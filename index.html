@@ -505,7 +505,7 @@ function runCoaching(){
   const thuMi = miles(rw[2]), sunDesc = rw[3], sunMi = miles(sunDesc);
   if(day===4 && thuMi){
     if(thuMi>=14) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min. Fueled run.`,
-      msg:`<b>1:30 lunch:</b> Chicken Meal, pick RICE over sweet potato. <b>4:45 PM:</b> Ezekiel + SF jelly AND 1 banana (~290 cal / 65 C) + 16–24 oz water with a hydration stick. <b>Carry:</b> ${thuMi>=18?'3':'2'} kosher gels or ${thuMi>=18?'7-8':'5-6'} Medjool dates + the stick bottle. <b>During:</b> first fuel at minute 45, then every 30–35 min — never wait to feel bad. <b>Within 45 min after:</b> Fairlife 320 mL + ½ scoop as a shake, then dinner ~1 hr later (Poke Bowl if it’s in the menu). The mid-run fuel is EXTRA on top of 2,220 — mandatory, and it goes in the Sunday report to Quinton.`});
+      msg:`<b>1:30 lunch:</b> Chicken Meal, pick RICE over sweet potato. <b>4:45 PM:</b> Ezekiel + SF jelly AND 1 banana (~290 cal / 65 C) + 16–24 oz water with a hydration stick. <b>Carry:</b> ${thuMi>=18?'3':'2'} kosher gels or ${thuMi>=18?'7-8':'5-6'} Medjool dates + the stick bottle. <b>During:</b> first fuel at minute 45, then every 30–35 min — never wait to feel bad. <b>Within 45 min after:</b> Fairlife 320 mL + ½ scoop as a shake, then dinner ~1 hr later (Poke Bowl if it’s in the menu). The mid-run fuel is EXTRA on top of 2,220 — mandatory, and it goes in the Sunday report to coach.`});
     else if(thuMi>=8) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min`,
       msg:`<b>4:30–5:00 PM:</b> Ezekiel + SF jelly (180 cal / 40 C) + 16 oz water with a hydration stick. <b>Carry:</b> 1 kosher gel or 2–3 Medjool dates — take at minute 45 if you’ll pass 90 minutes. <b>After:</b> eat the snack or dinner within 45 min of finishing — carbs + protein first, don’t wait until 10 PM starving. Any mid-run fuel is extra by design; log it in a note.`});
     else out.push({title:`🏃 Long run today — ${thuMi} mi · easy ~${Math.round(thuMi*10)} min`,
@@ -1454,12 +1454,12 @@ function viewTrack(){
     <div class="formrow"><button class="btn" id="wkCopy">📋 Copy week report for Claude</button></div>
   </div>
 
-  <h2 class="sec">Notes · off-track log · Quinton HW</h2>
+  <h2 class="sec">Notes · off-track log · coach HW</h2>
   <div class="card">
     <div class="formrow" style="margin-top:0">
       <select id="nTag" aria-label="Note type"><option>Note</option><option>Off-track</option><option>HW</option></select>
     </div>
-    <div class="formrow"><textarea id="nText" placeholder="What happened / what Quinton said / anything for Sunday…"></textarea></div>
+    <div class="formrow"><textarea id="nText" placeholder="What happened / what coach said / anything for Sunday…"></textarea></div>
     <div class="formrow"><button class="btn" id="nAdd">Save note</button></div>
     <div id="noteList">
       ${notes.slice().reverse().map((n,ri)=>{
