@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#171915">
+<title>The Cut</title>
+</head>
+<body style="margin:0">
+
+<style>
+  :root{
+    --ink:#171915; --panel:#20231d; --panel2:#282b24; --line:#33362e;
+    --text:#eae6da; --muted:#9b988b; --brass:#d9a441; --brass-dim:#8a6a2e;
+    --meat:#c4674f; --dairy:#7fa8c9; --pareve:#8faa72;
+    --disp:ui-rounded,-apple-system,"SF Pro Rounded",system-ui,sans-serif;
+    --body:-apple-system,"SF Pro Text",system-ui,"Segoe UI",sans-serif;
+    --mono:ui-monospace,"SF Mono",Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:var(--body);
+       font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .app{max-width:520px;margin:0 auto;padding:0 16px 110px}
+
+  header.top{padding:20px 2px 12px;display:flex;flex-direction:column;gap:10px}
+  .brand{display:flex;align-items:baseline;justify-content:space-between}
+  .brand h1{font-family:var(--disp);font-weight:800;font-size:22px;margin:0;letter-spacing:.2px}
+  .brand h1 span{color:var(--brass)}
+  .brand .coach{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .macrostrip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .mcell{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+         padding:8px 10px;text-align:center}
+  .mcell .n{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;
+            font-size:17px;color:var(--brass)}
+  .mcell .l{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+
+  h2.sec{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+         margin:26px 2px 10px;font-weight:600}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+        padding:14px 16px;margin-bottom:12px}
+  .card h3{font-family:var(--disp);font-weight:700;font-size:17px;margin:0;text-wrap:balance}
+  .card .sub{color:var(--muted);font-size:13px;margin-top:2px}
+
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;
+        letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:99px;
+        border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+  .chip::before{content:"";width:7px;height:7px;border-radius:99px;background:var(--muted)}
+  .chip.meat{color:var(--meat);border-color:color-mix(in srgb,var(--meat) 45%,transparent)}
+  .chip.meat::before{background:var(--meat)}
+  .chip.dairy{color:var(--dairy);border-color:color-mix(in srgb,var(--dairy) 45%,transparent)}
+  .chip.dairy::before{background:var(--dairy)}
+  .chip.pareve{color:var(--pareve);border-color:color-mix(in srgb,var(--pareve) 45%,transparent)}
+  .chip.pareve::before{background:var(--pareve)}
+  .chip.time{color:var(--brass);border-color:color-mix(in srgb,var(--brass) 40%,transparent)}
+  .chip.time::before{display:none}
+  .chip.notetag::before{display:none}
+  .chip.off{color:var(--meat);border-color:color-mix(in srgb,var(--meat) 45%,transparent)}
+  .chip.hw{color:var(--dairy);border-color:color-mix(in srgb,var(--dairy) 45%,transparent)}
+
+  .opt{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}
+  .opt:first-of-type{border-top:none;margin-top:8px;padding-top:0}
+  .opt .head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .opt .head b{font-size:15px;font-weight:650}
+  .varlbl{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-top:8px}
+  .ing{margin:8px 0 0;padding:0;list-style:none}
+  .ing li{display:flex;justify-content:space-between;gap:12px;padding:3.5px 0;font-size:14px}
+  .ing li .q{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);
+             font-size:12.5px;text-align:right;flex-shrink:0}
+  .totals{display:flex;gap:14px;margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);
+          font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted)}
+  .totals b{color:var(--brass);font-weight:700}
+  .budget{display:flex;gap:14px;font-family:var(--mono);font-variant-numeric:tabular-nums;
+          font-size:12px;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+  .budget b{color:var(--text);font-weight:600}
+
+  .today-date{font-family:var(--disp);font-weight:800;font-size:30px;margin:4px 0 0;letter-spacing:.2px}
+  .today-sub{color:var(--brass);font-weight:600;font-size:15px;margin-top:2px;display:flex;
+             justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .sched{margin:10px 0 0;padding:0;list-style:none}
+  .sched li{display:flex;gap:10px;padding:4px 0;font-size:14.5px;align-items:baseline}
+  .sched li .t{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--brass);
+               font-size:12.5px;min-width:64px;flex-shrink:0}
+  .note{background:color-mix(in srgb,var(--brass) 10%,transparent);
+        border:1px solid color-mix(in srgb,var(--brass) 30%,transparent);
+        color:var(--text);border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px}
+  .mealtimes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+  .timer-row{display:flex;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  input[type=time],input[type=date],input[type=number],input[type=text],textarea,select{
+        background:var(--panel2);border:1px solid var(--line);color:var(--text);
+        border-radius:9px;padding:8px 10px;font-family:var(--mono);font-size:15px;
+        color-scheme:dark}
+  textarea{font-family:var(--body);width:100%;min-height:64px;resize:vertical}
+  button{font-family:var(--body);cursor:pointer}
+  .btn{background:var(--brass);color:#241c08;border:none;border-radius:9px;
+       padding:9px 14px;font-weight:700;font-size:14px}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .btn:focus-visible,.tab:focus-visible,.dot:focus-visible,.seg button:focus-visible,
+  .suppitem:focus-visible,.buyitem:focus-visible,input:focus-visible,textarea:focus-visible,
+  select:focus-visible,.xdel:focus-visible,.pgrid button:focus-visible,.mealpick:focus-visible,
+  .step:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+  .dairy-ok{font-family:var(--mono);font-size:15px;margin-top:10px}
+  .dairy-ok b{color:var(--dairy)}
+
+  .setdot{width:26px;height:26px;border-radius:99px;border:1.5px solid var(--line);
+       background:var(--panel2);padding:0;flex-shrink:0;transition:background .15s,border-color .15s}
+  .setdot.on{background:var(--brass);border-color:var(--brass)}
+  input.repin{width:46px;text-align:center;padding:7px 2px;font-size:14px}
+  input.prw2{width:66px;text-align:center;padding:6px 2px;font-size:13px}
+  .holdflag{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);
+        border:1px solid var(--line);border-radius:6px;padding:2px 6px;text-transform:uppercase;white-space:nowrap}
+  .downflag{font-size:10px;font-weight:700;letter-spacing:.08em;color:#241c08;background:var(--meat);
+        border-radius:6px;padding:2px 6px;text-transform:uppercase;white-space:nowrap}
+  .water{display:flex;gap:9px;margin-top:12px;flex-wrap:wrap}
+  .dot{width:34px;height:34px;border-radius:99px;border:1.5px solid var(--line);
+       background:var(--panel2);padding:0;transition:background .15s,border-color .15s}
+  .dot.on{background:var(--dairy);border-color:var(--dairy)}
+  .water-label{font-size:12px;color:var(--muted);margin-top:8px}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--panel);border:1px solid var(--line);
+       border-radius:11px;padding:3px;gap:3px;margin:4px 0 14px}
+  .seg button{border:none;background:transparent;color:var(--muted);border-radius:8px;
+       padding:9px 0;font-weight:650;font-size:14px}
+  .seg button.on{background:var(--brass);color:#241c08}
+  .rules{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 14px;letter-spacing:.02em}
+  .ex{margin:8px 0 0;padding:0;list-style:none}
+  .ex li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:14.5px;
+         border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);align-items:center}
+  .ex li:first-child{border-top:none}
+  .ex li .r{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--brass);
+            font-size:12.5px;flex-shrink:0;text-align:right}
+  .daytag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .upflag{font-size:10px;font-weight:700;letter-spacing:.08em;color:#241c08;background:var(--pareve);
+          border-radius:6px;padding:2px 6px;margin-left:6px;text-transform:uppercase;white-space:nowrap}
+  input.prw{width:118px;font-size:13px;padding:6px 8px;text-align:right}
+
+  .suppitem,.buyitem{display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+            background:transparent;border:none;color:var(--text);font-size:15px;
+            padding:9px 2px;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+  .suppitem:first-of-type,.buyitem:first-of-type{border-top:none}
+  .suppitem .box,.buyitem .box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);
+            flex-shrink:0;display:flex;align-items:center;justify-content:center;
+            font-size:14px;color:#241c08;background:var(--panel2)}
+  .suppitem.done .box,.buyitem.done .box{background:var(--pareve);border-color:var(--pareve)}
+  .suppitem.done .nm,.buyitem.done .nm{color:var(--muted);text-decoration:line-through}
+  .suppitem .when,.buyitem .q{margin-left:auto;font-size:11px;color:var(--muted);letter-spacing:.06em;
+            text-transform:uppercase;flex-shrink:0;font-family:var(--mono)}
+  .xdel{background:none;border:none;color:var(--muted);font-size:16px;padding:2px 6px;flex-shrink:0}
+
+  /* menu builder + meal picking */
+  .mrow{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14.5px;
+        border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+  .mrow:first-of-type{border-top:none}
+  .mrow .nm{flex:1}
+  .stepper{display:flex;align-items:center;gap:2px}
+  .step{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);
+        color:var(--text);font-size:17px;font-weight:700;padding:0;line-height:1}
+  .stepn{font-family:var(--mono);font-variant-numeric:tabular-nums;min-width:26px;text-align:center;
+         font-size:15px;font-weight:700;color:var(--brass)}
+  .slotlbl{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+           margin:12px 0 4px;font-weight:600}
+  .slotlbl:first-of-type{margin-top:2px}
+  .pickrow{display:flex;flex-wrap:wrap;gap:7px;margin:6px 0 2px}
+  .mealpick{border:1px solid var(--line);background:var(--panel2);color:var(--text);
+        border-radius:99px;padding:7px 12px;font-size:13px;font-weight:600}
+  .mealpick .rem{color:var(--muted);font-family:var(--mono);font-size:11px;margin-left:4px}
+  .mealpick.on{background:var(--brass);border-color:var(--brass);color:#241c08}
+  .mealpick.on .rem{color:#5c4715}
+
+  .pbar{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:99px;
+        margin-top:12px;overflow:hidden}
+  .pfill{height:100%;background:var(--dairy);border-radius:99px;transition:width .2s}
+  canvas#wchart{width:100%;height:170px;display:block}
+  .legend{display:flex;gap:16px;font-size:11px;color:var(--muted);margin-top:5px}
+  .legend .sw{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  table.wk{width:100%;border-collapse:collapse;font-family:var(--mono);
+           font-variant-numeric:tabular-nums;font-size:13px;margin-top:6px}
+  table.wk td,table.wk th{padding:6px 4px;text-align:right;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
+  table.wk th{color:var(--muted);font-weight:600;font-size:10.5px;letter-spacing:.1em;
+              text-transform:uppercase;border-top:none}
+  table.wk td:first-child,table.wk th:first-child{text-align:left}
+  .delta-dn{color:var(--pareve)} .delta-up{color:var(--meat)}
+  .formrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+  .formrow input[type=number]{width:86px}
+  .formrow input[type=date]{width:150px}
+
+  .noteitem{border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);padding:10px 0}
+  .noteitem:first-of-type{border-top:none}
+  .noteitem .meta{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+  .noteitem .meta .d{font-family:var(--mono);font-size:12px;color:var(--muted)}
+  .noteitem p{margin:0;font-size:14.5px;white-space:pre-wrap}
+
+  .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .pgrid .ph{position:relative}
+  .pgrid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;display:block;
+             border:1px solid var(--line)}
+  .pgrid .xdel{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.55);border-radius:7px;
+               color:#fff;line-height:1}
+  .pgrid button.view{padding:0;border:none;background:none;width:100%}
+  .overlay{position:fixed;inset:0;background:rgba(10,11,9,.93);z-index:50;display:flex;
+           align-items:center;justify-content:center;padding:16px}
+  .overlay img{max-width:100%;max-height:90vh;border-radius:12px}
+
+  .timer-disp{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:44px;
+              font-weight:700;color:var(--brass);text-align:center;margin:6px 0 2px}
+  .timer-disp.done{color:var(--pareve)}
+
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;background:color-mix(in srgb,var(--ink) 88%,black);
+       backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+       border-top:1px solid var(--line);z-index:10;
+       padding-bottom:env(safe-area-inset-bottom,0)}
+  nav.tabs .row{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+  .tab{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;
+       letter-spacing:.1em;text-transform:uppercase;padding:19px 0 17px}
+  .tab.on{color:var(--brass)}
+  footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:34px;letter-spacing:.03em}
+  footer a{color:var(--brass)}
+  /* collapsible sections */
+  details.acc summary{cursor:pointer;list-style:none;position:relative;padding-right:22px}
+  details.acc summary::-webkit-details-marker{display:none}
+  details.acc summary::after{content:'▾';position:absolute;right:2px;top:2px;color:var(--muted);
+       transition:transform .15s}
+  details.acc[open] summary::after{transform:rotate(180deg)}
+  /* tab slide */
+  @keyframes slideL{from{opacity:.35;transform:translateX(26px)}to{opacity:1;transform:none}}
+  @keyframes slideR{from{opacity:.35;transform:translateX(-26px)}to{opacity:1;transform:none}}
+  .anim-l{animation:slideL .18s ease-out}
+  .anim-r{animation:slideR .18s ease-out}
+  .ingmac{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--muted);
+       text-align:right;flex-shrink:0}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}.anim-l,.anim-r{animation:none}}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1>THE <span>CUT</span></h1>
+      <div class="coach">Cut Companion</div>
+    </div>
+    <div class="macrostrip" id="macroStrip">
+      <div class="mcell"><div class="n">2220</div><div class="l">kcal</div></div>
+      <div class="mcell"><div class="n">187</div><div class="l">protein</div></div>
+      <div class="mcell"><div class="n">227</div><div class="l">carbs</div></div>
+      <div class="mcell"><div class="n">64</div><div class="l">fat</div></div>
+    </div>
+  </header>
+  <main id="view"></main>
+  <footer>coach lives in the Claude app → <a href="https://claude.ai/code">Code tab</a></footer>
+</div>
+
+<nav class="tabs" aria-label="Sections"><div class="row">
+  <button class="tab on" data-tab="today">Today</button>
+  <button class="tab" data-tab="meals">Meals</button>
+  <button class="tab" data-tab="prep">Prep</button>
+  <button class="tab" data-tab="train">Train</button>
+  <button class="tab" data-tab="track">Track</button>
+</div></nav>
+
+<script>
+/* ---------- shared ---------- */
+const K = {meat:'Meat', dairy:'Dairy', pareve:'Pareve'};
+const chip = (k,txt) => `<span class="chip ${k}">${txt||K[k]}</span>`;
+const tchip = t => `<span class="chip time">${t}</span>`;
+
+/* ---------- meals: named options ---------- */
+/* ing rows: [label, qty, [cal, P, C, F]] — per-ingredient macros from his sheet */
+const SLOTS = [
+ {key:'pre', slot:'Pre-Lift', time:'7:45 AM · Fri 3:30 PM', b:[200,16,32,1], opts:[
+   {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,23,0]],['Tuna packet','1',[90,15,5,1]]], t:[195,16,28,1]}]},
+   {id:'p3', name:'Rice Cakes + Yogurt', k:[['dairy']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,23,0]],['Oikos Triple Zero','1',[90,15,6,0]]], t:[195,16,29,0]}]},
+   {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',[160,10,30,1]],['Sugar-free jelly','32 g',[20,0,10,0]]], t:[180,10,40,1]}]},
+   {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',[90,15,6,0]],['Banana','1 med',[110,1,27,0]]], t:[200,16,33,0]}]},
+ ]},
+ {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[545,36,54,21], opts:[
+   {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',[95,3,16,2]],['Ryse protein','1 scoop',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',[190,7,7,17]]], t:[545,37,54,21]}]},
+   {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',[140,15,35,5]],['Cream cheese','45 g',[120,3,3,10.5]],['Latitude smoked salmon','75 g',[145,16,0,9]],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[545,35,72,25]}]},
+   {id:'b3', name:'Kodiak Breakfast', k:[['dairy']], vars:[
+     {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',[440,20,50,18]],['Fage 2% plain Greek yogurt','1 cup (150 g)',[100,15,4,3]],['Lakanto sugar-free maple syrup','60 g',[20,0,1,0]]], t:[560,35,55,21]},
+     {label:'Flapjacks', ing:[['Kodiak buttermilk Power Flapjacks (frozen)','4',[255,19,40,3]],['Justin’s Classic almond butter','1 pack (32 g)',[220,6,6,19]],['Fage Total 0% plain Greek yogurt','125 g',[70,13,4,0]],['Lakanto sugar-free maple syrup','15 g',[5,0,4,0]]], t:[546,37,54,22]}]},
+ ]},
+ {key:'lu', slot:'Lunch', time:'1:30 PM', b:[580,51,63,15], opts:[
+   {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight)','7 oz',[245,44,0,7]],['Sweet potato','225 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,51,63,15]}]},
+   {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight)','7 oz',[245,44,0,7]],['White rice (dry)','55 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,51,63,15]}]},
+   {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[580,55,47,18]}]},
+   {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[565,56,43,19]}]},
+ ]},
+ {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
+   {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',[120,20,9,0]],['Ryse protein','½ scoop',[70,13,2,1]],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[330,34,31,7]}]},
+   {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',[43,8,3,0]],['Justin’s Classic almond butter','3.1 g',[21,1,1,2]],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[325,35,32,7]}]},
+ ]},
+ {key:'di', slot:'Dinner', time:'10:00 PM', b:[585,54,58,19], opts:[
+   {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',[255,35,0,12]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',[20,2,4,0]]], t:[585,54,58,19]}]},
+   {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',[255,35,0,12]],['Tomato paste','33 g',[27,1,6,0]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]]], t:[590,55,62,19]}]},
+   {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[170,3,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[120,10,9,5]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[585,51,55,17]}]},
+ ]},
+];
+const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
+
+/* ---------- training ---------- */
+const GYM = {
+ mon:{tag:'Monday · Legs', ex:[['Leg curl machine','3 × 8-12'],['Smith squat or hack squat','3 × 10-8-6'],['Hip thrusts','3 × 8-12'],['Stiff-leg deadlift','3 × 8-12'],['Abductors','3 × 12']]},
+ tue:{tag:'Tuesday · Push', ex:[['Incline DB or Smith press','3 × 10-8-6'],['Flat machine press','3 × 10-8-6'],['DB lateral or cable Y raise','3 × 12-15'],['Machine tricep extension / dips','3 × 12-10-8'],['Cable cross ext. or pressdown','3 × 10-12'],['Pec deck or crossover — big stretch','3 × 10-12']]},
+ wed:{tag:'Wednesday · Pull', ex:[['Seated cable or chest-supported row','3 × 10-8-6'],['MAG bar or wide-grip lat pulldown','3 × 10-8-6'],['Straight-arm pulldown or single lat row','3 × 10-12'],['Preacher curl','3 × 8-12'],['DB hammer curl','3 × 8-12'],['Shrugs — big squeeze','3 × 12'],['Rear delts on cables','3 × 12']]},
+ fri:{tag:'Friday · Legs #2 · 3:30 PM', ex:[['Walking lunge warmup &amp; stretch','3 × 12 / leg'],['Leg press or hack squat','3 × 10-8-6'],['DB split squat','2 × 8-12 / leg'],['Leg extension','3 × 8-12'],['Adductors','3 × 10-12'],['Calf raises','3 × 12-15']]},
+};
+const HOME = {
+ mon:{tag:'Monday · Legs', ex:[['Leg curl machine','3 × 8-12'],['Tonal bar squats','3 × 10-8-6'],['Tonal hip thrusts','3 × 8-12'],['DB or Tonal stiff-leg deadlift','3 × 8-12'],['DB walking lunge','3 × 12 / leg']]},
+ tue:{tag:'Tuesday · Push', ex:[['Incline DB press','3 × 10-8-6'],['Flat DB press','3 × 12-10-8'],['DB lateral or cable Y raise','3 × 12-15'],['Rope / bar tricep extension','3 × 12-10-8'],['Cable cross extension','3 × 10-12'],['Cable crossover — big stretch','3 × 10-12']]},
+ wed:{tag:'Wednesday · Pull', ex:[['Weighted pull-ups','3 × 8-12'],['Seated cable or bent-over DB row','3 × 10-8-6'],['DB incline bench curl','3 × 8-12'],['DB hammer curl','3 × 8-12'],['Straight-arm pulldown or single lat row','3 × 10-12'],['Shrugs — big squeeze','3 × 12'],['Rear delts on cables','3 × 12']]},
+ fri:{tag:'Friday · Legs #2 · 3:30 PM', ex:[['Walking lunge warmup &amp; stretch','3 × 12 / leg'],['Tonal bar squats','3 × 10-8-6'],['Leg extension','3 × 8-12'],['DB split squat','2 × 8-12 / leg'],['Calf raises','3 × 12-15']]},
+};
+const SAT_GRANDMA = {tag:'Saturday · Upper Weakness · Grandma’s · 10:00', ex:[
+ ['Incline barbell press','3 × 10-8-6'],
+ ['Lat pulldown, wide or medium grip','2 × 8-12'],
+ ['Barbell bent-over row','2 × 8-12'],
+ ['DB lateral raise','3 × 12-15'],
+ ['Barbell or EZ-bar overhead press','3 × 8-12'],
+ ['DB hammer curl <span class="daytag">(5s negatives if 25s get easy)</span>','3 × 8-12'],
+ ['EZ-bar overhead tricep extension, seated','3 × 12-10-8'],
+ ['Top-cable rear delt fly — optional','3 × 12'],
+]};
+const SAT_HOME = {tag:'Saturday · Upper Weakness', ex:[
+ ['Incline DB press','3 × 10-8-6'],['Weighted pull-ups','2 × 8-12'],
+ ['Seated cable or bent-over DB row','2 × 8-12'],['DB lateral or cable Y raise','3 × 12-15'],
+ ['DB shoulder press','3 × 8-12'],['Rope hammer curl','3 × 8-12'],
+ ['Overhead DB tricep extension','3 × 12-10-8'],
+]};
+const CORE = {tag:'Core · 1-2× a week, post-lift', ex:[['Cable crunches','4 × 15'],['Weighted sit-ups','3 × failure'],['Leg-ups','3 × failure']]};
+/* rep-scheme parsing + double-progression verdicts */
+function parseTargets(r){
+  if(/failure/i.test(r)) return null;
+  const parts = r.replace('×','x').split('x');
+  const sets = parseInt(parts[0])||3;
+  const nums = ((parts[1]||'').match(/\d+/g)||[]).map(Number);
+  if(!nums.length) return null;
+  if(nums.length>=3 || (nums.length===2 && nums[0]>nums[1]))
+    return {sets, per:nums, type:'ladder'};
+  if(nums.length===2) return {sets, lo:nums[0], hi:nums[1], type:'range'};
+  return {sets, lo:nums[0], hi:nums[0], type:'range'};
+}
+function verdict(reps, t){
+  if(!t) return null;
+  const rs = (reps||[]).slice(0,t.sets);
+  if(rs.filter(v=>v!=null).length < t.sets) return null;
+  if(t.type==='ladder')
+    return rs.every((v,i)=>v >= (t.per[i]!=null?t.per[i]:t.per[t.per.length-1])) ? 'up' : 'hold';
+  if(rs.every(v=>v>=t.hi)) return 'up';
+  if(rs.every(v=>v<t.lo)) return 'down';
+  return 'hold';
+}
+function workoutFor(dayIdx, loc){
+  const plan = loc==='deal' ? GYM : HOME;
+  if(dayIdx===1) return plan.mon;
+  if(dayIdx===2) return plan.tue;
+  if(dayIdx===3) return plan.wed;
+  if(dayIdx===5) return plan.fri;
+  if(dayIdx===6) return loc==='deal' ? SAT_GRANDMA : SAT_HOME;
+  return null;
+}
+
+const PRS = [
+ {day:'Monday · Legs', items:[
+   ['pr_legcurl','Leg curl','',0,'3 × 8-12'],['pr_smith','Smith squat','',1,'3 × 10-8-6'],
+   ['pr_mon_hack','Hack squat','',0,'3 × 10-8-6'],
+   ['pr_hip','Hip thrusts','',0,'3 × 8-12'],['pr_sldl','Stiff-leg deadlift','',0,'3 × 8-12'],['pr_abd','Abductors','',0,'3 × 12']]},
+ {day:'Tuesday · Push', items:[
+   ['pr_incl','Incline Smith press','',0,'3 × 10-8-6'],['pr_incdb','Incline DB press','',0,'3 × 10-8-6'],
+   ['pr_flat','Machine flat press','',0,'3 × 10-8-6'],
+   ['pr_lat','DB lateral raise','',0,'3 × 12-15'],['pr_yraise','Cable Y raise','',0,'3 × 12-15'],
+   ['pr_push','Cable pushdown','',0,'3 × 10-12'],['pr_crossext','Cable cross extension','',0,'3 × 10-12'],
+   ['pr_tri','Tricep extension machine','',0,'3 × 12-10-8'],['pr_dips','Dips','',0,'3 × 12-10-8'],
+   ['pr_pec','Pec deck','—',0,'3 × 10-12'],['pr_crossover','Cable crossover','',0,'3 × 10-12']]},
+ {day:'Wednesday · Pull', items:[
+   ['pr_row','Seated row','',0,'3 × 10-8-6'],['pr_csr','Chest-supported row','',0,'3 × 10-8-6'],
+   ['pr_mag','MAG bar pulldown','',0,'3 × 10-8-6'],['pr_widelat','Wide-grip lat pulldown','',0,'3 × 10-8-6'],
+   ['pr_slat','Single lat pull','',0,'3 × 10-12'],['pr_straight','Straight-arm pulldown','',0,'3 × 10-12'],
+   ['pr_pre','Preacher curl','',0,'3 × 8-12'],['pr_ham','Hammer curl','',0,'3 × 8-12'],
+   ['pr_shrug','Shrugs','',0,'3 × 12'],['pr_reardelt','Rear delts on cables','',0,'3 × 12']]},
+ {day:'Friday · Legs #2', items:[
+   ['pr_hack','Hack squat','',0,'3 × 10-8-6'],['pr_legpress','Leg press','',0,'3 × 10-8-6'],
+   ['pr_split','DB split squat','',1,'2 × 8-12 / leg'],
+   ['pr_ext','Leg extension','',1,'3 × 8-12'],['pr_add','Adductors','',1,'3 × 10-12'],
+   ['pr_calf','Calf raise (Smith)','',1,'3 × 12-15'],['pr_lunge','Walking lunge (warmup)','',0,'3 × 12 / leg']]},
+ {day:'Saturday · Upper Weakness (grandma’s)', items:[
+   ['pr_sat_incl','Incline barbell press','',0,'3 × 10-8-6'],['pr_sat_lat','Lat pulldown','',0,'2 × 8-12'],
+   ['pr_sat_row','Barbell bent-over row','',0,'2 × 8-12'],['pr_sat_latr','DB lateral raise','',0,'3 × 12-15'],
+   ['pr_sat_ohp','Barbell overhead press','',0,'3 × 8-12'],['pr_sat_ezohp','EZ-bar overhead press','',0,'3 × 8-12'],
+   ['pr_sat_ham','DB hammer curl','',0,'3 × 8-12'],
+   ['pr_sat_tri','EZ overhead tricep extension','',0,'3 × 12-10-8'],['pr_sat_rear','Rear delt fly (top cable)','',0,'3 × 12']]},
+ {day:'Core', items:[
+   ['pr_crunch','Cable crunches','',0,'4 × 15'],['pr_situp','Weighted sit-ups','',0,'3 × failure'],['pr_legups','Leg-ups','bodyweight',0,'3 × failure']]},
+];
+/* Brooklyn home split PRs (Tonal digital lbs + DBs + cables) */
+const PRS_BK = [
+ {day:'Monday · Legs (home)', items:[
+   ['bk_legcurl','Leg curl (bench attach.)','',0,'3 × 8-12'],['bk_squat','Tonal bar squats','',0,'3 × 10-8-6'],
+   ['bk_hip','Tonal hip thrusts','',0,'3 × 8-12'],['bk_sldl_db','DB stiff-leg deadlift','',0,'3 × 8-12'],
+   ['bk_sldl_t','Tonal stiff-leg deadlift','',0,'3 × 8-12'],['bk_lunge','DB walking lunge','',0,'3 × 12 / leg']]},
+ {day:'Tuesday · Push (home)', items:[
+   ['bk_incdb','Incline DB press','',0,'3 × 10-8-6'],['bk_flatdb','Flat DB press','',0,'3 × 12-10-8'],
+   ['bk_lat','DB lateral raise','',0,'3 × 12-15'],['bk_yraise','Cable Y raise','',0,'3 × 12-15'],
+   ['bk_ropetri','Rope tricep extension','',0,'3 × 12-10-8'],['bk_bartri','Bar tricep extension','',0,'3 × 12-10-8'],
+   ['bk_crossext','Cable cross extension','',0,'3 × 10-12'],['bk_crossover','Cable crossover','',0,'3 × 10-12']]},
+ {day:'Wednesday · Pull (home)', items:[
+   ['bk_pullup','Weighted pull-ups','',0,'3 × 8-12'],['bk_row','Seated cable row','',0,'3 × 10-8-6'],
+   ['bk_dbrow','Bent-over DB row','',0,'3 × 10-8-6'],['bk_inccurl','DB incline bench curl','',0,'3 × 8-12'],
+   ['bk_ham','DB hammer curl','',0,'3 × 8-12'],['bk_straight','Straight-arm pulldown','',0,'3 × 10-12'],
+   ['bk_slat','Single lat row','',0,'3 × 10-12'],['bk_shrug','Shrugs','',0,'3 × 12'],['bk_rear','Rear delts on cables','',0,'3 × 12']]},
+ {day:'Friday · Legs #2 (home)', items:[
+   ['bk_lunge2','Walking lunge (warmup)','',0,'3 × 12 / leg'],['bk_squat2','Tonal bar squats','',0,'3 × 10-8-6'],
+   ['bk_ext','Leg extension (bench attach.)','',0,'3 × 8-12'],['bk_split','DB split squat','',0,'2 × 8-12 / leg'],
+   ['bk_calf','Calf raises','',0,'3 × 12-15']]},
+ {day:'Saturday · Upper Weakness (home)', items:[
+   ['bk_sat_inc','Incline DB press','',0,'3 × 10-8-6'],['bk_sat_pullup','Weighted pull-ups','',0,'2 × 8-12'],
+   ['bk_sat_row','Seated cable row','',0,'2 × 8-12'],['bk_sat_dbrow','Bent-over DB row','',0,'2 × 8-12'],
+   ['bk_sat_lat','DB lateral raise','',0,'3 × 12-15'],['bk_sat_y','Cable Y raise','',0,'3 × 12-15'],
+   ['bk_sat_ohp','DB shoulder press','',0,'3 × 8-12'],['bk_sat_ham','Rope hammer curl','',0,'3 × 8-12'],
+   ['bk_sat_tri','Overhead DB tricep extension','',0,'3 × 12-10-8']]},
+ {day:'Core', items:[
+   ['pr_crunch','Cable crunches','',0,'4 × 15'],['pr_situp','Weighted sit-ups','',0,'3 × failure'],['pr_legups','Leg-ups','bodyweight',0,'3 × failure']]},
+];
+
+/* ---------- Runna 16-week marathon plan · race Sun Oct 11 2026 ---------- */
+const RACE_DAY = new Date(2026,9,11);
+const RUNNA = [
+ [2,'2026-06-29','Long Run · 6 mi','Intervals · 3.3 mi'],
+ [3,'2026-07-06','Long Run · 7 mi · rolling','Tempo · 3.2 mi'],
+ [4,'2026-07-13','Long Run · 4.5 mi','Tempo · 3 mi'],
+ [5,'2026-07-20','Long Run · 8.5 mi · rolling','Hills · 3.2 mi'],
+ [6,'2026-07-27','Long Run · 9.5 mi · rolling','Tempo · 3.8 mi'],
+ [7,'2026-08-03','Long Run · 12 mi','Tempo · 3.2 mi'],
+ [8,'2026-08-10','Long Run · 6.5 mi','Intervals · 3.2 mi'],
+ [9,'2026-08-17','Long Run · 14 mi','Tempo · 4.5 mi'],
+ [10,'2026-08-24','Long Run · 15 mi','Tempo · 3.8 mi'],
+ [11,'2026-08-31','Long Run · 18 mi','Intervals · 3.5 mi'],
+ [12,'2026-09-07','Long Run · 9 mi','Tempo · 3.2 mi'],
+ [13,'2026-09-14','Long Run · 20 mi','Tempo · 4 mi'],
+ [14,'2026-09-21','Long Run · 16 mi · rolling','Hills · 3.2 mi'],
+ [15,'2026-09-28','Long Run · 10 mi','Tempo · 3.2 mi'],
+ [16,'2026-10-05','Taper Intervals · 3.2 mi','RACE · 26.2 mi'],
+];
+function runnaWeek(now){
+  const t = now.getTime();
+  for(const w of RUNNA){
+    const s = new Date(w[1]+'T00:00:00').getTime();
+    if(t>=s && t<s+7*864e5) return w;
+  }
+  return null;
+}
+
+const DAYS = {
+ 0:{title:'Rest · Short Run · Prep', sub:'Sunday', sch:[['8:00','Minyan'],['8:30','Class'],['AM','RUNNA_SUN'],['Day','Groceries + meal prep — see Prep tab'],['AM','Weigh in → send Claude the week report (Track tab has a copy button)']]},
+ 1:{title:'Legs — lift ~8:00', sub:'Monday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Leave to gym'],['9:00','Work']]},
+ 2:{title:'Push — lift ~8:00', sub:'Tuesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work']]},
+ 3:{title:'Pull — lift ~8:00', sub:'Wednesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work']]},
+ 4:{title:'Rest · Long Run', sub:'Thursday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Class'],['9:00','Work'],['6:00 PM','Walk'],['PM','RUNNA_THU'],['PM','Prep hockey bag']],
+    note:'Print or write down Saturday’s grandma card tonight or tomorrow — no phone on Shabbat.'},
+ 5:{title:'Hockey + Legs #2 @ 3:30', sub:'Friday', sch:[['6:00','Wake up'],['6:15','Leave to hockey'],['7:00','Hockey (to 8:30)'],['AM','Work'],['3:30','Lift — Legs #2 · pre-lift snack 3:30 window'],['5:00','Bank'],['7:00','Shul'],['8:00','Shabbat dinner']],
+    note:'Skip the 330-cal snack today — it goes into a bigger Shabbat dinner.'},
+ 6:{title:'Upper Weakness @ Grandma’s — 10:00', sub:'Saturday · Shabbat', sch:[['6:30','Wake up'],['6:45','Minyan'],['8:45','Class'],['9:45','Walk to grandma’s'],['10:00','Lift'],['12:30','Shabbat lunch']],
+    note:'Shabbat Shalom. The card for this session is under Train.'},
+};
+
+/* one-off schedule overrides, keyed by ISO date */
+const OVERRIDES = {
+ '2026-07-03': {title:'Holiday Friday — Hockey 9:30 + Legs #2', sub:'Friday · July 4th weekend',
+  sch:[['7:00','Minyan · Bank 🏦 right after'],['8:30','Pre-hockey fuel: Yogurt + Banana (200 cal) + 16 oz water'],['9:30','Hockey — bring a stick bottle'],['~11:30','Lift — Legs #2 (you’re warm from hockey: one warmup set, go)'],['~12:45','Breakfast — pick Kodiak or Bagel w/ Berries (big-carb day)'],['3:00','Shabbat prep — Friday card below'],['~3:30','Lunch as planned + 1 EXTRA Ezekiel + SF jelly (post-fast rebound carb)'],['7:00','Shul'],['8:00','Shabbat dinner — snack skipped, eat big with the family']],
+  note:'Post-fast rebound day: every meal eaten, one extra 180-cal carb before 4 PM, and front-load water — 60 oz down before hockey ends, gallon by shul. The scale is FAKE until Sunday; don’t weigh-in emotionally.'},
+};
+/* heads-up coaching, keyed by the ISO date it should DISPLAY */
+const EVENTS = [
+ {d:'2026-07-02', title:'Fast of 17 Tammuz — the script', msg:`No run, no lift today. Fast ends <b>8:49</b>.<br>
+① <b>8:49</b> — 16–24 oz water + a Ryse hydration stick. Nothing solid for 10 minutes.<br>
+② <b>~9:00</b> — 1 banana or 70 g berries. Easy landing.<br>
+③ <b>~9:15</b> — cook the <b>Jiben</b>: 2 eggs + 100 g egg whites + 113 g cottage cheese + 28 g mozzarella + 150 g spinach or broccoli + 2 Ezekiel. One pan, 10 min, 55 g protein.<br>
+④ <b>~10:15, only if hungry</b> — shake: Fairlife 320 mL + ½ scoop + a mix-in.<br>
+⑤ <b>STOP.</b> That’s ~950 cal / ~95 g protein — a great fast day. Do NOT chase 2,220.<br>
+Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · hockey bag ready · bed by 11:30 — hockey’s at 9:30 tomorrow.`},
+ {d:'2026-07-05', title:'Moved run — 6 easy miles this morning', msg:'Thursday’s long run was lost to the fast, so today: 6 mi EASY replaces the 3.3 mi intervals. Before: Yogurt + Banana (200 cal) + 8–16 oz water, 45–60 min out. Conversational pace the whole way. Then weigh-in report to Claude, groceries, prep, Creamis.'},
+ {d:'2026-07-19', title:'Week of Tisha B’Av begins', msg:'If your custom stops meat this week — run Jiben lunches + Poke dinners. Tell Claude your custom and he’ll set the week’s menu + defrost plan.'},
+ {d:'2026-07-22', title:'Tisha B’Av starts tonight — pre-fast script', msg:`25-hour fast from sundown (~8:15). Tomorrow’s 8.5 mi moves to Sunday 7/26.<br>
+<b>Water schedule:</b> 30 oz by 10 AM · 60 by 1 PM · 90 by 4 PM · gallon by 6:30. Both hydration sticks today.<br>
+<b>Food:</b> all meals on time. Lunch = Chicken Meal with RICE. <b>~6:15 PM pre-fast meal</b> (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber — carbs up, salt DOWN (skip most of the soy; salt now = misery at 2 AM).<br>
+<b>Last 20 min before sundown:</b> 16–24 oz water + final stick, then done. Early night.`},
+ {d:'2026-07-23', title:'Tisha B’Av — the script', msg:`No training. Fast ends ~9:05.<br>
+① <b>9:05</b> — 16–24 oz water + hydration stick, nothing solid 10 min.<br>
+② <b>~9:20</b> — banana or 70 g berries.<br>
+③ <b>~9:35</b> — <b>Jiben</b> (2 eggs + 100 g whites + 113 g cottage + 28 g mozz + 150 g greens + 2 Ezekiel) — 55 g protein, one pan.<br>
+④ <b>~10:30 optional</b> — Fairlife 320 mL + ½ scoop shake.<br>
+⑤ <b>Stop ~950 cal.</b> Water to 60–80 oz by bed. Magnesium. Tomorrow: all meals + 1 extra Ezekiel + jelly before 4 PM, gallon front-loaded, scale is fake for 2 days.`},
+ {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
+];
+/* auto run-coaching banners from the Runna plan; manual EVENTS for the day take priority */
+function runCoaching(){
+  if(EVENTS.some(e=>e.d===isoToday())) return [];
+  const out = [];
+  const now = new Date(), day = now.getDay();
+  const rw = runnaWeek(now);
+  if(!rw) return out;
+  const miles = s => { const m = /([\d.]+)\s*mi/.exec(s); return m? parseFloat(m[1]) : null; };
+  const thuMi = miles(rw[2]), sunDesc = rw[3], sunMi = miles(sunDesc);
+  if(day===4 && thuMi){
+    if(thuMi>=14) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min. Fueled run.`,
+      msg:`<b>1:30 lunch:</b> Chicken Meal, pick RICE over sweet potato. <b>4:45 PM:</b> Ezekiel + SF jelly AND 1 banana (~290 cal / 65 C) + 16–24 oz water with a hydration stick. <b>Carry:</b> ${thuMi>=18?'3':'2'} kosher gels or ${thuMi>=18?'7-8':'5-6'} Medjool dates + the stick bottle. <b>During:</b> first fuel at minute 45, then every 30–35 min — never wait to feel bad. <b>Within 45 min after:</b> Fairlife 320 mL + ½ scoop as a shake, then dinner ~1 hr later (Poke Bowl if it’s in the menu). The mid-run fuel is EXTRA on top of 2,220 — mandatory, and it goes in the Sunday report to Quinton.`});
+    else if(thuMi>=8) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min`,
+      msg:`<b>4:30–5:00 PM:</b> Ezekiel + SF jelly (180 cal / 40 C) + 16 oz water with a hydration stick. <b>Carry:</b> 1 kosher gel or 2–3 Medjool dates — take at minute 45 if you’ll pass 90 minutes. <b>After:</b> eat the snack or dinner within 45 min of finishing — carbs + protein first, don’t wait until 10 PM starving. Any mid-run fuel is extra by design; log it in a note.`});
+    else out.push({title:`🏃 Long run today — ${thuMi} mi · easy ~${Math.round(thuMi*10)} min`,
+      msg:`<b>~5:00 PM:</b> Yogurt + Banana (Oikos + 1 banana, 200 cal) + 8–16 oz water. <b>Run:</b> conversational pace the whole way — if you can’t talk, slow down. No mid-run fuel needed. <b>After:</b> normal snack and dinner, nothing changes.`});
+  }
+  if(day===3 && thuMi>=10) out.push({title:`🏃 ${thuMi} mi long run tomorrow — set it up today`,
+    msg:`<b>Eat every carb in the plan today — especially the 10 PM dinner carbs (they’re tomorrow’s fuel).</b> Add one extra 30 oz bottle to today’s gallon. Check you have gels/dates + 2 hydration sticks for tomorrow. Lights out by 11:30 — the run is only as good as tonight’s sleep.`});
+  if(day===0 && sunDesc){
+    if(sunDesc.includes('RACE')) out.push({title:'🏁 RACE DAY — 26.2', msg:'Full race-day plan comes from Claude race week — fueling schedule, breakfast timing, pacing. Nothing new today. Trust the taper.'});
+    else if(sunMi) out.push({title:`🏃 Quality run this morning — ${sunDesc}`,
+      msg:`<b>45–60 min before:</b> Yogurt + Banana (200 cal) + 8–16 oz water. <b>Warm up:</b> 5 min easy jog + 4 strides before the hard stuff — speed work on cold legs is how hamstrings pop. <b>Hit Runna’s paces, not faster.</b> After: breakfast as normal, then weigh-in report + prep day.`});
+  }
+  if(day===5 && thuMi>=12) out.push({title:`⚠️ Recovery watch — ${thuMi} mi yesterday`,
+    msg:`Hockey + Legs #2 on tired legs today. <b>Breakfast: pick Bagel w/ Berries</b> (72 C, the biggest-carb option). Longer warmup at both sessions; on Legs #2, drop the last set of anything that gets ugly. Front-load water before Shabbat.`});
+  return out;
+}
+
+const SUPPS = [
+ ['Creatine monohydrate — 10 g','daily'],['Multivitamin','daily'],['Vitamin D3','daily'],
+ ['Fish oil','daily'],['Lion’s mane','daily'],['Ryse hydration stick','daily'],
+ ['Ryse Pump Caps','pre-lift'],['Magnesium','night'],['Allegra (if needed)','allergies'],
+];
+
+/* ---------- weigh-ins (preloaded weeks 1-8) ---------- */
+const W0 = new Date(2026,4,11).getTime();
+const WPRE = [
+];
+
+/* ---------- prep content ---------- */
+/* per-serving grocery needs per meal option: [group, item, qty, unit] */
+const GROC = {
+ p2:[['Pantry &amp; Frozen','Rice cakes',3,'ct'],['Proteins','Tuna packets',1,'ct']],
+ p3:[['Pantry &amp; Frozen','Rice cakes',3,'ct'],['Dairy &amp; Fridge','Oikos Triple Zero',1,'ct']],
+ p4:[['Pantry &amp; Frozen','Ezekiel bread',2,'slices']],
+ p5:[['Dairy &amp; Fridge','Oikos Triple Zero',1,'ct'],['Produce','Bananas',1,'ct']],
+ b1:[['Pantry &amp; Frozen','Elev8 Cream of Rice',25,'g'],['Pantry &amp; Frozen','Oats',25,'g'],['Produce','Berries',70,'g'],['Pantry &amp; Frozen','Almond butter',32,'g']],
+ b2:[['Pantry &amp; Frozen','Sola everything bagels',1,'ct'],['Dairy &amp; Fridge','Cream cheese',45,'g'],['Proteins','Latitude smoked salmon',75,'g'],['Produce','Bananas',1,'ct']],
+ b3:[['Pantry &amp; Frozen','Kodiak waffles (2) or flapjacks (4)',1,'serving'],['Dairy &amp; Fridge','Fage Greek yogurt',1,'ct']],
+ l1:[['Proteins','Chicken breast',7,'oz'],['Produce','Sweet potatoes',225,'g'],['Dairy &amp; Fridge','Mini guac cups',1,'ct'],['Produce','String beans',150,'g']],
+ l1r:[['Proteins','Chicken breast',7,'oz'],['Pantry &amp; Frozen','White rice (dry)',55,'g'],['Dairy &amp; Fridge','Mini guac cups',1,'ct'],['Produce','String beans',150,'g']],
+ l2:[['Proteins','Eggs',2,'ct'],['Proteins','Egg whites',100,'g'],['Dairy &amp; Fridge','4% cottage cheese',113,'g'],['Dairy &amp; Fridge','Low-moisture mozzarella',28,'g'],['Produce','Broccoli',150,'g'],['Pantry &amp; Frozen','Ezekiel bread',2,'slices']],
+ l3:[['Proteins','Eggs',2,'ct'],['Proteins','Egg whites',100,'g'],['Dairy &amp; Fridge','4% cottage cheese',113,'g'],['Dairy &amp; Fridge','Low-moisture mozzarella',28,'g'],['Produce','Spinach (fresh)',150,'g'],['Pantry &amp; Frozen','Ezekiel bread',2,'slices']],
+ /* s1 (Ninja Creami) intentionally absent — its ingredients ship with the batch's own grocery group */
+ s2:[['Dairy &amp; Fridge','Oikos Triple Zero',1,'ct'],['Pantry &amp; Frozen','Kodiak protein oats',45,'g']],
+ d1:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
+ d15:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Tomato paste',33,'g'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
+ d2:[['Proteins','Salmon, sushi-grade',6,'oz'],['Pantry &amp; Frozen','Rice (dry)',50,'g'],['Produce','Edamame (frozen)',85,'g'],['Pantry &amp; Frozen','Seaweed packets',1,'ct'],['Produce','Cucumbers',75,'g']],
+};
+const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
+const GRP_ORDER = ['Proteins','Dairy &amp; Fridge','Produce','Pantry &amp; Frozen'];
+function buildGrocery(counts){
+  const agg = new Map();
+  Object.entries(counts).forEach(([id,n])=>{
+    if(!n || !GROC[id]) return;
+    GROC[id].forEach(([grp,item,q,u])=>{
+      const key = grp+'|'+item+'|'+u;
+      agg.set(key,(agg.get(key)||0)+q*n);
+    });
+  });
+  const out = {};
+  [...agg.entries()].forEach(([key,q])=>{
+    const [grp,item,u] = key.split('|');
+    let disp;
+    if(u==='oz') disp = q>=16? `${q} oz (~${(q/16).toFixed(1)} lb)` : `${q} oz`;
+    else if(u==='g') disp = `${q} g`;
+    else if(u==='ml') disp = `${q} mL (~${Math.ceil(q/1500)} bottle${q>1500?'s':''})`;
+    else if(u==='slices') disp = `${q} slices`;
+    else if(u==='serving') disp = `${q} serving${q>1?'s':''}`;
+    else disp = `× ${q}`;
+    (out[grp]=out[grp]||[]).push([item,disp]);
+  });
+  Object.values(out).forEach(list=>list.sort((a,b)=>a[0]<b[0]?-1:1));
+  return out;
+}
+const GROCERY = [
+ ['Proteins',[
+   ['Chicken breast','~2 lb (4 × 7 oz raw)'],['93/7 ground beef','1 lb (2 × 6 oz + spare)'],
+   ['Salmon','~1.2 lb (3 × 6 oz, freeze)'],['Eggs','1 dozen'],['Egg whites carton','1'],
+   ['Latitude smoked salmon','1 pack'],['Tuna packets','3-4']]],
+ ['Dairy &amp; Fridge',[
+   ['4% cottage cheese','2 × 113 g min'],['Low-moisture mozzarella','small block'],
+   ['Fairlife 0% milk','2 bottles'],['Fage Greek yogurt 0% / 2%','3-4'],
+   ['Oikos Triple Zero','3-4'],['Cream cheese','1 tub'],['Mini guac cups','4-pack']]],
+ ['Produce',[
+   ['Berries','~1 lb'],['Bananas','5-6'],['String beans','~600 g'],['Broccoli or spinach','~450 g'],
+   ['Asparagus','~300 g'],['Cucumbers','2-3'],['Sweet potatoes','~2 lb'],['Potatoes','~1.5 lb']]],
+ ['Pantry &amp; Frozen',[
+   ['Ezekiel bread','1 loaf (freeze half)'],['Sola everything bagels','1 pack'],
+   ['Kodiak waffles / flapjacks','1 box'],['Rice','bag (55 g dry / meal)'],['Rice cakes','1 pack'],
+   ['Keto buns','1 pack'],['Tomato paste','1 can/tube'],['Edamame (frozen)','1 bag'],['Seaweed packets','1 box'],
+   ['SF jelly · SF ketchup · soy sauce','check stock'],['Snack packs / mix-ins','5']]],
+];
+const COOKFLOW = [
+ ['1','Weigh everything RAW first: 4 × 7 oz chicken, 2-3 × 6 oz beef, 3 × 6 oz salmon. Label the bags.'],
+ ['2','Beef portions &amp; salmon → freezer (defrost-reminder stock). Beef only gets cooked the night of — as burger or tomato beef.'],
+ ['3','Cook the chicken per THIS WEEK’S recipe (Recipes cards below — spice amounts already scaled). Rice goes on at the same time — Rice Math card.'],
+ ['4','Oven-roast the week’s sweet potatoes; regular potatoes stay raw-weighed for night-of air fryer / pan.'],
+ ['5','Wash + cut veg into grab containers: string beans, broccoli/spinach, cucumbers, asparagus.'],
+ ['6','Cool fully, lid, label by meal. Fridge food = 4 days; Thu+ proteins come from the freezer.'],
+ ['7','Blend the 8 Creami bases (list below), lid, freezer — they need 24 h before first spin.'],
+];
+/* current Creami batch — base per cup: 320 mL Fairlife FF + 40 g Lakanto + ½ scoop protein
+   + thickener + extract (~210 cal / 32 P). Topping goes on AFTER spinning, ~120 cal budget. */
+const CREAMI_BATCHES = [
+ {name:'Batch 1', shop:[
+   ['Fairlife 0% for the batch','2 big bottles (2,560 mL)'],
+   ['SF Jell-O — vanilla cheesecake','2 cups’ worth'],
+   ['SF Jell-O — vanilla','2 cups’ worth'],
+   ['SF Jell-O — chocolate','1 cup'],
+   ['SF Jell-O — butterscotch','1 cup'],
+   ['Nilla wafers','~15 (1 box covers)'],['Oreo Thins','10'],
+   ['Cinnamon Toast Crunch','33 g'],['Fruity Pebbles','30 g'],
+   ['Fiber One cinnamon bar','1'],['Blueberries (cup 4)','70 g'],
+   ['Apple (cup 5)','1'],['Fresh pineapple (cup 6)','150 g'],
+   ['FF whipped cream','1 can'],['Lakanto 320 g · extracts · xanthan · SF choc syrup','check stock'],
+  ], cups:[
+  ['1 · Strawberry Shortcake Sundae','LD Strawberry Shortcake','vanilla cheesecake Jell-O 5 g','1 tsp vanilla bean paste','9 crushed Nilla wafers (34 g) + FF whip'],
+  ['2 · Cinnamon Toast Cereal Milk','Cinnamon Toast','xanthan ¼ tsp','½ tsp vanilla + ¾ tsp cinnamon in base','33 g Cinnamon Toast Crunch'],
+  ['3 · Thin Mint','Mint Chip Ice Cream','chocolate Jell-O 5 g','peppermint (if bought)','5 de-creamed Oreo Thins + SF choc drizzle'],
+  ['4 · Lemon-Blueberry Cheesecake','Lemon Cake','vanilla cheesecake Jell-O 5 g','¼ tsp blueberry','6 Nilla (23 g) + 70 g blueberries + whip'],
+  ['5 · Apple Pie à la Mode','RAW Grandma’s Apple Pie','butterscotch Jell-O 5 g','½ tsp caramel + cinnamon','1 cinnamon Fiber One bar + 100 g warm cinnamon apples + whip'],
+  ['6 · Piña Colada','RAW Piña Colada','vanilla Jell-O 5 g','½ tsp coconut','150 g fresh pineapple + whip (+ 8 g toasted coconut chips)'],
+  ['7 · Milk &amp; Cookies','RAW Milk N Cookies','vanilla Jell-O 5 g','vanilla bean paste','5 de-creamed Oreo Thins + FF whip'],
+  ['8 · Fruity Pebbles Cereal Milk','Fruity Pebbles','xanthan ¼ tsp','¼ tsp orange (trust it)','30 g Fruity Pebbles + whip'],
+ ]},
+ {name:'Batch 2', shop:[
+   ['Fairlife 0% for the batch','2 big bottles (2,560 mL)'],
+   ['SF Jell-O — vanilla','3 cups’ worth'],
+   ['SF Jell-O — vanilla cheesecake','3 cups’ worth'],
+   ['SF Jell-O — chocolate','1 cup'],
+   ['SF Jell-O — butterscotch','1 cup'],
+   ['Nilla wafers','~30 (1 box)'],['Oreo Thins','10'],['Biscoff','3'],
+   ['Cinnamon Toast Crunch','20 g'],['Fiber One cinnamon bar','½'],
+   ['Blueberries (cup 4)','70 g'],['Strawberries (cup 8)','70 g'],
+   ['FF whipped cream','1 can'],['Lakanto · extracts · TL unflavored whey','check stock'],
+  ], cups:[
+  ['1 · Death by Chocolate','Chocolate Cookie Blast','chocolate Jell-O 5 g','vanilla bean paste','5 de-creamed Oreo Thins + SF choc drizzle'],
+  ['2 · Creamsicle','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp orange','9 Nilla wafers + whip'],
+  ['3 · Banana Pudding','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp banana','9 Nilla wafers + whip — it’s the real thing'],
+  ['4 · Blueberry Muffin Batter','Blueberry Muffin','vanilla cheesecake Jell-O 5 g','¼ tsp blueberry','6 Nilla + 70 g blueberries + whip'],
+  ['5 · Butterscotch Biscoff','TL unflavored whey','butterscotch Jell-O 5 g','½ tsp caramel','3 crushed Biscoff + whip'],
+  ['6 · Cinnamon Roll','Cinnamon Toast','vanilla cheesecake Jell-O 5 g','vanilla + ½ tsp cinnamon','½ cinnamon Fiber One + 20 g Cinnamon Toast Crunch + whip'],
+  ['7 · Mint Cookies n Cream','Mint Chip Ice Cream','vanilla Jell-O 5 g','peppermint (if bought)','5 de-creamed Oreo Thins'],
+  ['8 · Strawberry Cheesecake','LD Strawberry Shortcake','vanilla cheesecake Jell-O 5 g','¼ tsp lemon (the tang)','6 Nilla + 70 g strawberries + whip'],
+ ]},
+ {name:'Batch 3', shop:[
+   ['Fairlife 0% for the batch','2 big bottles (2,560 mL)'],
+   ['SF Jell-O — vanilla','4 cups’ worth'],
+   ['SF Jell-O — chocolate','1 cup'],
+   ['SF Jell-O — butterscotch','2 cups’ worth'],
+   ['Nilla wafers','~15'],['Oreo Thins','5'],['Biscoff','3'],
+   ['Fruity Pebbles','30 g'],['Cereal of choice','33 g'],['Fiber One cinnamon bar','½'],
+   ['Strawberries (cup 5)','70 g'],['Apple (cup 2)','1'],['Fresh pineapple (cup 3)','150 g'],
+   ['FF whipped cream','1 can'],['Lakanto · extracts','check stock'],
+  ], cups:[
+  ['1 · Grasshopper Pie','Mint Chip Ice Cream','chocolate Jell-O 5 g','peppermint (if bought)','5 de-creamed Oreo Thins + whip'],
+  ['2 · Apple Cinnamon Roll','RAW Grandma’s Apple Pie','butterscotch Jell-O 5 g','½ tsp caramel + cinnamon','½ cinnamon Fiber One + 100 g warm cinnamon apples'],
+  ['3 · Tropical Sunrise','RAW Piña Colada','vanilla Jell-O 5 g','¼ tsp orange + ¼ tsp coconut','150 g fresh pineapple + whip'],
+  ['4 · Lemon Meringue Pie','Lemon Cake','vanilla Jell-O 5 g','½ tsp vanilla','9 Nilla wafers + whip'],
+  ['5 · Strawberry Milkshake','LD Strawberry Shortcake','xanthan ¼ tsp','vanilla bean paste','70 g strawberries + 6 Nilla + whip'],
+  ['6 · Cookie Butter Milk','RAW Milk N Cookies','butterscotch Jell-O 5 g','½ tsp caramel','3 crushed Biscoff + whip'],
+  ['7 · Fruity Pebbles Round 2','Fruity Pebbles','vanilla Jell-O 5 g','¼ tsp lemon','30 g Fruity Pebbles + whip'],
+  ['8 · Vanilla Bean Classic','Vanilla Ice Cream','vanilla Jell-O 5 g','1 tsp vanilla bean paste','33 g cereal of choice + whip'],
+ ]},
+];
+/* weekly recipe sets — full recipes, spice amounts scale with the menu.
+   s = scale source: 'chix' = all chicken meals, 'l1' = sweet-potato chicken meals, null = per portion */
+function tspF(x){
+  if(x<0.2) return 'pinch';
+  const q = Math.round(x*4)/4, w = Math.floor(q), r = +(q-w).toFixed(2);
+  const f = {0:'',0.25:'¼',0.5:'½',0.75:'¾'}[r]||'';
+  return `${w||''}${f} tsp`.trim();
+}
+function recipeCount(s,counts){
+  if(s==='chix') return (counts.l1||0)+(counts.l1r||0);
+  return s? (counts[s]||0) : 0;
+}
+function qtyF(q,u,n){
+  const m = q*n;
+  if(u==='tsp') return tspF(m);
+  if(u==='oz') return `${m} oz${m>=16?` (~${(m/16).toFixed(1)} lb)`:''}`;
+  if(u==='ct') return m===1?'1':`× ${m}`;
+  if(u==='lemon') return m<=0.5?'squeeze':m<=1?'1':Math.ceil(m)+'';
+  return `${Math.round(m)} ${u}`;
+}
+const RECIPES = [
+ {name:'Souk Week', shop:['Za’atar blend','Sumac','Ground cumin','Ground coriander','Turmeric','Allspice','Ground cloves','Everything-bagel seasoning','Lemons'],
+  recipes:[
+  {n:'Shawarma Grilled Chicken', w:'Sunday batch', s:'chix',
+   ing:[['Chicken breast (raw)',7,'oz'],['Ground cumin',0.5,'tsp'],['Paprika',0.5,'tsp'],['Turmeric',0.25,'tsp'],['Ground coriander',0.25,'tsp'],['Garlic powder',0.25,'tsp'],['Salt',0.25,'tsp'],['Black pepper',0.125,'tsp'],['Lemon (juice)',0.25,'lemon']],
+   st:['Weigh raw 7 oz portions first.','Mix all spices, coat every side, lemon juice over. 30 min minimum — overnight is better.','Grill medium-high 5–6 min per side to 165°F internal.','Rest 5 min before slicing/boxing — that’s the juice staying in.']},
+  {n:'Syrian Tomato Beef', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Tomato paste',33,'g'],['Onion, diced (adds ~15 cal)',30,'g'],['Allspice',0.75,'tsp'],['Cinnamon',0.5,'tsp'],['Ground cloves',0.125,'tsp'],['Salt',0.25,'tsp'],['Water',60,'mL']],
+   st:['Brown the beef in a pot, breaking it up.','Onion in, 2 min. Spices in, 30 sec until it smells like your grandma’s kitchen.','Paste + water, simmer LOW 10–12 min to a thick ragù.','Serve over the potatoes, egg on top, asparagus on the side.']},
+  {n:'Grilled Burger', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Salt',0.25,'tsp'],['Black pepper',0.25,'tsp'],['Garlic powder',0.25,'tsp']],
+   st:['Season, one patty, thumb-dimple the center so it doesn’t dome.','Grill 4 min per side to 160°F. Never press it.','Keto bun, egg on top, 32 g SF ketchup.']},
+  {n:'Za’atar-Sumac Sweet Potato Wedges', w:'Sunday batch', s:'l1',
+   ing:[['Sweet potato (raw)',225,'g'],['Za’atar',0.5,'tsp'],['Sumac',0.25,'tsp'],['Salt',0.25,'tsp']],
+   st:['Wedges, olive-oil spray, toss with spices.','Oven 400°F, 25–28 min, flip at 15.','Cool fully before lidding; air-fryer 3 min at night brings the crisp back.']},
+  {n:'Garlic-Cumin Charred String Beans', w:'Sunday batch', s:'chix',
+   ing:[['String beans',150,'g'],['Garlic powder',0.25,'tsp'],['Ground cumin',0.25,'tsp'],['Salt',0.25,'tsp'],['Lemon (juice)',0.125,'lemon']],
+   st:['Screaming-hot DRY pan, beans in whole, no touching for 2 min.','Spray, spices, toss 1 min.','Off heat, lemon squeeze.']},
+  {n:'Paprika Air-Fryer Potatoes', w:'night of · per dinner', s:null,
+   ing:[['Potatoes (raw)',220,'g'],['Paprika',0.5,'tsp'],['Garlic powder',0.25,'tsp'],['Salt',0.25,'tsp']],
+   st:['¾" cubes, spray, toss with spices.','Air fryer 390°F, 14–18 min, shake twice.','Splash of vinegar out of the basket — trust it.']},
+  {n:'Everything Asparagus', w:'night of · per dinner', s:null,
+   ing:[['Asparagus',100,'g'],['Everything-bagel seasoning',0.5,'tsp']],
+   st:['Dry pan 3–4 min, rolling occasionally, until blistered.','Spray, season, lemon zest if it’s out.']},
+  {n:'Poke Bowl', w:'night of · per bowl', s:null,
+   ing:[['Sushi-grade salmon (raw, fridge-thawed)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame, thawed',85,'g'],['Cucumber, sliced',75,'g'],['Seaweed packet, crumbled',1,'ct']],
+   st:['Rice back to life: splash of water, 45–60 sec microwave.','Cube the cold salmon ¾".','Build over the rice, soy over everything, seaweed on top.']},
+ ]},
+ {name:'Baja Week', shop:['Tajín Clásico','Chili powder','Dried oregano','Smoked paprika','Fresh limes','1 jalapeño'],
+  recipes:[
+  {n:'Chili-Lime Sheet-Pan Chicken', w:'Sunday batch', s:'chix',
+   ing:[['Chicken breast (raw)',7,'oz'],['Chili powder',0.5,'tsp'],['Ground cumin',0.5,'tsp'],['Dried oregano',0.25,'tsp'],['Garlic powder',0.25,'tsp'],['Salt',0.25,'tsp'],['Lime (juice, after)',0.25,'lemon']],
+   st:['Weigh raw portions, coat with the rub.','Oven 400°F on a sheet pan, 18–22 min to 165°F — string beans join the tray for the last 12 min.','Rest 5 min, lime squeeze over everything.']},
+  {n:'Taco Beef', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Tomato paste',33,'g'],['Chili powder',0.75,'tsp'],['Ground cumin',0.5,'tsp'],['Smoked paprika',0.25,'tsp'],['Dried oregano',0.25,'tsp'],['Salt',0.25,'tsp'],['Water',60,'mL']],
+   st:['Brown, break up, spices in 30 sec.','Paste + water, simmer LOW 10 min.','Over potatoes with the egg — taco plate, kosher edition.']},
+  {n:'Tajín Grilled Burger', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Tajín',0.5,'tsp'],['Garlic powder',0.25,'tsp']],
+   st:['Season, dimple, grill 4 min per side to 160°F.','Keto bun, egg, dust the top with a little more Tajín.']},
+  {n:'Tajín Sweet Potato Fries', w:'Sunday batch', s:'l1',
+   ing:[['Sweet potato (raw)',225,'g'],['Tajín',0.75,'tsp']],
+   st:['Fries or wedges, spray.','Air fryer 380°F 18–20 min, shake at 10 — don’t crowd the basket, two rounds beats one steamy one.','Tajín goes on AFTER they come out.']},
+  {n:'Stovetop Crispy Potatoes', w:'night of · per dinner', s:null,
+   ing:[['Potatoes (raw)',220,'g'],['Chili powder',0.25,'tsp'],['Salt',0.25,'tsp'],['Lime (after)',0.125,'lemon']],
+   st:['Microwave 4 min covered.','Hot nonstick + spray, 6–8 min until crusty.','Season + lime off the heat.']},
+  {n:'Charred Lime String Beans', w:'Sunday batch', s:'chix',
+   ing:[['String beans',150,'g'],['Tajín',0.5,'tsp']],
+   st:['Air fryer 390°F 7 min (or dry-pan char 3 min).','Tajín after, not before.']},
+  {n:'Baja Poke Bowl', w:'night of · per bowl', s:null,
+   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber',75,'g'],['Jalapeño, thin slices',4,'ct'],['Lime (juice)',0.25,'lemon'],['Tajín',0.25,'tsp']],
+   st:['Standard build, then lime + Tajín over the salmon, jalapeño on top.']},
+ ]},
+ {name:'Deli Week', shop:['Fresh dill','Ground coriander','Deli mustard','Dried oregano','Dried basil','White vinegar'],
+  recipes:[
+  {n:'Pastrami-Spice Shredded Chicken', w:'Sunday batch', s:'chix',
+   ing:[['Chicken breast (raw)',7,'oz'],['Ground coriander',0.5,'tsp'],['Black pepper',0.5,'tsp'],['Paprika',0.5,'tsp'],['Garlic powder',0.25,'tsp'],['Salt',0.25,'tsp']],
+   st:['Barely-simmering salted water, 14–16 min to 165°F.','Shred with two forks.','Toss with the spice mix + 2 tbsp of the poaching liquid. Real pastrami spice, zero dryness — different week, different texture.']},
+  {n:'Smash Burger, Deli Style', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Onion powder',0.25,'tsp'],['Garlic powder',0.25,'tsp'],['Black pepper',0.25,'tsp'],['Salt',0.25,'tsp'],['Deli mustard (0 cal)',5,'g']],
+   st:['Split into TWO balls.','Screaming pan, smash flat, 90 sec per side — two thin crusty patties beat one thick one.','Stack on the keto bun with mustard, egg on top.']},
+  {n:'Italian Tomato Beef', w:'night of · per dinner', s:null,
+   ing:[['93/7 ground beef (raw)',6,'oz'],['Tomato paste',33,'g'],['Dried oregano',0.5,'tsp'],['Dried basil',0.5,'tsp'],['Garlic powder',0.25,'tsp'],['Chili flakes',0.125,'tsp'],['Salt',0.25,'tsp'],['Water',60,'mL']],
+   st:['Brown, spices, paste + water, LOW 10–12 min.','It’s bolognese over potatoes. Nonna and grandma would both sign off.']},
+  {n:'Whole Baked Sweet Potatoes', w:'Sunday batch', s:'l1',
+   ing:[['Sweet potato (raw, whole)',225,'g'],['Cinnamon (after)',0.25,'tsp']],
+   st:['400°F whole, 45–50 min, until a knife slides through.','Scoop-and-eat portions all week; cinnamon at serving.']},
+  {n:'Garlic-Dill Crispy Smashed Potatoes', w:'night of · per dinner', s:null,
+   ing:[['Potatoes (raw, small)',220,'g'],['Garlic powder',0.25,'tsp'],['Dried or fresh dill',0.5,'tsp'],['Salt',0.25,'tsp'],['White vinegar (after)',5,'mL']],
+   st:['Boil 12 min.','Squash flat with a cup, spray both sides.','Air fryer 390°F 12 min. Season + vinegar out of the basket.']},
+  {n:'Grilled Veg + Balsamic', w:'Sunday batch', s:'chix',
+   ing:[['String beans',150,'g'],['Garlic powder',0.25,'tsp'],['Balsamic drizzle (after)',5,'g']],
+   st:['Grill basket or foil, 6–7 min.','Balsamic hits AFTER the grill, never on it.']},
+  {n:'Everything-Dill Poke Bowl', w:'night of · per bowl', s:null,
+   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber ribbons',75,'g'],['Everything-bagel seasoning',0.5,'tsp'],['Fresh dill',1,'tsp']],
+   st:['Standard build; everything seasoning + dill over the salmon. Bagel-shop poke.']},
+ ]},
+];
+/* rotating COR combo sets — new set each week, day pick highlighted */
+const COR_SETS = [
+ [
+  ['Cinnabon Bowl','Cinnamon Roll COR + Cinnamon Toast Ryse — almond butter swirled on top'],
+  ['Death by Chocolate','Chocolate Cake COR + Chocolate Cookie Blast — strawberries as the berry'],
+  ['Lemon-Blueberry Loaf','Blueberry Muffin COR + Lemon Cake — blueberries'],
+  ['Biscoff Bowl','Cookie Butter COR + RAW Milk N Cookies'],
+  ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie + cinnamon — swap berries for 70 g diced apple (same cals)'],
+  ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse'],
+  ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse'],
+ ],
+ [
+  ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream'],
+  ['Double Blueberry Muffin','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries'],
+  ['Tropical Bowl','Coconut Cream Pie COR + RAW Piña Colada'],
+  ['Cookies on Cookies','Cookies n Cream COR + RAW Milk N Cookies'],
+  ['Maple Apple Pie','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — diced apple'],
+  ['Strawberry Shortcake Bowl','Plain COR + LD Strawberry Shortcake — strawberries as the berry'],
+  ['Fruity Pebbles Cereal Milk','Plain COR + Fruity Pebbles protein'],
+ ],
+ [
+  ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — strawberries'],
+  ['Carrot Cake Cheesecake','Carrot Cake COR + Vanilla Ice Cream Ryse'],
+  ['Lemon Loaf','Plain COR + Lemon Cake — blueberries'],
+  ['Cookie Butter Crunch','Cookie Butter COR + Cinnamon Toast Ryse'],
+  ['Apple Fritter','Apple Pie COR + Cinnamon Toast Ryse — diced apple + extra cinnamon'],
+  ['Mint Chocolate','Chocolate Cake COR + Mint Chip Ice Cream'],
+  ['Coconut Blueberry','Coconut Cream Pie COR + Blueberry Muffin Ryse — blueberries'],
+ ],
+];
+/* rotating weekly flavor themes — flips every Sunday, cycles automatically */
+const THEMES = [
+ {name:'Souk Week · Syrian &amp; Middle Eastern',
+  shop:['Sumac','Za’atar blend','Ground coriander','Turmeric','Allspice','Ground cloves'], lines:[
+  ['Chicken','Shawarma rub: cumin + paprika + turmeric + garlic + coriander, lemon squeeze off the grill'],
+  ['Beef','Hashu-style tomato beef: allspice + cinnamon + pinch of clove in the paste, diced onion in the pot'],
+  ['Potatoes','Za’atar + sumac wedges — sumac is the zero-cal lemon hit'],
+  ['String beans','Loubieh style: garlic + cumin, charred'],
+  ['Creami','Cinnamon + a crack of cardamom in the base']]},
+ {name:'Baja Week · Mexican',
+  shop:['Tajín Clásico','Chili powder','Dried oregano','Cayenne','Fresh limes','1 jalapeño','Unsweetened cocoa powder'], lines:[
+  ['Chicken','Chili powder + cumin + oregano + garlic, lime after the grill'],
+  ['Beef','Taco crumbles: same spices + smoked paprika into the tomato paste'],
+  ['Poke','Chili-lime + a few jalapeño slices'],
+  ['Potatoes','Street fries: Tajín Clásico (certified kosher, ~0 cal)'],
+  ['Creami','Mexican hot chocolate: cocoa + cinnamon + tiny cayenne']]},
+ {name:'Tokyo Week',
+  shop:['Fresh ginger','Scallions','Rice vinegar','Wasabi paste','Chili flakes'], lines:[
+  ['Chicken','Soy + ginger + garlic marinade (soy’s already in your macros)'],
+  ['Beef','Teriyaki-ish: soy + garlic + ginger + a drop of Lakanto'],
+  ['Poke','Upgrade: rice vinegar splash + wasabi + scallions + cucumber ribbons'],
+  ['Potatoes','Furikake fries: crumble your seaweed packet over them'],
+  ['Edamame','Flaky salt + chili flakes']]},
+ {name:'Nonna Week · Italian',
+  shop:['Dried basil','Dried oregano','Dried rosemary','Fresh parsley','Almond extract','Chili flakes'], lines:[
+  ['Chicken','Oregano + basil + garlic + onion powder, lemon finish'],
+  ['Beef','Marinara crumbles: paste + oregano + basil + garlic + chili flakes'],
+  ['Salmon (cooked)','Lemon + garlic + parsley'],
+  ['Potatoes','Rosemary-garlic roast'],
+  ['Protein Cookie','Drop of almond extract (your one safe nut, and it’s allowed)']]},
+ {name:'Smokehouse Week · BBQ',
+  shop:['Smoked paprika','Cayenne','Dried thyme','SF caramel syrup (optional)'], lines:[
+  ['Chicken','Dry rub: smoked paprika + garlic + onion + black pepper + tiny Lakanto brown'],
+  ['Beef','Blackened burger: paprika + cayenne + thyme + garlic'],
+  ['Salmon (cooked)','Blackened in the pan, skin-down'],
+  ['Sweet potatoes','Cinnamon + smoked paprika — sweet-smoky'],
+  ['Creami','Vanilla + a drop of SF caramel syrup']]},
+ {name:'Bagel-Shop Week · NY Deli',
+  shop:['Everything-bagel seasoning','Fresh dill','Ground coriander','Deli mustard','White vinegar'], lines:[
+  ['Chicken','Pastrami rub: coriander + black pepper + paprika + garlic — real deli spice'],
+  ['Beef','Onion-garlic-pepper smash burger + deli mustard (0 cal)'],
+  ['Poke / salmon','Everything-bagel seasoning + fresh dill'],
+  ['Cucumbers','10-minute quick pickle: vinegar + dill + salt'],
+  ['Creami','Cinnamon-raisin-bagel vibe: cinnamon + a few raisins from the mix-in budget']]},
+];
+const COR_WILDCARDS = [
+ ['Flavor-purity move','TL unflavored whey when the COR flavor is loud (cookie butter, carrot cake)'],
+];
+const FL_ANCHOR = new Date(2026,5,28); /* Sunday Jun 28 */
+function weekIdx(){
+  const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay()); sun.setHours(12,0,0,0);
+  return Math.floor((sun-FL_ANCHOR)/(7*864e5));
+}
+const weekPick = arr => arr[((weekIdx()%arr.length)+arr.length)%arr.length];
+const flavorTheme = () => weekPick(THEMES);
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const todayKey = () => { const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const isoToday = () => iso(new Date());
+function menuWeekDates(){ /* Sun-Sat containing today */
+  const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
+  return Array.from({length:7},(_,i)=>{ const d=new Date(sun); d.setDate(sun.getDate()+i); return iso(d); });
+}
+const store = {
+  get(k,f){ try{ const v=JSON.parse(localStorage.getItem(k)); return v===null?f:v; }catch(e){ return f; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
+};
+let logDate = null; /* null = today; ISO date when backfilling meals/drinks */
+const dkey = i => { const [y,m,d] = i.split('-'); return `${+y}-${+m}-${+d}`; };
+const openAcc = new Set(); /* which collapsible sections are open */
+/* storage persistence self-check: if the sentinel is missing, this browser context
+   either is brand new OR wipes data between visits */
+let storageFresh = false;
+try{
+  if(!localStorage.getItem('qpcut.sentinel')) storageFresh = true;
+  localStorage.setItem('qpcut.sentinel', '1');
+}catch(e){ storageFresh = true; }
+const macros = t => `<div class="totals"><span><b>${t[0]}</b> kcal</span><span>P <b>${t[1]}</b></span><span>C <b>${t[2]}</b></span><span>F <b>${t[3]}</b></span></div>`;
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function allWeights(){
+  const user = store.get('qpcut.weights',[]);
+  const map = new Map();
+  WPRE.forEach(([d,w,s])=>map.set(d,{d,w,s}));
+  user.forEach(e=>map.set(e.d,e));
+  return [...map.values()].sort((a,b)=>a.d<b.d?-1:1);
+}
+function weekOf(dISO){ return Math.floor((new Date(dISO+'T12:00:00').getTime()-W0)/(7*864e5))+1; }
+function eatenCountThisWeek(optId, slotKey){
+  const eaten = store.get('qpcut.eaten',{});
+  return menuWeekDates().filter(d=>eaten[d] && eaten[d][slotKey]===optId).length;
+}
+
+/* ---------- photos (IndexedDB) ---------- */
+function pdb(){ return new Promise((res,rej)=>{ const r=indexedDB.open('qpcut',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('photos',{autoIncrement:true});
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function addPhoto(rec){ const db=await pdb(); return new Promise(res=>{
+  const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').add(rec); tx.oncomplete=res; }); }
+async function getPhotos(){ const db=await pdb(); return new Promise(res=>{ const out=[];
+  const c=db.transaction('photos').objectStore('photos').openCursor();
+  c.onsuccess=e=>{ const cur=e.target.result; if(cur){ out.push({key:cur.key,...cur.value}); cur.continue(); } else res(out); }; }); }
+async function delPhoto(key){ const db=await pdb(); return new Promise(res=>{
+  const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').delete(key); tx.oncomplete=res; }); }
+
+/* ---------- shared "things to buy" component (Today + Prep, feeds grocery list) ---------- */
+function buyCardHTML(){
+  const buy = store.get('qpcut.buy',[]);
+  return `
+  <h2 class="sec">Things to buy</h2>
+  <div class="card">
+    <div>
+      ${buy.length?buy.map((b,i)=>`
+        <button class="buyitem${b.done?' done':''}" data-bi="${i}">
+          <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
+          <span class="xdel" data-bx="${i}" role="button" aria-label="delete">×</span>
+        </button>`).join(''):'<div class="sub">Nothing yet — anything you add lands on the grocery list too.</div>'}
+    </div>
+    <div class="formrow">
+      <input type="text" id="buyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
+      <button class="btn" id="buyAdd">Add</button>
+    </div>
+  </div>`;
+}
+function wireBuy(){
+  const add = $('#buyAdd');
+  if(add) add.addEventListener('click',()=>{
+    const v = $('#buyName').value.trim(); if(!v) return;
+    const buy = store.get('qpcut.buy',[]); buy.push({name:v,done:false});
+    store.set('qpcut.buy',buy); render();
+  });
+  document.querySelectorAll('[data-bx]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const buy = store.get('qpcut.buy',[]); buy.splice(+el.dataset.bx,1);
+    store.set('qpcut.buy',buy); render();
+  }));
+  document.querySelectorAll('[data-bi]').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target.closest('[data-bx]')) return;
+    const buy = store.get('qpcut.buy',[]);
+    buy[+el.dataset.bi].done = !buy[+el.dataset.bi].done;
+    store.set('qpcut.buy',buy); render();
+  }));
+}
+
+function todayBuyCardHTML(){
+  const t = store.get('qpcut.buytoday',[]);
+  const master = store.get('qpcut.buy',[]);
+  return `
+  <h2 class="sec">Things to buy</h2>
+  <div class="card">
+    ${t.length?t.map((b,i)=>`
+      <button class="buyitem${b.done?' done':''}" data-ti="${i}">
+        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
+        <span class="xdel" data-tx="${i}" role="button" aria-label="delete">×</span>
+      </button>`).join(''):'<div class="sub">Quick list — stays here, never hits the grocery list.</div>'}
+    <div class="formrow">
+      <input type="text" id="tbuyName" placeholder="Add quick item…" style="flex:1;font-family:var(--body)">
+      <button class="btn" id="tbuyAdd">Add</button>
+    </div>
+    ${master.length?`
+    <div class="slotlbl" style="margin-top:14px">From Prep — these are on the grocery list</div>
+    ${master.map((b,i)=>`
+      <button class="buyitem${b.done?' done':''}" data-bi="${i}">
+        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
+      </button>`).join('')}`:''}
+  </div>`;
+}
+
+/* ---------- views ---------- */
+function viewToday(){
+  const now = new Date(), d = OVERRIDES[isoToday()] || DAYS[now.getDay()];
+  const dateStr = now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+  const isFri = now.getDay()===5;
+  const rw = runnaWeek(now);
+  const daysToRace = Math.ceil((RACE_DAY - now)/864e5);
+  const sch = d.sch.map(([t,x])=>{
+    if(x==='RUNNA_THU') x = rw? `Runna: ${rw[2]}` : 'Runna long run';
+    if(x==='RUNNA_SUN') x = rw? `Runna: ${rw[3]}` : 'Runna short run';
+    return [t,x];
+  });
+  const ld = logDate || isoToday();
+  const backfill = ld !== isoToday();
+  const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
+  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12;
+  const DRINKS = [
+    ['bottle','🚰 Water bottle','30 oz'],['pre','⚡ Pre-workout','~9 oz'],
+    ['eaa','💪 EAA','~9 oz'],['soda','🥤 Seltzer / diet soda','12 oz'],
+  ];
+  const meat = store.get('qpcut.meat', null);
+  let dairyLine = '';
+  if (meat && meat.day===todayKey())
+    dairyLine = `<div class="dairy-ok">Meat at ${meat.disp} → dairy OK from <b>${meat.ok}</b></div>`;
+  const done = store.get('qpcut.supps.'+dkey(ld), []);
+  const counts = store.get('qpcut.menucounts',{});
+  const eaten = store.get('qpcut.eaten',{});
+  const todayEaten = eaten[ld]||{};
+  const logCard = SLOTS.map(s=>{
+    const picks = s.opts.filter(o=>(counts[o.id]||0)>0 || todayEaten[s.key]===o.id);
+    const list = (picks.length?picks:s.opts).map(o=>{
+      const rem = Math.max(0,(counts[o.id]||0) - eatenCountThisWeek(o.id,s.key));
+      const on = todayEaten[s.key]===o.id;
+      return `<button class="mealpick${on?' on':''}" data-slot="${s.key}" data-opt="${o.id}">
+        ${o.name}${counts[o.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
+    }).join('');
+    return `<div class="slotlbl">${s.slot}</div><div class="pickrow">${list}</div>`;
+  }).join('');
+  return `
+  <div class="today-sub"><span>${d.sub} · ${dateStr}</span>
+    ${daysToRace>0?tchip(`🏁 race in ${daysToRace}d`):''}</div>
+  <div class="today-date">${d.title}</div>
+  ${storageFresh?`<div class="note" style="margin-top:14px"><b>⚠️ Storage check:</b> this browser has no saved app data. If this is your first time here, ignore this. If you HAVE logged here before, this browser is wiping data between visits — <b>don’t log here</b>, and tell Claude exactly how you opened the app (Safari tab / home-screen icon / inside the Claude app) so he can fix it.</div>`:''}
+  ${EVENTS.filter(e=>e.d===isoToday()).map(e=>`
+    <div class="note" style="margin-top:14px"><b>⚠️ ${e.title}</b><br>${e.msg}</div>`).join('')}
+  ${runCoaching().map(e=>`
+    <div class="note" style="margin-top:14px"><b>${e.title}</b><br>${e.msg}</div>`).join('')}
+  <div class="card" style="margin-top:14px">
+    <ul class="sched">${sch.map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}</ul>
+    ${d.note?`<div class="note">${d.note}</div>`:''}
+  </div>
+
+  ${now.getDay()===5?`
+  <h2 class="sec">Friday → Shabbat prep</h2>
+  <div class="card">
+    <ul class="sched">
+      <li><span class="t">🥣</span><span><b>Prep Saturday breakfast tonight</b> — this Shabbat’s COR combo: <b>${weekPick(COR_SETS)[6][0]}</b> (${weekPick(COR_SETS)[6][1]}). Cold route: mix the COR + protein with Fairlife and fridge it overnight — eats like pudding. Or set it up dry for hot water your usual way.</span></li>
+      <li><span class="t">🍗</span><span><b>Friday-night dinner</b> squared away before shul.</span></li>
+      <li><span class="t">🚫</span><span><b>Skip the 330-cal snack</b> — it goes into the family dinner. Enjoy it, that’s the plan working, not breaking.</span></li>
+      <li><span class="t">📝</span><span><b>Grandma card</b> printed or written down if you didn’t Thursday — no phone tomorrow.</span></li>
+    </ul>
+  </div>`:''}
+
+  <h2 class="sec">Logging day · applies to meals, hydration &amp; stack</h2>
+  <div class="card">
+    <div class="pickrow" style="margin:0">
+      ${menuWeekDates().filter(dd=>dd<=isoToday()).map(dd=>{
+        const wd = new Date(dd+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+        return `<button class="mealpick${dd===ld?' on':''}" data-ld="${dd}">${wd} ${+dd.slice(8)}</button>`;
+      }).join('')}
+      <input type="date" id="ldPick" value="${ld}" max="${isoToday()}" style="padding:6px 8px;font-size:13px" aria-label="Log a different date">
+    </div>
+    ${backfill?`<div class="note" style="margin:10px 0 0">Backfill mode — everything below saves to <b>${ld}</b>.</div>`:''}
+  </div>
+
+  ${(()=>{
+    const loc = store.get('qpcut.loc','deal');
+    const wo = workoutFor(new Date(ld+'T12:00:00').getDay(), loc);
+    if(!wo) return '';
+    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
+    return `
+  <h2 class="sec">Lift${backfill?` · ${ld}`:' · today'}</h2>
+  <div class="card" id="liftLog"><span class="daytag">${wo.tag}</span>
+    <ul class="ex">${wo.ex.map(([n,r],i)=>{
+      const t = parseTargets(r);
+      const sets = t? t.sets : (parseInt(r)||3);
+      const reps = repLog[i]||[];
+      const v = verdict(reps, t);
+      const badge = v==='up' ? '<span class="upflag">⬆ go up next time</span>'
+                  : v==='down' ? '<span class="downflag">⬇ lighten ~10%</span>'
+                  : v==='hold' ? '<span class="holdflag">hold weight</span>' : '';
+      return `<li style="display:block">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+          <span style="${v?'color:var(--muted)':''}">${n}</span><span class="r">${r}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;justify-content:flex-end;flex-wrap:wrap">
+          ${Array.from({length:sets},(_,s)=>{
+            const ph = t? (t.type==='ladder' ? (t.per[s]!=null?t.per[s]:t.per[t.per.length-1]) : t.hi) : '·';
+            const val = reps[s]!=null? reps[s] : '';
+            return `<input class="repin" inputmode="numeric" data-ex="${i}" data-set="${s}" value="${val}" placeholder="${ph}" aria-label="${`set ${s+1} reps`}">`;
+          }).join('')}
+          ${badge}
+        </div></li>`;
+    }).join('')}</ul>
+    <div class="sub" style="margin-top:8px">Type reps per set (grey number = the target). Verdicts follow the double-progression rule automatically. Weights live in Train → PRs.</div>
+  </div>`;
+  })()}
+
+  <h2 class="sec">Log meals${backfill?` · ${ld}`:' · today'}</h2>
+  <div class="card" id="mealLog">
+    ${logCard}
+    <div class="sub" style="margin-top:10px">Set the week’s menu in Prep. Numbers show what’s left this week.</div>
+  </div>
+
+  <h2 class="sec">Meat → dairy wait (6h)</h2>
+  <div class="card">
+    <div class="timer-row">
+      <input type="time" id="meatTime" aria-label="Time you finished meat">
+      <button class="btn" id="meatSet">Set</button>
+      <button class="btn ghost" id="meatClear">Clear</button>
+    </div>
+    <div id="dairyOut">${dairyLine}</div>
+  </div>
+
+  <h2 class="sec">Hydration · ${backfill?ld:'goal 1 gallon'}</h2>
+  <div class="card">
+    ${DRINKS.map(([id,name,size])=>`
+      <div class="mrow"><span class="nm">${name} <span class="daytag">${size}</span></span>
+        <span class="stepper">
+          <button class="step" data-ddec="${id}">−</button>
+          <span class="stepn">${drinks[id]||0}</span>
+          <button class="step" data-dinc="${id}">+</button>
+        </span></div>`).join('')}
+    <div class="pbar"><div class="pfill" style="width:${Math.min(100,oz/128*100)}%"></div></div>
+    <div class="water-label">${oz} / 128 oz${oz>=128?' · 🎉 gallon done':''} · plus 10k steps minimum</div>
+  </div>
+
+  <h2 class="sec">Stack${backfill?` · ${ld}`:' · today'}</h2>
+  <div class="card" id="suppList">
+    ${SUPPS.map(([n,w],i)=>`
+      <button class="suppitem${done.includes(i)?' done':''}" data-i="${i}">
+        <span class="box">${done.includes(i)?'✓':''}</span>
+        <span class="nm">${n}</span><span class="when">${w}</span>
+      </button>`).join('')}
+  </div>
+  ${todayBuyCardHTML()}`;
+}
+
+function ingRow([n,q,m]){
+  return `<li style="display:block;padding:5px 0">
+    <div style="display:flex;justify-content:space-between;gap:12px"><span>${n}</span><span class="q">${q}</span></div>
+    ${m?`<div class="ingmac">${m[0]} cal · ${m[1]}P · ${m[2]}C · ${m[3]}F</div>`:''}
+  </li>`;
+}
+function viewMeals(){
+  return `<h2 class="sec" style="margin-top:16px">Tap a slot to open it · all weights RAW / dry</h2>` +
+  SLOTS.map(s=>`
+   <details class="card acc" data-acc="meal-${s.key}"${openAcc.has('meal-'+s.key)?' open':''}>
+     <summary>
+       <h3 style="display:inline">${s.slot}</h3> ${tchip(s.time)}
+       <div class="budget"><span><b>${s.b[0]}</b> kcal</span><span>P <b>${s.b[1]}</b></span><span>C <b>${s.b[2]}</b></span><span>F <b>${s.b[3]}</b></span></div>
+     </summary>
+     ${s.opts.map(m=>`
+       <div class="opt">
+         <div class="head"><b>${m.name}</b><span>${m.k.map(c=>chip(c[0],c[1])).join(' ')}</span></div>
+         ${m.vars.map(v=>`
+           ${v.label?`<div class="varlbl">${v.label}</div>`:''}
+           <ul class="ing">${v.ing.map(ingRow).join('')}</ul>
+           ${macros(v.t)}`).join('')}
+       </div>`).join('')}
+   </details>`).join('');
+}
+
+function riceMathHTML(counts){
+  const nR = counts['l1r']||0;
+  const nPoke = counts['d2']||0;
+  return `
+  <h2 class="sec">Rice math · auto from your menu</h2>
+  <div class="card">
+    ${nR>0?`
+    <div class="opt"><div class="head"><b>White rice — ${nR} Chicken Meal${nR>1?'s':''} — Rice (auto from your menu)</b></div>
+      <ul class="ing">
+        <li><span>White rice (dry)</span><span class="q">${nR*55} g</span></li>
+        <li><span>Water</span><span class="q">${nR*85} mL</span></li>
+        <li><span>Salt</span><span class="q">${nR>=3?'½ tsp':'¼ tsp'}</span></li>
+      </ul>
+      <div class="sub">Rinse until the water runs clear. Rice + water + salt in the pot → bring to a boil → lid on, LOW heat 12 min → heat OFF, lid stays on 10 min → fluff. Rice cooker: same amounts, white setting. Portioning: weigh the total cooked rice, divide by ${nR} — each portion = your 55 g dry.</div>
+    </div>`:''}
+    ${nPoke>0?`
+    <div class="opt"><div class="head"><b>Sushi rice — ${nPoke} Poke Bowl${nPoke>1?'s':''} (auto from your menu)</b></div>
+      <ul class="ing">
+        <li><span>Sushi / short-grain rice (dry)</span><span class="q">${nPoke*50} g</span></li>
+        <li><span>Water</span><span class="q">${nPoke*60} mL</span></li>
+        <li><span>Rice vinegar</span><span class="q">${nPoke*7} mL</span></li>
+        <li><span>Lakanto</span><span class="q">${nPoke*2} g</span></li>
+        <li><span>Salt</span><span class="q">${nPoke>=3?Math.round(nPoke*1)+' g':'pinch'}</span></li>
+      </ul>
+      <div class="sub"><b>Cook the full batch Sunday.</b> Rinse 3–4× until clear. Rice + water → boil → lid on, LOW 12 min → off heat, 10 min rest. While it’s hot: warm the vinegar + Lakanto + salt 15 sec to dissolve, fold in gently, fan it as you fold (that’s the shine). Portion into ${nPoke} containers, fridge (good 4 days). Each poke night: splash of water + 45–60 sec microwave, then the cold salmon on top.</div>
+    </div>`:''}
+    ${nR===0&&nPoke===0?'<div class="sub">Add Chicken Meal — Rice or Poke Bowls to the menu above — exact rice, water, vinegar, and salt amounts appear here.</div>':''}
+  </div>`;
+}
+
+function viewPrep(){
+  const counts = store.get('qpcut.menucounts',{});
+  const gDone = store.get('qpcut.grocery',[]);
+  const buy = store.get('qpcut.buy',[]);
+  const wk = menuWeekDates();
+  const builder = SLOTS.filter(s=>s.key!=='pre'&&s.key!=='bf').map(s=>`
+    <div class="slotlbl">${s.slot}</div>
+    ${s.opts.map(o=>`
+      <div class="mrow"><span class="nm">${o.name} ${o.k.map(c=>chip(c[0],c[1])).join(' ')}</span>
+        <span class="stepper">
+          <button class="step" data-dec="${o.id}">−</button>
+          <span class="stepn">${counts[o.id]||0}</span>
+          <button class="step" data-inc="${o.id}">+</button>
+        </span></div>`).join('')}`).join('');
+  return `
+  <h2 class="sec" style="margin-top:16px">This week’s menu · ${wk[0].slice(5).replace('-','/')} – ${wk[6].slice(5).replace('-','/')}</h2>
+  <div class="card">${builder}
+    <div class="note">Set it Sunday, adjust anytime. Then tell Claude the menu — he sets that week’s defrost reminders (poke &amp; burger/tomato-beef nights need a morning pull from the freezer).</div>
+  </div>
+
+  <h2 class="sec">Grocery list · ${Object.values(counts).some(v=>v>0)?'built from your menu':'starter list — set a menu to auto-build it'}</h2>
+  ${(()=>{
+    const hasMenu = Object.values(counts).some(v=>v>0);
+    const groups = hasMenu
+      ? GRP_ORDER.map(g=>[g, (buildGrocery(counts)[g]||[])]).filter(([g,items])=>items.length)
+      : GROCERY;
+    return groups.map(([grp,items])=>`
+      <div class="card"><span class="daytag">${grp}</span>
+        ${items.map(([n,q])=>{
+          const id = grp+'|'+n;
+          const on = gDone.includes(id);
+          return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
+            <span class="box">${on?'✓':''}</span><span class="nm">${n}</span><span class="q">${q}</span></button>`;
+        }).join('')}
+      </div>`).join('');
+  })()}
+  ${(()=>{
+    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+    const batches = CREAMI_BATCHES;
+    const eatenAll = store.get('qpcut.eaten',{});
+    const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
+    const done = cb.started && eatenN>=8;
+    const shopBatch = batches[(cb.idx + (done?1:0)) % batches.length];
+    return `
+  <div class="card"><span class="daytag">Creami batch · shopping for ${shopBatch.name}${done?' (next up)':''}</span>
+    ${shopBatch.shop.map(([n,q])=>{
+      const id = 'Creami|'+n, on = gDone.includes(id);
+      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
+        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span><span class="q">${q}</span></button>`;
+    }).join('')}
+  </div>`;
+  })()}
+  <div class="card"><span class="daytag">Spices for this week’s recipes · ${weekPick(RECIPES).name}</span>
+    <div class="sub" style="margin-top:2px">Grab only what’s not already in the cabinet.</div>
+    ${weekPick(RECIPES).shop.map(n=>{
+      const id = 'Flavor|'+n, on = gDone.includes(id);
+      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
+        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span></button>`;
+    }).join('')}
+  </div>
+  ${buy.length?`
+  <div class="card"><span class="daytag">Your adds · from Things to Buy</span>
+    ${buy.map((b,i)=>`
+      <button class="buyitem${b.done?' done':''}" data-bi="${i}">
+        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span></button>`).join('')}
+  </div>`:''}
+  <div class="card"><span class="daytag">Staples — check stock</span>
+    ${STAPLES.map(n=>{
+      const id = 'Staples|'+n, on = gDone.includes(id);
+      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
+        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span></button>`;
+    }).join('')}
+  </div>
+  <button class="btn ghost" id="gReset" style="margin-bottom:4px">Reset grocery checks</button>
+  ${buyCardHTML()}
+
+  <h2 class="sec">Sunday cook flow · weigh RAW, always</h2>
+  <div class="card">
+    <ul class="sched">${COOKFLOW.map(([n,s])=>`<li><span class="t">${n}</span><span>${s}</span></li>`).join('')}</ul>
+  </div>
+
+  <h2 class="sec">Recipes · ${weekPick(RECIPES).name} · Sunday batch first, then night-of</h2>
+  ${[...weekPick(RECIPES).recipes].sort((a,b)=>(b.w.startsWith('Sunday')?1:0)-(a.w.startsWith('Sunday')?1:0)).map((r,ri)=>{
+    const n = recipeCount(r.s, counts);
+    const mult = n>0? n : 1;
+    const accId = 'rec-'+ri;
+    return `
+    <details class="card acc" data-acc="${accId}"${openAcc.has(accId)?' open':''}>
+      <summary>
+        <h3 style="display:inline;font-size:16px">${r.n}</h3> ${tchip(`${r.w}${n>0?` · ×${n}`:''}`)}
+      </summary>
+      <ul class="ing">${r.ing.map(([l,q,u])=>`<li><span>${l}</span><span class="q">${qtyF(q,u,mult)}</span></li>`).join('')}</ul>
+      <ul class="sched" style="margin-top:8px">${r.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+      ${r.s&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
+    </details>`;
+  }).join('')}
+  ${riceMathHTML(counts)}
+
+  ${(()=>{
+    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+    const batches = CREAMI_BATCHES;
+    const batch = batches[cb.idx%batches.length];
+    const eatenAll = store.get('qpcut.eaten',{});
+    const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
+    const left = Math.max(0,8-eatenN);
+    const done = cb.started && eatenN>=8;
+    const nextBatch = batches[(cb.idx+1)%batches.length];
+    const cupHTML = cups => cups.map(([n,p,th,ex,top])=>`
+      <div class="opt"><div class="head"><b>${n}</b></div>
+        <ul class="ing">
+          <li><span>Protein (½ scoop)</span><span class="q">${p}</span></li>
+          <li><span>Thickener</span><span class="q">${th}</span></li>
+          <li><span>Extract</span><span class="q">${ex}</span></li>
+          <li><span>Topping (after spin)</span><span class="q">${top}</span></li>
+        </ul>
+      </div>`).join('');
+    return `
+  <h2 class="sec">Creami batch · make all 8 on Sunday</h2>
+  <details class="card acc" data-acc="creami"${openAcc.has('creami')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">${batch.name}</h3> ${tchip(cb.started?`${left}/8 in the freezer`:'tap to open')}</summary>
+    <div class="sub" style="margin-top:8px">Every cup: <b>320 mL Fairlife FF · 40 g Lakanto · ½ scoop protein · thickener · extract</b> → blend, lid, freeze 24 h. ≈210 cal / 32 P before topping; topping budget = the plan’s <b>140-cal mix-in</b>, added after the spin (all amounts sized to 140). Re-spin with a splash of Fairlife if crumbly. Counter runs off your Ninja Creami snack logs on Today.</div>
+    ${done ? `
+      <div class="note">🎉 ${batch.name} finished — <b>${nextBatch.name}</b> is up. Recipes below; hit the button once you’ve made them.</div>
+      ${cupHTML(nextBatch.cups)}
+      <div class="formrow"><button class="btn" id="cbNext">Made them — start ${nextBatch.name}</button></div>
+    ` : `
+      ${cupHTML(batch.cups)}
+      <div class="formrow">${cb.started
+        ? `<button class="btn ghost" id="cbReset">Remade this batch today (reset counter)</button>`
+        : `<button class="btn" id="cbStart">Made them — start counting</button>`}</div>
+    `}
+    <div class="sub" style="margin-top:10px">Batch needs: ~2,560 mL Fairlife (2 big bottles) · 320 g Lakanto · 4 scoops total protein. Tell Claude the winners — he rewrites the queued batches.</div>
+  </details>`;
+  })()}
+
+  <h2 class="sec">Cream of Rice combos · new set every Sunday</h2>
+  <details class="card acc" data-acc="cor"${openAcc.has('cor')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">Today: ${weekPick(COR_SETS)[new Date().getDay()][0]}</h3> ${tchip('tap for the week')}</summary>
+    ${weekPick(COR_SETS).map(([n,s],i)=>{
+      const today = new Date().getDay()===i;
+      return `<div class="opt"><div class="head"><b>${today?'▸ ':''}${n}</b>${today?tchip('today'):''}</div>
+        <div class="sub" style="margin-top:4px">${s}</div></div>`;
+    }).join('')}
+    ${COR_WILDCARDS.map(([n,s])=>`<div class="opt"><div class="head"><b>${n}</b></div><div class="sub" style="margin-top:4px">${s}</div></div>`).join('')}
+    <div class="sub" style="margin-top:10px">Base is always B1: COR 25 g + oats 25 g + 1 scoop protein + berries 70 g + almond butter 32 g.</div>
+  </details>
+  <div class="note">Allergy card: all nuts are off-limits <b>except almonds</b>. Everything in the plan is already screened.</div>`;
+}
+
+function viewTrain(){
+  const loc = store.get('qpcut.loc','deal');
+  const mode = store.get('qpcut.trainmode','plan');
+  const plan = loc==='deal' ? GYM : HOME;
+  const sat = loc==='deal' ? SAT_GRANDMA : SAT_HOME;
+  const satNote = loc==='deal'
+    ? '<div class="note">Shabbat card — print it or write it down before Friday night. Bench inclines ✓. Barbell + EZ bar carry the pressing; her DBs stop at 25 lb.</div>' : '';
+  const day = (d,accId) => `
+    <details class="card acc" data-acc="${accId}"${openAcc.has(accId)?' open':''}>
+      <summary><span class="daytag">${d.tag}</span></summary>
+      <ul class="ex">${d.ex.map(([n,r])=>`<li><span>${n}</span><span class="r">${r}</span></li>`).join('')}</ul>
+    </details>`;
+  const prs = store.get('qpcut.prs',{});
+  const prset = store.get('qpcut.prset',{});
+  const prView = `
+    <p class="rules">One box per set — ranges use the same weight across, ladders climb. Top of range on all sets → smallest jump next session.</p>
+    ${(loc==='deal'?PRS:PRS_BK).map(g=>`
+      <div class="card"><span class="daytag">${g.day}</span>
+        <ul class="ex">${g.items.map(([id,name,def,up,sch])=>{
+          const t = parseTargets(sch||'');
+          const sets = t? t.sets : 3;
+          const vals = prset[id]||[];
+          const legacy = prs[id]!==undefined? prs[id] : def;
+          return `<li style="display:block">
+            <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+              <span>${name}${up?'<span class="upflag">go up</span>':''}</span>
+              <span class="r">${sch||''}</span>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap">
+              ${legacy&&!vals.some(v=>v)?`<span class="daytag" style="margin-right:auto">was: ${esc(legacy)}</span>`:''}
+              ${Array.from({length:sets},(_,s)=>`<input class="prw2" data-pr="${id}" data-set="${s}" value="${esc(vals[s]!=null?vals[s]:'')}" placeholder="wt" aria-label="${name} set ${s+1} weight">`).join('')}
+            </div></li>`;
+        }).join('')}
+        </ul>
+      </div>`).join('')}
+    <div class="sub" style="margin:4px 2px 0">Saves on this phone. Tell Claude the new numbers and he calls the next jump.</div>`;
+  const now = new Date();
+  const runnaTable = `
+    <div class="card"><span class="daytag">Runna · 16-week marathon build · race Oct 11</span>
+      <div style="overflow-x:auto"><table class="wk">
+        <tr><th>Wk</th><th style="text-align:left">Thu</th><th style="text-align:left">Sun</th></tr>
+        ${RUNNA.map(w=>{
+          const cur = runnaWeek(now)===w;
+          return `<tr${cur?' style="color:var(--brass);font-weight:700"':''}>
+            <td>${w[0]}</td><td style="text-align:left">${w[2]}</td><td style="text-align:left">${w[3]}</td></tr>`;
+        }).join('')}
+      </table></div>
+    </div>
+    <div class="card"><span class="daytag">If a run has to move</span>
+      <ul class="sched">
+        <li><span class="t">LR</span><span>Long run bumped → <b>Sunday, replacing the quality run</b>. The long run always wins.</span></li>
+        <li><span class="t">LR 10+</span><span>Big long run bumped → <b>Wednesday evening</b> (Pull morning doesn’t conflict), or Sunday easy.</span></li>
+        <li><span class="t">Qual.</span><span>Tempo/intervals bumped → <b>drop it</b>. Speed work is the first sacrifice.</span></li>
+        <li><span class="t">Never</span><span>Onto Friday (hockey + Legs #2) or Shabbat.</span></li>
+      </ul>
+    </div>
+    <div class="card"><span class="daytag">Jewish calendar × training · dates to plan around</span>
+      <ul class="sched">
+        <li><span class="t">Jul 22-23</span><span>Tisha B’Av (25-h fast, Wed eve → Thu night) — week 5’s Thursday 8.5 mi must move</span></li>
+        <li><span class="t">~Jul 19-23</span><span>No-meat stretch per your custom — plan Jiben lunches + Poke dinners</span></li>
+        <li><span class="t">Sep 11-13</span><span>Rosh Hashanah (Fri eve–Sun) — week 12’s Sunday run is out</span></li>
+        <li><span class="t">Sep 14</span><span>Fast of Gedaliah (dawn–dusk), a Monday legs day</span></li>
+        <li><span class="t">Sep 20-21</span><span>Yom Kippur (Sun eve–Mon) — week 13’s Sunday run = that morning only, before the fast</span></li>
+        <li><span class="t">Sep 25-27</span><span>Sukkot (Fri eve–Sun) — week 14’s Sunday run is out</span></li>
+        <li><span class="t">Oct 3-4</span><span>Shemini Atzeret / Simchat Torah — week 15’s Sunday run is out</span></li>
+        <li><span class="t">Oct 11</span><span>🏁 Race day (target — not registered yet)</span></li>
+      </ul>
+    </div>`;
+  return `
+   <div class="seg" role="group" aria-label="Location" style="margin-top:16px">
+     <button data-loc="deal" class="${loc==='deal'?'on':''}">Deal · Alpha Gym</button>
+     <button data-loc="bk" class="${loc==='bk'?'on':''}">Brooklyn · Home</button>
+   </div>
+   <div class="seg" role="group" aria-label="View">
+     <button data-mode="plan" class="${mode==='plan'?'on':''}">Program</button>
+     <button data-mode="pr" class="${mode==='pr'?'on':''}">PRs / Weights</button>
+   </div>
+   <div class="card">
+     <span class="daytag">Rest timer · works while the app is open</span>
+     <div class="timer-disp" id="timerDisp">--:--</div>
+     <div class="timer-row" style="justify-content:center">
+       <button class="btn" data-t="90">90 s</button>
+       <button class="btn" data-t="120">120 s</button>
+       <button class="btn ghost" id="tStop">Stop</button>
+     </div>
+   </div>
+   ${mode==='pr' ? prView : `
+   <p class="rules">Every set close to failure · 90–120 s rest · 3–5 s reps · tap a day to open it</p>
+   ${day(plan.mon,'tr-mon')}${day(plan.tue,'tr-tue')}${day(plan.wed,'tr-wed')}
+   <div class="card"><span class="daytag">Thursday · Rest — long run + 6 PM walk</span></div>
+   ${day(plan.fri,'tr-fri')}
+   ${day(sat,'tr-sat')}${satNote}
+   <div class="card"><span class="daytag">Sunday · Rest — Runna run + meal prep</span></div>
+   ${day(CORE,'tr-core')}
+   ${runnaTable}`}`;
+}
+
+function viewTrack(){
+  const notes = store.get('qpcut.notes',[]);
+  const tagcls = t => t==='Off-track'?'off':(t==='HW'?'hw':'time');
+  const entries = allWeights();
+  const curWk = weekOf(isoToday());
+  const thisWeek = entries.filter(e=>weekOf(e.d)===curWk);
+  const eaten = store.get('qpcut.eaten',{});
+  const thisWeekRows = thisWeek.map(e=>{
+    const day = new Date(e.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+    return `<tr><td>${day} ${e.d.slice(5).replace('-','/')}</td><td>${e.w!=null?e.w.toFixed(1):'—'}</td>
+      <td>${e.s!=null?e.s.toFixed(1)+'k':'—'}</td><td>${e.sl!=null?e.sl+'h':'—'}</td></tr>`;
+  }).join('');
+  return `
+  <h2 class="sec" style="margin-top:16px">Weight &amp; steps · daily, after bathroom, before food</h2>
+  <div class="card">
+    <canvas id="wchart" aria-label="Weight and steps trend chart"></canvas>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--brass)"></span>weight (7-day trend)</span>
+      <span><span class="sw" style="background:var(--dairy)"></span>steps (k)</span>
+    </div>
+    <div class="formrow">
+      <input type="date" id="wDate" value="${isoToday()}">
+      <input type="number" id="wLbs" step="0.1" placeholder="lbs" inputmode="decimal">
+      <input type="number" id="wSteps" step="0.1" placeholder="steps k" inputmode="decimal">
+      <input type="number" id="wSleep" step="0.5" placeholder="sleep h" inputmode="decimal">
+      <button class="btn" id="wAdd">Log</button>
+    </div>
+    <div class="slotlbl" style="margin-top:14px">This week — daily</div>
+    <table class="wk">
+      <tr><th>Day</th><th>lbs</th><th>steps</th><th>sleep</th></tr>
+      ${thisWeekRows||'<tr><td colspan="4" style="text-align:left;color:var(--muted)">Nothing logged yet this week.</td></tr>'}
+    </table>
+    <div class="slotlbl" style="margin-top:14px">Weekly averages · current week runs live</div>
+    <table class="wk" id="wkTable"></table>
+    <div class="formrow"><button class="btn" id="wkCopy">📋 Copy week report for Claude</button></div>
+  </div>
+
+  <h2 class="sec">Notes · off-track log · Quinton HW</h2>
+  <div class="card">
+    <div class="formrow" style="margin-top:0">
+      <select id="nTag" aria-label="Note type"><option>Note</option><option>Off-track</option><option>HW</option></select>
+    </div>
+    <div class="formrow"><textarea id="nText" placeholder="What happened / what Quinton said / anything for Sunday…"></textarea></div>
+    <div class="formrow"><button class="btn" id="nAdd">Save note</button></div>
+    <div id="noteList">
+      ${notes.slice().reverse().map((n,ri)=>{
+        const i = notes.length-1-ri;
+        return `<div class="noteitem">
+          <div class="meta"><span class="chip notetag ${tagcls(n.tag)}">${n.tag}</span>
+            <span class="d">${n.d}</span>
+            <button class="xdel" data-nx="${i}" aria-label="delete note">×</button></div>
+          <p>${esc(n.text)}</p></div>`;
+      }).join('')||'<div class="sub" style="margin-top:8px">No notes yet.</div>'}
+    </div>
+  </div>
+
+  <h2 class="sec">Data backup · move logs between devices</h2>
+  <div class="card">
+    <div class="formrow" style="margin-top:0">
+      <button class="btn" id="expData">📤 Copy all data</button>
+      <button class="btn ghost" id="impData">📥 Import</button>
+    </div>
+    <div class="sub" style="margin-top:8px">Logs live separately on each device/browser. Copy here → send it to yourself → Import on the other device (imports overwrite matching data, so go FROM the device with the good logs TO the empty one). Photos stay per-device. Pro move: pick ONE home — the home-screen app — and always log there.</div>
+  </div>
+
+  <h2 class="sec">Food photos</h2>
+  <div class="card">
+    <div class="formrow" style="margin-top:0">
+      <input type="file" id="phFile" accept="image/*" capture="environment" style="display:none">
+      <button class="btn" id="phAdd">📷 Add photo</button>
+      <span class="sub">Saved on this phone. Send Claude a copy in chat for a macro check.</span>
+    </div>
+    <div class="pgrid" id="phGrid"></div>
+  </div>`;
+}
+
+/* ---------- chart ---------- */
+function drawTrack(){
+  const entries = allWeights();
+  const c = $('#wchart'); if(!c||!entries.length) return;
+  const dpr = window.devicePixelRatio||1;
+  const W = c.clientWidth||460, H = 170;
+  c.width = W*dpr; c.height = H*dpr;
+  const ctx = c.getContext('2d'); ctx.scale(dpr,dpr);
+  const withW = entries.filter(e=>e.w!=null);
+  const ws = withW.map(e=>e.w);
+  const min = ws.length? Math.min(...ws)-1 : 170, max = ws.length? Math.max(...ws)+1 : 190;
+  const sVals = entries.filter(e=>e.s!=null).map(e=>e.s);
+  const sMax = Math.max(10, ...(sVals.length?sVals:[10]))+2;
+  const L=34,R=34,T=8,B=18;
+  const x = i => L + i*(W-L-R)/Math.max(entries.length-1,1);
+  const y = v => T + (max-v)*(H-T-B)/(max-min);
+  const ys = v => T + (sMax-v)*(H-T-B)/sMax;
+  ctx.font = '10px ui-monospace,monospace';
+  ctx.strokeStyle = 'rgba(155,152,139,.18)';
+  for(let g=0; g<4; g++){
+    const v = min + (max-min)*g/3, gy = y(v);
+    ctx.beginPath(); ctx.moveTo(L,gy); ctx.lineTo(W-R,gy); ctx.stroke();
+    ctx.fillStyle = '#d9a441'; ctx.fillText(v.toFixed(1), 2, gy+3);
+    const sv = sMax*g/3;
+    ctx.fillStyle = '#7fa8c9'; ctx.fillText(sv.toFixed(0)+'k', W-R+4, ys(sv)+3);
+  }
+  /* steps line (right axis) */
+  ctx.strokeStyle = 'rgba(127,168,201,.75)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); let pen=false;
+  entries.forEach((e,i)=>{
+    if(e.s==null){ pen=false; return; }
+    pen ? ctx.lineTo(x(i),ys(e.s)) : ctx.moveTo(x(i),ys(e.s));
+    pen = true;
+  });
+  ctx.stroke(); ctx.setLineDash([]);
+  /* daily weight (skips days logged without a weight) */
+  ctx.strokeStyle = 'rgba(155,152,139,.5)'; ctx.lineWidth = 1;
+  ctx.beginPath(); let pw=false;
+  entries.forEach((e,i)=>{
+    if(e.w==null){ pw=false; return; }
+    pw?ctx.lineTo(x(i),y(e.w)):ctx.moveTo(x(i),y(e.w)); pw=true;
+  });
+  ctx.stroke();
+  /* 7-entry rolling avg over weighted days */
+  ctx.strokeStyle = '#d9a441'; ctx.lineWidth = 2;
+  ctx.beginPath(); let pa=false;
+  entries.forEach((e,i)=>{
+    const s7 = entries.slice(Math.max(0,i-6),i+1).filter(q=>q.w!=null);
+    if(!s7.length){ pa=false; return; }
+    const avg = s7.reduce((a,b)=>a+b.w,0)/s7.length;
+    pa?ctx.lineTo(x(i),y(avg)):ctx.moveTo(x(i),y(avg)); pa=true;
+  });
+  ctx.stroke();
+  const last = withW[withW.length-1];
+  if(last){
+    const li = entries.indexOf(last);
+    ctx.fillStyle = '#d9a441';
+    ctx.beginPath(); ctx.arc(x(li),y(last.w),3,0,7); ctx.fill();
+    ctx.fillText(last.w.toFixed(1), Math.min(x(li)-14,W-64), y(last.w)-7);
+  }
+
+  /* weekly averages — current week included (his call, July 9) */
+  const wk = new Map();
+  entries.forEach(e=>{ const k=weekOf(e.d); if(!wk.has(k)) wk.set(k,[]); wk.get(k).push(e); });
+  const rows = [...wk.entries()].sort((a,b)=>a[0]-b[0]).map(([k,es])=>{
+    const wv = es.filter(e=>e.w!=null);
+    const avg = wv.length? wv.reduce((a,b)=>a+b.w,0)/wv.length : null;
+    const st = es.filter(e=>e.s!=null);
+    const sAvg = st.length? (st.reduce((a,b)=>a+b.s,0)/st.length):null;
+    return {k,avg,sAvg};
+  });
+  $('#wkTable').innerHTML = `<tr><th>Week</th><th>avg lbs</th><th>Δ</th><th>steps avg</th></tr>` +
+    rows.map((r,i)=>{
+      const p = i? rows[i-1].avg : null;
+      const d = (r.avg!=null&&p!=null)? (r.avg-p) : null;
+      const dTxt = d===null?'—':`<span class="${d<=0?'delta-dn':'delta-up'}">${d>0?'+':''}${d.toFixed(2)}</span>`;
+      return `<tr><td>Wk ${r.k}</td><td>${r.avg!=null?r.avg.toFixed(1):'—'}</td><td>${dTxt}</td><td>${r.sAvg?r.sAvg.toFixed(1)+'k':'—'}</td></tr>`;
+    }).join('');
+}
+
+function weekReport(){
+  const wk = menuWeekDates();
+  const entries = allWeights().filter(e=>wk.includes(e.d));
+  const eaten = store.get('qpcut.eaten',{});
+  const notes = store.get('qpcut.notes',[]).filter(n=>wk.includes(n.d));
+  const counts = store.get('qpcut.menucounts',{});
+  const lines = [`WEEK REPORT ${wk[0]} → ${wk[6]}`,''];
+  wk.forEach(d=>{
+    const day = new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+    const e = entries.find(x=>x.d===d);
+    const m = eaten[d]||{};
+    const meals = ['pre','bf','lu','sn','di'].map(k=>m[k]&&OPTBYID[m[k]]?OPTBYID[m[k]].name:null).filter(Boolean).join(' / ');
+    const parts = [];
+    if(e){ if(e.w!=null)parts.push(e.w.toFixed(1)+' lb'); if(e.s!=null)parts.push(e.s+'k steps'); if(e.sl!=null)parts.push(e.sl+'h sleep'); }
+    if(meals) parts.push('ate: '+meals);
+    if(parts.length) lines.push(`${day} ${d.slice(5)}: ${parts.join(' · ')}`);
+  });
+  const menuSet = Object.entries(counts).filter(([k,v])=>v>0).map(([k,v])=>`${OPTBYID[k]?OPTBYID[k].name:k} ×${v}`);
+  if(menuSet.length){ lines.push('','Menu this week: '+menuSet.join(', ')); }
+  const loc = store.get('qpcut.loc','deal');
+  wk.forEach(d=>{
+    const rp = store.get('qpcut.reps.'+dkey(d),{});
+    if(!Object.keys(rp).length) return;
+    const wo = workoutFor(new Date(d+'T12:00:00').getDay(), loc);
+    if(!wo) return;
+    const day = new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+    const exLines = Object.entries(rp).map(([i,arr])=>{
+      const ex = wo.ex[+i]; if(!ex||!arr||!arr.some(v=>v!=null)) return null;
+      const nm = ex[0].replace(/<[^>]*>/g,'');
+      const v = verdict(arr, parseTargets(ex[1]));
+      return `- ${nm}: ${arr.map(x=>x==null?'·':x).join('/')}${v?` → ${v==='up'?'GO UP':v==='down'?'LIGHTEN':'hold'}`:''}`;
+    }).filter(Boolean);
+    if(exLines.length){ lines.push('', `Lift ${day} (${wo.tag}):`, ...exLines); }
+  });
+  if(notes.length){ lines.push('','Notes:'); notes.forEach(n=>lines.push(`- [${n.tag} ${n.d.slice(5)}] ${n.text}`)); }
+  return lines.join('\n');
+}
+
+async function drawPhotos(){
+  const grid = $('#phGrid'); if(!grid) return;
+  const ph = await getPhotos();
+  grid.innerHTML = ph.slice().reverse().map(p=>`
+    <div class="ph">
+      <button class="view" data-view="${p.key}"><img src="${p.img}" alt="food photo ${p.d.slice(0,10)}"></button>
+      <button class="xdel" data-px="${p.key}" aria-label="delete photo">×</button>
+    </div>`).join('') || '<div class="sub">No photos yet — start the collage.</div>';
+  grid.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{
+    const img = b.querySelector('img');
+    const ov = document.createElement('div'); ov.className='overlay';
+    ov.innerHTML = `<img src="${img.src}" alt="food photo">`;
+    ov.addEventListener('click',()=>ov.remove());
+    document.body.appendChild(ov);
+  }));
+  grid.querySelectorAll('[data-px]').forEach(b=>b.addEventListener('click',async()=>{
+    await delPhoto(+b.dataset.px); drawPhotos();
+  }));
+}
+
+/* ---------- wiring ---------- */
+const ORDER = ['today','meals','prep','train','track'];
+const VIEWS = {today:viewToday, meals:viewMeals, prep:viewPrep, train:viewTrain, track:viewTrack};
+let current = 'today';
+let timerInt = null;
+function setTab(t, dir){
+  current = t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
+  render();
+  if(dir){
+    const v = $('#view');
+    v.classList.remove('anim-l','anim-r');
+    void v.offsetWidth;
+    v.classList.add(dir==='l'?'anim-l':'anim-r');
+  }
+  window.scrollTo(0,0);
+}
+function render(){
+  if(timerInt){ clearInterval(timerInt); timerInt=null; }
+  $('#macroStrip').style.display = (current==='meals'||current==='prep') ? 'grid' : 'none';
+  $('#view').innerHTML = VIEWS[current]();
+  ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
+  document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{
+    if(d.open) openAcc.add(d.dataset.acc); else openAcc.delete(d.dataset.acc);
+  }));
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  const dir = ORDER.indexOf(b.dataset.tab) > ORDER.indexOf(current) ? 'l' : 'r';
+  setTab(b.dataset.tab, dir);
+}));
+
+/* swipe between tabs */
+let sx=0, sy=0;
+document.addEventListener('touchstart',e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx = e.changedTouches[0].clientX-sx, dy = e.changedTouches[0].clientY-sy;
+  if(Math.abs(dx)>70 && Math.abs(dx)>2.2*Math.abs(dy)){
+    const i = ORDER.indexOf(current);
+    if(dx<0 && i<ORDER.length-1) setTab(ORDER[i+1],'l');
+    if(dx>0 && i>0) setTab(ORDER[i-1],'r');
+  }
+},{passive:true});
+
+function wireToday(){
+  document.querySelectorAll('[data-ld]').forEach(el=>el.addEventListener('click',()=>{
+    logDate = el.dataset.ld===isoToday()? null : el.dataset.ld; render();
+  }));
+  const llog = $('#liftLog');
+  if(llog) llog.addEventListener('change',e=>{
+    const inp = e.target.closest('.repin'); if(!inp) return;
+    const key = 'qpcut.reps.'+dkey(logDate||isoToday());
+    const rp = store.get(key,{});
+    const arr = rp[inp.dataset.ex] = rp[inp.dataset.ex]||[];
+    const v = parseInt(inp.value);
+    arr[+inp.dataset.set] = isNaN(v)? null : v;
+    store.set(key,rp); render();
+  });
+  $('#mealLog').addEventListener('click',e=>{
+    const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
+    const eaten = store.get('qpcut.eaten',{});
+    const d = logDate || isoToday();
+    eaten[d] = eaten[d]||{};
+    eaten[d][b.dataset.slot] = eaten[d][b.dataset.slot]===b.dataset.opt ? null : b.dataset.opt;
+    store.set('qpcut.eaten',eaten); render();
+  });
+  const lp = $('#ldPick');
+  if(lp) lp.addEventListener('change',()=>{
+    if(!lp.value) return;
+    logDate = lp.value===isoToday()? null : lp.value;
+    render();
+  });
+  document.querySelectorAll('[data-dinc],[data-ddec]').forEach(b=>b.addEventListener('click',()=>{
+    const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
+    const d = store.get(key,{});
+    const id = b.dataset.dinc||b.dataset.ddec;
+    d[id] = Math.max(0,(d[id]||0)+(b.dataset.dinc?1:-1));
+    store.set(key,d); render();
+  }));
+  $('#meatSet').addEventListener('click',()=>{
+    const v = $('#meatTime').value; if(!v) return;
+    const [h,m] = v.split(':').map(Number);
+    const fmt = (H,M)=>{const ap=H>=12?'PM':'AM';const h12=((H+11)%12)+1;return `${h12}:${String(M).padStart(2,'0')} ${ap}`;};
+    const okH = (h+6)%24;
+    const rec = {day:todayKey(), disp:fmt(h,m), ok:fmt(okH,m)+(h+6>=24?' (next day)':'')};
+    store.set('qpcut.meat', rec);
+    $('#dairyOut').innerHTML = `<div class="dairy-ok">Meat at ${rec.disp} → dairy OK from <b>${rec.ok}</b></div>`;
+  });
+  $('#meatClear').addEventListener('click',()=>{ store.set('qpcut.meat',null); $('#dairyOut').innerHTML=''; });
+  $('#suppList').addEventListener('click',e=>{
+    const it = e.target.closest('.suppitem'); if(!it) return;
+    const i = +it.dataset.i, key = 'qpcut.supps.'+dkey(logDate||isoToday());
+    let done = store.get(key,[]);
+    done = done.includes(i) ? done.filter(x=>x!==i) : [...done,i];
+    store.set(key,done);
+    it.classList.toggle('done');
+    it.querySelector('.box').textContent = done.includes(i)?'✓':'';
+  });
+  const ta = $('#tbuyAdd');
+  if(ta) ta.addEventListener('click',()=>{
+    const v = $('#tbuyName').value.trim(); if(!v) return;
+    const t = store.get('qpcut.buytoday',[]); t.push({name:v,done:false});
+    store.set('qpcut.buytoday',t); render();
+  });
+  document.querySelectorAll('[data-tx]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const t = store.get('qpcut.buytoday',[]); t.splice(+el.dataset.tx,1);
+    store.set('qpcut.buytoday',t); render();
+  }));
+  document.querySelectorAll('[data-ti]').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target.closest('[data-tx]')) return;
+    const t = store.get('qpcut.buytoday',[]);
+    t[+el.dataset.ti].done = !t[+el.dataset.ti].done;
+    store.set('qpcut.buytoday',t); render();
+  }));
+  wireBuy();
+}
+function wirePrep(){
+  const cbStart = $('#cbStart'), cbNext = $('#cbNext'), cbReset = $('#cbReset');
+  if(cbStart) cbStart.addEventListener('click',()=>{
+    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+    cb.started = isoToday(); store.set('qpcut.creamibatch',cb); render();
+  });
+  if(cbReset) cbReset.addEventListener('click',()=>{
+    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+    cb.started = isoToday(); store.set('qpcut.creamibatch',cb); render();
+  });
+  if(cbNext) cbNext.addEventListener('click',()=>{
+    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+    cb.idx = (cb.idx+1)%CREAMI_BATCHES.length; cb.started = isoToday();
+    store.set('qpcut.creamibatch',cb); render();
+  });
+  document.querySelectorAll('[data-inc],[data-dec]').forEach(b=>b.addEventListener('click',()=>{
+    const counts = store.get('qpcut.menucounts',{});
+    const id = b.dataset.inc||b.dataset.dec;
+    counts[id] = Math.max(0,(counts[id]||0)+(b.dataset.inc?1:-1));
+    store.set('qpcut.menucounts',counts); render();
+  }));
+  document.querySelectorAll('[data-gid]').forEach(b=>b.addEventListener('click',()=>{
+    let g = store.get('qpcut.grocery',[]);
+    const id = b.dataset.gid;
+    g = g.includes(id) ? g.filter(x=>x!==id) : [...g,id];
+    store.set('qpcut.grocery',g); render();
+  }));
+  $('#gReset').addEventListener('click',()=>{ store.set('qpcut.grocery',[]); render(); });
+  wireBuy();
+}
+function beep(){
+  try{
+    const ac = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.connect(g); g.connect(ac.destination);
+    o.frequency.value = 880; g.gain.value = .25;
+    o.start(); o.stop(ac.currentTime+.6);
+  }catch(e){}
+  if(navigator.vibrate) navigator.vibrate([200,100,200]);
+}
+function wireTrain(){
+  document.querySelectorAll('.seg button[data-loc]').forEach(b=>b.addEventListener('click',()=>{
+    store.set('qpcut.loc', b.dataset.loc); render();
+  }));
+  document.querySelectorAll('.seg button[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+    store.set('qpcut.trainmode', b.dataset.mode); render();
+  }));
+  document.querySelectorAll('input.prw2').forEach(inp=>inp.addEventListener('change',()=>{
+    const p = store.get('qpcut.prset',{});
+    const arr = p[inp.dataset.pr] = p[inp.dataset.pr]||[];
+    arr[+inp.dataset.set] = inp.value;
+    store.set('qpcut.prset',p);
+  }));
+  document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{
+    if(timerInt) clearInterval(timerInt);
+    let left = +b.dataset.t;
+    const disp = $('#timerDisp'); disp.classList.remove('done');
+    const tick = ()=>{
+      disp.textContent = `${String(Math.floor(left/60)).padStart(1,'0')}:${String(left%60).padStart(2,'0')}`;
+      if(left<=0){ clearInterval(timerInt); timerInt=null; disp.textContent='GO'; disp.classList.add('done'); beep(); }
+      left--;
+    };
+    tick(); timerInt = setInterval(tick,1000);
+  }));
+  $('#tStop').addEventListener('click',()=>{
+    if(timerInt){ clearInterval(timerInt); timerInt=null; }
+    const disp = $('#timerDisp'); disp.textContent='--:--'; disp.classList.remove('done');
+  });
+}
+function wireTrack(){
+  requestAnimationFrame(drawTrack);
+  drawPhotos();
+  $('#wAdd').addEventListener('click',()=>{
+    const btn = $('#wAdd');
+    const d = $('#wDate').value;
+    const w = parseFloat($('#wLbs').value), s = parseFloat($('#wSteps').value), sl = parseFloat($('#wSleep').value);
+    if(!d || (isNaN(w)&&isNaN(s)&&isNaN(sl))){
+      btn.textContent='Enter a number first';
+      setTimeout(()=>{ if($('#wAdd')) $('#wAdd').textContent='Log'; },1600);
+      return;
+    }
+    const prev = allWeights().find(e=>e.d===d) || {};
+    const user = store.get('qpcut.weights',[]).filter(e=>e.d!==d);
+    user.push({d,
+      w: isNaN(w) ? (prev.w!=null?prev.w:null) : w,
+      s: isNaN(s) ? (prev.s!=null?prev.s:null) : s,
+      sl: isNaN(sl) ? (prev.sl!=null?prev.sl:null) : sl});
+    store.set('qpcut.weights',user);
+    render();
+  });
+  $('#wkCopy').addEventListener('click',async()=>{
+    const txt = weekReport();
+    try{ await navigator.clipboard.writeText(txt); $('#wkCopy').textContent='✓ Copied — paste it to Claude'; }
+    catch(e){
+      const ta = document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta);
+      ta.select(); try{ document.execCommand('copy'); $('#wkCopy').textContent='✓ Copied — paste it to Claude'; }
+      catch(e2){ alert(txt); } ta.remove();
+    }
+  });
+  $('#nAdd').addEventListener('click',()=>{
+    const text = $('#nText').value.trim(); if(!text) return;
+    const notes = store.get('qpcut.notes',[]);
+    notes.push({d: isoToday(), tag: $('#nTag').value, text});
+    store.set('qpcut.notes',notes); render();
+  });
+  $('#noteList').addEventListener('click',e=>{
+    const del = e.target.closest('[data-nx]'); if(!del) return;
+    const notes = store.get('qpcut.notes',[]);
+    notes.splice(+del.dataset.nx,1);
+    store.set('qpcut.notes',notes); render();
+  });
+  $('#expData').addEventListener('click',async()=>{
+    const out = {};
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(k && k.startsWith('qpcut.')) out[k] = localStorage.getItem(k);
+    }
+    const txt = JSON.stringify(out);
+    try{ await navigator.clipboard.writeText(txt); $('#expData').textContent='✓ Copied — send it to your other device'; }
+    catch(e){ prompt('Copy this blob:', txt); }
+  });
+  $('#impData').addEventListener('click',()=>{
+    const txt = prompt('Paste the data blob from your other device:');
+    if(!txt) return;
+    try{
+      const obj = JSON.parse(txt);
+      let n = 0;
+      Object.entries(obj).forEach(([k,v])=>{ if(k.startsWith('qpcut.')){ localStorage.setItem(k,v); n++; } });
+      alert(`Imported ${n} data blocks ✓`);
+      render();
+    }catch(e){ alert('That didn’t parse — make sure you pasted the whole blob.'); }
+  });
+  $('#phAdd').addEventListener('click',()=>$('#phFile').click());
+  $('#phFile').addEventListener('change',e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const img = new Image();
+    img.onload = async ()=>{
+      const MAX = 900;
+      const sc = Math.min(1, MAX/Math.max(img.width,img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      await addPhoto({d:new Date().toISOString(), img: cv.toDataURL('image/jpeg',.72)});
+      URL.revokeObjectURL(img.src);
+      $('#phFile').value='';
+      drawPhotos();
+    };
+    img.src = URL.createObjectURL(f);
+  });
+}
+render();
+</script>
+
+</body>
+</html>
