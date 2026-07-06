@@ -1020,6 +1020,26 @@ function viewToday(){
     ${d.note?`<div class="note">${d.note}</div>`:''}
   </div>
 
+  ${(()=>{
+    const corToday = weekPick(COR_SETS)[now.getDay()];
+    const cbT = store.get('qpcut.creamibatch',{idx:0,started:null});
+    const batchT = CREAMI_BATCHES[cbT.idx%CREAMI_BATCHES.length];
+    const eatenNT = cbT.started? Object.entries(store.get('qpcut.eaten',{})).filter(([dd,m])=>dd>=cbT.started&&m.sn==='s1').length : 0;
+    const cupT = batchT.cups[Math.min(eatenNT,7)];
+    return `
+  <h2 class="sec">Today’s flavors</h2>
+  <div class="card">
+    <div class="opt"><div class="head"><b>🥣 ${corToday[0]}</b>${tchip('breakfast')}</div>
+      <div class="sub" style="margin-top:4px">${corToday[1]}</div></div>
+    <div class="opt">
+      ${isFri
+        ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
+        : `<div class="head"><b>🍦 ${cupT[0].replace(/^\\d+ · /,'')}</b>${tchip(cbT.started?'up next in the freezer':'batch not started')}</div>
+           <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>`}
+    </div>
+  </div>`;
+  })()}
+
   ${now.getDay()===5?`
   <h2 class="sec">Friday → Shabbat prep</h2>
   <div class="card">
