@@ -386,6 +386,47 @@ function prWeightsFor(ids){
     return `${ids.length>1? it[1].split(' ')[0].replace(',','')+' ':''}${val}`;
   }).filter(Boolean).join(' · ');
 }
+function prLoc(id, loc){
+  const m = WMAP[loc==='deal'?'deal':'bk'];
+  for(const d in m) for(let i=0;i<m[d].length;i++) if(m[d][i].includes(id)) return {day:+d, idx:i};
+  return null;
+}
+function weightRowsHTML(ids, sets){
+  if(!ids||!ids.length) return '';
+  const pset = store.get('qpcut.prset',{});
+  const legacy = store.get('qpcut.prs',{});
+  const hasData = id => (pset[id]||[]).some(v=>v) || (legacy[id]!=null&&legacy[id]!=='') || ((prItemById(id)||['','',''])[2]||'')!=='';
+  const withData = ids.filter(hasData);
+  const show = withData.length? withData : [ids[0]];
+  return show.map(id=>{
+    const it = prItemById(id)||['','',''];
+    const vals = pset[id]||[];
+    const leg = (legacy[id]!=null&&legacy[id]!=='')? legacy[id] : (it[2]||'');
+    const lbl = ids.length>1? esc(it[1].split(' ')[0].replace(',','')) : 'wt';
+    return `<div style="display:flex;gap:6px;align-items:center;margin-top:5px;justify-content:flex-end;flex-wrap:wrap">
+      <span class="ingmac" style="margin-right:auto">🏋 ${lbl}${(!vals.some(v=>v)&&leg)?` · was ${esc(String(leg))}`:''}</span>
+      ${Array.from({length:sets},(_,s)=>`<input class="prw2" data-pr="${id}" data-set="${s}" value="${esc(vals[s]!=null?vals[s]:'')}" placeholder="wt" aria-label="${it[1]} set ${s+1} weight">`).join('')}
+    </div>`;
+  }).join('');
+}
+function wireWeights(){
+  document.querySelectorAll('input.prw2').forEach(inp=>inp.addEventListener('change',()=>{
+    const p = store.get('qpcut.prset',{});
+    const arr = p[inp.dataset.pr] = p[inp.dataset.pr]||[];
+    arr[+inp.dataset.set] = inp.value;
+    store.set('qpcut.prset',p);
+  }));
+}
+function wireReps(){
+  document.querySelectorAll('input.repin').forEach(inp=>inp.addEventListener('change',()=>{
+    const key = 'qpcut.reps.'+dkey(inp.dataset.rd);
+    const rp = store.get(key,{});
+    const arr = rp[inp.dataset.ex] = rp[inp.dataset.ex]||[];
+    const v = parseInt(inp.value);
+    arr[+inp.dataset.set] = isNaN(v)? null : v;
+    store.set(key,rp); render();
+  }));
+}
 function workoutFor(dayIdx, loc){
   const plan = loc==='deal' ? GYM : HOME;
   if(dayIdx===1) return plan.mon;
@@ -1111,7 +1152,6 @@ function viewToday(){
       const sets = t? t.sets : (parseInt(r)||3);
       const reps = repLog[i]||[];
       const v = verdict(reps, t);
-      const wStr = prWeightsFor(wmap[i]);
       const badge = v==='up' ? '<span class="upflag">⬆ go up next time</span>'
                   : v==='down' ? '<span class="downflag">⬇ lighten ~10%</span>'
                   : v==='hold' ? '<span class="holdflag">hold weight</span>' : '';
@@ -1119,12 +1159,13 @@ function viewToday(){
         <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
           <span style="${v?'color:var(--muted)':''}">${n}</span><span class="r">${r}</span>
         </div>
-        ${wStr?`<div class="ingmac" style="text-align:left;margin-top:2px">🏋 ${wStr}</div>`:'<div class="ingmac" style="text-align:left;margin-top:2px">no weight set — calibrate in Train → PRs</div>'}
-        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;justify-content:flex-end;flex-wrap:wrap">
+        ${weightRowsHTML(wmap[i], sets)}
+        <div style="display:flex;gap:6px;align-items:center;margin-top:5px;justify-content:flex-end;flex-wrap:wrap">
+          <span class="ingmac" style="margin-right:auto">reps</span>
           ${Array.from({length:sets},(_,s)=>{
             const ph = t? (t.type==='ladder' ? (t.per[s]!=null?t.per[s]:t.per[t.per.length-1]) : t.hi) : '·';
             const val = reps[s]!=null? reps[s] : '';
-            return `<input class="repin" inputmode="numeric" data-ex="${i}" data-set="${s}" value="${val}" placeholder="${ph}" aria-label="${`set ${s+1} reps`}">`;
+            return `<input class="repin" inputmode="numeric" data-rd="${ld}" data-ex="${i}" data-set="${s}" value="${val}" placeholder="${ph}" aria-label="${`set ${s+1} reps`}">`;
           }).join('')}
           ${badge}
         </div></li>`;
@@ -1412,15 +1453,29 @@ function viewTrain(){
           const sets = t? t.sets : 3;
           const vals = prset[id]||[];
           const legacy = prs[id]!==undefined? prs[id] : def;
+          const li2 = prLoc(id, loc);
+          let repsRow = '';
+          if(li2){
+            const rdate = menuWeekDates()[li2.day];
+            const wkReps = (store.get('qpcut.reps.'+dkey(rdate),{})[li2.idx])||[];
+            const v = verdict(wkReps, t);
+            const rBadge = v==='up'?'<span class="upflag">⬆ go up</span>':v==='down'?'<span class="downflag">⬇ lighten</span>':v==='hold'?'<span class="holdflag">hold</span>':'';
+            repsRow = `<div style="display:flex;gap:6px;align-items:center;margin-top:5px;justify-content:flex-end;flex-wrap:wrap">
+              <span class="ingmac" style="margin-right:auto">reps · this week</span>
+              ${Array.from({length:sets},(_,s)=>`<input class="repin" inputmode="numeric" data-rd="${rdate}" data-ex="${li2.idx}" data-set="${s}" value="${wkReps[s]!=null?wkReps[s]:''}" placeholder="${t? (t.type==='ladder'?(t.per[s]!=null?t.per[s]:t.per[t.per.length-1]):t.hi):'·'}" aria-label="${name} set ${s+1} reps">`).join('')}
+              ${rBadge}
+            </div>`;
+          }
           return `<li style="display:block">
             <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
               <span>${name}${up?'<span class="upflag">go up</span>':''}</span>
               <span class="r">${sch||''}</span>
             </div>
             <div style="display:flex;gap:6px;margin-top:6px;justify-content:flex-end;align-items:center;flex-wrap:wrap">
-              ${legacy&&!vals.some(v=>v)?`<span class="daytag" style="margin-right:auto">was: ${esc(legacy)}</span>`:''}
+              ${legacy&&!vals.some(v=>v)?`<span class="daytag" style="margin-right:auto">was: ${esc(legacy)}</span>`:`<span class="ingmac" style="margin-right:auto">🏋 wt</span>`}
               ${Array.from({length:sets},(_,s)=>`<input class="prw2" data-pr="${id}" data-set="${s}" value="${esc(vals[s]!=null?vals[s]:'')}" placeholder="wt" aria-label="${name} set ${s+1} weight">`).join('')}
-            </div></li>`;
+            </div>
+            ${repsRow}</li>`;
         }).join('')}
         </ul>
       </details>`).join('')}
@@ -1747,16 +1802,8 @@ function wireToday(){
   document.querySelectorAll('[data-ld]').forEach(el=>el.addEventListener('click',()=>{
     logDate = el.dataset.ld===isoToday()? null : el.dataset.ld; render();
   }));
-  const llog = $('#liftLog');
-  if(llog) llog.addEventListener('change',e=>{
-    const inp = e.target.closest('.repin'); if(!inp) return;
-    const key = 'qpcut.reps.'+dkey(logDate||isoToday());
-    const rp = store.get(key,{});
-    const arr = rp[inp.dataset.ex] = rp[inp.dataset.ex]||[];
-    const v = parseInt(inp.value);
-    arr[+inp.dataset.set] = isNaN(v)? null : v;
-    store.set(key,rp); render();
-  });
+  wireReps();
+  wireWeights();
   $('#mealLog').addEventListener('click',e=>{
     const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
     const eaten = store.get('qpcut.eaten',{});
@@ -1863,12 +1910,8 @@ function wireTrain(){
   document.querySelectorAll('.seg button[data-mode]').forEach(b=>b.addEventListener('click',()=>{
     store.set('qpcut.trainmode', b.dataset.mode); render();
   }));
-  document.querySelectorAll('input.prw2').forEach(inp=>inp.addEventListener('change',()=>{
-    const p = store.get('qpcut.prset',{});
-    const arr = p[inp.dataset.pr] = p[inp.dataset.pr]||[];
-    arr[+inp.dataset.set] = inp.value;
-    store.set('qpcut.prset',p);
-  }));
+  wireWeights();
+  wireReps();
   document.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{
     if(timerInt) clearInterval(timerInt);
     let left = +b.dataset.t;
@@ -1969,7 +2012,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783371183';
+const BUILD = 'b1783375610';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
