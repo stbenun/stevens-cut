@@ -588,8 +588,9 @@ const DAYS = {
 
 /* one-off schedule overrides, keyed by ISO date */
 const OVERRIDES = {
- '2026-07-07': {title:'Push — lift ~8:00', sub:'Tuesday',
-  sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['5:05','Leave work'],['5:15','S.'],['7:15','Class'],['9:00','Dinner (moved up from 10)']]},
+ '2026-07-07': {title:'Push — lift ~8:00 · the restaurant tonight', sub:'Tuesday',
+  sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['1:30','NO lunch today — planned skip, banked for dinner'],['5:05','Leave work'],['5:15','S.'],['5:30','Shake: Fairlife 320 mL + 1 FULL scoop Ryse (260 cal · 45P)'],['7:15','Class'],['9:00','the restaurant 🌊 — plate plan below']],
+  note:`<b>the restaurant plate plan (~1,230 budget):</b> 2 focaccia · salad, dressing on the side · <b>~9 oz fish (two palms) — tuna steak / branzino / snapper, serve yourself FIRST when mains land</b> · 1½ teacups pasta total across all pastas · roasted potatoes + veg freely · water. Skipping: fried starters, avocado, dolci. ⚠️ NUT DISHES stay across the table, no shared spoons: butternut ravioli (hazelnut), bruschetta (walnut), cucumber-zucchini salad (pine nuts). Done eating when you leave. Tomorrow’s scale = sodium noise.`},
  '2026-07-03': {title:'Holiday Friday — Hockey 9:30 + Legs #2', sub:'Friday · July 4th weekend',
   sch:[['7:00','Minyan · Bank 🏦 right after'],['8:30','Pre-hockey fuel: Yogurt + Banana (200 cal) + 16 oz water'],['9:30','Hockey — bring a stick bottle'],['~11:30','Lift — Legs #2 (you’re warm from hockey: one warmup set, go)'],['~12:45','Breakfast — pick Kodiak or Bagel w/ Berries (big-carb day)'],['3:00','Shabbat prep — Friday card below'],['~3:30','Lunch as planned + 1 EXTRA Ezekiel + SF jelly (post-fast rebound carb)'],['7:00','Shul'],['8:00','Shabbat dinner — snack skipped, eat big with the family']],
   note:'Post-fast rebound day: every meal eaten, one extra 180-cal carb before 4 PM, and front-load water — 60 oz down before hockey ends, gallon by shul. The scale is FAKE until Sunday; don’t weigh-in emotionally.'},
@@ -2084,7 +2085,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783440207';
+const BUILD = 'b1783440973';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
