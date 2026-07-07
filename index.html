@@ -199,6 +199,13 @@
   .formrow input[type=number]{width:86px}
   .formrow input[type=date]{width:150px}
 
+  .wdays{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin-top:12px}
+  .wdays .mealpick{padding:8px 0;text-align:center;white-space:nowrap;font-size:12.5px}
+  .logform{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+  .logform .full{grid-column:1 / -1}
+  .logform label{display:flex;flex-direction:column;gap:4px;font-size:10px;letter-spacing:.1em;
+       text-transform:uppercase;color:var(--muted);font-weight:600}
+  .logform input{width:100%;text-align:center;box-sizing:border-box}
   .noteitem{border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent);padding:10px 0}
   .noteitem:first-of-type{border-top:none}
   .noteitem .meta{display:flex;gap:8px;align-items:center;margin-bottom:4px}
@@ -1577,18 +1584,18 @@ function viewTrack(){
       <span><span class="sw" style="background:var(--brass)"></span>weight (7-day trend)</span>
       <span><span class="sw" style="background:var(--dairy)"></span>steps (k)</span>
     </div>
-    <div class="pickrow" id="wDays" style="margin-top:10px">
+    <div class="wdays" id="wDays">
       ${menuWeekDates().filter(d=>d<=isoToday()).map(d=>{
         const wd = new Date(d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
         return `<button class="mealpick${d===isoToday()?' on':''}" data-wd="${d}">${wd} ${+d.slice(8)}</button>`;
       }).join('')}
     </div>
-    <div class="formrow">
-      <input type="date" id="wDate" value="${isoToday()}">
-      <input type="number" id="wLbs" step="0.1" placeholder="lbs" inputmode="decimal">
-      <input type="number" id="wSteps" step="0.1" placeholder="steps k" inputmode="decimal">
-      <input type="number" id="wSleep" step="0.5" placeholder="sleep h" inputmode="decimal">
-      <button class="btn" id="wAdd">Log</button>
+    <div class="logform">
+      <label class="full">date<input type="date" id="wDate" value="${isoToday()}"></label>
+      <label>weight · lbs<input type="number" id="wLbs" step="0.1" inputmode="decimal"></label>
+      <label>steps · k<input type="number" id="wSteps" step="0.1" inputmode="decimal"></label>
+      <label>sleep · h<input type="number" id="wSleep" step="0.5" inputmode="decimal"></label>
+      <button class="btn full" id="wAdd">Log</button>
     </div>
     <div class="slotlbl" style="margin-top:14px">This week — daily</div>
     <table class="wk">
@@ -2074,7 +2081,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783423455';
+const BUILD = 'b1783425497';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
