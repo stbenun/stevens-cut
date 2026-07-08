@@ -253,6 +253,13 @@
   .anim-r{animation:slideR .18s ease-out}
   .ingmac{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11px;color:var(--muted);
        text-align:right;flex-shrink:0}
+  #printZone{display:none}
+  @media print{
+    body.printing .app,body.printing nav.tabs{display:none!important}
+    body.printing #printZone{display:block!important;background:#fff;color:#000;padding:20px;
+        font-family:Georgia,serif}
+    body.printing{background:#fff}
+  }
   @media (prefers-reduced-motion: reduce){*{transition:none!important}.anim-l,.anim-r{animation:none}}
 </style>
 
@@ -273,6 +280,7 @@
   <footer>coach lives in the Claude app → <a href="https://claude.ai/code">Code tab</a></footer>
 </div>
 
+<div id="printZone"></div>
 <nav class="tabs" aria-label="Sections"><div class="row">
   <button class="tab on" data-tab="today">Today</button>
   <button class="tab" data-tab="meals">Meals</button>
@@ -425,6 +433,10 @@ function lastSessions(dayIdx, exIdx, want){
   return out;
 }
 function lastSessionInfo(dayIdx, exIdx){ return lastSessions(dayIdx, exIdx, 1)[0] || null; }
+/* single-arm exercises: optional per-arm (L/R) logging */
+const ARM_EX = new Set(['pr_lat','pr_yraise','pr_slat','pr_ham','pr_shrug','pr_reardelt',
+ 'pr_sat_latr','pr_sat_ham','pr_sat_rear',
+ 'bk_lat','bk_yraise','bk_slat','bk_ham','bk_shrug','bk_rear','bk_inccurl']);
 /* plate math: 'side' = box value is plates per side · 'bar' = total incl. 45-lb bar · 'db' = dumbbells */
 const PLATEMATH = {
  pr_smith:'side', pr_incl:'side', pr_calf:'side', pr_flat:'side', pr_dips:'side', pr_abd:'side',
@@ -499,6 +511,31 @@ function exBlockHTML(o){
       <input class="repin rpi" inputmode="numeric" data-rd="${o.rd}" data-ex="${o.ex}" data-set="${s}" value="${reps[s]!=null?reps[s]:''}" placeholder="${ph}" aria-label="set ${s+1} reps">`:''}
     </div>`;
   }).join('');
+  /* ⚖ optional right-arm rows for single-arm movements */
+  let armHTML = '';
+  if(prId && ARM_EX.has(prId)){
+    const armOn = store.get('qpcut.armmode',{})[prId];
+    armHTML = `<div style="display:flex;justify-content:flex-end;margin-top:6px">
+      <button class="btn ghost" style="padding:4px 10px;font-size:11px" data-arm="${prId}">${armOn?'✕ hide right-arm rows':'⚖ log arms separately'}</button></div>`;
+    if(armOn){
+      const rVals = pset[prId+'__R']||[];
+      const rReps = hasReps? ((store.get('qpcut.reps.'+dkey(o.rd),{}))[o.ex+'R']||[]) : [];
+      armHTML += `<div class="ingmac" style="text-align:right;margin-top:4px">rows above = LEFT · below = RIGHT (leave blank if same)</div>`;
+      armHTML += Array.from({length:o.sets},(_,s)=>`
+        <div class="setrow${hasReps?'':' noreps'}">
+          <span class="slab">R${s+1}</span>
+          <input class="prw2 wti" inputmode="decimal" data-pr="${prId}__R" data-set="${s}" value="${esc(rVals[s]!=null?rVals[s]:'')}" placeholder="wt" aria-label="right arm set ${s+1} weight">
+          ${hasReps?`<span class="x">×</span>
+          <input class="repin rpi" inputmode="numeric" data-rd="${o.rd}" data-ex="${o.ex}R" data-set="${s}" value="${rReps[s]!=null?rReps[s]:''}" placeholder="·" aria-label="right arm set ${s+1} reps">`:''}
+        </div>`).join('');
+      const lTot = reps.slice(0,o.sets).filter(x=>x!=null).reduce((a,b)=>a+b,0);
+      const rTot = rReps.slice(0,o.sets).filter(x=>x!=null).reduce((a,b)=>a+b,0);
+      if(lTot && rTot && lTot!==rTot){
+        const weak = rTot<lTot? 'RIGHT':'LEFT';
+        armHTML += `<div class="coachline" style="color:var(--meat)">⚖ ${weak} arm behind (${Math.min(lTot,rTot)} vs ${Math.max(lTot,rTot)} total reps). Protocol: start every set with the ${weak} arm · strong arm only MATCHES the weak arm’s reps · finish with 1 extra back-off set weak-side only.</div>`;
+      }
+    }
+  }
   const v = hasReps? verdict(reps, o.t) : null;
   /* ▶ live next-set call while mid-session */
   let nextAdv = '';
@@ -540,7 +577,14 @@ function exBlockHTML(o){
     }).filter(Boolean);
     if(parts.length) pmLine = `<div class="ingmac" style="text-align:right;margin-top:4px">🧮 ${pm==='db'?'DBs':pm==='bar'?'45-lb bar · per side':'per side'} → ${parts.join(' · ')}</div>`;
   }
-  return selHTML + coach + legNote + rows + pmLine + nextAdv + badge;
+  return selHTML + coach + legNote + rows + armHTML + pmLine + nextAdv + badge;
+}
+function wireArm(){
+  document.querySelectorAll('[data-arm]').forEach(b=>b.addEventListener('click',()=>{
+    const m = store.get('qpcut.armmode',{});
+    m[b.dataset.arm] = !m[b.dataset.arm];
+    store.set('qpcut.armmode',m); render();
+  }));
 }
 function wireExSel(){
   document.querySelectorAll('select.exsel').forEach(el=>el.addEventListener('change',()=>{
@@ -562,6 +606,41 @@ function wireWeights(){
     store.set(wk,wl);
     render();
   }));
+}
+/* Saturday print card — clean one-pager for the no-phone day */
+function printSatCard(){
+  const loc = store.get('qpcut.loc','deal');
+  const wo = loc==='deal'? SAT_GRANDMA : SAT_HOME;
+  const wmapSat = (WMAP[loc==='deal'?'deal':'bk']||{})[6]||[];
+  const pset = store.get('qpcut.prset',{});
+  const legacy = store.get('qpcut.prs',{});
+  const cor = weekPick(COR_SETS)[6];
+  const z = document.getElementById('printZone');
+  z.innerHTML = `
+    <h1 style="font-size:22px;margin:0 0 4px">Saturday — Upper Weakness</h1>
+    <p style="margin:0 0 14px;font-size:13px">Every set close to failure · 90–120 s rest · 3–5 s reps</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <tr><th style="text-align:left;border-bottom:1px solid #000;padding:4px">Exercise</th>
+          <th style="text-align:left;border-bottom:1px solid #000;padding:4px">Sets × Reps</th>
+          <th style="text-align:left;border-bottom:1px solid #000;padding:4px">Weight</th>
+          <th style="border-bottom:1px solid #000;padding:4px">Done</th></tr>
+      ${wo.ex.map(([n,r],i)=>{
+        const ids = wmapSat[i]||[];
+        const id = ids.find(x=>(pset[x]||[]).some(v=>v)) || ids[0];
+        const w = id? ((pset[id]||[]).filter(v=>v).join(' / ') || legacy[id] || '____') : '____';
+        return `<tr>
+          <td style="padding:6px 4px;border-bottom:1px solid #ccc">${n.replace(/<[^>]*>/g,'')}</td>
+          <td style="padding:6px 4px;border-bottom:1px solid #ccc">${r}</td>
+          <td style="padding:6px 4px;border-bottom:1px solid #ccc">${esc(String(w))}</td>
+          <td style="padding:6px 4px;border-bottom:1px solid #ccc;text-align:center">☐ ☐ ☐</td></tr>`;
+      }).join('')}
+    </table>
+    <h2 style="font-size:15px;margin:16px 0 4px">Shabbat breakfast — ${cor[0]}</h2>
+    <p style="margin:0;font-size:13px">${cor[1]} (prepped Friday — COR 25 g + oats 25 g + 1 scoop protein + berries 70 g + almond butter 32 g)</p>
+    <p style="margin:10px 0 0;font-size:12px">Shabbat lunch 12:30 · Shabbat Shalom 🕯️</p>`;
+  document.body.classList.add('printing');
+  window.print();
+  setTimeout(()=>{ document.body.classList.remove('printing'); }, 800);
 }
 function wireReps(){
   document.querySelectorAll('input.repin').forEach(inp=>inp.addEventListener('change',()=>{
@@ -718,6 +797,18 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · h
 ⑤ <b>Stop ~950 cal.</b> Water to 60–80 oz by bed. Magnesium. Tomorrow: all meals + 1 extra Ezekiel + jelly before 4 PM, gallon front-loaded, scale is fake for 2 days.`},
  {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
 ];
+/* static mirror of his Google Calendar reminders — I update this when the calendar changes */
+const REMIND_MIRROR = {
+ 0:[['7:30 AM','⚖️ Weigh in → send Claude the week report'],['7:45 AM','🧊 Salmon out (poke tonight)'],['10:15 AM','🛒 Groceries + prep + Creamis + sushi rice']],
+ 1:[['6:45 AM','🧊 Burger patty out']],
+ 2:[['6:10 AM','🧊 Salmon out (poke tonight)']],
+ 3:[['6:10 AM','🧊 Burger patty out']],
+ 4:[['6:45 AM','🧊 Salmon out (poke tonight)'],['9:00 PM','🏒 Hockey bag + print Shabbat card']],
+ 5:[['7:00 AM','🏦 Bank'],['3:00 PM','🕯️ Shabbat prep']],
+ 6:[],
+};
+const REMIND_DAILY = ['8:15 PM','👟 Steps check — on pace for 11k?'];
+
 /* auto run-coaching banners from the Runna plan; manual EVENTS for the day take priority */
 function runCoaching(){
   if(EVENTS.some(e=>e.d===isoToday())) return [];
@@ -1244,6 +1335,31 @@ function viewToday(){
     ${d.note?`<div class="note">${d.note}</div>`:''}
   </div>
 
+  ${now.getDay()===0?(()=>{
+    const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
+    const wdone = store.get('qpcut.wiz.'+dkey(isoToday()),[]);
+    return `
+  <h2 class="sec">Sunday wizard · ${wdone.length}/${wsteps.length}</h2>
+  <div class="card" id="wizList">
+    ${wsteps.map((s,i)=>`
+      <button class="suppitem${wdone.includes(i)?' done':''}" data-wz="${i}">
+        <span class="box">${wdone.includes(i)?'✓':''}</span><span class="nm">${s}</span>
+      </button>`).join('')}
+    ${wdone.length===wsteps.length?'<div class="note" style="margin-top:8px">🎉 Sunday handled. Week’s on rails.</div>':''}
+  </div>`;
+  })():''}
+
+  <div style="display:flex;justify-content:flex-end;margin-top:14px">
+    ${(now.getDay()===5||now.getDay()===4)?`<button class="btn ghost" id="printSat" style="font-size:12.5px">🖨 Print Saturday card</button>`:''}
+  </div>
+
+  <h2 class="sec">Today’s reminders <span style="text-transform:none;letter-spacing:0">· mirror of your calendar</span></h2>
+  <div class="card">
+    <ul class="sched">
+      ${[...(REMIND_MIRROR[now.getDay()]||[]), REMIND_DAILY].map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}
+    </ul>
+  </div>
+
   ${(()=>{
     const corToday = weekPick(COR_SETS)[now.getDay()];
     const cbT = store.get('qpcut.creamibatch',{idx:0,started:null});
@@ -1708,6 +1824,7 @@ function viewTrack(){
     </table>
     <div class="slotlbl" style="margin-top:14px">Weekly averages · current week runs live</div>
     <table class="wk" id="wkTable"></table>
+    <div id="etaCard"></div>
     <div class="formrow"><button class="btn" id="wkCopy">📋 Copy week report for Claude</button></div>
   </div>
 
@@ -1830,6 +1947,25 @@ function drawTrack(){
       const dTxt = d===null?'—':`<span class="${d<=0?'delta-dn':'delta-up'}">${d>0?'+':''}${d.toFixed(2)}</span>`;
       return `<tr><td>Wk ${r.k}</td><td>${r.avg!=null?r.avg.toFixed(1):'—'}</td><td>${dTxt}</td><td>${r.sAvg?r.sAvg.toFixed(1)+'k':'—'}</td></tr>`;
     }).join('');
+  /* 🎯 goal ETA from the last 3 completed weekly averages */
+  const eta = $('#etaCard');
+  if(eta){
+    const curWk2 = weekOf(isoToday());
+    const full = rows.filter(r=>r.avg!=null && r.k<curWk2);
+    if(full.length>=3){
+      const a = full[full.length-1], b = full[full.length-3];
+      const rate = (a.avg-b.avg)/2; /* lb per week, negative = losing */
+      const cur = full[full.length-1].avg;
+      if(rate<-0.05){
+        const wk165 = (cur-165)/(-rate), wk160 = (cur-160)/(-rate);
+        const dISO = w => { const d = new Date(); d.setDate(d.getDate()+Math.round(w*7));
+          return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
+        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 <b>Trend: ${rate.toFixed(2)} lb/wk.</b> At this pace: <b>165 around ${cur<=165?'— you’re there':dISO(wk165)}</b> · <b>160 around ${cur<=160?'— there':dISO(wk160)}</b>. Recalculates every completed week.</div>`;
+      } else {
+        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 Trend over the last 3 weeks is flat (${rate>=0?'+':''}${rate.toFixed(2)} lb/wk) — no ETA. First lever: steps back to 11–12k; then it’s a Q conversation.</div>`;
+      }
+    }
+  }
 }
 
 function weekReport(){
@@ -1949,6 +2085,18 @@ function wireToday(){
   wireReps();
   wireWeights();
   wireExSel();
+  wireArm();
+  const wiz = $('#wizList');
+  if(wiz) wiz.addEventListener('click',e=>{
+    const it = e.target.closest('[data-wz]'); if(!it) return;
+    const key = 'qpcut.wiz.'+dkey(isoToday());
+    let done = store.get(key,[]);
+    const i = +it.dataset.wz;
+    done = done.includes(i)? done.filter(x=>x!==i) : [...done,i];
+    store.set(key,done); render();
+  });
+  const pbtn = $('#printSat');
+  if(pbtn) pbtn.addEventListener('click', printSatCard);
   $('#mealLog').addEventListener('click',e=>{
     const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
     const eaten = store.get('qpcut.eaten',{});
@@ -2185,7 +2333,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783527142';
+const BUILD = 'b1783527680';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
