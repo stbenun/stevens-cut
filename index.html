@@ -875,22 +875,43 @@ const DI_LANES = {
  pareve:{n:'🐟 Triple-Tuna Rice Bowl', mac:'≈578 · 56P · 58C · 9F', ing:[['Tuna packets in water (StarKist-style)','3'],['Rice (dry)','55 g'],['Edamame, frozen','85 g'],['Cucumber','75 g'],['Soy sauce','20 mL']],
   st:['Rice on first (12 min) — or Sunday’s rice, 60 sec in the microwave.','Edamame: 2 min microwave.','Bowl it, soy over, sriracha if it’s around. 4 minutes with leftover rice.']},
 };
+/* lanes hold ARRAYS of variants — weekPick rotates them every Sunday */
 const DRAFT_SLOT_MEALS = {
  pre:{t:'Pre-Lift · target 200 · 16P · 32C · 1F', lanes:{
-  dairy:{n:'🥛 Oikos + Banana', mac:'≈200 · 16P · 33C · 0F', ing:[['Oikos Triple Zero','1'],['Banana','1 med']], st:['Eat. Go lift.']},
-  pareve:{n:'🐟 Tuna + Rice Cakes', mac:'≈195 · 16P · 28C · 1F', ing:[['Tuna packet in water','1'],['Rice cakes (35 cal ea)','3']], st:['Stack. Go lift.']}}},
+  dairy:[{n:'🥛 Oikos + Banana', mac:'≈200 · 16P · 33C · 0F', ing:[['Oikos Triple Zero','1'],['Banana','1 med']], st:['Eat. Go lift.']}],
+  pareve:[{n:'🐟 Tuna + Rice Cakes', mac:'≈195 · 16P · 28C · 1F', ing:[['Tuna packet in water','1'],['Rice cakes (35 cal ea)','3']], st:['Stack. Go lift.']}]}},
  bf:{t:'Breakfast · target 545 · 36P · 54C · 21F', lanes:{
-  dairy:{n:'🥛 Scramble & Toast', mac:'≈550 · 41P · 61C · 15F', ing:[['Eggs','2'],['Egg whites','150 g'],['Ezekiel bread','2 slices'],['Banana','1 med'],['Justin’s Classic almond butter','8 g']],
-   st:['Soft-scramble the eggs + whites.','Toast the Ezekiel, thin almond-butter smear, banana coins on top.','10 minutes.']}}},
- lu:{t:'Lunch · target 580 · 51P · 63C · 15F', lanes:DI_LANES},
+  dairy:[
+   {n:'🥛 Scramble & Toast', mac:'≈550 · 41P · 61C · 15F', ing:[['Eggs','2'],['Egg whites','150 g'],['Ezekiel bread','2 slices'],['Banana','1 med'],['Justin’s Classic almond butter','8 g']],
+    st:['Soft-scramble the eggs + whites.','Toast the Ezekiel, thin almond-butter smear, banana coins.','10 minutes.']},
+   {n:'🥛 Yogurt Parfait Crunch', mac:'≈535 · 39P · 72C · 12F', ing:[['Fage Total 0%','340 g'],['Fruity Pebbles (or cereal of choice)','30 g'],['Berries','70 g'],['Justin’s almond butter','16 g'],['Banana','1 med']],
+    st:['Layer yogurt / cereal / fruit in a big glass, AB drizzled between layers.','Zero cooking. Carbs run high, fat low — fine on lift mornings.']}],
+  pareve:[
+   {n:'🐟 Eggs & AB Toast', mac:'≈560 · 35P · 55C · 24F', ing:[['Eggs','2'],['Egg whites','100 g'],['Ezekiel bread','3 slices'],['Justin’s Classic almond butter','24 g'],['SF jelly','16 g']],
+    st:['Scramble eggs + whites.','Toast ×3: one AB+jelly, two for the eggs.','Fully pareve — works any morning, meat night before or not.']}]}},
+ lu:{t:'Lunch · target 580 · 51P · 63C · 15F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
  sn:{t:'Snack · target 330 · 34P · 31C · 7F', lanes:{
-  dairy:{n:'🥛 Whipped Cottage “Cheesecake” Cup', mac:'≈320 · 37P · 23C · 8F', ing:[['Good Culture 2% cottage cheese','1 cup (210 g)'],['Ryse protein','½ scoop (17 g)'],['SF Jell-O cheesecake mix','5 g'],['Nilla wafers, crushed on top','4']],
-   st:['Blend the cottage smooth (immersion blender, 30 sec) — or stir if curds don’t bother you.','Whisk in the Ryse + Jell-O mix.','Nilla crumble on top. 5 minutes, tastes like dessert.']},
-  meat:{n:'🍗 Cold Chicken & Rice Cakes', mac:'≈280 · 30P · 24C · 4F', ing:[['Cooked chicken breast (Sunday batch)','4 oz'],['Rice cakes','3'],['Deli mustard or SF ketchup','free']],
-   st:['Slice the cold chicken, stack on the cakes, sauce. Zero cooking. Runs ~50 under — add a rice cake if hungry.']},
-  pareve:{n:'🐟 Tuna Rice-Cake Stack', mac:'≈285 · 31P · 28C · 2F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['SF jelly — trust the sweet-savory','16 g']],
-   st:['Tuna on cakes, thin jelly stripe. 2 minutes. Sounds wrong, eats right.']}}},
- di:{t:'Dinner · target 585 · 54P · 58C · 19F', lanes:DI_LANES},
+  dairy:[
+   {n:'🥛 Whipped Cottage “Cheesecake” Cup', mac:'≈320 · 37P · 23C · 8F', ing:[['Good Culture 2% cottage cheese','1 cup (210 g)'],['Ryse protein','½ scoop (17 g)'],['SF Jell-O cheesecake mix','5 g'],['Nilla wafers, crushed','4']],
+    st:['Blend the cottage smooth (30 sec immersion) or stir.','Whisk in Ryse + Jell-O mix.','Nilla crumble. 5 minutes.']},
+   {n:'🥛 The Frosty', mac:'≈315 · 38P · 29C · 2.5F', ing:[['Fairlife 0%','240 mL'],['Ryse Chocolate Cookie Blast','1 scoop'],['Banana','½ med (60 g)'],['Ice + ¼ tsp xanthan','—'],['FF whip + SF choc syrup','1 Tbsp']],
+    st:['Blend everything until spoon-thick.','Whip + drizzle on top. 4 minutes — it’s a Wendy’s Frosty on your macros.']},
+   {n:'🥛 90-Second Mug Cake', mac:'≈325 · 32P · 27C · 5F', ing:[['Kodiak protein oats, blitzed to flour','30 g'],['Ryse (Lemon Cake is elite here)','1 scoop'],['Baking powder','¼ tsp'],['Fairlife 0%','60 mL'],['Strawberries','50 g'],['FF whip','on top']],
+    st:['Stir to a thick batter in a mug.','Microwave 90 sec.','Berries + whip. Warm cake on a cut.']},
+   {n:'🥛 Cinnamon “Frosted” Rice Cakes', mac:'≈334 · 32P · 34C · 6F', ing:[['Rice cakes','3'],['Oikos Triple Zero vanilla','150 g'],['Ryse Cinnamon Toast','½ scoop'],['Justin’s almond butter','10 g'],['Cinnamon','dust']],
+    st:['Whisk Oikos + Ryse into frosting.','Spread on cakes, AB drizzle, cinnamon. 5 minutes, crunchy cinnamon roll.']},
+   {n:'🥛 Cookies & Cream Yogurt Bark', mac:'≈316 · 32P · 31C · 7F', ing:[['Fage Total 0%','170 g'],['Ryse Vanilla Ice Cream','½ scoop'],['Oreo Thins','4 (46 g)'],['Raspberries','30 g']],
+    st:['Whisk yogurt + Ryse + splash of Fairlife, spread ½" on parchment.','Press in crushed Thins + berries.','Freeze 3 hrs, snap into shards. MAKE-AHEAD — Sunday move.']},
+   {n:'🥛 Hot Chocolate + Dunkers', mac:'≈320 · 38P · 21C · 6F', ing:[['Fairlife 0%, warmed','240 mL'],['Ryse Chocolate Cookie Blast','1 scoop'],['Biscoff','2'],['FF whip','on top']],
+    st:['Warm the Fairlife (not boiling), whisk the Ryse in OFF the heat.','Whip on top, Biscoff for dunking. Winter-soul option.']}],
+  pareve:[
+   {n:'🐟 Tuna Rice-Cake Stack', mac:'≈285 · 31P · 28C · 2F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['SF jelly — trust the sweet-savory','16 g']],
+    st:['Tuna on cakes, thin jelly stripe. 2 minutes. Sounds wrong, eats right.']},
+   {n:'🐟 Egg-White Scramble & Cakes', mac:'≈305 · 32P · 25C · 6F', ing:[['Egg whites','250 g'],['Egg','1'],['Rice cakes','3'],['Everything-bagel seasoning','½ tsp']],
+    st:['Fast scramble in a sprayed pan, 3 min.','Pile on the cakes, season. Pareve protein without touching tuna.']},
+   {n:'🐟 Tuna-Edamame Quick Bowl', mac:'≈320 · 37P · 14C · 7F', ing:[['Tuna packets in water','2'],['Edamame, frozen','100 g'],['Soy sauce + sriracha','free'],['Cucumber','75 g']],
+    st:['Edamame: 2 min microwave. Bowl everything. 3 minutes flat.']}]}},
+ di:{t:'Dinner · target 585 · 54P · 58C · 19F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
 };
 
 /* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
@@ -1638,13 +1659,16 @@ function viewToday(){
     </div>
     ${sm? `
     <div class="budget" style="margin-top:8px"><span><b>${sm.t}</b></span></div>
-    ${Object.entries(sm.lanes).map(([lane,t])=>`
+    ${Object.entries(sm.lanes).map(([lane,arr])=>{
+      const t = Array.isArray(arr)? weekPick(arr) : arr;
+      return `
       <details class="acc" data-acc="draft-${lane}"${openAcc.has('draft-'+lane)?' open':''} style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
         <summary><b>${t.n}</b> <span class="ingmac">${t.mac}</span></summary>
         <ul class="ing">${t.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
         <ul class="sched" style="margin-top:6px">${t.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
-      </details>`).join('')}
-    ${Object.keys(sm.lanes).length<3?'<div class="sub" style="margin-top:8px">Missing a lane for this slot? Ask Claude live — custom draft in one message.</div>':''}` : '<div class="sub" style="margin-top:8px">Pick the slot — recipes appear matched to its exact macros.</div>'}
+      </details>`;
+    }).join('')}
+    <div class="sub" style="margin-top:8px">Options rotate every Sunday. Want a different lane or a fresh idea? Ask Claude — custom draft in one message.</div>` : '<div class="sub" style="margin-top:8px">Pick the slot — recipes appear matched to its exact macros.</div>'}
   </details>`;
   })()}
 
@@ -2683,7 +2707,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783535831';
+const BUILD = 'b1783536083';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
