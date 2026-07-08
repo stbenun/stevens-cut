@@ -797,6 +797,50 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · h
 ⑤ <b>Stop ~950 cal.</b> Water to 60–80 oz by bed. Magnesium. Tomorrow: all meals + 1 extra Ezekiel + jelly before 4 PM, gallon front-loaded, scale is fake for 2 days.`},
  {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
 ];
+/* eating-out presets — kosher venues + plate rules */
+const EATOUT = {
+ teva:{name:'the restaurant · dairy Italian', rules:[
+  'Salad: chopped or Israeli, dressing on the side',
+  'Fish main FIRST on your plate: tuna Pittsburgh / branzino / snapper — 6–9 oz',
+  'Pasta: pomodoro, 1–1½ teacups total across the table’s orders',
+  'Focaccia: 2 pieces max',
+  '⚠ NUTS: butternut ravioli · bruschetta · cucumber-zucchini salad — far side of the table',
+  'Skip fried starters + dolci (or 3 shared bites)']},
+ bbq:{name:'Kosher BBQ / grill · meat', rules:[
+  'Protein anchor, two palms: grilled chicken, turkey, sirloin, lean brisket flat (skip ribs/wings — fat bombs)',
+  'One bun or laffa max — or none, double pickles + slaw instead',
+  'Fries/rings: a few off the top, never a basket',
+  'BBQ sauce = sugar: 1–2 Tbsp, on the side',
+  'Free-ish: pickles, vinegar slaw, grilled veg',
+  'Bridge shake is dairy → rinse well before the meat meal (dairy→meat needs no long wait)']},
+ home:{name:'Home dairy dinner · weighable', rules:[
+  'You can weigh this one — use plan numbers:',
+  'Fish: salmon 6 oz raw OR branzino 8–9 oz raw (leaner, eat more)',
+  'Rice + lentils: 50 g + 30 g dry (≈240 g cooked)',
+  'Veggies 200 g+, any prep with spray',
+  'Or the Jiben route: full Jiben + 2 extra egg whites',
+  'Banking a slot? +3 oz fish and +30 g dry carbs per banked slot']},
+ meat:{name:'Other meat restaurant', rules:[
+  'Grilled protein anchor, two palms, claim it first',
+  'Carb: one fist — bread OR rice OR fries-taste, not all three',
+  'Fried: 2–3 pieces total','Sauces on the side','Salad dressed light or lemon']},
+ dairy:{name:'Other dairy restaurant', rules:[
+  'Fish beats pasta as your main','Pasta/pizza: teacup / 2-slice share',
+  'Cheese-forward dishes: taste, don’t own','Salad, dressing side','Skip dessert or 3 shared bites']},
+};
+/* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
+   covering snack + dinner budgets: ~915 cal · ~85P · ~90C · ~25F. Rotates Sundays. */
+const SHABBAT_FEAST = [
+ {n:'Za’atar Chicken & Potato Tray', mac:'≈950 · 84P · 92C · 26F (incl. 1 challah slice at the table)',
+  ing:[['Chicken breast (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Olive oil','12 g (1 scant Tbsp)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Challah at the table','1 slice']],
+  st:['Oven 425°F. Halve the potatoes, toss everything with the oil + spices on ONE tray — chicken in the middle, potatoes around, beans on top.','Bake 22–25 min to 165°F in the chicken. Lemon over the whole tray out of the oven.','Fridge; reheat covered before candle-lighting or serve room temp. Total active time: ~15 min.']},
+ {n:'Friday Tomato Beef & Mejadra', mac:'≈965 · 85P · 96C · 25F',
+  ing:[['93/7 ground beef (raw)','12 oz'],['Rice (dry)','60 g'],['Lentils (dry)','45 g'],['Onion, sliced','80 g'],['Tomato paste','33 g'],['Allspice','1 tsp'],['Cinnamon','½ tsp'],['Salt','¾ tsp'],['Cucumber-tomato salad, lemon only','big bowl']],
+  st:['Lentils into boiling water 10 min, add rice + salt, cook 12 more, rest.','Meanwhile: char the onion dry in a hot pot, remove half for topping. Brown the beef, spices 30 sec, paste + ½ cup water, simmer 10 min.','Beef over the mejadra, charred onion on top. Reheats beautifully — better on day two. Active: ~25 min.']},
+ {n:'Shawarma Chicken Platter', mac:'≈920 · 86P · 91C · 22F (incl. 1 small pita/challah)',
+  ing:[['Chicken breast (raw)','12 oz'],['Rice (dry)','70 g'],['Shawarma rub: cumin 1 tsp · paprika 1 tsp · turmeric ½ tsp · coriander ½ tsp · garlic ½ tsp · salt ¾ tsp','—'],['Tahini','15 g'],['Israeli salad (tomato/cucumber/onion, lemon)','big bowl'],['Pickles','free'],['Small pita or challah','1']],
+  st:['Rub the chicken, rest while rice cooks.','Screaming grill pan or grill: 5–6 min a side to 165°F. Rest 5, slice thin against the grain.','Platter: rice base, chicken, tahini drizzled thin, salad + pickles alongside. Active: ~20 min.']},
+];
 /* static mirror of his Google Calendar reminders — I update this when the calendar changes */
 const REMIND_MIRROR = {
  0:[['7:30 AM','⚖️ Weigh in → send Claude the week report'],['7:45 AM','🧊 Salmon out (poke tonight)'],['10:15 AM','🛒 Groceries + prep + Creamis + sushi rice']],
@@ -1387,7 +1431,7 @@ function viewToday(){
   <div class="card">
     <ul class="sched">
       <li><span class="t">🥣</span><span><b>Prep Saturday breakfast tonight</b> — this Shabbat’s COR combo: <b>${weekPick(COR_SETS)[6][0]}</b> (${weekPick(COR_SETS)[6][1]}). Cold route: mix the COR + protein with Fairlife and fridge it overnight — eats like pudding. Or set it up dry for hot water your usual way.</span></li>
-      <li><span class="t">🍗</span><span><b>Friday-night dinner</b> squared away before shul.</span></li>
+      <li><span class="t">🍗</span><span><b>Shabbat feast dish</b> — this week: <b>${weekPick(SHABBAT_FEAST).n}</b> (recipe in Prep, 20–30 min, covers tonight’s snack + dinner budgets).</span></li>
       <li><span class="t">🚫</span><span><b>Skip the 330-cal snack</b> — it goes into the family dinner. Enjoy it, that’s the plan working, not breaking.</span></li>
       <li><span class="t">📝</span><span><b>Grandma card</b> printed or written down if you didn’t Thursday — no phone tomorrow.</span></li>
     </ul>
@@ -1464,6 +1508,70 @@ function viewToday(){
     <div class="pbar"><div class="pfill" style="width:${Math.min(100,oz/128*100)}%"></div></div>
     <div class="water-label">${oz} / 128 oz${oz>=128?' · 🎉 gallon done':''} · plus 10k steps minimum</div>
   </div>
+
+  ${(()=>{
+    const eo = (store.get('qpcut.eatout',{}))[ld];
+    if(eo){
+      const v = EATOUT[eo.v]||EATOUT.dairy;
+      const budget = 585 + (eo.bankL?580:0) + (eo.bankS?330:0);
+      return `
+  <h2 class="sec">🍽 Tonight: ${v.name}</h2>
+  <div class="card">
+    <div class="budget"><span>Budget: <b>${budget}</b> kcal${(eo.bankL||eo.bankS)?` (banked${eo.bankL?' lunch':''}${eo.bankS?' + snack':''})`:''}</span></div>
+    ${(eo.bankL||eo.bankS)?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
+    <ul class="sched" style="margin-top:8px">${v.rules.map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>
+    <div class="formrow"><button class="btn ghost" id="eoClear">Clear</button></div>
+  </div>`;
+    }
+    return `
+  <details class="card acc" data-acc="eatout"${openAcc.has('eatout')?' open':''} style="margin-top:14px" id="eoCard">
+    <summary><h3 style="display:inline;font-size:16px">🍽 Eating out / special dinner?</h3> ${tchip('tap to plan it')}</summary>
+    <div class="formrow" style="margin-top:10px">
+      <select id="eoVenue">${Object.entries(EATOUT).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select>
+    </div>
+    <div class="formrow">
+      <button class="btn ghost" id="eoBankL">bank lunch: no</button>
+      <button class="btn ghost" id="eoBankS">bank snack: no</button>
+      <button class="btn" id="eoGo">Build my plan</button>
+    </div>
+  </details>`;
+  })()}
+
+  <details class="card acc" data-acc="offplan"${openAcc.has('offplan')?' open':''} id="opCard">
+    <summary><h3 style="display:inline;font-size:16px">🍪 Snacked off-plan?</h3> ${tchip('log it, fix it')}</summary>
+    ${(()=>{
+      const ops = (store.get('qpcut.offplan',{}))[ld]||[];
+      const eatenT = (store.get('qpcut.eaten',{}))[ld]||{};
+      const pool = [];
+      if(!eatenT.sn) pool.push(['Tonight’s Creami: skip the topping', 140]);
+      if(!eatenT.di){ pool.push(['Dinner: potatoes/rice → half portion', 85]); pool.push(['Dinner: skip the keto bun', 50]); pool.push(['Dinner: skip bun + egg', 130]); }
+      if(!eatenT.bf) pool.push(['Breakfast: almond butter 32 g → 16 g', 95]);
+      const fixes = c => {
+        const sorted = [...pool].sort((a,b)=>b[1]-a[1]);
+        const combos = [];
+        for(const start of sorted){
+          let sum = start[1], picks = [start[0]];
+          for(const p of sorted){ if(p[0]!==start[0] && sum < c-20){ sum += p[1]; picks.push(p[0]); } }
+          combos.push({picks, sum});
+          if(combos.length>=2) break;
+        }
+        return combos;
+      };
+      return `
+    ${ops.map((o,i)=>`
+      <div class="noteitem"><div class="meta"><span class="chip notetag off">~${o.cal} cal</span>
+        <button class="xdel" data-opx="${i}" aria-label="delete">×</button></div>
+        <p>${esc(o.text)}</p>
+        ${fixes(o.cal).map(f=>`<div class="coachline" style="text-align:left">→ ${f.picks.join(' + ')} (${f.sum>=o.cal?'covers it':`covers ${f.sum} — tell Claude about the rest`})</div>`).join('')||'<div class="coachline" style="text-align:left">→ everything’s eaten today — tell Claude, we’ll trim tomorrow</div>'}
+      </div>`).join('')}
+    <div class="formrow" style="margin-top:8px">
+      <input type="text" id="opText" placeholder="What was it?" style="flex:1;font-family:var(--body)">
+      <input type="number" id="opCal" placeholder="~cal" inputmode="numeric" style="width:84px">
+    </div>
+    <div class="formrow"><button class="btn" id="opAdd">Log it</button>
+      <span class="sub">No idea on calories? Ask Claude first.</span></div>`;
+    })()}
+  </details>
 
   <h2 class="sec">Daily dials${backfill?` · ${ld}`:''} · 10 seconds, tap each once</h2>
   <div class="card" id="dialCard">
@@ -1657,6 +1765,18 @@ function viewPrep(){
       ${r.s&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
     </details>`;
   }).join('')}
+  <h2 class="sec">🕯 Shabbat feast · one dish = Friday snack + dinner (~915 cal · ~85P)</h2>
+  ${(()=>{
+    const f = weekPick(SHABBAT_FEAST);
+    return `
+  <details class="card acc" data-acc="feast"${openAcc.has('feast')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip('Thu night / Fri PM · 20-30 min')}</summary>
+    <div class="budget" style="margin-top:6px"><span><b>${f.mac}</b></span></div>
+    <ul class="ing">${f.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
+    <ul class="sched" style="margin-top:8px">${f.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+    <div class="sub" style="margin-top:8px">Rotates each Sunday. Eat it as your portion at the family table — challah/pita already counted. Add its proteins to the grocery run.</div>
+  </details>`;
+  })()}
   ${riceMathHTML(counts)}
 
   ${(()=>{
@@ -2021,6 +2141,9 @@ function weekReport(){
     if(dl.e||dl.h||dl.s) parts.push(`dials E${dl.e||'·'}/H${dl.h||'·'}/S${dl.s||'·'}`);
     const rpe = store.get('qpcut.rpe.'+dkey(d),0);
     if(rpe) parts.push(`session RPE ${rpe}/5`);
+    const eo = (store.get('qpcut.eatout',{}))[d];
+    if(eo) parts.push(`dining out: ${(EATOUT[eo.v]||{}).name||eo.v}${(eo.bankL||eo.bankS)?` (banked${eo.bankL?' lunch':''}${eo.bankS?' snack':''})`:''}`);
+    ((store.get('qpcut.offplan',{}))[d]||[]).forEach(o=>parts.push(`off-plan: ${o.text}${o.cal?` ~${o.cal} cal`:''}`));
     if(parts.length) lines.push(`${day} ${d.slice(5)}: ${parts.join(' · ')}`);
   });
   const menuSet = Object.entries(counts).filter(([k,v])=>v>0).map(([k,v])=>`${OPTBYID[k]?OPTBYID[k].name:k} ×${v}`);
@@ -2168,6 +2291,40 @@ function wireToday(){
     const v = $('#tbuyName').value.trim(); if(!v) return;
     const buy = store.get('qpcut.buy',[]); buy.push({name:v+' 🔄',done:false});
     store.set('qpcut.buy',buy); render();
+  });
+  /* eating-out planner */
+  let eoL = false, eoS = false;
+  const bl = $('#eoBankL'), bs = $('#eoBankS'), go = $('#eoGo');
+  if(bl) bl.addEventListener('click',()=>{ eoL=!eoL; bl.textContent=`bank lunch: ${eoL?'YES':'no'}`; bl.classList.toggle('ghost',!eoL); });
+  if(bs) bs.addEventListener('click',()=>{ eoS=!eoS; bs.textContent=`bank snack: ${eoS?'YES':'no'}`; bs.classList.toggle('ghost',!eoS); });
+  if(go) go.addEventListener('click',()=>{
+    const m = store.get('qpcut.eatout',{});
+    m[logDate||isoToday()] = {v: $('#eoVenue').value, bankL: eoL, bankS: eoS};
+    store.set('qpcut.eatout',m); render();
+  });
+  const eoC = $('#eoClear');
+  if(eoC) eoC.addEventListener('click',()=>{
+    const m = store.get('qpcut.eatout',{});
+    delete m[logDate||isoToday()];
+    store.set('qpcut.eatout',m); render();
+  });
+  /* off-plan snack log */
+  const opA = $('#opAdd');
+  if(opA) opA.addEventListener('click',()=>{
+    const text = $('#opText').value.trim();
+    const cal = parseInt($('#opCal').value)||0;
+    if(!text) return;
+    const m = store.get('qpcut.offplan',{});
+    (m[logDate||isoToday()] = m[logDate||isoToday()]||[]).push({text, cal});
+    store.set('qpcut.offplan',m); render();
+  });
+  const opC = $('#opCard');
+  if(opC) opC.addEventListener('click',e=>{
+    const del = e.target.closest('[data-opx]'); if(!del) return;
+    const m = store.get('qpcut.offplan',{});
+    const arr = m[logDate||isoToday()]||[];
+    arr.splice(+del.dataset.opx,1);
+    store.set('qpcut.offplan',m); render();
   });
   $('#mealLog').addEventListener('click',e=>{
     const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
@@ -2405,7 +2562,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783530846';
+const BUILD = 'b1783531760';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
