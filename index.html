@@ -1572,29 +1572,32 @@ function viewToday(){
     <summary><h3 style="display:inline;font-size:16px">🍪 Snacked off-plan?</h3> ${tchip('log it, fix it')}</summary>
     ${(()=>{
       const ops = (store.get('qpcut.offplan',{}))[ld]||[];
-      const eatenT = (store.get('qpcut.eaten',{}))[ld]||{};
-      const pool = [];
-      if(!eatenT.sn) pool.push(['Tonight’s Creami: skip the topping', 140]);
-      if(!eatenT.di){ pool.push(['Dinner: potatoes/rice → half portion', 85]); pool.push(['Dinner: skip the keto bun', 50]); pool.push(['Dinner: skip bun + egg', 130]); }
-      if(!eatenT.bf) pool.push(['Breakfast: almond butter 32 g → 16 g', 95]);
-      const fixes = c => {
-        const sorted = [...pool].sort((a,b)=>b[1]-a[1]);
-        const combos = [];
-        for(const start of sorted){
-          let sum = start[1], picks = [start[0]];
-          for(const p of sorted){ if(p[0]!==start[0] && sum < c-20){ sum += p[1]; picks.push(p[0]); } }
-          combos.push({picks, sum});
-          if(combos.length>=2) break;
-        }
-        return combos;
-      };
+      const FIXPOOL = [
+        ['Breakfast: almond butter 32 g → 16 g', 95],
+        ['Lunch: sweet potato / rice → half', 95],
+        ['Lunch: skip the guac cup', 100],
+        ['Snack: Creami without the topping', 140],
+        ['Snack: skip it entirely', 330],
+        ['Dinner: potatoes / rice → half', 85],
+        ['Dinner: skip the keto bun', 50],
+        ['Dinner: skip bun + egg', 130],
+        ['Pre-lift: skip (rest days only)', 200],
+      ];
       return `
-    ${ops.map((o,i)=>`
+    ${ops.map((o,i)=>{
+      const chosen = o.fixes||[];
+      const covered = FIXPOOL.filter(([l])=>chosen.includes(l)).reduce((a,[,c])=>a+c,0);
+      return `
       <div class="noteitem"><div class="meta"><span class="chip notetag off">~${o.cal} cal</span>
+        <span class="d">${covered? `covered ${Math.min(covered,o.cal)}${covered>=o.cal?' ✓':` / ${o.cal}`}`:'pick where it comes off ↓'}</span>
         <button class="xdel" data-opx="${i}" aria-label="delete">×</button></div>
         <p>${esc(o.text)}</p>
-        ${fixes(o.cal).map(f=>`<div class="coachline" style="text-align:left">→ ${f.picks.join(' + ')} (${f.sum>=o.cal?'covers it':`covers ${f.sum} — tell Claude about the rest`})</div>`).join('')||'<div class="coachline" style="text-align:left">→ everything’s eaten today — tell Claude, we’ll trim tomorrow</div>'}
-      </div>`).join('')}
+        <div class="pickrow" style="margin-top:6px">
+          ${FIXPOOL.map(([l,c],fi)=>`<button class="mealpick${chosen.includes(l)?' on':''}" data-opfix="${i}|${fi}">${l} <span class="rem">−${c}</span></button>`).join('')}
+        </div>
+        ${covered && covered<o.cal? `<div class="coachline" style="text-align:left">→ ${o.cal-covered} cal short — pick another, or tell Claude to trim tomorrow</div>`:''}
+      </div>`;
+    }).join('')}
     <div class="formrow" style="margin-top:8px">
       <input type="text" id="opText" placeholder="What was it?" style="flex:1;font-family:var(--body)">
       <input type="number" id="opCal" placeholder="~cal" inputmode="numeric" style="width:84px">
@@ -2178,7 +2181,7 @@ function weekReport(){
       const bk = (eo.banks||[]).filter(k=>k!=='di').map(k=>SLOT_BUDGET[k]?SLOT_BUDGET[k][1]:k);
       parts.push(`dining out: ${(EATOUT[eo.v]||{}).name||eo.v}${bk.length?` (banked ${bk.join(' + ')})`:''}`);
     }
-    ((store.get('qpcut.offplan',{}))[d]||[]).forEach(o=>parts.push(`off-plan: ${o.text}${o.cal?` ~${o.cal} cal`:''}`));
+    ((store.get('qpcut.offplan',{}))[d]||[]).forEach(o=>parts.push(`off-plan: ${o.text}${o.cal?` ~${o.cal} cal`:''}${(o.fixes&&o.fixes.length)?` (offset: ${o.fixes.join('; ')})`:''}`));
     if(parts.length) lines.push(`${day} ${d.slice(5)}: ${parts.join(' · ')}`);
   });
   const menuSet = Object.entries(counts).filter(([k,v])=>v>0).map(([k,v])=>`${OPTBYID[k]?OPTBYID[k].name:k} ×${v}`);
@@ -2358,6 +2361,18 @@ function wireToday(){
   });
   const opC = $('#opCard');
   if(opC) opC.addEventListener('click',e=>{
+    const fix = e.target.closest('[data-opfix]');
+    if(fix){
+      const [oi, fi] = fix.dataset.opfix.split('|').map(Number);
+      const FIXLBLS = ['Breakfast: almond butter 32 g → 16 g','Lunch: sweet potato / rice → half','Lunch: skip the guac cup','Snack: Creami without the topping','Snack: skip it entirely','Dinner: potatoes / rice → half','Dinner: skip the keto bun','Dinner: skip bun + egg','Pre-lift: skip (rest days only)'];
+      const m = store.get('qpcut.offplan',{});
+      const o = (m[logDate||isoToday()]||[])[oi]; if(!o) return;
+      o.fixes = o.fixes||[];
+      const l = FIXLBLS[fi];
+      o.fixes = o.fixes.includes(l)? o.fixes.filter(x=>x!==l) : [...o.fixes, l];
+      store.set('qpcut.offplan',m); render();
+      return;
+    }
     const del = e.target.closest('[data-opx]'); if(!del) return;
     const m = store.get('qpcut.offplan',{});
     const arr = m[logDate||isoToday()]||[];
@@ -2600,7 +2615,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783532702';
+const BUILD = 'b1783533042';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
