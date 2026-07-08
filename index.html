@@ -798,35 +798,61 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · h
  {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
 ];
 /* eating-out presets — kosher venues + plate rules */
+const SLOT_BUDGET = {bf:[545,'breakfast'], pre:[200,'pre-lift'], lu:[580,'lunch'], sn:[330,'snack'], di:[585,'dinner']};
 const EATOUT = {
- teva:{name:'the restaurant · dairy Italian', rules:[
-  'Salad: chopped or Israeli, dressing on the side',
-  'Fish main FIRST on your plate: tuna Pittsburgh / branzino / snapper — 6–9 oz',
-  'Pasta: pomodoro, 1–1½ teacups total across the table’s orders',
-  'Focaccia: 2 pieces max',
-  '⚠ NUTS: butternut ravioli · bruschetta · cucumber-zucchini salad — far side of the table',
-  'Skip fried starters + dolci (or 3 shared bites)']},
- bbq:{name:'Kosher BBQ / grill · meat', rules:[
+ bbq:{name:'BBQ', rules:[
   'Protein anchor, two palms: grilled chicken, turkey, sirloin, lean brisket flat (skip ribs/wings — fat bombs)',
   'One bun or laffa max — or none, double pickles + slaw instead',
   'Fries/rings: a few off the top, never a basket',
   'BBQ sauce = sugar: 1–2 Tbsp, on the side',
   'Free-ish: pickles, vinegar slaw, grilled veg',
   'Bridge shake is dairy → rinse well before the meat meal (dairy→meat needs no long wait)']},
- home:{name:'Home dairy dinner · weighable', rules:[
-  'You can weigh this one — use plan numbers:',
+ homedairy:{name:'Home Dairy', rules:[
+  'You can weigh this one — plan numbers:',
   'Fish: salmon 6 oz raw OR branzino 8–9 oz raw (leaner, eat more)',
   'Rice + lentils: 50 g + 30 g dry (≈240 g cooked)',
   'Veggies 200 g+, any prep with spray',
   'Or the Jiben route: full Jiben + 2 extra egg whites',
-  'Banking a slot? +3 oz fish and +30 g dry carbs per banked slot']},
- meat:{name:'Other meat restaurant', rules:[
-  'Grilled protein anchor, two palms, claim it first',
-  'Carb: one fist — bread OR rice OR fries-taste, not all three',
-  'Fried: 2–3 pieces total','Sauces on the side','Salad dressed light or lemon']},
- dairy:{name:'Other dairy restaurant', rules:[
-  'Fish beats pasta as your main','Pasta/pizza: teacup / 2-slice share',
-  'Cheese-forward dishes: taste, don’t own','Salad, dressing side','Skip dessert or 3 shared bites']},
+  'Per banked slot: +3 oz fish and +30 g dry carbs']},
+ homemeat:{name:'Home Meat', rules:[
+  'Weighable — plan numbers:',
+  'Chicken breast 7–10 oz raw OR 93/7 beef 6–8 oz raw',
+  'Rice 50–70 g dry or potatoes 220–300 g raw',
+  'Veggies 200 g+, spray only',
+  'SF ketchup / tomato paste / mustard — basically free',
+  'Per banked slot: +2–3 oz protein and +30 g dry carbs']},
+ restdairy:{name:'Restaurant Dairy', rules:[
+  'Fish beats pasta as your main — claim it FIRST when plates land',
+  'Pasta/pizza: teacup or 2-slice share, taste everything, own nothing',
+  'Cheese-forward dishes: a few bites',
+  'Salad early, dressing on the side',
+  '⚠ Nut check: pesto (pine nuts), desserts, candied-nut salads — ask, and keep serving spoons separate',
+  'Dessert: 3 shared bites or skip']},
+ restmeat:{name:'Restaurant Meat', rules:[
+  'Grilled protein anchor, two palms, first on your plate',
+  'Carb: one fist — bread OR rice OR a fries-taste, not all three',
+  'Fried starters: 2–3 pieces total',
+  'Sauces on the side',
+  'Salads dressed light or lemon',
+  '⚠ Nut check on salads/desserts — ask']},
+ sushi:{name:'Sushi', rules:[
+  'Open with edamame (and miso if they have it)',
+  'Anchor: sashimi plate or 1 salmon/tuna-avocado roll — cap 2 rolls total',
+  'Skip: tempura anything, spicy-mayo drizzle, “crunch” topping (fried batter)',
+  'Wasabi, ginger, soy — free (soy’s already in your macros)',
+  'Still hungry → more sashimi, never more rice']},
+ pizza:{name:'Pizza Night', rules:[
+  'Big salad FIRST — it decides how slice 3 feels',
+  '2 slices cap, thin crust beats thick',
+  'Skip garlic knots / fries sides',
+  'Protein patch afterward if the day is short: Oikos or a half-scoop shake']},
+ simcha:{name:'Simcha / Event', rules:[
+  'ONE recon lap of the whole spread before touching anything',
+  'One plate per course, built protein-first (grilled chicken, fish, carving station)',
+  'The fried appetizer waves: let 2 of every 3 pass you',
+  'Kiddush/l’chaim: one and done — alcohol is 7 cal/g and lowers plate standards',
+  'One dessert, picked deliberately, eaten slowly',
+  'You came for the people — work the room, not the buffet']},
 };
 /* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
    covering snack + dinner budgets: ~915 cal · ~85P · ~90C · ~25F. Rotates Sundays. */
@@ -847,7 +873,7 @@ const REMIND_MIRROR = {
  1:[['6:45 AM','🧊 Burger patty out']],
  2:[['6:10 AM','🧊 Salmon out (poke tonight)']],
  3:[['6:10 AM','🧊 Burger patty out']],
- 4:[['6:45 AM','🧊 Salmon out (poke tonight)'],['9:00 PM','🏒 Hockey bag + print Shabbat card']],
+ 4:[['6:45 AM','🧊 Salmon out (poke tonight)'],['7:05 AM','🧊 Shabbat feast protein out — fridge thaw'],['9:00 PM','🏒 Hockey bag + print Shabbat card']],
  5:[['7:00 AM','🏦 Bank'],['3:00 PM','🕯️ Shabbat prep']],
  6:[],
 };
@@ -1435,7 +1461,9 @@ function viewToday(){
       <li><span class="t">🚫</span><span><b>Skip the 330-cal snack</b> — it goes into the family dinner. Enjoy it, that’s the plan working, not breaking.</span></li>
       <li><span class="t">📝</span><span><b>Grandma card</b> printed or written down if you didn’t Thursday — no phone tomorrow.</span></li>
     </ul>
-  </div>`:''}
+  </div>
+  <h2 class="sec">🕯 Tonight’s feast recipe</h2>
+  ${feastCardHTML('feast-today')}`:''}
 
   <h2 class="sec">Logging day · applies to meals, hydration &amp; stack</h2>
   <div class="card">
@@ -1512,28 +1540,31 @@ function viewToday(){
   ${(()=>{
     const eo = (store.get('qpcut.eatout',{}))[ld];
     if(eo){
-      const v = EATOUT[eo.v]||EATOUT.dairy;
-      const budget = 585 + (eo.bankL?580:0) + (eo.bankS?330:0);
+      const v = EATOUT[eo.v]||EATOUT.restdairy;
+      const banks = eo.banks || [...(eo.bankL?['lu']:[]), ...(eo.bankS?['sn']:[]), 'di'];
+      const budget = banks.reduce((a,k)=>a+(SLOT_BUDGET[k]?SLOT_BUDGET[k][0]:0),0);
+      const bankNames = banks.map(k=>SLOT_BUDGET[k]?SLOT_BUDGET[k][1]:k).join(' + ');
       return `
-  <h2 class="sec">🍽 Tonight: ${v.name}</h2>
+  <h2 class="sec">🍽 The plan: ${v.name}</h2>
   <div class="card">
-    <div class="budget"><span>Budget: <b>${budget}</b> kcal${(eo.bankL||eo.bankS)?` (banked${eo.bankL?' lunch':''}${eo.bankS?' + snack':''})`:''}</span></div>
-    ${(eo.bankL||eo.bankS)?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
+    <div class="budget"><span>Budget: <b>${budget}</b> kcal <span class="daytag">(${bankNames})</span></span></div>
+    ${budget>700?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
     <ul class="sched" style="margin-top:8px">${v.rules.map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>
     <div class="formrow"><button class="btn ghost" id="eoClear">Clear</button></div>
   </div>`;
     }
     return `
   <details class="card acc" data-acc="eatout"${openAcc.has('eatout')?' open':''} style="margin-top:14px" id="eoCard">
-    <summary><h3 style="display:inline;font-size:16px">🍽 Eating out / special dinner?</h3> ${tchip('tap to plan it')}</summary>
+    <summary><h3 style="display:inline;font-size:16px">🍽 Eating out / special meal?</h3> ${tchip('tap to plan it')}</summary>
     <div class="formrow" style="margin-top:10px">
       <select id="eoVenue">${Object.entries(EATOUT).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select>
     </div>
-    <div class="formrow">
-      <button class="btn ghost" id="eoBankL">bank lunch: no</button>
-      <button class="btn ghost" id="eoBankS">bank snack: no</button>
-      <button class="btn" id="eoGo">Build my plan</button>
+    <div class="slotlbl" style="margin-top:10px">Which meals am I skipping for it?</div>
+    <div class="pickrow">
+      ${Object.entries(SLOT_BUDGET).map(([k,[cal,nm]])=>`
+        <button class="mealpick${k==='di'?' on':''}" data-bank="${k}">skipping ${nm}</button>`).join('')}
     </div>
+    <div class="formrow"><button class="btn" id="eoGo">Build my plan</button></div>
   </details>`;
   })()}
 
@@ -1636,6 +1667,17 @@ function viewMeals(){
    </details>`).join('');
 }
 
+function feastCardHTML(accId){
+  const f = weekPick(SHABBAT_FEAST);
+  return `
+  <details class="card acc" data-acc="${accId}"${openAcc.has(accId)?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip('Thu night / Fri PM · 20-30 min')}</summary>
+    <div class="budget" style="margin-top:6px"><span><b>${f.mac}</b></span></div>
+    <ul class="ing">${f.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
+    <ul class="sched" style="margin-top:8px">${f.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+    <div class="sub" style="margin-top:8px">Rotates each Sunday. Eat it as your portion at the family table — challah/pita already counted. Protein comes out of the freezer THURSDAY MORNING (fridge thaw).</div>
+  </details>`;
+}
 function riceMathHTML(counts){
   const nR = counts['l1r']||0;
   const nPoke = counts['d2']||0;
@@ -1766,17 +1808,7 @@ function viewPrep(){
     </details>`;
   }).join('')}
   <h2 class="sec">🕯 Shabbat feast · one dish = Friday snack + dinner (~915 cal · ~85P)</h2>
-  ${(()=>{
-    const f = weekPick(SHABBAT_FEAST);
-    return `
-  <details class="card acc" data-acc="feast"${openAcc.has('feast')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip('Thu night / Fri PM · 20-30 min')}</summary>
-    <div class="budget" style="margin-top:6px"><span><b>${f.mac}</b></span></div>
-    <ul class="ing">${f.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
-    <ul class="sched" style="margin-top:8px">${f.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
-    <div class="sub" style="margin-top:8px">Rotates each Sunday. Eat it as your portion at the family table — challah/pita already counted. Add its proteins to the grocery run.</div>
-  </details>`;
-  })()}
+  ${feastCardHTML('feast')}
   ${riceMathHTML(counts)}
 
   ${(()=>{
@@ -2142,7 +2174,10 @@ function weekReport(){
     const rpe = store.get('qpcut.rpe.'+dkey(d),0);
     if(rpe) parts.push(`session RPE ${rpe}/5`);
     const eo = (store.get('qpcut.eatout',{}))[d];
-    if(eo) parts.push(`dining out: ${(EATOUT[eo.v]||{}).name||eo.v}${(eo.bankL||eo.bankS)?` (banked${eo.bankL?' lunch':''}${eo.bankS?' snack':''})`:''}`);
+    if(eo){
+      const bk = (eo.banks||[]).filter(k=>k!=='di').map(k=>SLOT_BUDGET[k]?SLOT_BUDGET[k][1]:k);
+      parts.push(`dining out: ${(EATOUT[eo.v]||{}).name||eo.v}${bk.length?` (banked ${bk.join(' + ')})`:''}`);
+    }
     ((store.get('qpcut.offplan',{}))[d]||[]).forEach(o=>parts.push(`off-plan: ${o.text}${o.cal?` ~${o.cal} cal`:''}`));
     if(parts.length) lines.push(`${day} ${d.slice(5)}: ${parts.join(' · ')}`);
   });
@@ -2293,13 +2328,16 @@ function wireToday(){
     store.set('qpcut.buy',buy); render();
   });
   /* eating-out planner */
-  let eoL = false, eoS = false;
-  const bl = $('#eoBankL'), bs = $('#eoBankS'), go = $('#eoGo');
-  if(bl) bl.addEventListener('click',()=>{ eoL=!eoL; bl.textContent=`bank lunch: ${eoL?'YES':'no'}`; bl.classList.toggle('ghost',!eoL); });
-  if(bs) bs.addEventListener('click',()=>{ eoS=!eoS; bs.textContent=`bank snack: ${eoS?'YES':'no'}`; bs.classList.toggle('ghost',!eoS); });
+  const eoBanks = new Set(['di']);
+  document.querySelectorAll('[data-bank]').forEach(b=>b.addEventListener('click',()=>{
+    const k = b.dataset.bank;
+    eoBanks.has(k)? eoBanks.delete(k) : eoBanks.add(k);
+    b.classList.toggle('on', eoBanks.has(k));
+  }));
+  const go = $('#eoGo');
   if(go) go.addEventListener('click',()=>{
     const m = store.get('qpcut.eatout',{});
-    m[logDate||isoToday()] = {v: $('#eoVenue').value, bankL: eoL, bankS: eoS};
+    m[logDate||isoToday()] = {v: $('#eoVenue').value, banks: [...eoBanks]};
     store.set('qpcut.eatout',m); render();
   });
   const eoC = $('#eoClear');
@@ -2562,7 +2600,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783532102';
+const BUILD = 'b1783532702';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
