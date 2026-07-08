@@ -1435,10 +1435,6 @@ function viewToday(){
     ['bottle','🚰 Water bottle','30 oz'],['pre','⚡ Pre-workout','~9 oz'],
     ['eaa','💪 EAA','~9 oz'],['soda','🥤 Seltzer / diet soda','12 oz'],
   ];
-  const meat = store.get('qpcut.meat', null);
-  let dairyLine = '';
-  if (meat && meat.day===todayKey())
-    dairyLine = `<div class="dairy-ok">Meat at ${meat.disp} → dairy OK from <b>${meat.ok}</b></div>`;
   const done = store.get('qpcut.supps.'+dkey(ld), []);
   const counts = store.get('qpcut.menucounts',{});
   const eaten = store.get('qpcut.eaten',{});
@@ -1467,6 +1463,13 @@ function viewToday(){
     ${d.note?`<div class="note">${d.note}</div>`:''}
   </div>
 
+  <h2 class="sec">Today’s reminders <span style="text-transform:none;letter-spacing:0">· mirror of your calendar</span></h2>
+  <div class="card">
+    <ul class="sched">
+      ${[...(REMIND_MIRROR[now.getDay()]||[]), REMIND_DAILY].map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}
+    </ul>
+  </div>
+
   ${now.getDay()===0?(()=>{
     const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
     const wdone = store.get('qpcut.wiz.'+dkey(isoToday()),[]);
@@ -1481,12 +1484,36 @@ function viewToday(){
   </div>`;
   })():''}
 
-  <h2 class="sec">Today’s reminders <span style="text-transform:none;letter-spacing:0">· mirror of your calendar</span></h2>
-  <div class="card">
-    <ul class="sched">
-      ${[...(REMIND_MIRROR[now.getDay()]||[]), REMIND_DAILY].map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}
-    </ul>
-  </div>
+  ${(()=>{
+    const loc = store.get('qpcut.loc','deal');
+    const wo = workoutFor(new Date(ld+'T12:00:00').getDay(), loc);
+    if(!wo) return '';
+    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
+    const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[new Date(ld+'T12:00:00').getDay()]||[];
+    return `
+  <h2 class="sec">Lift${backfill?` · ${ld}`:' · today'}</h2>
+  <details class="card acc" data-acc="lift"${openAcc.has('lift')?' open':''} id="liftLog">
+    <summary><span class="daytag">${wo.tag}</span></summary>
+    <ul class="ex">${wo.ex.map(([n,r],i)=>{
+      const t = parseTargets(r);
+      const sets = t? t.sets : (parseInt(r)||3);
+      const reps = repLog[i]||[];
+      const v = verdict(reps, t);
+      return `<li style="display:block">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
+          <span style="${v?'color:var(--muted)':''}">${n}</span><span class="r">${r}</span>
+        </div>
+        ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
+      </li>`;
+    }).join('')}</ul>
+    ${(()=>{
+      const rpe = store.get('qpcut.rpe.'+dkey(ld), 0);
+      return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
+        <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
+    })()}
+    <div class="sub" style="margin-top:8px">Grey number = target. Verdicts are automatic. Weights sync with Train → PRs.</div>
+  </details>`;
+  })()}
 
   ${(()=>{
     const corToday = weekPick(COR_SETS)[now.getDay()];
@@ -1533,52 +1560,11 @@ function viewToday(){
     ${backfill?`<div class="note" style="margin:10px 0 0">Backfill mode — everything below saves to <b>${ld}</b>.</div>`:''}
   </div>
 
-  ${(()=>{
-    const loc = store.get('qpcut.loc','deal');
-    const wo = workoutFor(new Date(ld+'T12:00:00').getDay(), loc);
-    if(!wo) return '';
-    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
-    const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[new Date(ld+'T12:00:00').getDay()]||[];
-    return `
-  <h2 class="sec">Lift${backfill?` · ${ld}`:' · today'}</h2>
-  <details class="card acc" data-acc="lift"${openAcc.has('lift')?' open':''} id="liftLog">
-    <summary><span class="daytag">${wo.tag}</span></summary>
-    <ul class="ex">${wo.ex.map(([n,r],i)=>{
-      const t = parseTargets(r);
-      const sets = t? t.sets : (parseInt(r)||3);
-      const reps = repLog[i]||[];
-      const v = verdict(reps, t);
-      return `<li style="display:block">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
-          <span style="${v?'color:var(--muted)':''}">${n}</span><span class="r">${r}</span>
-        </div>
-        ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
-      </li>`;
-    }).join('')}</ul>
-    ${(()=>{
-      const rpe = store.get('qpcut.rpe.'+dkey(ld), 0);
-      return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
-        <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
-    })()}
-    <div class="sub" style="margin-top:8px">Grey number = target. Verdicts are automatic. Weights sync with Train → PRs.</div>
-  </details>`;
-  })()}
-
   <h2 class="sec">Log meals${backfill?` · ${ld}`:' · today'}</h2>
   <div class="card" id="mealLog">
     ${logCard}
     <div class="sub" style="margin-top:10px">Set the week’s menu in Prep. Numbers show what’s left this week.</div>
   </div>
-
-  <details class="card acc" data-acc="meat6"${(meat&&meat.day===todayKey())||openAcc.has('meat6')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">⏱ Meat → dairy wait</h3> ${tchip('6 hours')}</summary>
-    <div class="timer-row">
-      <input type="time" id="meatTime" aria-label="Time you finished meat">
-      <button class="btn" id="meatSet">Set</button>
-      <button class="btn ghost" id="meatClear">Clear</button>
-    </div>
-    <div id="dairyOut">${dairyLine}</div>
-  </details>
 
   <h2 class="sec">Hydration · ${backfill?ld:'goal 1 gallon'}</h2>
   <div class="card">
@@ -2492,16 +2478,6 @@ function wireToday(){
     d[id] = Math.max(0,(d[id]||0)+(b.dataset.dinc?1:-1));
     store.set(key,d); render();
   }));
-  $('#meatSet').addEventListener('click',()=>{
-    const v = $('#meatTime').value; if(!v) return;
-    const [h,m] = v.split(':').map(Number);
-    const fmt = (H,M)=>{const ap=H>=12?'PM':'AM';const h12=((H+11)%12)+1;return `${h12}:${String(M).padStart(2,'0')} ${ap}`;};
-    const okH = (h+6)%24;
-    const rec = {day:todayKey(), disp:fmt(h,m), ok:fmt(okH,m)+(h+6>=24?' (next day)':'')};
-    store.set('qpcut.meat', rec);
-    $('#dairyOut').innerHTML = `<div class="dairy-ok">Meat at ${rec.disp} → dairy OK from <b>${rec.ok}</b></div>`;
-  });
-  $('#meatClear').addEventListener('click',()=>{ store.set('qpcut.meat',null); $('#dairyOut').innerHTML=''; });
   $('#suppList').addEventListener('click',e=>{
     const it = e.target.closest('.suppitem'); if(!it) return;
     const i = +it.dataset.i, key = 'qpcut.supps.'+dkey(logDate||isoToday());
@@ -2707,7 +2683,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783536083';
+const BUILD = 'b1783539686';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
