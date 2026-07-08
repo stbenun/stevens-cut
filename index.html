@@ -1271,9 +1271,11 @@ function todayBuyCardHTML(){
         <span class="xdel" data-tx="${i}" role="button" aria-label="delete">×</span>
       </button>`).join(''):'<div class="sub">Quick list — stays here, never hits the grocery list.</div>'}
     <div class="formrow">
-      <input type="text" id="tbuyName" placeholder="Add quick item…" style="flex:1;font-family:var(--body)">
-      <button class="btn" id="tbuyAdd">Add</button>
+      <input type="text" id="tbuyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
+      <button class="btn ghost" id="tbuyAdd">Quick</button>
+      <button class="btn" id="gbuyAdd">🔄 Grocery</button>
     </div>
+    <div class="sub" style="margin-top:6px">Ran out of something? Type it → 🔄 Grocery — it’s on Sunday’s list. “Quick” keeps it here only.</div>
     ${master.length?`
     <div class="slotlbl" style="margin-top:14px">From Prep — these are on the grocery list</div>
     ${master.map((b,i)=>`
@@ -1425,6 +1427,11 @@ function viewToday(){
         ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
       </li>`;
     }).join('')}</ul>
+    ${(()=>{
+      const rpe = store.get('qpcut.rpe.'+dkey(ld), 0);
+      return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
+        <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
+    })()}
     <div class="sub" style="margin-top:8px">Type reps per set (grey number = the target). Verdicts follow the double-progression rule automatically. Weights sync with Train → PRs.</div>
   </details>`;
   })()}
@@ -1456,6 +1463,33 @@ function viewToday(){
         </span></div>`).join('')}
     <div class="pbar"><div class="pfill" style="width:${Math.min(100,oz/128*100)}%"></div></div>
     <div class="water-label">${oz} / 128 oz${oz>=128?' · 🎉 gallon done':''} · plus 10k steps minimum</div>
+  </div>
+
+  <h2 class="sec">Daily dials${backfill?` · ${ld}`:''} · 10 seconds, tap each once</h2>
+  <div class="card" id="dialCard">
+    ${(()=>{
+      const dl = store.get('qpcut.dials.'+dkey(ld), {});
+      return [['e','⚡ Energy'],['h','🍽 Hunger'],['s','🩹 Soreness']].map(([k,lbl])=>`
+        <div class="mrow"><span class="nm">${lbl}</span>
+          <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${(dl[k]||0)>=v?' on':''}" data-dial="${k}" data-v="${v}" aria-label="${lbl} ${v}"></button>`).join('')}</span>
+        </div>`).join('');
+    })()}
+    <div class="sub" style="margin-top:8px">1 = low · 5 = high. These feed Claude’s Sunday analysis — patterns show up in 2–3 weeks.</div>
+  </div>
+
+  <h2 class="sec">Ask Q · lands in Sunday’s report automatically</h2>
+  <div class="card" id="askqCard">
+    ${(()=>{
+      const qs = store.get('qpcut.askq',[]);
+      return (qs.length? qs.map((q,i)=>`
+        <div class="noteitem"><div class="meta"><span class="d">${q.d.slice(5)}</span>
+          <button class="xdel" data-qx="${i}" aria-label="delete">×</button></div>
+          <p>${esc(q.text)}</p></div>`).join('') : '<div class="sub">Anything you want to ask Q this week — jot it the second you think of it.</div>');
+    })()}
+    <div class="formrow">
+      <input type="text" id="askqText" placeholder="Question for Q…" style="flex:1;font-family:var(--body)">
+      <button class="btn" id="askqAdd">Add</button>
+    </div>
   </div>
 
   <h2 class="sec">Stack${backfill?` · ${ld}`:' · today'}</h2>
@@ -1983,6 +2017,10 @@ function weekReport(){
     const parts = [];
     if(e){ if(e.w!=null)parts.push(e.w.toFixed(1)+' lb'); if(e.s!=null)parts.push(e.s+'k steps'); if(e.sl!=null)parts.push(e.sl+'h sleep'); }
     if(meals) parts.push('ate: '+meals);
+    const dl = store.get('qpcut.dials.'+dkey(d),{});
+    if(dl.e||dl.h||dl.s) parts.push(`dials E${dl.e||'·'}/H${dl.h||'·'}/S${dl.s||'·'}`);
+    const rpe = store.get('qpcut.rpe.'+dkey(d),0);
+    if(rpe) parts.push(`session RPE ${rpe}/5`);
     if(parts.length) lines.push(`${day} ${d.slice(5)}: ${parts.join(' · ')}`);
   });
   const menuSet = Object.entries(counts).filter(([k,v])=>v>0).map(([k,v])=>`${OPTBYID[k]?OPTBYID[k].name:k} ×${v}`);
@@ -2003,6 +2041,8 @@ function weekReport(){
     if(exLines.length){ lines.push('', `Lift ${day} (${wo.tag}):`, ...exLines); }
   });
   if(notes.length){ lines.push('','Notes:'); notes.forEach(n=>lines.push(`- [${n.tag} ${n.d.slice(5)}] ${n.text}`)); }
+  const askq = store.get('qpcut.askq',[]);
+  if(askq.length){ lines.push('','Questions for Q:'); askq.forEach(q=>lines.push(`- ${q.text}`)); }
   return lines.join('\n');
 }
 
@@ -2097,6 +2137,38 @@ function wireToday(){
   });
   const pbtn = $('#printSat');
   if(pbtn) pbtn.addEventListener('click', printSatCard);
+  const dc = $('#dialCard');
+  if(dc) dc.addEventListener('click',e=>{
+    const b = e.target.closest('[data-dial]'); if(!b) return;
+    const key = 'qpcut.dials.'+dkey(logDate||isoToday());
+    const dl = store.get(key,{});
+    const k = b.dataset.dial, v = +b.dataset.v;
+    dl[k] = (dl[k]===v)? 0 : v;
+    store.set(key,dl); render();
+  });
+  document.querySelectorAll('[data-rpe]').forEach(b=>b.addEventListener('click',()=>{
+    const key = 'qpcut.rpe.'+dkey(logDate||isoToday());
+    const cur = store.get(key,0), v = +b.dataset.rpe;
+    store.set(key, cur===v? 0 : v); render();
+  }));
+  const qa = $('#askqAdd');
+  if(qa) qa.addEventListener('click',()=>{
+    const v = $('#askqText').value.trim(); if(!v) return;
+    const qs = store.get('qpcut.askq',[]); qs.push({d:isoToday(), text:v});
+    store.set('qpcut.askq',qs); render();
+  });
+  const qc = $('#askqCard');
+  if(qc) qc.addEventListener('click',e=>{
+    const del = e.target.closest('[data-qx]'); if(!del) return;
+    const qs = store.get('qpcut.askq',[]); qs.splice(+del.dataset.qx,1);
+    store.set('qpcut.askq',qs); render();
+  });
+  const gb = $('#gbuyAdd');
+  if(gb) gb.addEventListener('click',()=>{
+    const v = $('#tbuyName').value.trim(); if(!v) return;
+    const buy = store.get('qpcut.buy',[]); buy.push({name:v+' 🔄',done:false});
+    store.set('qpcut.buy',buy); render();
+  });
   $('#mealLog').addEventListener('click',e=>{
     const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
     const eaten = store.get('qpcut.eaten',{});
@@ -2333,7 +2405,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783527680';
+const BUILD = 'b1783530846';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
