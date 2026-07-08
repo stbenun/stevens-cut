@@ -1140,7 +1140,7 @@ const RECIPES = [
    ing:[['Asparagus',100,'g'],['Everything-bagel seasoning',0.5,'tsp']],
    st:['Dry pan 3–4 min, rolling occasionally, until blistered.','Spray, season, lemon zest if it’s out.']},
   {n:'Poke Bowl', w:'night of · per bowl', s:null,
-   ing:[['Sushi-grade salmon (raw, fridge-thawed)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame, thawed',85,'g'],['Cucumber, sliced',75,'g'],['Seaweed packet, crumbled',1,'ct']],
+   ing:[['Sushi-grade salmon (raw, fridge-thawed)',6,'oz'],['Sushi rice (batch math below)',50,'g'],['Soy sauce',30,'mL'],['Edamame, thawed',85,'g'],['Cucumber, sliced',75,'g'],['Seaweed packet, crumbled',1,'ct']],
    st:['Rice back to life: splash of water, 45–60 sec microwave.','Cube the cold salmon ¾".','Build over the rice, soy over everything, seaweed on top.']},
  ]},
  {name:'Baja Week', shop:['Tajín Clásico','Chili powder','Dried oregano','Smoked paprika','Fresh limes','1 jalapeño'],
@@ -1164,7 +1164,7 @@ const RECIPES = [
    ing:[['String beans',150,'g'],['Tajín',0.5,'tsp']],
    st:['Air fryer 390°F 7 min (or dry-pan char 3 min).','Tajín after, not before.']},
   {n:'Baja Poke Bowl', w:'night of · per bowl', s:null,
-   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber',75,'g'],['Jalapeño, thin slices',4,'ct'],['Lime (juice)',0.25,'lemon'],['Tajín',0.25,'tsp']],
+   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice (batch math below)',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber',75,'g'],['Jalapeño, thin slices',4,'ct'],['Lime (juice)',0.25,'lemon'],['Tajín',0.25,'tsp']],
    st:['Standard build, then lime + Tajín over the salmon, jalapeño on top.']},
  ]},
  {name:'Deli Week', shop:['Fresh dill','Ground coriander','Deli mustard','Dried oregano','Dried basil','White vinegar'],
@@ -1188,7 +1188,7 @@ const RECIPES = [
    ing:[['String beans',150,'g'],['Garlic powder',0.25,'tsp'],['Balsamic drizzle (after)',5,'g']],
    st:['Grill basket or foil, 6–7 min.','Balsamic hits AFTER the grill, never on it.']},
   {n:'Everything-Dill Poke Bowl', w:'night of · per bowl', s:null,
-   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice — see Rice Math',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber ribbons',75,'g'],['Everything-bagel seasoning',0.5,'tsp'],['Fresh dill',1,'tsp']],
+   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice (batch math below)',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber ribbons',75,'g'],['Everything-bagel seasoning',0.5,'tsp'],['Fresh dill',1,'tsp']],
    st:['Standard build; everything seasoning + dill over the salmon. Bagel-shop poke.']},
  ]},
 ];
@@ -1754,19 +1754,22 @@ function riceMathHTML(counts){
       </ul>
       <div class="sub">Rinse until the water runs clear. Rice + water + salt in the pot → bring to a boil → lid on, LOW heat 12 min → heat OFF, lid stays on 10 min → fluff. Rice cooker: same amounts, white setting. Portioning: weigh the total cooked rice, divide by ${nR} — each portion = your 55 g dry.</div>
     </div>`:''}
-    ${nPoke>0?`
-    <div class="opt"><div class="head"><b>Sushi rice — ${nPoke} Poke Bowl${nPoke>1?'s':''} (auto from your menu)</b></div>
-      <ul class="ing">
-        <li><span>Sushi / short-grain rice (dry)</span><span class="q">${nPoke*50} g</span></li>
-        <li><span>Water</span><span class="q">${nPoke*60} mL</span></li>
-        <li><span>Rice vinegar</span><span class="q">${nPoke*7} mL</span></li>
-        <li><span>Lakanto</span><span class="q">${nPoke*2} g</span></li>
-        <li><span>Salt</span><span class="q">${nPoke>=3?Math.round(nPoke*1)+' g':'pinch'}</span></li>
-      </ul>
-      <div class="sub"><b>Cook the full batch Sunday.</b> Rinse 3–4× until clear. Rice + water → boil → lid on, LOW 12 min → off heat, 10 min rest. While it’s hot: warm the vinegar + Lakanto + salt 15 sec to dissolve, fold in gently, fan it as you fold (that’s the shine). Portion into ${nPoke} containers, fridge (good 4 days). Each poke night: splash of water + 45–60 sec microwave, then the cold salmon on top.</div>
-    </div>`:''}
-    ${nR===0&&nPoke===0?'<div class="sub">Add Chicken Meal — Rice or Poke Bowls to the menu above — exact rice, water, vinegar, and salt amounts appear here.</div>':''}
+    ${nR===0?'<div class="sub">Add Chicken Meal — Rice to the menu above — exact rice and water amounts appear here. (Sushi rice lives inside the Poke Bowl recipe.)</div>':''}
   </div>`;
+}
+function sushiMathHTML(counts){
+  const nPoke = counts['d2']||0;
+  if(!nPoke) return '<div class="sub" style="margin-top:8px">Add Poke Bowls to the menu — the Sunday sushi-rice batch math appears here.</div>';
+  return `
+    <div class="varlbl" style="margin-top:10px">Sunday sushi-rice batch — ${nPoke} bowl${nPoke>1?'s':''} (auto from your menu)</div>
+    <ul class="ing">
+      <li><span>Sushi / short-grain rice (dry)</span><span class="q">${nPoke*50} g</span></li>
+      <li><span>Water</span><span class="q">${nPoke*60} mL</span></li>
+      <li><span>Rice vinegar</span><span class="q">${nPoke*7} mL</span></li>
+      <li><span>Lakanto</span><span class="q">${nPoke*2} g</span></li>
+      <li><span>Salt</span><span class="q">${nPoke>=3?Math.round(nPoke*1)+' g':'pinch'}</span></li>
+    </ul>
+    <div class="sub"><b>Cook the full batch Sunday.</b> Rinse 3–4× until clear → boil → lid on, LOW 12 min → off heat 10 min. Fold in the warmed vinegar + Lakanto + salt while hot, fanning as you fold. Portion into ${nPoke} containers (good 4 days); each poke night: splash of water + 45–60 sec microwave, cold salmon on top.</div>`;
 }
 
 function viewPrep(){
@@ -1848,10 +1851,11 @@ function viewPrep(){
   </details>
   ${buyCardHTML()}
 
-  <h2 class="sec">Sunday cook flow · weigh RAW, always</h2>
-  <div class="card">
-    <ul class="sched">${COOKFLOW.map(([n,s])=>`<li><span class="t">${n}</span><span>${s}</span></li>`).join('')}</ul>
-  </div>
+  <h2 class="sec">Sunday cook flow</h2>
+  <details class="card acc" data-acc="cookflow"${openAcc.has('cookflow')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">🔥 The 7 steps</h3> ${tchip('weigh RAW, always')}</summary>
+    <ul class="sched" style="margin-top:8px">${COOKFLOW.map(([n,s])=>`<li><span class="t">${n}</span><span>${s}</span></li>`).join('')}</ul>
+  </details>
 
   <h2 class="sec">Recipes · ${weekPick(RECIPES).name} · Sunday batch first, then night-of</h2>
   ${[...weekPick(RECIPES).recipes].sort((a,b)=>(b.w.startsWith('Sunday')?1:0)-(a.w.startsWith('Sunday')?1:0)).map((r,ri)=>{
@@ -1865,6 +1869,7 @@ function viewPrep(){
       </summary>
       <ul class="ing">${r.ing.map(([l,q,u])=>`<li><span>${l}</span><span class="q">${qtyF(q,u,mult)}</span></li>`).join('')}</ul>
       <ul class="sched" style="margin-top:8px">${r.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+      ${/Poke/i.test(r.n)? sushiMathHTML(counts) : ''}
       ${r.s&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
     </details>`;
   }).join('')}
@@ -2678,7 +2683,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783535502';
+const BUILD = 'b1783535831';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
