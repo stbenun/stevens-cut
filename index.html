@@ -949,9 +949,9 @@ function runCoaching(){
   const thuMi = miles(rw[2]), sunDesc = rw[3], sunMi = miles(sunDesc);
   if(day===4 && thuMi){
     if(thuMi>=14) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min. Fueled run.`,
-      msg:`<b>1:30 lunch:</b> Chicken Meal, pick RICE over sweet potato. <b>4:45 PM:</b> Ezekiel + SF jelly AND 1 banana (~290 cal / 65 C) + 16–24 oz water with a hydration stick. <b>Carry:</b> ${thuMi>=18?'3':'2'} kosher gels or ${thuMi>=18?'7-8':'5-6'} Medjool dates + the stick bottle. <b>During:</b> first fuel at minute 45, then every 30–35 min — never wait to feel bad. <b>Within 45 min after:</b> Fairlife 320 mL + ½ scoop as a shake, then dinner ~1 hr later (Poke Bowl if it’s in the menu). The mid-run fuel is EXTRA on top of 2,220 — mandatory, and it goes in the Sunday report to coach.`});
+      msg:`<b>Pace: 9:45–10:30 /mi, HR ≤ 155 the whole way</b> — at this distance a fast start ends the run early. <b>1:30 lunch:</b> Chicken Meal, pick RICE over sweet potato. <b>4:45 PM (or 45–60 min before a morning run):</b> Ezekiel + SF jelly AND 1 banana (~290 cal / 65 C) + 16–24 oz water with a hydration stick. <b>Carry:</b> ${thuMi>=18?'3':'2'} kosher gels or ${thuMi>=18?'7-8':'5-6'} Medjool dates + the stick bottle. <b>During:</b> first fuel at minute 45, then every 30–35 min — never wait to feel bad. <b>Within 45 min after:</b> Fairlife 320 mL + ½ scoop as a shake, then dinner ~1 hr later (Poke Bowl if it’s in the menu). The mid-run fuel is EXTRA on top of 2,220 — mandatory, and it goes in the Sunday report to coach.`});
     else if(thuMi>=8) out.push({title:`🏃 Long run today — ${thuMi} mi · ~${Math.round(thuMi*10)}–${Math.round(thuMi*11.5)} min`,
-      msg:`<b>4:30–5:00 PM:</b> Ezekiel + SF jelly (180 cal / 40 C) + 16 oz water with a hydration stick. <b>Carry:</b> 1 kosher gel or 2–3 Medjool dates — take at minute 45 if you’ll pass 90 minutes. <b>After:</b> eat the snack or dinner within 45 min of finishing — carbs + protein first, don’t wait until 10 PM starving. Any mid-run fuel is extra by design; log it in a note.`});
+      msg:`<b>Pace: 9:45–10:30 /mi, HR ≤ 155.</b> If HR passes 160, slow down or walk 60 sec — walking counts, blowing up doesn’t. Speed lives on Sunday, not today. <b>Fuel 45–60 min before</b> (morning or evening run): Ezekiel + SF jelly (180 cal / 40 C) + 16 oz water with a hydration stick. <b>Carry:</b> 1 kosher gel or 2–3 Medjool dates — take at minute 45 if you’ll pass 90 minutes. <b>After:</b> eat the snack or dinner within 45 min of finishing — carbs + protein first, don’t wait until 10 PM starving. Any mid-run fuel is extra by design; log it in a note.`});
     else out.push({title:`🏃 Long run today — ${thuMi} mi · easy ~${Math.round(thuMi*10)} min`,
       msg:`<b>~5:00 PM:</b> Yogurt + Banana (Oikos + 1 banana, 200 cal) + 8–16 oz water. <b>Run:</b> conversational pace the whole way — if you can’t talk, slow down. No mid-run fuel needed. <b>After:</b> normal snack and dinner, nothing changes.`});
   }
@@ -1922,7 +1922,7 @@ function viewPrep(){
   <h2 class="sec">Creami batch · make all 8 on Sunday</h2>
   <details class="card acc" data-acc="creami"${openAcc.has('creami')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">${batch.name}</h3> ${tchip(cb.started?`${left}/8 in the freezer`:'tap to open')}</summary>
-    <div class="sub" style="margin-top:8px">Every cup: <b>320 mL Fairlife FF · 40 g Lakanto · ½ scoop protein · thickener · extract</b> → blend, lid, freeze 24 h. ≈210 cal / 32 P before topping; topping budget = the plan’s <b>140-cal mix-in</b>, added after the spin (all amounts sized to 140). Re-spin with a splash of Fairlife if crumbly. Counter runs off your Ninja Creami snack logs on Today.</div>
+    <div class="sub" style="margin-top:8px">Every cup: <b>320 mL Fairlife FF · 40 g Lakanto · ½ scoop protein · thickener · extract</b> → blend, lid, freeze 24 h. ≈210 cal / 32 P before topping; topping budget = the plan’s <b>140-cal mix-in</b>, added after the spin (all amounts sized to 140). Re-spin with a splash of Fairlife if crumbly. Counter runs off your Ninja Creami snack logs on Today. <b>Spin at eat time, not ahead</b> — a pre-spun cup refreezes icy. No machine that night (Shabbat, travel)? Spin it before, keep it in the freezer ≤ 2 h and eat it soft-ish, or make bark: spread the spun cup thin on parchment, freeze, snap into pieces — bark stays good for days.</div>
     ${done ? `
       <div class="note">🎉 ${batch.name} finished — <b>${nextBatch.name}</b> is up. Recipes below; hit the button once you’ve made them.</div>
       ${cupHTML(nextBatch.cups)}
@@ -2701,7 +2701,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783706267';
+const BUILD = 'b1783706503';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
