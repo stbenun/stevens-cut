@@ -1823,23 +1823,11 @@ function feastCardHTML(accId){
     <div class="sub" style="margin-top:8px">Rotates each Sunday. Eat it as your portion at the family table — challah/pita already counted. Protein comes out of the freezer THURSDAY MORNING (fridge thaw).</div>
   </details>`;
 }
-function riceMathHTML(counts){
+function riceNoteHTML(counts){
   const nR = counts['l1r']||0;
-  const nPoke = counts['d2']||0;
-  return `
-  <h2 class="sec">Rice math · auto from your menu</h2>
-  <div class="card">
-    ${nR>0?`
-    <div class="opt"><div class="head"><b>White rice — ${nR} Chicken Meal${nR>1?'s':''} — Rice (auto from your menu)</b></div>
-      <ul class="ing">
-        <li><span>White rice (dry)</span><span class="q">${nR*55} g</span></li>
-        <li><span>Water</span><span class="q">${nR*85} mL</span></li>
-        <li><span>Salt</span><span class="q">${nR>=3?'½ tsp':'¼ tsp'}</span></li>
-      </ul>
-      <div class="sub">Cook it as <b>this week’s themed rice</b> — full recipe up in the Recipes section, auto-scaled to the same ${nR} portion${nR>1?'s':''} (${weekPick(RECIPES).recipes.find(r=>r.s==='l1r')?weekPick(RECIPES).recipes.find(r=>r.s==='l1r').n:'weekly rice'}). Rice cooker: same rice + water amounts, white setting, seasonings in the pot. Portioning: weigh the total cooked, divide by ${nR}.</div>
-    </div>`:''}
-    ${nR===0?'<div class="sub">Add Chicken Meal — Rice to the menu above — exact rice and water amounts appear here. (Sushi rice lives inside the Poke Bowl recipe.)</div>':''}
-  </div>`;
+  return `<div class="sub" style="margin-top:6px">${nR>0
+    ?`Batch total for your ${nR} Chicken Meal${nR>1?'s':''} — Rice: <b>${nR*55} g dry rice + ${nR*85} mL water</b> (amounts above already show it). Rice cooker instead: same amounts, seasonings in the pot, white setting — skip the stovetop steps.`
+    :'No Chicken Meal — Rice in this week’s menu, so nothing to batch. Set it in the menu above and this recipe scales itself. (Sushi rice for poke lives inside the Poke Bowl recipe.)'}</div>`;
 }
 function sushiMathHTML(counts){
   const nPoke = counts['d2']||0;
@@ -1954,12 +1942,12 @@ function viewPrep(){
       <ul class="ing">${r.ing.map(([l,q,u])=>`<li><span>${l}</span><span class="q">${qtyF(q,u,mult)}</span></li>`).join('')}</ul>
       <ul class="sched" style="margin-top:8px">${r.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
       ${/Poke/i.test(r.n)? sushiMathHTML(counts) : ''}
-      ${r.s&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
+      ${r.s==='l1r'? riceNoteHTML(counts) : ''}
+      ${r.s&&r.s!=='l1r'&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
     </details>`;
   }).join('')}
   <h2 class="sec">🕯 Shabbat feast · one dish = Friday snack + dinner (~915 cal · ~85P)</h2>
   ${feastCardHTML('feast')}
-  ${riceMathHTML(counts)}
 
   ${(()=>{
     const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
@@ -2777,7 +2765,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783884281';
+const BUILD = 'b1783884369';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
