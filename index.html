@@ -919,13 +919,13 @@ const DRAFT_SLOT_MEALS = {
 const SHABBAT_FEAST = [
  {n:'Za’atar Chicken & Potato Tray', mac:'≈950 · 84P · 92C · 26F (incl. 1 challah slice at the table)',
   ing:[['Chicken breast (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Olive oil','12 g (1 scant Tbsp)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Challah at the table','1 slice']],
-  st:['Oven 425°F. Halve the potatoes, toss everything with the oil + spices on ONE tray — chicken in the middle, potatoes around, beans on top.','Bake 22–25 min to 165°F in the chicken. Lemon over the whole tray out of the oven.','Fridge; reheat covered before candle-lighting or serve room temp. Total active time: ~15 min.']},
+  st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken, the 12 g oil, and all the spices — toss with your hands until everything is coated.','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
  {n:'Friday Tomato Beef & Mejadra', mac:'≈965 · 85P · 96C · 25F',
   ing:[['93/7 ground beef (raw)','12 oz'],['Rice (dry)','60 g'],['Lentils (dry)','45 g'],['Onion, sliced','80 g'],['Tomato paste','33 g'],['Allspice','1 tsp'],['Cinnamon','½ tsp'],['Salt','¾ tsp'],['Cucumber-tomato salad, lemon only','big bowl']],
-  st:['Lentils into boiling water 10 min, add rice + salt, cook 12 more, rest.','Meanwhile: char the onion dry in a hot pot, remove half for topping. Brown the beef, spices 30 sec, paste + ½ cup water, simmer 10 min.','Beef over the mejadra, charred onion on top. Reheats beautifully — better on day two. Active: ~25 min.']},
+  st:['Pot 1 (the mejadra): lentils into boiling water, 10 min. Then add the rice + ¾ tsp salt, turn to low (3/10), lid on, 12 more min. Kill the heat and leave the lid on — it finishes itself.','Pot 2, while that cooks: empty DRY pot on high (8/10), 2-min preheat. Onion slices in, spread flat, untouched 2 min, then stirred another 2–3 — you want real dark-brown edges (that’s "charred," and it’s the flavor of the dish). Take HALF the onions out and set aside for topping.','Same pot, medium-high (7/10): beef in with the remaining onions. Crumble small, 4–5 min to zero pink.','Spices in, 30 seconds. Tomato paste + ½ cup water, stir until dissolved, then LOW (2/10) for 10 min until thick.','Assemble: mejadra on the platter, beef over it, the reserved charred onions on top. Reheats beautifully — honestly better on day two. Active time ~25 min.']},
  {n:'Shawarma Chicken Platter', mac:'≈920 · 86P · 91C · 22F (incl. 1 small pita/challah)',
   ing:[['Chicken breast (raw)','12 oz'],['Rice (dry)','70 g'],['Shawarma rub: cumin 1 tsp · paprika 1 tsp · turmeric ½ tsp · coriander ½ tsp · garlic ½ tsp · salt ¾ tsp','—'],['Tahini','15 g'],['Israeli salad (tomato/cucumber/onion, lemon)','big bowl'],['Pickles','free'],['Small pita or challah','1']],
-  st:['Rub the chicken, rest while rice cooks.','Screaming grill pan or grill: 5–6 min a side to 165°F. Rest 5, slice thin against the grain.','Platter: rice base, chicken, tahini drizzled thin, salad + pickles alongside. Active: ~20 min.']},
+  st:['Stir the shawarma rub together. Pat the chicken dry with paper towels, coat every side, and let it sit while the rice cooks.','Rice: 70 g dry, rinsed until the water runs clearish, + 105 mL water + pinch of salt. Boil, then low (3/10) with the lid on, 12 min, then off the heat 5 min — don’t peek.','Grill pan on high (8/10), preheated 3 full min, 3 sprays. Chicken down: 5–6 min, don’t move it. Flip once, 5–6 more. 165°F inside = done.','Rest the chicken 5 min, then slice thin ACROSS the grain — look at the direction the meat fibers run and cut perpendicular to them.','Platter: rice as the base, chicken on top, the 15 g tahini drizzled thin over it, salad + pickles alongside. Active time ~20 min.']},
 ];
 /* static mirror of his Google Calendar reminders — I update this when the calendar changes */
 const REMIND_MIRROR = {
@@ -2767,7 +2767,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783863077';
+const BUILD = 'b1783863121';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
