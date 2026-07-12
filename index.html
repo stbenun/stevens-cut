@@ -1226,6 +1226,9 @@ const RECIPES = [
   {n:'Everything-Dill Poke Bowl', w:'night of · per bowl', s:null,
    ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice (batch math below)',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber ribbons',75,'g'],['Everything-bagel seasoning',0.5,'tsp'],['Fresh dill',1,'tsp']],
    st:['Rice: 50 g cold batch rice, ~10 mL water on top, microwave 45–60 sec, fluff.','Cold salmon into ¾" cubes. Cucumber into ribbons: drag a vegetable peeler down its length, rotating as you go.','Build: rice → salmon, edamame, cucumber ribbons in piles → 30 mL soy over everything.','Everything seasoning + dill over the salmon. Bagel-shop poke.']},
+  {n:'Air-Fried Salmon Bites Bowl', w:'night of · per bowl · cooked poke, same macros', s:null,
+   ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice (from the Poke recipe math)',50,'g'],['Everything-bagel seasoning',0.5,'tsp'],['Fresh dill',1,'tsp'],['Soy sauce (for dipping/drizzle)',30,'mL'],['Edamame',85,'g'],['Cucumber',75,'g']],
+   st:['Rice: 50 g cold batch rice, ~10 mL water on top, microwave 45–60 sec, fluff.','Cut the cold salmon into 1" cubes (slightly bigger than raw poke — they shrink). Pat them DRY with paper towels — wet fish steams instead of crisping.','3 sprays over the cubes + the everything seasoning, tossed gently in a bowl.','Air fryer 390°F: bites in a single layer, not touching. 6–7 min, NO flipping needed. Done = golden edges and the cubes flake when pressed with a fork — don’t go past 8 min, salmon dries fast.','Build: rice → hot bites on top → edamame + cucumber in piles → dill over the fish → soy drizzled or as a dipping cup.','Eat right away — crispy bites don’t hold.']},
  ]},
  {name:'Smokehouse Week', shop:['Smoked paprika','Mustard powder','Liquid smoke (tiny bottle)','Lakanto Golden (brown-sugar sub)','Scallions','Lemons'],
   recipes:[
@@ -2795,7 +2798,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783889490';
+const BUILD = 'b1783894351';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
