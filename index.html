@@ -386,7 +386,7 @@ function verdict(reps, t){
 /* maps each program line (by day + index) to its PR row ids, per location */
 const WMAP = {
  deal:{
-  1:[['pr_legcurl'],['pr_smith','pr_mon_hack'],['pr_hip'],['pr_sldl'],['pr_abd']],
+  1:[['pr_legcurl'],['pr_smith','pr_hack'],['pr_hip'],['pr_sldl'],['pr_abd']],
   2:[['pr_incdb','pr_incl'],['pr_flat'],['pr_lat','pr_yraise'],['pr_tri','pr_dips'],['pr_crossext','pr_push'],['pr_pec','pr_crossover']],
   3:[['pr_row','pr_csr'],['pr_mag','pr_widelat'],['pr_straight','pr_slat'],['pr_pre'],['pr_ham'],['pr_shrug'],['pr_reardelt']],
   5:[['pr_lunge'],['pr_legpress','pr_hack'],['pr_split'],['pr_ext'],['pr_add'],['pr_calf']],
@@ -666,7 +666,6 @@ function workoutFor(dayIdx, loc){
 const PRS = [
  {day:'Monday · Legs', items:[
    ['pr_legcurl','Leg curl','',0,'3 × 8-12'],['pr_smith','Smith squat','',1,'3 × 10-8-6'],
-   ['pr_mon_hack','Hack squat','',0,'3 × 10-8-6'],
    ['pr_hip','Hip thrusts','',0,'3 × 8-12'],['pr_sldl','Stiff-leg deadlift','',0,'3 × 8-12'],['pr_abd','Abductors','',0,'3 × 12']]},
  {day:'Tuesday · Push', items:[
    ['pr_incl','Incline Smith press','',0,'3 × 10-8-6'],['pr_incdb','Incline DB press','',0,'3 × 10-8-6'],
@@ -1375,6 +1374,11 @@ const store = {
   get(k,f){ try{ const v=JSON.parse(localStorage.getItem(k)); return v===null?f:v; }catch(e){ return f; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
 };
+/* one-time migration: Monday hack squat (pr_mon_hack) merged into the shared pr_hack row (Jul 13) */
+(()=>{ const p = store.get('qpcut.prset',{});
+  const had = (p['pr_mon_hack']||[]).some(v=>v);
+  if(had){ if(!(p['pr_hack']||[]).some(v=>v)) p['pr_hack'] = p['pr_mon_hack'];
+    delete p['pr_mon_hack']; store.set('qpcut.prset',p); } })();
 let logDate = null; /* null = today; ISO date when backfilling meals/drinks */
 const dkey = i => { const [y,m,d] = i.split('-'); return `${+y}-${+m}-${+d}`; };
 const openAcc = new Set(); /* which collapsible sections are open */
@@ -2809,7 +2813,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783970868';
+const BUILD = 'b1783977085';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
