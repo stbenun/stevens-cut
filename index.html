@@ -1224,9 +1224,9 @@ const RECIPES = [
   {n:'Whole Baked Sweet Potatoes', w:'Sunday batch', s:'l1',
    ing:[['Sweet potato (raw, whole)',225,'g'],['Cinnamon (after)',0.25,'tsp']],
    st:['Oven 400°F. Scrub the potatoes and stab each one 4–5 times with a fork — unvented ones can burst.','Straight on the oven rack, with a sheet pan on the shelf below to catch drips. 45–50 min.','Done = a knife slides to the center with zero resistance and they’re oozing a little at the fork holes.','Cool, then fridge them whole. Scoop portions all week — weigh the scoop. Cinnamon goes on at serving.']},
-  {n:'Garlic-Dill Crispy Smashed Potatoes', w:'night of · per dinner', s:null,
-   ing:[['Potatoes (raw, small)',220,'g'],['Garlic powder',0.25,'tsp'],['Dried or fresh dill',0.5,'tsp'],['Salt',0.25,'tsp'],['White vinegar (after)',5,'mL']],
-   st:['Small potatoes into boiling salted water for 12 min — fork-tender but not falling apart.','Drain. On a cutting board, press each one flat to ~½" with the bottom of a mug. Cracked, ragged edges are the GOAL — those are what get crispy.','3 sprays per side.','Air fryer 390°F, 12 min, no flipping needed. Done = golden and crackly at the edges.','Out of the basket: garlic powder, dill, salt, and the 5 mL vinegar splashed over. Toss once.']},
+  {n:'Garlic-Dill Crispy Potatoes', w:'night of · per dinner', s:null,
+   ing:[['Potatoes (raw)',220,'g'],['Garlic powder',0.25,'tsp'],['Dried or fresh dill',0.5,'tsp'],['Salt',0.25,'tsp'],['White vinegar (after)',5,'mL']],
+   st:['¾" cubes (thumb-width), all the same size — and SKIN ON. The skin is flavor and structure; peeled potatoes fall apart (ask me how we know).','Cubes in a microwave-safe bowl, splash (~15 mL) of water, plate on top. Microwave 4 min — just fork-tender.','Air fryer 390°F, 12–14 min, shake at minute 6. Done = golden with crispy corners, fork goes in clean.','Out of the basket: garlic powder, dill, salt, and the 5 mL vinegar splashed over. Toss once.']},
   {n:'Balsamic Charred String Beans', w:'Sunday batch', s:'chix',
    ing:[['String beans',150,'g'],['Garlic powder',0.25,'tsp'],['Balsamic drizzle (after)',5,'g']],
    st:['Beans in a bowl: 5 sprays + garlic powder + a pinch of salt, tossed with your hands.','Air fryer 390°F, 7–8 min, one basket shake at minute 4. Done = blistered with some dark spots, still a little snap.','Out of the basket, onto the plate or into the containers FIRST — then the balsamic drizzled over. Balsamic in the fryer burns to tar.']},
@@ -2808,7 +2808,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783900429';
+const BUILD = 'b1783956569';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
