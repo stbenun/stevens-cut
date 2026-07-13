@@ -300,11 +300,11 @@ const tchip = t => `<span class="chip time">${t}</span>`;
 /* ing rows: [label, qty, [cal, P, C, F]] — per-ingredient macros from his sheet */
 const SLOTS = [
  {key:'pre', slot:'Pre-Lift', time:'7:45 AM · Fri 3:30 PM', b:[200,16,32,1], opts:[
-   {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Tuna packet','1',[90,15,5,1]]], t:[195,16,26,1]}]},
+   {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Tuna packet','1',[70,17,0,0]]], t:[175,18,21,0]}]},
    {id:'p3', name:'Rice Cakes + Yogurt', k:[['dairy']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Oikos Triple Zero','1',[90,15,6,0]]], t:[195,16,27,0]}]},
    {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',[160,10,30,1]],['Sugar-free jelly','32 g',[20,0,10,0]]], t:[180,10,40,1]}]},
    {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',[90,15,6,0]],['Banana','1 med',[110,1,27,0]]], t:[200,16,33,0]}]},
-   {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',[90,15,5,1]],['Banana','1 med',[110,1,27,0]]], t:[200,16,32,1]}]},
+   {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',[70,17,0,0]],['Banana','1 med',[110,1,27,0]]], t:[180,18,27,0]}]},
  ]},
  {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[545,36,54,21], opts:[
    {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',[95,3,16,2]],['Ryse protein','1 scoop',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',[190,7,7,17]]], t:[545,37,54,21]}]},
@@ -883,14 +883,14 @@ const DI_LANES = {
   st:['Veg into a hot sprayed pan, 2 min.','Eggs + whites + mozz in, soft scramble on medium-low.','Cottage stirred in OFF the heat — keeps it creamy. Ezekiel toasted. 12 minutes.']},
  meat:{n:'🍗 Speed Chicken Skillet', mac:'≈575 · 51P · 57C · 15F', ing:[['Chicken breast, sliced THIN (raw)','7 oz'],['Potatoes','250 g'],['String beans','150 g'],['Mini guac cup','1'],['SF ketchup (G. Hughes / Heinz NSA)','32 g']],
   st:['Potatoes cubed → microwave 4 min covered.','Thin chicken slices into a screaming sprayed pan — 2-3 min a side.','Potatoes + beans into the same pan, crisp 3 min. Guac on top. 15 minutes total.']},
- pareve:{n:'🐟 Triple-Tuna Rice Bowl', mac:'≈578 · 56P · 58C · 9F', ing:[['Tuna packets in water (StarKist-style)','3'],['Rice (dry)','55 g'],['Edamame, frozen','85 g'],['Cucumber','75 g'],['Soy sauce','20 mL']],
+ pareve:{n:'🐟 Triple-Tuna Rice Bowl', mac:'≈520 · 62P · 58C · 3F', ing:[['Tuna packets in water (StarKist-style)','3'],['Rice (dry)','55 g'],['Edamame, frozen','85 g'],['Cucumber','75 g'],['Soy sauce','20 mL']],
   st:['Rice on first (12 min) — or Sunday’s rice, 60 sec in the microwave.','Edamame: 2 min microwave.','Bowl it, soy over, sriracha if it’s around. 4 minutes with leftover rice.']},
 };
 /* lanes hold ARRAYS of variants — weekPick rotates them every Sunday */
 const DRAFT_SLOT_MEALS = {
  pre:{t:'Pre-Lift · target 200 · 16P · 32C · 1F', lanes:{
   dairy:[{n:'🥛 Oikos + Banana', mac:'≈200 · 16P · 33C · 0F', ing:[['Oikos Triple Zero','1'],['Banana','1 med']], st:['Eat. Go lift.']}],
-  pareve:[{n:'🐟 Tuna + Rice Cakes', mac:'≈195 · 16P · 26C · 1F', ing:[['Tuna packet in water','1'],['Rice cakes (35 cal ea)','3']], st:['Stack. Go lift.']}]}},
+  pareve:[{n:'🐟 Tuna + Rice Cakes', mac:'≈175 · 18P · 21C · 0F', ing:[['Tuna packet in water','1'],['Rice cakes (35 cal ea)','3']], st:['Stack. Go lift.']}]}},
  bf:{t:'Breakfast · target 545 · 36P · 54C · 21F', lanes:{
   dairy:[
    {n:'🥛 Scramble & Toast', mac:'≈550 · 41P · 61C · 15F', ing:[['Eggs','2'],['Egg whites','150 g'],['Ezekiel bread','2 slices'],['Banana','1 med'],['Justin’s Classic almond butter','8 g']],
@@ -916,11 +916,11 @@ const DRAFT_SLOT_MEALS = {
    {n:'🥛 Hot Chocolate + Dunkers', mac:'≈320 · 38P · 21C · 6F', ing:[['Fairlife 0%, warmed','240 mL'],['Ryse Chocolate Cookie Blast','1 scoop'],['Biscoff','2'],['FF whip','on top']],
     st:['Warm the Fairlife (not boiling), whisk the Ryse in OFF the heat.','Whip on top, Biscoff for dunking. Winter-soul option.']}],
   pareve:[
-   {n:'🐟 Tuna Rice-Cake Stack', mac:'≈285 · 31P · 28C · 2F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['SF jelly — trust the sweet-savory','16 g']],
+   {n:'🐟 Tuna Rice-Cake Stack', mac:'≈255 · 35P · 26C · 0F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['SF jelly — trust the sweet-savory','16 g']],
     st:['Tuna on cakes, thin jelly stripe. 2 minutes. Sounds wrong, eats right.']},
    {n:'🐟 Egg-White Scramble & Cakes', mac:'≈305 · 32P · 25C · 6F', ing:[['Egg whites','250 g'],['Egg','1'],['Rice cakes','3'],['Everything-bagel seasoning','½ tsp']],
     st:['Fast scramble in a sprayed pan, 3 min.','Pile on the cakes, season. Pareve protein without touching tuna.']},
-   {n:'🐟 Tuna-Edamame Quick Bowl', mac:'≈320 · 37P · 14C · 7F', ing:[['Tuna packets in water','2'],['Edamame, frozen','100 g'],['Soy sauce + sriracha','free'],['Cucumber','75 g']],
+   {n:'🐟 Tuna-Edamame Quick Bowl', mac:'≈290 · 41P · 14C · 5F', ing:[['Tuna packets in water','2'],['Edamame, frozen','100 g'],['Soy sauce + sriracha','free'],['Cucumber','75 g']],
     st:['Edamame: 2 min microwave. Bowl everything. 3 minutes flat.']}]}},
  di:{t:'Dinner · target 585 · 54P · 58C · 19F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
 };
@@ -2813,7 +2813,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1783977085';
+const BUILD = 'b1783986438';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
