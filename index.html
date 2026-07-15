@@ -324,7 +324,7 @@ const SLOTS = [
    {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',[250,37,0,10]],['Egg whites (binder)','15 g',[8,2,0,0]],['Keto bun','1',[50,6,16,2]],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','220 g',[160,4,36,0]],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',[0,0,0,0]]], t:[530,50,57,15]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
-   {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['Egg whites','72 mL',[36,8,0,0]],['Oikos Triple Zero vanilla','60 g',[36,6,3,0]],['Pumpkin purée','60 g',[20,1,5,0]],['Fairlife 0%','60 mL',[20,3,2,0]],['All-purpose flour','22 g',[80,2,17,0]],['Oat flour','2.5 g',[9,0,2,0]],['Lakanto','48 g',[0,0,0,0]],['Ryse whey (choc 10 g + vanilla 5 g)','15 g',[55,11,1,1]],['Dark cocoa','13 g',[28,2,7,2]],['Lily’s SF chips','7 g',[40,1,2,4]]], t:[325,34,34,7]}]},
+   {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['BROWNIE wet: egg whites 60 mL · Oikos vanilla 40 g · pumpkin purée 60 g · Fairlife 0% 60 mL','bowl 1',[94,15,9,0]],['BROWNIE dry: all-purpose flour 18 g · Lakanto 36 g · Ryse Choc Cookie Blast 10 g · dark cocoa 13 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt','bowl 2',[130,11,22,3]],['COOKIE wet: Oikos vanilla 20 g · egg whites 12 mL · vanilla extract ¼ tsp','bowl 3',[18,3,1,0]],['COOKIE dry: all-purpose flour 5 g · Ryse vanilla 5 g · oat flour 3 g · Lakanto 12 g · baking soda ⅛ tsp · salt','bowl 4',[47,5,6,1]],['Lily’s SF chips on top (weighed)','7 g',[40,1,2,4]]], t:[325,34,34,7]}]},
    {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',[120,20,9,0]],['Ryse protein','½ scoop',[70,13,2,1]],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[330,34,31,7]}]},
    {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',[43,8,3,0]],['Justin’s Classic almond butter','3.1 g',[21,1,1,2]],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[325,35,32,7]}]},
  ]},
@@ -336,6 +336,33 @@ const SLOTS = [
  ]},
 ];
 const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
+
+/* how to make each meal — renders inside the option card on Meals (one home per meal) */
+const HOWTO = {
+ p2:['Stack the tuna on the cakes. 2 minutes, zero cooking. Go lift.'],
+ p3:['Spread the Oikos on the cakes like frosting. Go lift.'],
+ p4:['Toast the Ezekiel, spread the jelly. Best pre-run fuel in the house.'],
+ p5:['Eat the yogurt, eat the banana. Fast carbs — 25–30 min before lifting is enough.'],
+ p6:['Tuna, then banana. Slowest-digesting pre-lift — eat it 45+ min out.'],
+ b1:['Bowl: COR + oats + ~240 mL hot water, stir 60–90 sec until it thickens.','Let it cool 1 min, THEN whisk in the protein scoop — boiling water clumps whey.','Berries on top, almond butter swirled through. This week’s combo is on the Today flavors card.'],
+ b2:['Toast the bagel. Cream cheese on both halves, lox over, balsamic drizzled thin.','Banana or berries on the side. No cooking.'],
+ b3:['Waffles/flapjacks in the toaster till crisp.','Yogurt on top or as the dip, Lakanto syrup over. Weigh the syrup — it’s the sneaky line.'],
+ l1:['Everything comes off the Sunday batch: chicken + sweet potato reheated covered, 90 sec with a splash of water. String beans 45 sec.','Guac stays cold, goes on last. Chicken flavor = this week’s recipe (Prep → Recipes).'],
+ l1r:['Same as the sweet-potato version — reheat chicken + rice 90 sec covered with a splash of water, beans 45 sec, guac cold on top.','The rice is this week’s themed batch rice (Prep → Recipes).'],
+ l2:['Nonstick on medium (6/10), 3 sprays. Whisk eggs + whites + cottage cheese together.','Pour, and push gently with a spatula every 20 sec — soft scramble, 3–4 min, until JUST set (shiny, not dry).','Broccoli in (pre-steamed 2 min in the microwave), fold 1 min. Mozzarella over, heat OFF, lid on 1 min to melt.','Ezekiel toasted on the side.'],
+ l3:['Same play as Broccoli Jiben, but the spinach goes in raw — fold it through the soft scramble 60–90 sec until wilted down.','Mozzarella last, heat off, lid till melted. Ezekiel toasted.'],
+ l4:['Toast 2 Ezekiel fully — soft bread goes soggy under hot tuna.','Mix 2 tuna packets + 1 tsp deli mustard. Pile on edge to edge.','14 g mozzarella per slice. Air fryer 390°F, 3–4 min — bubbling with brown spots.','Guac on the side, apple after. Eat hot.'],
+ l6:['Sunday: pat the salmon dry, coat in the rub (cumin ½ · paprika ½ · turmeric ¼ · garlic ¼ · salt ¼ tsp). 400°F on parchment, 12–14 min — flakes under a fork.','Box over the rice + edamame. Day of: splash of water, 60–90 sec microwave, or eat room temp.','Hummus weighed (25 g) + fresh mini Israeli salad (tomato 100 g + cucumber 100 g, ¼" dice, lemon + sumac) go on day-of.'],
+ l7:['Rice from the batch: ~10 mL water on top, 45–60 sec microwave, fluff.','Sauce: 20 g light mayo + 1 tsp sriracha. Drain the tuna WELL, fold in — that’s spicy tuna, same as the roll.','Build: rice → spicy tuna → edamame + cucumber → soy over → 1 rice cake CRUSHED on top, last. Eat immediately — the crunch dies in minutes.'],
+ l8:['Sunday: pulse 12 oz skinned salmon in the processor 5–6 taps with 30 g egg whites + 1 tsp garlic + 1 tsp paprika + ½ tsp salt — chunky mince, not paste. (No processor: chop with a knife till it clumps, then mix in whites + spices. Skip the blender.)','Wet hands, 4 patties ~¾" thick, parchment between, fridge (2 days) or freeze.','Day of: nonstick medium-high (7/10), 3 sprays. 3 min untouched → flip once → 3 min. Opaque through = done.','Keto bun + hummus-sriracha schmear (30 g + ½ tsp) + pickles + crispy-cube potatoes.'],
+ s1:['Spin AT eat time, not ahead — pre-spun refreezes icy. Tonight’s cup + topping are on the Today flavors card; the batch recipes live in Prep.','Crumbly after the spin? Splash of Fairlife, re-spin. No machine tonight? Bark: spread the spun cup thin on parchment, freeze, snap.'],
+ s2:['Mix everything into one dough — it’ll be sticky; wet hands help.','Form a thick disc on parchment. Air fryer 350°F, 6–8 min: edges set, center still soft (it firms as it cools).','Eat warm. Under-bake beats over-bake, every time.'],
+ s4:['Four bowls: brownie wet (whisk smooth) · brownie dry · cookie wet · cookie dry. Fold each pair until the streaks JUST disappear — then stop.','One 5" springform / big ramekin / mini-loaf, 3 sprays. Brownie batter in flat, cookie batter in dollops on top, one knife-drag to swirl, chips over.','350°F, 22–28 min — check at 22. Edges SET, center soft with a slight jiggle. Pull early; whey bakes dry.','Cool IN the pan 20–30 min. FF whip fits the budget. (Doubling for 2 nights: ×2 in a loaf pan, 28–38 min, cut in half.)'],
+ d1:['Season the beef gently (10 squeezes max), one ¾" patty, deep thumb-dimple in the middle.','Pan/grill medium-high (7/10), 3-min preheat, 3 sprays. 4 min untouched → flip once → 4 min. 160°F or clear juices. Never press it.','Keto bun, egg on top, 32 g SF ketchup. Potatoes + asparagus by this week’s side recipes (Prep → Recipes).'],
+ d15:['Medium pot, medium-high (7/10), no oil, 2-min preheat. Beef in, crumbled small, 4–5 min to zero pink.','This week’s spices 30 sec → tomato paste + 60 mL water, stir till dissolved → LOW (2/10) 10–12 min till thick.','Over potatoes, egg on top, asparagus on the side (side methods: Prep → Recipes).'],
+ d2:['Rice revived: ~10 mL water, 45–60 sec microwave, fluff. Salmon stays fridge-cold till now: ¾" cubes.','Build: rice → salmon, edamame, cucumber in piles → 30 mL soy over → seaweed crumbled on top.','This week’s twist (jalapeño-lime, dill, scallion…) is on the Prep recipe card. Eat immediately.'],
+ d3:['Pat the salmon dry. Rub: paprika ½ tsp + garlic ¼ tsp + salt ¼ tsp + pinch cayenne, pressed on.','Air fryer 390°F, 7–9 min — flakes under a fork. Any salmon works; it’s cooked.','Plate with crispy-cube potatoes (micro 4 min → fryer 390°F 12–14), asparagus (fryer 7 min), edamame (2-min micro from frozen). SF ketchup if you want it.'],
+};
 
 /* ---------- training ---------- */
 const GYM = {
@@ -1916,6 +1943,11 @@ function viewMeals(){
            ${v.label?`<div class="varlbl">${v.label}</div>`:''}
            <ul class="ing">${v.ing.map(ingRow).join('')}</ul>
            ${macros(v.t)}`).join('')}
+         ${HOWTO[m.id]?`
+         <details class="how" style="margin-top:8px">
+           <summary class="sub" style="cursor:pointer">👨‍🍳 How to make it</summary>
+           <ul class="sched" style="margin-top:6px">${HOWTO[m.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>
+         </details>`:''}
        </div>`).join('')}
    </details>`).join('');
 }
@@ -2014,12 +2046,16 @@ function viewPrep(){
         <span class="box">${on?'✓':''}</span><span class="nm">${n}</span></button>`;
     }).join('')}
   </div>
-  ${buy.length?`
-  <div style="margin-top:14px"><span class="daytag">Your adds · from Things to Buy</span>
+  <div style="margin-top:14px"><span class="daytag">Your adds</span>
     ${buy.map((b,i)=>`
       <button class="buyitem${b.done?' done':''}" data-bi="${i}">
-        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span></button>`).join('')}
-  </div>`:''}
+        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
+        <span class="xdel" data-bx="${i}" role="button" aria-label="delete">×</span></button>`).join('')}
+    <div class="formrow">
+      <input type="text" id="buyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
+      <button class="btn" id="buyAdd">Add</button>
+    </div>
+  </div>
   <div style="margin-top:14px"><span class="daytag">Staples — check stock</span>
     ${STAPLES.map(n=>{
       const id = 'Staples|'+n, on = gDone.includes(id);
@@ -2029,7 +2065,6 @@ function viewPrep(){
   </div>
   <div class="formrow"><button class="btn ghost" id="gReset">Reset grocery checks</button></div>
   </details>
-  ${buyCardHTML()}
 
   <h2 class="sec">Sunday cook flow</h2>
   <details class="card acc" data-acc="cookflow"${openAcc.has('cookflow')?' open':''}>
@@ -2054,59 +2089,6 @@ function viewPrep(){
       ${r.s&&r.s!=='l1r'&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
     </details>`;
   }).join('')}
-  <h2 class="sec">🍫 The Brookie · single — one full snack (≈325 · 34P · 31C net · 7F)</h2>
-  <details class="card acc" data-acc="brookie"${openAcc.has('brookie')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">Brownie-Cookie, single</h3> ${tchip('dairy snack · night-of or ahead')}</summary>
-    <ul class="ing">
-      <li><span>BROWNIE wet: egg whites 60 mL · Oikos vanilla 40 g · pumpkin purée 60 g · Fairlife 0% 60 mL</span><span class="q">bowl 1</span></li>
-      <li><span>BROWNIE dry: All-purpose flour 18 g · Lakanto 36 g · Ryse Chocolate Cookie Blast 10 g · dark cocoa 13 g · baking soda scant ¼ tsp · baking powder ¼ tsp · pinch salt</span><span class="q">bowl 2</span></li>
-      <li><span>COOKIE wet: Oikos vanilla 20 g · egg whites 12 mL · vanilla extract ¼ tsp</span><span class="q">bowl 3</span></li>
-      <li><span>COOKIE dry: All-purpose flour 5 g · Ryse vanilla 5 g · oat flour 3 g (oats run 10 sec in the processor to powder) · Lakanto 12 g · baking soda ⅛ tsp · pinch salt</span><span class="q">bowl 4</span></li>
-      <li><span>Lily’s SF chips on top — weigh them</span><span class="q">7 g</span></li>
-    </ul>
-    <ul class="sched" style="margin-top:8px">
-      <li><span class="t">1</span><span>Oven 350°F, middle rack. One 5" springform, big ramekin, or mini-loaf pan — 3 sprays.</span></li>
-      <li><span class="t">2</span><span>Brownie: whisk bowl 1 smooth, stir bowl 2, fold together until the streaks just disappear — then STOP. Overmixing = tough.</span></li>
-      <li><span class="t">3</span><span>Cookie: bowl 3 smooth, bowl 4 stirred, fold. Thick paste = correct.</span></li>
-      <li><span class="t">4</span><span>Brownie batter in, spread flat. Cookie batter on top in dollops, one knife-drag to swirl. Chips over everything.</span></li>
-      <li><span class="t">5</span><span>Bake 22–28 min — start checking at 22. Done = edges SET, center soft with a slight jiggle. <b>Pull early — that’s what keeps it fudgy with whey.</b></span></li>
-      <li><span class="t">6</span><span>Cool in the pan 20–30 min — it firms as it cools; early removal = crumble. FF whip on top fits the budget. Log as “The Brookie.”</span></li>
-    </ul>
-    <div class="sub" style="margin-top:6px">Two nights? Everything ×2 in a parchment loaf pan, bake 28–38 min, cut in half. Buy once: dark cocoa · Lily’s SF chips · Libby’s pumpkin purée (fallback: unsweetened applesauce 1:1). Everything else is house stock.</div>
-  </details>
-
-  <h2 class="sec">🐟 Fish &amp; tuna lunches · methods</h2>
-  <details class="card acc" data-acc="fishlunch"${openAcc.has('fishlunch')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">The four new lunches, step by step</h3> ${tchip('all in the Meals menu')}</summary>
-    <div class="slotlbl" style="margin-top:10px">🍔 Salmon Smash Patties · 530 · 50P</div>
-    <ul class="sched">
-      <li><span class="t">1</span><span><b>Sunday:</b> skin off 12 oz salmon (ask the fish counter to do it). Cut into rough 1" chunks.</span></li>
-      <li><span class="t">2</span><span>Food processor: salmon + 30 g egg whites + 1 tsp garlic powder + 1 tsp paprika + ½ tsp salt + pepper. <b>PULSE 5–6 times</b> — chunky mince that holds together when squeezed, NOT paste. <b>No processor? Use the KNIFE, not the blender:</b> chop across strips 2–3 min, folding the pile, until it clumps — then mix in the whites + spices in a bowl. (Blender only as a last resort: ½" cubes, 3 small batches, 3–4 pulses each, scrape between — it pastes the bottom while the top stays whole.)</span></li>
-      <li><span class="t">3</span><span>Wet your hands (stops sticking), form 4 equal patties ~¾" thick. Parchment between layers, airtight box. Fridge 2 days max, or freeze (overnight fridge-thaw).</span></li>
-      <li><span class="t">4</span><span><b>Day of:</b> nonstick on medium-high (7/10), 2-min preheat, 3 sprays. Two patties down — 3 min untouched for the crust, flip ONCE, 3 more. Done = opaque all the way through the middle (peek with a fork).</span></li>
-      <li><span class="t">5</span><span>Build: keto bun · 30 g hummus mixed with ½ tsp sriracha as the schmear · patties · pickles on the plate · potatoes by the crispy-cube method (microwave 4 min → air fryer 390°F 12–14).</span></li>
-    </ul>
-    <div class="slotlbl" style="margin-top:12px">🥙 Salmon Shawarma Bowl · 576 · 51P</div>
-    <ul class="sched">
-      <li><span class="t">1</span><span><b>Sunday:</b> per portion, stir the rub — cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt ¼ tsp. Pat 6-oz salmon portions DRY, coat every side.</span></li>
-      <li><span class="t">2</span><span>Parchment-lined pan, 400°F, 12–14 min — done when it flakes under a fork and the center just turned opaque. Cool, box each portion over its rice (40 g dry each) + 85 g edamame.</span></li>
-      <li><span class="t">3</span><span><b>Day of:</b> splash of water, microwave 60–90 sec (or eat room temp — shawarma spices don’t care). Add 25 g hummus (weighed) + a fresh mini Israeli salad: tomato 100 g + cucumber 100 g, ¼" dice, lemon + pinch of sumac.</span></li>
-    </ul>
-    <div class="slotlbl" style="margin-top:12px">🌶 Spicy Tuna Crunch Bowl · 598 · 64P · zero cooking</div>
-    <ul class="sched">
-      <li><span class="t">1</span><span>Rice: 45-g-dry portion from the batch, ~10 mL water on top, microwave 45–60 sec, fluff.</span></li>
-      <li><span class="t">2</span><span>The sauce: 20 g light mayo + 1 tsp sriracha stirred in a bowl. Drain 3 tuna packets WELL, fold in — that’s spicy tuna, same as the roll.</span></li>
-      <li><span class="t">3</span><span>Build: rice → spicy tuna → edamame (from frozen: 2-min microwave) + cucumber → 15 mL soy over → <b>crush 1 rice cake over the top</b>. Eat immediately — the crunch dies within minutes, that’s the whole show.</span></li>
-    </ul>
-    <div class="slotlbl" style="margin-top:12px">🫓 Tuna Melt Stack · 575 · 51P</div>
-    <ul class="sched">
-      <li><span class="t">1</span><span>Toast 2 Ezekiel slices fully — soft bread goes soggy under hot tuna.</span></li>
-      <li><span class="t">2</span><span>2 tuna packets + 1 tsp deli mustard, mixed. Pile onto the toast, edge to edge.</span></li>
-      <li><span class="t">3</span><span>14 g mozzarella over each slice. Air fryer 390°F, 3–4 min — melted, bubbling, brown spots starting. (Toaster oven top-rack works the same.)</span></li>
-      <li><span class="t">4</span><span>Guac cup on the side, apple after. Eat hot.</span></li>
-    </ul>
-  </details>
-
   <h2 class="sec">🕯 Shabbat feast · one dish = Friday snack + dinner (~915 cal · ~85P)</h2>
   ${feastCardHTML('feast')}
 
@@ -2935,7 +2917,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784144430';
+const BUILD = 'b1784145063';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
