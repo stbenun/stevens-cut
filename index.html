@@ -318,6 +318,7 @@ const SLOTS = [
    {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight)','7 oz',[245,44,0,7]],['White rice (dry)','55 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,51,63,15]}]},
    {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[580,55,47,18]}]},
    {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[565,56,43,19]}]},
+   {id:'l4', name:'Tuna Melt Stack', k:[['dairy']], vars:[{ing:[['Tuna packets','2',[140,34,0,0]],['Ezekiel bread, toasted','2 slices',[160,10,30,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Mini guac cup','1',[100,1,6,8]],['Apple','1 med',[95,0,25,0]]], t:[575,51,63,15]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
    {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['Egg whites','72 mL',[36,8,0,0]],['Oikos Triple Zero vanilla','60 g',[36,6,3,0]],['Pumpkin purée','60 g',[20,1,5,0]],['Fairlife 0%','60 mL',[20,3,2,0]],['All-purpose flour','22 g',[80,2,17,0]],['Oat flour','2.5 g',[9,0,2,0]],['Lakanto','48 g',[0,0,0,0]],['Ryse whey (choc 10 g + vanilla 5 g)','15 g',[55,11,1,1]],['Dark cocoa','13 g',[28,2,7,2]],['Lily’s SF chips','7 g',[40,1,2,4]]], t:[325,34,34,7]}]},
@@ -328,6 +329,7 @@ const SLOTS = [
    {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',[255,35,0,12]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',[20,2,4,0]]], t:[585,54,58,19]}]},
    {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',[255,35,0,12]],['Tomato paste','33 g',[27,1,6,0]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]]], t:[590,55,62,19]}]},
    {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[170,3,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[120,10,9,5]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[585,51,55,17]}]},
+   {id:'d3', name:'Blackened Salmon Plate', k:[['pareve']], vars:[{ing:[['Salmon (any — it’s cooked, raw weight)','6 oz',[250,37,0,10]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]],['Edamame','85 g',[120,10,9,5]],['Rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne','—',[0,0,0,0]],['SF ketchup','32 g',[20,0,2,0]]], t:[570,53,51,15]}]},
  ]},
 ];
 const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
@@ -798,7 +800,7 @@ const EVENTS = [
 ⑤ <b>STOP.</b> That’s ~950 cal / ~95 g protein — a great fast day. Do NOT chase 2,220.<br>
 Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · hockey bag ready · bed by 11:30 — hockey’s at 9:30 tomorrow.`},
  {d:'2026-07-05', title:'Moved run — 6 easy miles this morning', msg:'Thursday’s long run was lost to the fast, so today: 6 mi EASY replaces the 3.3 mi intervals. Before: Yogurt + Banana (200 cal) + 8–16 oz water, 45–60 min out. Conversational pace the whole way. Then weigh-in report to Claude, groceries, prep, Creamis.'},
- {d:'2026-07-19', title:'Week of Tisha B’Av begins', msg:'If your custom stops meat this week — run Jiben lunches + Poke dinners. Tell Claude your custom and he’ll set the week’s menu + defrost plan.'},
+ {d:'2026-07-19', title:'Nine Days · menu-set day', msg:'Setting this week’s menu: NO meat options until Thursday night — lunches = Jiben ×/Tuna Melt, dinners = Poke/Salmon Bites/Blackened Salmon. Tomorrow is sushi night out (planner → Sushi, bank the snack). Defrosts this week are all salmon — no beef/chicken pulls.'},
  {d:'2026-07-22', title:'Tisha B’Av starts tonight — pre-fast script', msg:`25-hour fast from sundown (~8:15). Tomorrow’s 8.5 mi moves to Sunday 7/26.<br>
 <b>Water schedule:</b> 30 oz by 10 AM · 60 by 1 PM · 90 by 4 PM · gallon by 6:30. Both hydration sticks today.<br>
 <b>Food:</b> all meals on time. Lunch = Chicken Meal with RICE. <b>~6:15 PM pre-fast meal</b> (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber — carbs up, salt DOWN (skip most of the soy; salt now = misery at 2 AM).<br>
@@ -1007,12 +1009,14 @@ const GROC = {
  l1r:[['Proteins','Chicken breast',7,'oz'],['Pantry &amp; Frozen','White rice (dry)',55,'g'],['Dairy &amp; Fridge','Mini guac cups',1,'ct'],['Produce','String beans',150,'g']],
  l2:[['Proteins','Eggs',2,'ct'],['Proteins','Egg whites',100,'g'],['Dairy &amp; Fridge','4% cottage cheese',113,'g'],['Dairy &amp; Fridge','Low-moisture mozzarella',28,'g'],['Produce','Broccoli',150,'g'],['Pantry &amp; Frozen','Ezekiel bread',2,'slices']],
  l3:[['Proteins','Eggs',2,'ct'],['Proteins','Egg whites',100,'g'],['Dairy &amp; Fridge','4% cottage cheese',113,'g'],['Dairy &amp; Fridge','Low-moisture mozzarella',28,'g'],['Produce','Spinach (fresh)',150,'g'],['Pantry &amp; Frozen','Ezekiel bread',2,'slices']],
+ l4:[['Proteins','Tuna packets',2,'ct'],['Pantry &amp; Frozen','Ezekiel bread',2,'slices'],['Dairy &amp; Fridge','Low-moisture mozzarella',28,'g'],['Dairy &amp; Fridge','Mini guac cups',1,'ct'],['Produce','Apples',1,'ct']],
  /* s1 (Ninja Creami) intentionally absent — its ingredients ship with the batch's own grocery group */
  s2:[['Dairy &amp; Fridge','Oikos Triple Zero',1,'ct'],['Pantry &amp; Frozen','Kodiak protein oats',45,'g']],
  s4:[['Proteins','Egg whites',72,'g'],['Dairy &amp; Fridge','Oikos Triple Zero (vanilla)',60,'g'],['Pantry &amp; Frozen','Pumpkin purée (Libby’s)',60,'g'],['Dairy &amp; Fridge','Fairlife 0% milk',60,'ml'],['Pantry &amp; Frozen','All-purpose flour',23,'g'],['Pantry &amp; Frozen','Dark cocoa powder',13,'g'],['Pantry &amp; Frozen','Lily’s SF chocolate chips',7,'g'],['Pantry &amp; Frozen','Lakanto',48,'g']],
  d1:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
  d15:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Tomato paste',33,'g'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
  d2:[['Proteins','Salmon, sushi-grade',6,'oz'],['Pantry &amp; Frozen','Rice (dry)',50,'g'],['Produce','Edamame (frozen)',85,'g'],['Pantry &amp; Frozen','Seaweed packets',1,'ct'],['Produce','Cucumbers',75,'g']],
+ d3:[['Proteins','Salmon (any cut)',6,'oz'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g'],['Produce','Edamame (frozen)',85,'g']],
 };
 const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
 const GRP_ORDER = ['Proteins','Dairy &amp; Fridge','Produce','Pantry &amp; Frozen'];
@@ -1500,13 +1504,16 @@ function todayBuyCardHTML(){
         <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
         <span class="xdel" data-tx="${i}" role="button" aria-label="delete">×</span>
       </button>`).join('')}
-    <div>${buyListHTML()}</div>
+    ${store.get('qpcut.buy',[]).map((b,i)=>`
+      <button class="buyitem${b.done?' done':''}" data-bi="${i}">
+        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
+      </button>`).join('')}
     <div class="formrow">
       <input type="text" id="tbuyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
       <button class="btn ghost" id="tbuyAdd">Quick</button>
       <button class="btn" id="gbuyAdd">🔄 Grocery</button>
     </div>
-    <div class="sub" style="margin-top:6px"><b>Quick</b> = errand, today only. <b>🔄 Grocery</b> = onto the shopping list. The rest of the list = everything unchecked on the grocery list — checks sync both ways.</div>
+    <div class="sub" style="margin-top:6px"><b>Quick</b> = errand, today only. <b>🔄 Grocery</b> = onto the shopping list. Unchecked groceries stay in Prep’s Things-to-Buy, not here.</div>
   </div>`;
 }
 
@@ -1584,6 +1591,23 @@ function viewToday(){
       ${(REMIND_MIRROR[now.getDay()]||[]).map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')||'<li><span>— none today</span></li>'}
     </ul>
   </div>
+
+  ${(()=>{ const t = isoToday(); if(t<'2026-07-15'||t>'2026-07-23') return '';
+    return `
+  <h2 class="sec">🕯 Nine Days · no meat until after the fast</h2>
+  <details class="card acc" data-acc="ninedays"${openAcc.has('ninedays')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">The meat-free plan</h3> ${tchip('Jul 15 – 23 · Shabbat exempt')}</summary>
+    <ul class="sched" style="margin-top:8px">
+      <li><span class="t">Lunches</span><span>Rotate: Spinach/Broccoli Jiben · <b>Tuna Melt Stack</b> (new — in Meals, 575 · 51P)</span></li>
+      <li><span class="t">Dinners</span><span>Rotate: Poke Bowl · Salmon Bites Bowl · <b>Blackened Salmon Plate</b> (new — in Meals, 570 · 53P)</span></li>
+      <li><span class="t">Shabbat</span><span>Meat is PERMITTED Fri night + Sat — the Shawarma Chicken feast runs as planned.</span></li>
+      <li><span class="t">Mon 7/20</span><span>Sushi out 🍣 — eating-out planner, Sushi preset, bank the snack.</span></li>
+      <li><span class="t">Jul 22–23</span><span>Pre-fast meal, fast day, and rebound are already scripted — banners appear on the day.</span></li>
+    </ul>
+    <div class="sub" style="margin-top:8px"><b>Tuna Melt method:</b> toast 2 Ezekiel · mix 2 tuna packets with 1 tsp deli mustard · pile on the toast, 28 g mozzarella over · air fryer 390°F 3–4 min until bubbling · guac on the side, apple after.</div>
+    <div class="sub" style="margin-top:6px"><b>Blackened Salmon method:</b> pat 6 oz salmon dry · rub: paprika ½ tsp + garlic ¼ tsp + salt ¼ tsp + pinch cayenne · air fryer 390°F 7–9 min, done when it flakes under a fork · potatoes via the crispy-cube method, asparagus 7 min, edamame straight from frozen (2 min micro). Any salmon works — it’s cooked, sushi-grade not required.</div>
+  </details>`;
+  })()}
 
   ${now.getDay()===0?(()=>{
     const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
@@ -2871,7 +2895,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784140680';
+const BUILD = 'b1784143608';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
