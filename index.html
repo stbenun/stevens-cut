@@ -862,10 +862,11 @@ const EATOUT = {
   '⚠ Nut check on salads/desserts — ask']},
  sushi:{name:'Sushi', rules:[
   'Open with edamame (and miso if they have it)',
-  'Anchor: sashimi plate or 1 salmon/tuna-avocado roll — cap 2 rolls total',
-  'Skip: tempura anything, spicy-mayo drizzle, “crunch” topping (fried batter)',
-  'Wasabi, ginger, soy — free (soy’s already in your macros)',
-  'Still hungry → more sashimi, never more rice']},
+  'Anchor: 8–10 pieces of sashimi (salmon/tuna), FIRST',
+  'Rolls: snack banked → up to 2 simple rolls (salmon · tuna · salmon-avocado). Dinner budget only → 1 roll, 10–12 pc sashimi',
+  'Skip: tempura anything, “spicy” anything (that’s mayo), “crunch” topping (fried batter)',
+  'Wasabi, ginger — free. Soy: dip, don’t pour — tomorrow’s scale is listening',
+  'Still hungry → more sashimi (2–3 pc ≈ 100 cal), never more rice']},
  pizza:{name:'Pizza Night', rules:[
   'Big salad FIRST — it decides how slice 3 feels',
   '2 slices cap, thin crust beats thick',
@@ -981,8 +982,8 @@ function runCoaching(){
 }
 
 const SUPPS = [
- ['Creatine monohydrate — 10 g','daily'],['Multivitamin','daily'],['Vitamin D3','daily'],
- ['Fish oil','daily'],['Lion’s mane','daily'],['Ryse hydration stick','daily'],
+ ['Creatine monohydrate — 10 g','daily'],['Lion’s mane','daily'],['Multivitamin','daily'],
+ ['Vitamin D3','daily'],['Fish oil','daily'],['Ryse hydration stick','daily'],
  ['Ryse Pump Caps','pre-lift'],['Magnesium','night'],['Allegra (if needed)','allergies'],
 ];
 
@@ -2815,7 +2816,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784053023';
+const BUILD = 'b1784115963';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
