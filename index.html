@@ -2396,14 +2396,19 @@ function weekReport(){
   return lines.join('\n');
 }
 
+let phShowAll = false;
 async function drawPhotos(){
   const grid = $('#phGrid'); if(!grid) return;
   const ph = await getPhotos();
-  grid.innerHTML = ph.slice().reverse().map(p=>`
+  const all = ph.slice().reverse();
+  const show = phShowAll? all : all.slice(0,6);
+  grid.innerHTML = (show.map(p=>`
     <div class="ph">
       <button class="view" data-view="${p.key}"><img src="${p.img}" alt="food photo ${p.d.slice(0,10)}"></button>
       <button class="xdel" data-px="${p.key}" aria-label="delete photo">×</button>
-    </div>`).join('') || '<div class="sub">No photos yet — start the collage.</div>';
+    </div>`).join('') + (all.length>6?`<button class="btn ghost" id="phMore" style="grid-column:1/-1">${phShowAll?'Show recent 6 only':`Show all ${all.length}`}</button>`:'')) || '<div class="sub">No photos yet — start the collage.</div>';
+  const pm = grid.querySelector('#phMore');
+  if(pm) pm.addEventListener('click',()=>{ phShowAll = !phShowAll; drawPhotos(); });
   grid.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{
     const img = b.querySelector('img');
     const ov = document.createElement('div'); ov.className='overlay';
@@ -2820,7 +2825,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784125827';
+const BUILD = 'b1784127858';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
