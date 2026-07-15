@@ -1889,6 +1889,7 @@ function viewToday(){
     <div class="slotlbl" style="margin-top:10px">${o.name} · ${o.vars[0].t[0]} cal · ${o.vars[0].t[1]}P</div>
     <ul class="ing">${o.vars[0].ing.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
     ${HOWTO[o.id]?`<ul class="sched" style="margin-top:6px">${HOWTO[o.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
+    ${sideDishesHTML(o.id)}
     `:`<div class="sub" style="margin-top:8px">Tap tonight’s pick — ingredients and the method appear right here.</div>`}
   </div>`;
   })()}
@@ -2090,11 +2091,21 @@ function viewMeals(){
          <details class="how" style="margin-top:8px">
            <summary class="sub" style="cursor:pointer">👨‍🍳 How to make it</summary>
            <ul class="sched" style="margin-top:6px">${HOWTO[m.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>
+           ${sideDishesHTML(m.id)}
          </details>`:''}
        </div>`).join('')}
    </details>`).join('');
 }
 
+/* dinners with potato+asparagus sides get this week's side recipes attached */
+function sideDishesHTML(optId){
+  if(!['d1','d15','d3'].includes(optId)) return '';
+  const rec = weekPick(RECIPES).recipes.filter(r=> (/potato/i.test(r.n) && !/sweet/i.test(r.n)) || /asparagus/i.test(r.n));
+  return rec.map(r=>`
+    <div class="varlbl" style="margin-top:10px">🥔 This week’s side · ${r.n}</div>
+    <ul class="ing">${r.ing.map(([l,q,u])=>`<li><span>${l}</span><span class="q">${qtyF(q,u,1)}</span></li>`).join('')}</ul>
+    <ul class="sched" style="margin-top:4px">${r.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>`).join('');
+}
 function feastCardHTML(accId){
   const f = weekPick(SHABBAT_FEAST);
   return `
@@ -3073,7 +3084,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784147324';
+const BUILD = 'b1784148046';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
