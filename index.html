@@ -320,6 +320,7 @@ const SLOTS = [
    {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[565,56,43,19]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
+   {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['Egg whites','72 mL',[36,8,0,0]],['Oikos Triple Zero vanilla','60 g',[36,6,3,0]],['Pumpkin purée','60 g',[20,1,5,0]],['Fairlife 0%','60 mL',[20,3,2,0]],['AP flour','22 g',[80,2,17,0]],['Oat flour','2.5 g',[9,0,2,0]],['Lakanto','48 g',[0,0,0,0]],['Ryse whey (choc 10 g + vanilla 5 g)','15 g',[55,11,1,1]],['Dark cocoa','12.5 g',[28,2,7,2]],['Lily’s SF chips','5 g',[20,1,1,2]]], t:[305,34,33,5]}]},
    {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',[120,20,9,0]],['Ryse protein','½ scoop',[70,13,2,1]],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[330,34,31,7]}]},
    {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',[43,8,3,0]],['Justin’s Classic almond butter','3.1 g',[21,1,1,2]],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[325,35,32,7]}]},
  ]},
@@ -906,6 +907,8 @@ const DRAFT_SLOT_MEALS = {
  lu:{t:'Lunch · target 580 · 51P · 63C · 15F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
  sn:{t:'Snack · target 330 · 34P · 31C · 7F', lanes:{
   dairy:[
+   {n:'🍫 The Brookie — bake day (makes 2 snacks)', mac:'≈305 · 34P · 33C · 5F per brookie', ing:[['BROWNIE — egg whites 120 mL · Oikos vanilla 80 g · pumpkin purée 120 g · Fairlife 0% 120 mL','wet'],['BROWNIE — AP flour 35 g · Lakanto 72 g · Ryse Chocolate Cookie Blast 20 g · dark cocoa 25 g · baking soda ⅓ tsp · baking powder ½ tsp · pinch salt','dry'],['COOKIE — Oikos vanilla 40 g · egg whites 25 mL · vanilla extract ½ tsp','wet'],['COOKIE — AP flour 10 g · Ryse vanilla 10 g · oat flour 5 g (blitzed oats) · Lakanto 24 g · baking soda ¼ tsp · pinch salt','dry'],['Lily’s SF chips on top','10 g']],
+    st:['Oven 350°F, middle rack. Two 5–6" springforms, 3 sprays each — or ONE loaf pan lined with parchment (cut the slab in half after; each half = 1 snack).','Brownie batter: whisk the 4 wet things smooth in one bowl. Stir the dry in another. Fold together until just combined — streaks gone, then STOP.','Cookie batter, same play in two small bowls: wet smooth, dry stirred, fold together. It’ll be a thick paste — correct.','Brownie batter into the pan(s), spread flat. Cookie batter on top in spoon-dollops, then drag a knife through twice to swirl. Chips scattered over.','Bake 28–38 min (start checking at 28): edges SET, center still soft with a slight jiggle. Our whey bakes drier than the video guy’s casein — pulling early is what keeps it fudgy. A minute too long = brownie brick.','Cool in the pan 30 full minutes before releasing — it firms as it cools, early removal = crumble.','Eat one tonight (FF whip on top stays inside budget); fridge the second in foil — snack #2, eats even fudgier on day two.']},
    {n:'🥛 Whipped Cottage “Cheesecake” Cup', mac:'≈320 · 37P · 23C · 8F', ing:[['Good Culture 2% cottage cheese','1 cup (210 g)'],['Ryse protein','½ scoop (17 g)'],['SF Jell-O cheesecake mix','5 g'],['Nilla wafers, crushed','4']],
     st:['Blend the cottage smooth (30 sec immersion) or stir.','Whisk in Ryse + Jell-O mix.','Nilla crumble. 5 minutes.']},
    {n:'🥛 The Frosty', mac:'≈315 · 38P · 29C · 2.5F', ing:[['Fairlife 0%','240 mL'],['Ryse Chocolate Cookie Blast','1 scoop'],['Banana','½ med (60 g)'],['Ice + ¼ tsp xanthan','—'],['FF whip + SF choc syrup','1 Tbsp']],
@@ -2825,7 +2828,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784127858';
+const BUILD = 'b1784135793';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
