@@ -488,9 +488,11 @@ function prescribe(lv, baseVals, curVals, sets){
   const hasNums = nums.some(n=>!isNaN(n));
   const fmt = f => base.map((x,i)=> isNaN(nums[i])? (x||'?') : String(r25(f(nums[i])))).join(' / ');
   if(lv==='up'){
-    const already = baseVals&&baseVals.length && JSON.stringify(base)!==JSON.stringify(cur.filter(x=>x!==undefined));
-    if(already && cur.some(x=>x)) return `GO UP — already loaded: ${cur.filter(x=>x).join(' / ')} ✓`;
-    return `GO UP → load ${hasNums? fmt(n=>n+jumpFor(n)) : 'the smallest jump on every set'}`;
+    const curN = cur.map(x=>parseFloat(x)).filter(n=>!isNaN(n));
+    const baseN = nums.filter(n=>!isNaN(n));
+    const already = curN.length && baseN.length && Math.min(...curN) > Math.min(...baseN)+0.01;
+    if(already) return `GO UP — already loaded: ${cur.filter(x=>x).join(' / ')} ✓ hit the rep targets with 1–2 in the tank`;
+    return `GO UP → load ${hasNums? fmt(n=>n+jumpFor(n)) : 'the smallest jump on every set'} · same rep targets`;
   }
   if(lv==='down') return `LIGHTEN → ${hasNums? fmt(n=>n*0.9) : '~10% down'}`;
   return `SAME weight → ${cur.filter(x=>x).join(' / ')||base.filter(x=>x).join(' / ')||'repeat last loads'} · beat last week’s reps`;
@@ -520,22 +522,8 @@ function exBlockHTML(o){
   const leg = prId? ((legacy[prId]!=null&&legacy[prId]!=='')? legacy[prId] : (it[2]||'')) : '';
   const hasReps = o.rd!=null && o.ex!=null;
   const reps = hasReps? ((store.get('qpcut.reps.'+dkey(o.rd),{}))[o.ex]||[]) : [];
-  /* 📋 weekly prescription from last same-weekday session */
-  let coach = '';
-  if(o.day!=null && o.ex!=null && o.t && prId){
-    const ls = lastSessionInfo(o.day, o.ex);
-    if(ls){
-      const lv = verdict(ls.reps, o.t);
-      if(lv){
-        const wlLast = (store.get('qpcut.wlog.'+dkey(ls.date),{}))[prId];
-        coach = `<div class="coachline">📋 This week: ${prescribe(lv, wlLast, vals, o.sets)}<br>
-          <span class="ingmac">last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}</span></div>`;
-        const past3 = lastSessions(o.day, o.ex, 3);
-        if(past3.length===3 && past3.every(s=>verdict(s.reps, o.t)==='hold'))
-          coach += `<div class="coachline" style="color:var(--meat)">⚠ 3 weeks stalled — deload ~10% and rebuild, or swap the variation for 3 weeks. Ask Claude.</div>`;
-      }
-    }
-  }
+  /* effort feedback: reps left in the tank on the LAST set (RP-style autoregulation) */
+  const rir = hasReps? (store.get('qpcut.rir.'+dkey(o.rd),{}))[o.ex] : undefined;
   const rows = Array.from({length:o.sets},(_,s)=>{
     const ph = o.t? (o.t.type==='ladder'? (o.t.per[s]!=null?o.t.per[s]:o.t.per[o.t.per.length-1]) : o.t.hi) : '·';
     return `<div class="setrow${hasReps?'':' noreps'}">
@@ -571,33 +559,66 @@ function exBlockHTML(o){
     }
   }
   const v = hasReps? verdict(reps, o.t) : null;
-  /* ▶ live next-set call while mid-session */
-  let nextAdv = '';
-  if(hasReps && o.t && !v){
-    let idx = -1;
-    for(let s=1;s<o.sets;s++){ if(reps[s]==null && reps[s-1]!=null){ idx = s; break; } }
-    if(idx>0){
-      const prev = reps[idx-1];
-      const tPrev = o.t.type==='ladder'? (o.t.per[idx-1]!=null?o.t.per[idx-1]:o.t.per[o.t.per.length-1]) : o.t.hi;
-      const wNum = parseFloat(vals[idx-1]);
-      const j = isNaN(wNum)? null : jumpFor(wNum);
-      let msg;
-      if(o.t.type==='ladder'){
-        const tNext = o.t.per[idx]!=null? o.t.per[idx] : o.t.per[o.t.per.length-1];
-        if(prev>=tPrev) msg = `ADD weight${j?` — try ${r25(wNum+j)} lb`:''} · target ${tNext} reps`;
-        else if(prev>=tPrev-2) msg = `HOLD this weight · target ${tNext}, grind it`;
-        else msg = `LIGHTEN ~10%${isNaN(wNum)?'':` — try ${r25(wNum*0.9)} lb`}`;
-      } else {
-        if(prev>o.t.hi+1) msg = `too light — ADD${j?` ${j} lb now (${r25(wNum+j)})`:' the smallest jump now'}`;
-        else if(prev>=o.t.lo) msg = `SAME weight · aim ${Math.min(prev,o.t.hi)}+ reps`;
-        else msg = `LIGHTEN ~10%${isNaN(wNum)?'':` — try ${r25(wNum*0.9)} lb`}`;
+  /* ---- ONE voice: target (pre-session) → live call (mid-session) → verdict (done). Never two at once. ---- */
+  let guide = '';
+  const doneCount = hasReps? reps.slice(0,o.sets).filter(x=>x!=null).length : 0;
+  if(o.t && prId && hasReps){
+    const ls = (o.day!=null)? lastSessionInfo(o.day, o.ex) : null;
+    const lv = ls? verdict(ls.reps, o.t) : null;
+    const wlLast = ls? (store.get('qpcut.wlog.'+dkey(ls.date),{}))[prId] : null;
+    const lsRir = ls? (store.get('qpcut.rir.'+dkey(ls.date),{}))[o.ex] : undefined;
+    const lastLine = ls? `<span class="ingmac">last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}${lsRir!=null?` · RIR ${lsRir===3?'3+':lsRir}`:''}</span>` : '';
+    if(doneCount===0){
+      guide = `<div class="coachline">🎯 ${lv? prescribe(lv, wlLast, vals, o.sets)
+        : (vals.some(x=>x)? `Plan: ${vals.filter(x=>x).join(' / ')} · ${o.t.type==='ladder'?'climb the boxes':`${o.t.lo}–${o.t.hi} reps every set`} · finish each set with 1–2 in the tank`
+        : 'No weight yet — 📖 calibration guide is at the top of Train → PRs')}${lastLine?'<br>'+lastLine:''}</div>`;
+      if(o.day!=null){
+        const past3 = lastSessions(o.day, o.ex, 3);
+        if(past3.length===3 && past3.every(s=>verdict(s.reps, o.t)==='hold'))
+          guide += `<div class="coachline" style="color:var(--meat)">⚠ 3 sessions stalled at this weight — today: drop ~10%, rebuild a rep per week. Stalls break from behind, not from pushing the same wall.</div>`;
       }
-      nextAdv = `<div class="coachline">▶ Set ${idx+1}: ${msg}</div>`;
+    } else if(v===null){
+      let idx = -1;
+      for(let s=1;s<o.sets;s++){ if(reps[s]==null && reps[s-1]!=null){ idx = s; break; } }
+      if(idx>0){
+        const prev = reps[idx-1];
+        const wNum = parseFloat(vals[idx-1]);
+        if(o.t.type==='ladder'){
+          const tNext = o.t.per[idx]!=null? o.t.per[idx] : o.t.per[o.t.per.length-1];
+          guide = `<div class="coachline">▶ Set ${idx+1}: next box up${vals[idx]?` (${esc(String(vals[idx]))})`:''} · target ${tNext} reps · 1–2 in the tank.</div>`;
+        } else if(idx===1 && prev>=o.t.hi+3){
+          guide = `<div class="coachline">▶ Way too light (${prev} vs target ${o.t.hi}) — add ${isNaN(wNum)?'the smallest jump':`${jumpFor(wNum)} lb (${r25(wNum+jumpFor(wNum))})`} NOW and call this set 1.</div>`;
+        } else if(idx===1 && prev<=o.t.lo-3){
+          guide = `<div class="coachline">▶ Too heavy today — drop ~10%${isNaN(wNum)?'':` (${r25(wNum*0.9)})`} NOW. A bad day isn’t a bad plan.</div>`;
+        } else {
+          guide = `<div class="coachline">▶ Set ${idx+1} of ${o.sets}: SAME weight · ${Math.max(o.t.lo, Math.min(prev, o.t.hi))}–${o.t.hi} reps · stop with 1–2 in the tank. Weight changes between sessions, not mid-exercise.</div>`;
+        }
+      }
+    } else {
+      const nums = vals.slice(0,o.sets).map(x=>parseFloat(x));
+      const hasNums = nums.some(n=>!isNaN(n));
+      const fmt = f => vals.slice(0,o.sets).map((x,i)=> isNaN(nums[i])? (x||'?') : String(r25(f(nums[i])))).join(' / ');
+      if(v==='up'){
+        guide = rir===0
+          ? `<div class="coachline">🎉 GO UP — but that was failure (0 in the tank), so next session take the SMALLEST jump only${hasNums?`: ${fmt(n=>n+2.5)}`:''}.</div>`
+          : `<div class="coachline">🎉 GO UP next session → ${hasNums? fmt(n=>n+jumpFor(n)) : 'smallest solid jump every set'}. Update the boxes at the gym next time, not now.</div>`;
+      } else if(v==='down'){
+        guide = `<div class="coachline">⬇ LIGHTEN next session → ${hasNums? fmt(n=>n*0.9) : '~10% down'}, rebuild from there.</div>`;
+      } else {
+        guide = (rir!=null && rir>=3)
+          ? `<div class="coachline">HOLD — but 3+ in the tank means the reps are there. Same weight next session, take every set to 1–2 left. Then it’s a GO UP.</div>`
+          : `<div class="coachline">HOLD — same weight next session, beat today by one rep anywhere. That’s the whole game.</div>`;
+      }
     }
   }
-  const badge = v==='up'?'<div style="display:flex;justify-content:flex-end;margin-top:6px"><span class="upflag">⬆ go up next time</span></div>'
-    : v==='down'?'<div style="display:flex;justify-content:flex-end;margin-top:6px"><span class="downflag">⬇ lighten ~10%</span></div>'
-    : v==='hold'?'<div style="display:flex;justify-content:flex-end;margin-top:6px"><span class="holdflag">hold weight</span></div>':'';
+  /* RIR chips — tap after the final set */
+  let rirHTML = '';
+  if(hasReps && o.t && doneCount>0){
+    rirHTML = `<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <span class="ingmac">last set — reps left in tank:</span>
+      ${[0,1,2,3].map(n=>`<button class="mealpick${rir===n?' on':''}" style="padding:3px 10px;font-size:12px" data-rir="${o.rd}|${o.ex}|${n}">${n===3?'3+':n}</button>`).join('')}
+    </div>`;
+  }
   const legNote = (prId && !vals.some(x=>x) && leg)? `<div class="ingmac" style="text-align:right;margin-top:3px">was ${esc(String(leg))}</div>`:'';
   /* 🧮 plate math for flagged exercises */
   let pmLine = '';
@@ -611,7 +632,7 @@ function exBlockHTML(o){
     }).filter(Boolean);
     if(parts.length) pmLine = `<div class="ingmac" style="text-align:right;margin-top:4px">🧮 ${pm==='db'?'DBs':pm==='bar'?'45-lb bar · per side':'per side'} → ${parts.join(' · ')}</div>`;
   }
-  return selHTML + coach + legNote + rows + armHTML + pmLine + nextAdv + badge;
+  return selHTML + legNote + rows + armHTML + pmLine + guide + rirHTML;
 }
 function wireArm(){
   document.querySelectorAll('[data-arm]').forEach(b=>b.addEventListener('click',()=>{
@@ -633,11 +654,18 @@ function wireWeights(){
     const arr = p[inp.dataset.pr] = p[inp.dataset.pr]||[];
     arr[+inp.dataset.set] = inp.value;
     store.set('qpcut.prset',p);
-    /* snapshot the day's loads so "last week @ weight" history builds up */
-    const wk = 'qpcut.wlog.'+dkey(logDate||isoToday());
-    const wl = store.get(wk,{});
-    wl[inp.dataset.pr] = arr.slice();
-    store.set(wk,wl);
+    /* snapshot the day's loads ONLY if this exercise is in that day's workout —
+       calibrating other days' boxes must not pollute today's history */
+    const d = logDate||isoToday();
+    const wd = new Date(d+'T12:00:00').getDay();
+    const baseId = inp.dataset.pr.replace(/__R$/,'');
+    const inDay = (((WMAP[store.get('qpcut.loc','deal')==='deal'?'deal':'bk']||{})[wd])||[]).some(ids=>ids.includes(baseId));
+    if(inDay){
+      const wk = 'qpcut.wlog.'+dkey(d);
+      const wl = store.get(wk,{});
+      wl[inp.dataset.pr] = arr.slice();
+      store.set(wk,wl);
+    }
     render();
   }));
 }
@@ -677,6 +705,13 @@ function printSatCard(){
   setTimeout(()=>{ document.body.classList.remove('printing'); }, 800);
 }
 function wireReps(){
+  document.querySelectorAll('[data-rir]').forEach(b=>b.addEventListener('click',()=>{
+    const [rd,ex,n] = b.dataset.rir.split('|');
+    const key = 'qpcut.rir.'+dkey(rd);
+    const m = store.get(key,{});
+    m[ex] = m[ex]===+n? null : +n;
+    store.set(key,m); render();
+  }));
   document.querySelectorAll('input.repin').forEach(inp=>inp.addEventListener('change',()=>{
     const key = 'qpcut.reps.'+dkey(inp.dataset.rd);
     const rp = store.get(key,{});
@@ -2266,16 +2301,17 @@ function viewTrain(){
   const prs = store.get('qpcut.prs',{});
   const prset = store.get('qpcut.prset',{});
   const prView = `
-    <p class="rules">One box per set — ranges use the same weight across, ladders climb. Top of range on all sets → smallest jump next session.</p>
+    <p class="rules">The system: <b>double progression with an effort check.</b> Same weight every set (ladders climb their boxes) → end each set with 1–2 reps in the tank → when every set hits the top target, the app prescribes the exact next jump. Weight changes happen BETWEEN sessions, never mid-exercise (one exception: the app tells you when set 1 is wildly off). One guidance line per exercise — it’s a target before you start, a set-call mid-session, a verdict when you’re done. They never disagree.</p>
     <details class="card acc" data-acc="pr-help"${openAcc.has('pr-help')?' open':''}>
-      <summary><h3 style="display:inline;font-size:16px">📖 How to find a PR (blank boxes)</h3></summary>
+      <summary><h3 style="display:inline;font-size:16px">📖 The playbook — calibration &amp; how the loop runs</h3></summary>
       <ul class="sched" style="margin-top:8px">
-        <li><span class="t">1</span><span><b>Warm up, then climb:</b> ~5 easy reps at a light weight, add a solid jump, repeat. You’re hunting, not training yet.</span></li>
-        <li><span class="t">2</span><span><b>Stop at the weight where the target reps are genuinely hard</b> — you finish with only 1–2 reps left in the tank, at a clean 3–5 s tempo.</span></li>
-        <li><span class="t">3</span><span><b>Range (e.g. 8-12):</b> find the weight where you can <i>just</i> hit the TOP number (12 hard clean reps). Put that same weight in all the boxes.</span></li>
-        <li><span class="t">4</span><span><b>Ladder (10-8-6 / 12-10-8):</b> find the weight where the FIRST number is hard — that’s box 1. Add ~10% for box 2, ~10% more for box 3.</span></li>
-        <li><span class="t">5</span><span><b>Then the loop runs itself:</b> log reps on Today → the verdict appears → ⬆ GO UP means add the smallest jump the equipment allows (2.5–5 lb upper, 5–10 lb lower) and update these boxes.</span></li>
-        <li><span class="t">💡</span><span>One calibration session per exercise. On a cut, beating last week by ONE rep is winning — small jumps every week beat big jumps every month.</span></li>
+        <li><span class="t">1</span><span><b>Blank boxes? Calibrate once:</b> warm up, then climb — ~5 easy reps, solid jump, repeat. You’re hunting a weight, not training yet.</span></li>
+        <li><span class="t">2</span><span><b>Range (8-12):</b> the weight where 12 clean reps leaves 1–2 in the tank — same weight in every box. <b>Ladder (10-8-6):</b> box 1 = where the first number is hard, +~10% per box after.</span></li>
+        <li><span class="t">3</span><span><b>Session flow:</b> the 🎯 line shows today’s exact loads (computed from last session). Log reps set by set — the ▶ line calls each next set. After the last set, tap <b>reps left in tank</b> (that’s the effort check).</span></li>
+        <li><span class="t">4</span><span><b>Verdicts:</b> 🎉 GO UP = every set hit the top target → next session’s loads are printed for you (smaller jump if you were at true failure). HOLD = same weight, beat it by one rep. ⬇ LIGHTEN = drop ~10%, rebuild.</span></li>
+        <li><span class="t">5</span><span><b>The tank number matters:</b> hitting reps with 3+ left isn’t a GO UP — it’s sandbagging, and the app will say so. Growth lives at 1–2 from failure; failure itself costs more than it pays.</span></li>
+        <li><span class="t">6</span><span><b>Stalls:</b> 3 sessions stuck at the same weight → the app prescribes a ~10% drop-and-rebuild. Stalls break from behind, not by pushing the same wall a 4th week.</span></li>
+        <li><span class="t">💡</span><span>On a cut, one more rep than last week IS progress. Small jumps every week beat big jumps every month.</span></li>
       </ul>
     </details>
     ${(loc==='deal'?PRS:PRS_BK).map((g,gi)=>`
@@ -3037,7 +3073,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784146708';
+const BUILD = 'b1784147324';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
