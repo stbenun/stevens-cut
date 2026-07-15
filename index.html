@@ -2238,8 +2238,8 @@ function viewTrack(){
   <h2 class="sec">Food photos</h2>
   <div class="card">
     <div class="formrow" style="margin-top:0">
-      <input type="file" id="phFile" accept="image/*" style="display:none">
-      <button class="btn" id="phAdd">📷 Add photo · camera or library</button>
+      <input type="file" id="phFile" accept="image/*" multiple style="display:none">
+      <button class="btn" id="phAdd">📷 Add photos · camera or library</button>
       <span class="sub">Saved on this phone. Send Claude a copy in chat for a macro check.</span>
     </div>
     <div class="pgrid" id="phGrid"></div>
@@ -2796,27 +2796,31 @@ function wireTrack(){
     try{ applyData(txt); }catch(e){ alert('That didn’t parse — make sure you pasted the whole blob.'); }
   });
   $('#phAdd').addEventListener('click',()=>$('#phFile').click());
-  $('#phFile').addEventListener('change',e=>{
-    const f = e.target.files[0]; if(!f) return;
-    const img = new Image();
-    img.onload = async ()=>{
-      const MAX = 900;
-      const sc = Math.min(1, MAX/Math.max(img.width,img.height));
-      const cv = document.createElement('canvas');
-      cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-      await addPhoto({d:new Date().toISOString(), img: cv.toDataURL('image/jpeg',.72)});
-      URL.revokeObjectURL(img.src);
-      $('#phFile').value='';
-      drawPhotos();
-    };
-    img.src = URL.createObjectURL(f);
+  $('#phFile').addEventListener('change',async e=>{
+    const files = [...e.target.files]; if(!files.length) return;
+    const shrink = f => new Promise(res=>{
+      const img = new Image();
+      img.onload = async ()=>{
+        const MAX = 900;
+        const sc = Math.min(1, MAX/Math.max(img.width,img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(img.width*sc); cv.height = Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        await addPhoto({d:new Date().toISOString(), img: cv.toDataURL('image/jpeg',.72)});
+        URL.revokeObjectURL(img.src); res();
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(img.src); res(); };
+      img.src = URL.createObjectURL(f);
+    });
+    for(const f of files) await shrink(f); /* sequential — parallel canvases crash older iPhones */
+    $('#phFile').value='';
+    drawPhotos();
   });
 }
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784115963';
+const BUILD = 'b1784125827';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
