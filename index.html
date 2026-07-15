@@ -2000,6 +2000,28 @@ function viewPrep(){
       ${r.s&&r.s!=='l1r'&&n===0?'<div class="sub" style="margin-top:6px">Per-portion amounts — set this meal in the menu and they scale.</div>':''}
     </details>`;
   }).join('')}
+  <h2 class="sec">🍫 The Brookie · bake once = 2 snacks (305 · 34P · 33C · 5F each)</h2>
+  <details class="card acc" data-acc="brookie"${openAcc.has('brookie')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">Brownie-Cookie slab</h3> ${tchip('bake ahead · dairy snack')}</summary>
+    <ul class="ing">
+      <li><span>BROWNIE wet: egg whites 120 mL · Oikos vanilla 80 g · pumpkin purée 120 g · Fairlife 0% 120 mL</span><span class="q">bowl 1</span></li>
+      <li><span>BROWNIE dry: AP flour 35 g · Lakanto 72 g · Ryse Chocolate Cookie Blast 20 g · dark cocoa 25 g · baking soda ⅓ tsp · baking powder ½ tsp · pinch salt</span><span class="q">bowl 2</span></li>
+      <li><span>COOKIE wet: Oikos vanilla 40 g · egg whites 25 mL · vanilla extract ½ tsp</span><span class="q">bowl 3</span></li>
+      <li><span>COOKIE dry: AP flour 10 g · Ryse vanilla 10 g · oat flour 5 g (blitzed oats) · Lakanto 24 g · baking soda ¼ tsp · pinch salt</span><span class="q">bowl 4</span></li>
+      <li><span>Lily’s SF chips, scattered on top</span><span class="q">10 g</span></li>
+    </ul>
+    <ul class="sched" style="margin-top:8px">
+      <li><span class="t">1</span><span>Oven 350°F, middle rack. Two 5–6" springforms, 3 sprays each — or ONE loaf pan lined with parchment (cut the slab in half after; each half = 1 snack).</span></li>
+      <li><span class="t">2</span><span>Brownie: whisk bowl 1 smooth, stir bowl 2, fold together until the streaks just disappear — then STOP. Overmixing = tough.</span></li>
+      <li><span class="t">3</span><span>Cookie: same play — bowl 3 smooth, bowl 4 stirred, fold. Thick paste = correct.</span></li>
+      <li><span class="t">4</span><span>Brownie batter in first, spread flat. Cookie batter on top in spoon-dollops, drag a knife through twice to swirl. Chips over everything.</span></li>
+      <li><span class="t">5</span><span>Bake 28–38 min — start checking at 28. Done = edges SET, center soft with a slight jiggle. Our whey bakes drier than the video’s casein: <b>pulling early is what keeps it fudgy.</b></span></li>
+      <li><span class="t">6</span><span>Cool IN the pan 30 full minutes — it firms as it cools; early removal = crumble.</span></li>
+      <li><span class="t">7</span><span>Eat one tonight (FF whip fits the budget). Foil the second, fridge — snack #2, fudgier on day two. Log each as “The Brookie” in the snack row.</span></li>
+    </ul>
+    <div class="sub" style="margin-top:6px">Buy once: Libby’s pumpkin purée · dark cocoa · Lily’s SF chips. Everything else is house stock.</div>
+  </details>
+
   <h2 class="sec">🕯 Shabbat feast · one dish = Friday snack + dinner (~915 cal · ~85P)</h2>
   ${feastCardHTML('feast')}
 
@@ -2828,7 +2850,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784135793';
+const BUILD = 'b1784136063';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
