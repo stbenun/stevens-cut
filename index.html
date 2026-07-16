@@ -1353,9 +1353,9 @@ const RECIPES = [
   {n:'Smoky Lemon Asparagus', w:'night of · per dinner', s:null,
    ing:[['Asparagus',100,'g'],['Smoked paprika',0.25,'tsp'],['Salt',0.125,'tsp'],['Lemon (juice)',0.25,'lemon']],
    st:['Snap off the woody ends: bend one spear until it breaks naturally, cut the rest at that spot.','3 sprays over the spears, flat into the air-fryer basket. 390°F, 7 min — blistered, still bright green.','Out of the basket: smoked paprika + salt + a big lemon squeeze. Seasoning after the heat, always.']},
-  {n:'Crispy Smoke-Rub Potatoes', w:'night of · per dinner', s:null,
+  {n:'Smoke-Rub Hash Browns', w:'night of · per dinner', s:null,
    ing:[['Potatoes (raw)',220,'g'],['Smoked paprika',0.5,'tsp'],['Onion powder',0.25,'tsp'],['Salt',0.25,'tsp']],
-   st:['¾" cubes (thumb-width), same size, no peeling.','In a bowl: 5 sprays, spices, toss until coated.','Air fryer 390°F, 14–18 min, shake at minutes 6 and 12.','Done = deep golden-red, crispy corners, fork goes in clean.']},
+   st:['Grate the potatoes (skin on) on the BIG holes of a box grater.','Rinse the shreds in a bowl of cold water — swish until the water goes cloudy, drain, repeat once. Washing the starch off is what stops gray, gummy hash browns.','THE step: pile the shreds in a clean dish towel and TWIST hard over the sink until water stops coming out. Wet shreds steam; bone-dry shreds crisp. Do not skip this.','Toss with 5 sprays + the spices. Spread in the basket in a thin, even layer (~½" — two rounds if crowded).','Air fryer 380°F: 8 min, toss-flip with a spatula, 5–7 more. Done = deep golden with lacy crispy edges.','Salt check out of the basket. SF ketchup (32 g) on the side is already in the dinner macros. Diner breakfast, smokehouse dinner.']},
   {n:'Classic Poke Bowl', w:'night of · per bowl', s:null,
    ing:[['Sushi-grade salmon (raw)',6,'oz'],['Sushi rice (from the Poke recipe math)',50,'g'],['Soy sauce',30,'mL'],['Edamame',85,'g'],['Cucumber',75,'g'],['Scallion, thin-sliced',1,'ct'],['Seaweed packet',1,'ct']],
    st:['Rice: 50 g cold batch rice, ~10 mL water on top, microwave 45–60 sec, fluff.','Cold salmon into ¾" cubes — strips first, then across.','Build: rice → salmon, edamame, cucumber in piles → 30 mL soy over everything → scallion + crumbled seaweed on top. The palate-cleanser week — no smoke near the fish.']},
@@ -3065,7 +3065,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784213395';
+const BUILD = 'b1784214878';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
