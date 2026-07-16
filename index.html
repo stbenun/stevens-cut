@@ -846,6 +846,10 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
+ {d:'2026-07-16', title:'🎓 Moreshet Alumni event tonight — plan set', msg:`<b>Run:</b> long run MOVES to Sunday morning (replaces the short run) — tonight is rest, enjoy it.<br>
+<b>Eat:</b> normal through lunch. <b>Skip the snack</b> — bank it via 🍽 Eating out → Simcha/Event (915 for the night).<br>
+<b>At the event (Nine Days = dairy/pareve spread):</b> ① protein first — sushi/grilled fish, two palms ② ONE fist of carbs ③ nothing fried ④ dessert: one item max ⑤ seltzer in hand all night.<br>
+<b>Salmon defrosted this morning → tomorrow’s lunch, cooked</b> (blackened or shawarma card). Bed at a human hour — hockey + Legs #2 + refeed day 2 tomorrow.`},
  {d:'2026-07-13', title:'⚡ REFEED DAY 1 of 2 — Q-approved · PM Legs today', msg:`+275 cal today, all planned. Meat lunch → pre-lift is PAREVE. Everything else per the normal plan.<br>
 ① <b>1:30</b> — meat lunch as planned.<br>
 ② <b>4:30</b> — <b>Tuna + Banana</b> (pareve pre-lift) <b>PLUS 3 rice cakes</b> (+105 · 21C).<br>
@@ -3084,7 +3088,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784148046';
+const BUILD = 'b1784204862';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
