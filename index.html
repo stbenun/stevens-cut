@@ -871,7 +871,6 @@ const EVENTS = [
 ⑤ <b>STOP.</b> That’s ~950 cal / ~95 g protein — a great fast day. Do NOT chase 2,220.<br>
 Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · hockey bag ready · bed by 11:30 — hockey’s at 9:30 tomorrow.`},
  {d:'2026-07-05', title:'Moved run — 6 easy miles this morning', msg:'Thursday’s long run was lost to the fast, so today: 6 mi EASY replaces the 3.3 mi intervals. Before: Yogurt + Banana (200 cal) + 8–16 oz water, 45–60 min out. Conversational pace the whole way. Then weigh-in report to Claude, groceries, prep, Creamis.'},
- {d:'2026-07-19', title:'Nine Days · menu-set day', msg:'Setting this week’s menu: NO meat options until Thursday night — lunches = Jiben ×/Tuna Melt, dinners = Poke/Salmon Bites/Blackened Salmon. Tomorrow is sushi night out (planner → Sushi, bank the snack). Defrosts this week are all salmon — no beef/chicken pulls.'},
  {d:'2026-07-22', title:'Tisha B’Av starts tonight — pre-fast script', msg:`25-hour fast from sundown (~8:15). Tomorrow’s 8.5 mi moves to Sunday 7/26.<br>
 <b>Water schedule:</b> 30 oz by 10 AM · 60 by 1 PM · 90 by 4 PM · gallon by 6:30. Both hydration sticks today.<br>
 <b>Food:</b> all meals on time. Lunch = Chicken Meal with RICE. <b>~6:15 PM pre-fast meal</b> (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber — carbs up, salt DOWN (skip most of the soy; salt now = misery at 2 AM).<br>
@@ -1005,13 +1004,13 @@ const DRAFT_SLOT_MEALS = {
 /* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
    covering snack + dinner budgets: ~915 cal · ~85P · ~90C · ~25F. Rotates Sundays. */
 const SHABBAT_FEAST = [
- {n:'Za’atar Chicken & Potato Tray', mac:'≈950 · 84P · 92C · 26F (incl. 1 challah slice at the table)',
+ {n:'Za’atar Chicken & Potato Tray', when:'cook THURSDAY night — reheats covered with zero loss', mac:'≈950 · 84P · 92C · 26F (incl. 1 challah slice at the table)',
   ing:[['Chicken breast (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Olive oil','12 g (1 scant Tbsp)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Challah at the table','1 slice']],
   st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken, the 12 g oil, and all the spices — toss with your hands until everything is coated.','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
- {n:'Friday Tomato Beef & Mejadra', mac:'≈965 · 85P · 96C · 25F',
+ {n:'Friday Tomato Beef & Mejadra', when:'cook THURSDAY night — genuinely better on day two', mac:'≈965 · 85P · 96C · 25F',
   ing:[['93/7 ground beef (raw)','12 oz'],['Rice (dry)','60 g'],['Lentils (dry)','45 g'],['Onion, sliced','80 g'],['Tomato paste','33 g'],['Allspice','1 tsp'],['Cinnamon','½ tsp'],['Salt','¾ tsp'],['Cucumber-tomato salad, lemon only','big bowl']],
   st:['Pot 1 (the mejadra): lentils into boiling water, 10 min. Then add the rice + ¾ tsp salt, turn to low (3/10), lid on, 12 more min. Kill the heat and leave the lid on — it finishes itself.','Pot 2, while that cooks: empty DRY pot on high (8/10), 2-min preheat. Onion slices in, spread flat, untouched 2 min, then stirred another 2–3 — you want real dark-brown edges (that’s "charred," and it’s the flavor of the dish). Take HALF the onions out and set aside for topping.','Same pot, medium-high (7/10): beef in with the remaining onions. Crumble small, 4–5 min to zero pink.','Spices in, 30 seconds. Tomato paste + ½ cup water, stir until dissolved, then LOW (2/10) for 10 min until thick.','Assemble: mejadra on the platter, beef over it, the reserved charred onions on top. Reheats beautifully — honestly better on day two. Active time ~25 min.']},
- {n:'Shawarma Chicken Platter', mac:'≈920 · 86P · 91C · 22F (incl. 1 small pita/challah)',
+ {n:'Shawarma Chicken Platter', when:'Thursday works · BEST fresh Friday ~5:15 after the gym (thin cutlets shine same-day)', mac:'≈920 · 86P · 91C · 22F (incl. 1 small pita/challah)',
   ing:[['Chicken breast — THIN-SLICED cutlets (raw)','12 oz'],['Rice (dry)','70 g'],['Shawarma rub: cumin 1 tsp · paprika 1 tsp · turmeric ½ tsp · coriander ½ tsp · garlic ½ tsp · salt ¾ tsp','—'],['Hummus (weighed)','50 g'],['Israeli salad: tomato 150 g · cucumber 150 g · red onion 30 g','1 bowl'],['Salad dressing: ½ lemon · ½ tsp sumac · ¼ tsp salt · black pepper (no oil — the hummus has the fat)','—'],['Pickles','free'],['Pita, WEIGHED: 40 g with the normal challah plan · 60 g if you skip the half-slice (the Friday-card trade)','—']],
   st:['Stir the shawarma rub together. Pat the chicken dry with paper towels, coat every side, and let it sit while the rice cooks.','Rice: 70 g dry, rinsed until the water runs clearish, + 105 mL water + pinch of salt. Boil, then low (3/10) with the lid on, 12 min, then off the heat 5 min — don’t peek.','Grill pan on high (8/10), preheated 3 full min, 3 sprays. Thin cutlets down: 2½–3 min per side, flip ONCE — don’t walk away, thin chicken goes from perfect to dry in a minute. 165°F / no pink = done.','Rest the chicken 5 min, then slice into shawarma strips ACROSS the grain — look at the direction the fibers run and cut perpendicular.','Salad (make it FRIDAY, not Thursday — it weeps water overnight): dice tomato, cucumber, and onion to ¼" — small and uniform, that’s the dish. Salt, then lemon, toss, then the sumac over the top LAST so it stays bright.','Platter: rice as the base, chicken on top, the 50 g hummus schmeared in a wide stripe along the side, salad + pickles alongside. Active time ~20 min.']},
 ];
@@ -1738,24 +1737,7 @@ function viewToday(){
     </ul>
   </div>
 
-  ${(()=>{ const t = isoToday(); if(t<'2026-07-15'||t>'2026-07-23') return '';
-    return `
-  <h2 class="sec">🕯 Nine Days · no meat until after the fast</h2>
-  <details class="card acc" data-acc="ninedays"${openAcc.has('ninedays')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">The meat-free plan</h3> ${tchip('Jul 15 – 23 · Shabbat exempt')}</summary>
-    <ul class="sched" style="margin-top:8px">
-      <li><span class="t">Lunches</span><span>Rotate: Jiben · <b>Tuna Melt Stack</b> (575 · 51P) · <b>Salmon Smash Patties</b> (530 · 50P) · <b>Salmon Shawarma Bowl</b> (576 · 51P) · <b>Spicy Tuna Crunch Bowl</b> (598 · 64P, zero cooking) — all in Meals</span></li>
-      <li><span class="t">Sun prep</span><span><b>Smash patties:</b> pulse 12 oz salmon in the food processor 5–6 taps — chunky mince, not paste with 30 g egg whites + 1 tsp garlic + 1 tsp paprika + ½ tsp salt. Form 4 patties, parchment between, fridge (2 days) or freeze. Lunch: sear 2 in a sprayed nonstick, medium-high (7/10), 3 min per side — opaque through, crusty outside. Keto bun + hummus-sriracha schmear + pickles + potatoes.</span></li>
-      <li><span class="t">Sun prep</span><span><b>Shawarma salmon:</b> rub 2 × 6 oz portions with the feast’s shawarma spices, roast with the Sunday batch (400°F 12–14 min). Box over rice + edamame; hummus + Israeli salad added day-of. Eats warm or room temp.</span></li>
-      <li><span class="t">Dinners</span><span>Rotate: Poke Bowl · Salmon Bites Bowl · <b>Blackened Salmon Plate</b> (new — in Meals, 570 · 53P)</span></li>
-      <li><span class="t">Shabbat</span><span>Meat is PERMITTED Fri night + Sat — the Shawarma Chicken feast runs as planned.</span></li>
-      <li><span class="t">Mon 7/20</span><span>Sushi out 🍣 — eating-out planner, Sushi preset, bank the snack.</span></li>
-      <li><span class="t">Jul 22–23</span><span>Pre-fast meal, fast day, and rebound are already scripted — banners appear on the day.</span></li>
-    </ul>
-    <div class="sub" style="margin-top:8px"><b>Tuna Melt method:</b> toast 2 Ezekiel · mix 2 tuna packets with 1 tsp deli mustard · pile on the toast, 28 g mozzarella over · air fryer 390°F 3–4 min until bubbling · guac on the side, apple after.</div>
-    <div class="sub" style="margin-top:6px"><b>Blackened Salmon method:</b> pat 6 oz salmon dry · rub: paprika ½ tsp + garlic ¼ tsp + salt ¼ tsp + pinch cayenne · air fryer 390°F 7–9 min, done when it flakes under a fork · potatoes via the crispy-cube method, asparagus 7 min, edamame straight from frozen (2 min micro). Any salmon works — it’s cooked, sushi-grade not required.</div>
-  </details>`;
-  })()}
+
 
   ${now.getDay()===0?(()=>{
     const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
@@ -2104,7 +2086,7 @@ function feastCardHTML(accId){
   const f = weekPick(SHABBAT_FEAST);
   return `
   <details class="card acc" data-acc="${accId}"${openAcc.has(accId)?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip('Thu night / Fri PM · 20-30 min')}</summary>
+    <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip(f.when||'Thu night / Fri PM')}</summary>
     <div class="budget" style="margin-top:6px"><span><b>${f.mac}</b></span></div>
     <ul class="ing">${f.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
     <ul class="sched" style="margin-top:8px">${f.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
@@ -3073,7 +3055,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784210430';
+const BUILD = 'b1784210587';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
