@@ -827,7 +827,7 @@ const DAYS = {
  1:{title:'Legs — lift ~8:00', sub:'Monday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit'],['8:00 PM','Rabbi Benjamin'],['9:00 PM','Rabbi Nathan']]},
  2:{title:'Push — lift ~8:00', sub:'Tuesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit + Rabbi Ricky'],['8:15 PM','Rabbi Benjamin or Rabbi Nathan']]},
  3:{title:'Pull — lift ~8:00', sub:'Wednesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit'],['8:00 PM','Rabbi Benjamin']]},
- 4:{title:'Rest · Long Run', sub:'Thursday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Class'],['9:00','Work'],['6:00 PM','Walk'],['PM','RUNNA_THU'],['7:15 PM','Arbit'],['8:00 PM','Rabbi Alouf'],['PM','Prep hockey bag']],
+ 4:{title:'Rest · Long Run', sub:'Thursday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Class'],['9:00','Work'],['6:00 PM','Walk'],['PM','RUNNA_THU'],['7:15 PM','Arbit'],['8:00 PM','Rabbi Alouf']],
     note:'Print or write down Saturday’s grandma card tonight or tomorrow — no phone on Shabbat.'},
  5:{title:'Legs #2 — leave 3:30', sub:'Friday', sch:[['6:40','Wake up'],['7:00','Minyan'],['AM','Work'],['3:00','Pre-lift meal + Shabbat prep window'],['3:30','Leave to gym — Legs #2 ~3:45'],['5:00','Bank'],['7:00','Shul'],['8:00','Shabbat dinner']],
     note:'Skip the 330-cal snack today — it goes into a bigger Shabbat dinner.'},
@@ -842,16 +842,13 @@ const OVERRIDES = {
  '2026-07-07': {title:'Push — lift ~8:00 · the restaurant tonight', sub:'Tuesday',
   sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['1:30','NO lunch today — planned skip, banked for dinner'],['5:05','Leave work'],['5:15','S.'],['5:30','Shake: Fairlife 320 mL + 1 FULL scoop Ryse (260 cal · 45P)'],['7:15','Class'],['9:00','the restaurant 🌊 — plate plan below']],
   note:`<b>the restaurant plate plan (~1,230 budget):</b> 2 focaccia · salad, dressing on the side · <b>~9 oz fish (two palms) — tuna steak / branzino / snapper, serve yourself FIRST when mains land</b> · 1½ teacups pasta total across all pastas · roasted potatoes + veg freely · water. Skipping: fried starters, avocado, dolci. ⚠️ NUT DISHES stay across the table, no shared spoons: butternut ravioli (hazelnut), bruschetta (walnut), cucumber-zucchini salad (pine nuts). Done eating when you leave. Tomorrow’s scale = sodium noise.`},
- '2026-07-03': {title:'Holiday Friday — Hockey 9:30 + Legs #2', sub:'Friday · July 4th weekend',
-  sch:[['7:00','Minyan · Bank 🏦 right after'],['8:30','Pre-hockey fuel: Yogurt + Banana (200 cal) + 16 oz water'],['9:30','Hockey — bring a stick bottle'],['~11:30','Lift — Legs #2 (you’re warm from hockey: one warmup set, go)'],['~12:45','Breakfast — pick Kodiak or Bagel w/ Berries (big-carb day)'],['3:00','Shabbat prep — Friday card below'],['~3:30','Lunch as planned + 1 EXTRA Ezekiel + SF jelly (post-fast rebound carb)'],['7:00','Shul'],['8:00','Shabbat dinner — snack skipped, eat big with the family']],
-  note:'Post-fast rebound day: every meal eaten, one extra 180-cal carb before 4 PM, and front-load water — 60 oz down before hockey ends, gallon by shul. The scale is FAKE until Sunday; don’t weigh-in emotionally.'},
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
  {d:'2026-07-16', title:'🎓 Moreshet Alumni event tonight — plan set', msg:`<b>Run:</b> long run MOVES to Sunday morning (replaces the short run) — tonight is rest, enjoy it.<br>
 <b>Eat:</b> normal through lunch. <b>Skip the snack</b> — bank it via 🍽 Eating out → Simcha/Event (915 for the night).<br>
 <b>At the event (SIYUM = meat is served):</b> ① anchor: LEAN meat first — grilled chicken or lean roast, two palms ② skip wings/ribs/anything glazed ③ ONE fist of carbs ④ nothing fried ⑤ pareve desserts aren’t worth it — one max ⑥ seltzer in hand all night.<br>
-<b>Salmon defrosted this morning → tomorrow’s lunch, cooked</b> (blackened or shawarma card). Bed at a human hour — hockey + Legs #2 + refeed day 2 tomorrow.`},
+<b>Salmon defrosted this morning → tomorrow’s lunch, cooked</b> (blackened or shawarma card). Bed at a human hour — Legs #2 + refeed day 2 tomorrow.`},
  {d:'2026-07-13', title:'⚡ REFEED DAY 1 of 2 — Q-approved · PM Legs today', msg:`+275 cal today, all planned. Meat lunch → pre-lift is PAREVE. Everything else per the normal plan.<br>
 ① <b>1:30</b> — meat lunch as planned.<br>
 ② <b>4:30</b> — <b>Tuna + Banana</b> (pareve pre-lift) <b>PLUS 3 rice cakes</b> (+105 · 21C).<br>
@@ -869,7 +866,7 @@ const EVENTS = [
 ③ <b>~9:15</b> — cook the <b>Jiben</b>: 2 eggs + 100 g egg whites + 113 g cottage cheese + 28 g mozzarella + 150 g spinach or broccoli + 2 Ezekiel. One pan, 10 min, 55 g protein.<br>
 ④ <b>~10:15, only if hungry</b> — shake: Fairlife 320 mL + ½ scoop + a mix-in.<br>
 ⑤ <b>STOP.</b> That’s ~950 cal / ~95 g protein — a great fast day. Do NOT chase 2,220.<br>
-Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · hockey bag ready · bed by 11:30 — hockey’s at 9:30 tomorrow.`},
+Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · bed by 11:30.`},
  {d:'2026-07-05', title:'Moved run — 6 easy miles this morning', msg:'Thursday’s long run was lost to the fast, so today: 6 mi EASY replaces the 3.3 mi intervals. Before: Yogurt + Banana (200 cal) + 8–16 oz water, 45–60 min out. Conversational pace the whole way. Then weigh-in report to Claude, groceries, prep, Creamis.'},
  {d:'2026-07-22', title:'Tisha B’Av starts tonight — pre-fast script', msg:`25-hour fast from sundown (~8:15). Tomorrow’s 8.5 mi moves to Sunday 7/26.<br>
 <b>Water schedule:</b> 30 oz by 10 AM · 60 by 1 PM · 90 by 4 PM · gallon by 6:30. Both hydration sticks today.<br>
@@ -1600,7 +1597,7 @@ function todayBuyCardHTML(){
 }
 
 /* ---------- Right Now: curated daily timeline (minutes from midnight) ---------- */
-function dayTimeline(playingHockey){
+function dayTimeline(){
   const wd = new Date().getDay();
   const GYM_DEF = {1:'07:55',2:'07:55',3:'07:55',5:'15:30'};
   const gl = (store.get('qpcut.gymleave',{}))[wd] || GYM_DEF[wd];
@@ -1619,15 +1616,15 @@ function dayTimeline(playingHockey){
     A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1110,'Dinner BEFORE Arbit — classes run late');
     (wd===2?[[1155,'Arbit + Rabbi Ricky'],[1215,'Rabbi Benjamin or Rabbi Nathan']]:[[1155,'Arbit'],[1200,'Rabbi Benjamin']]).forEach(([m,l])=>A(m,l));
     A(1290,'Snack + dials + magnesium'); A(1350,'Bed by 10:30 — recovery night'); }
-  if(wd===4){ A(400,'Wake'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080,'Walk + Runna run (banner above)'); A(1155,'Arbit'); A(1200,'Rabbi Alouf'); A(1260,'Hockey bag + print the Shabbat card'); A(1280,'Dinner + dials'); A(1350,'Bed by 10:30 — hockey wake is 6:00'); }
+  if(wd===4){ A(400,'Wake'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080,'Walk + Runna run (banner above)'); A(1155,'Arbit'); A(1200,'Rabbi Alouf'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1350,'Bed by 10:30'); }
   if(wd===5){ A(400,'Wake'); A(420,'Minyan'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
     if(lift){ A(lift-45,'Pre-lift meal + Shabbat prep window'); A(lift-25,'Pump Caps'); A(glM,'Leave — EAA only, no stim'); A(lift,'Lift — Legs #2'); }
     A(1020,'Bank'); A(1140,'Shul'); A(1200,'Shabbat dinner — feast + challah rules on the Friday card'); }
   if(wd===6){ A(390,'Wake'); A(405,'Minyan'); A(525,'Class'); A(585,'Walk to grandma’s'); A(600,'Lift — the printed card'); A(750,'Shabbat lunch'); }
   return T.sort((a,b)=>a[0]-b[0]);
 }
-function rightNowHTML(playingHockey){
-  const T = dayTimeline(playingHockey);
+function rightNowHTML(){
+  const T = dayTimeline();
   if(!T.length) return '';
   const now = new Date(); const m = now.getHours()*60+now.getMinutes();
   const fmtM = t=>{ let h=Math.floor(t/60), mm=t%60; const ap=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${String(mm).padStart(2,'0')} ${ap}`; };
@@ -1697,8 +1694,7 @@ function viewToday(){
     if(x==='RUNNA_SUN') x = rw? `Runna: ${rw[3]}` : 'Runna short run';
     return [t,x];
   });
-  let dTitle = d.title, hockeyHTML = '';
-  const playingHockey = false; /* hockey ended Jul 2026 */
+  let dTitle = d.title;
   const ld = logDate || isoToday();
   const backfill = ld !== isoToday();
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
@@ -1726,8 +1722,7 @@ function viewToday(){
     ${daysToRace>0?tchip(`🏁 race in ${daysToRace}d`):''}</div>
   <div class="today-date">${dTitle}</div>
   ${winsHTML()}
-  ${hockeyHTML}
-  ${rightNowHTML(playingHockey)}
+  ${rightNowHTML()}
   ${storageFresh?`<div class="note" style="margin-top:14px"><b>⚠️ Storage check:</b> this browser has no saved app data. If this is your first time here, ignore this. If you HAVE logged here before, this browser is wiping data between visits — <b>don’t log here</b>, and tell Claude exactly how you opened the app (Safari tab / home-screen icon / inside the Claude app) so he can fix it.</div>`:''}
   ${EVENTS.filter(e=>e.d===isoToday()).map(e=>`
     <div class="note" style="margin-top:14px"><b>⚠️ ${e.title}</b><br>${e.msg}</div>`).join('')}
@@ -2348,7 +2343,7 @@ function viewTrain(){
         <li><span class="t">LR</span><span>Long run bumped → <b>Sunday, replacing the quality run</b>. The long run always wins.</span></li>
         <li><span class="t">LR 10+</span><span>Big long run bumped → <b>Wednesday evening</b> (Pull morning doesn’t conflict), or Sunday easy.</span></li>
         <li><span class="t">Qual.</span><span>Tempo/intervals bumped → <b>drop it</b>. Speed work is the first sacrifice.</span></li>
-        <li><span class="t">Never</span><span>Onto Friday (hockey + Legs #2) or Shabbat.</span></li>
+        <li><span class="t">Never</span><span>Onto Friday (Legs #2 + Shabbat prep) or Shabbat.</span></li>
       </ul>
     </div>
     <div class="card"><span class="daytag">Jewish calendar × training · dates to plan around</span>
@@ -3063,7 +3058,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784210870';
+const BUILD = 'b1784211072';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
