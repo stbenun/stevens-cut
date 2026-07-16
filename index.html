@@ -1365,8 +1365,8 @@ const RECIPES = [
 const COR_SETS = [
  [
   ['Cinnabon Bowl','Cinnamon Roll COR + Cinnamon Toast Ryse — almond butter swirled on top'],
-  ['Death by Chocolate','Chocolate Cake COR + Chocolate Cookie Blast — strawberries 70 g as the berry'],
-  ['Lemon-Blueberry Loaf','Blueberry Muffin COR + Lemon Cake — blueberries 70 g'],
+  ['Death by Chocolate','Chocolate Cake COR + Chocolate Cookie Blast — strawberries as the berry'],
+  ['Lemon-Blueberry Loaf','Blueberry Muffin COR + Lemon Cake — blueberries'],
   ['Biscoff Bowl','Cookie Butter COR + RAW Milk N Cookies'],
   ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie + cinnamon — swap the berries for 70 g diced apple (same cals)'],
   ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse'],
@@ -1374,21 +1374,21 @@ const COR_SETS = [
  ],
  [
   ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream'],
-  ['Double Blueberry Muffin','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries 70 g'],
+  ['Double Blueberry Muffin','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries'],
   ['Tropical Bowl','Coconut Cream Pie COR + RAW Piña Colada'],
   ['Cookies on Cookies','Cookies n Cream COR + RAW Milk N Cookies'],
   ['Maple Apple Pie','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — 70 g diced apple (replaces the berries)'],
-  ['Strawberry Shortcake Bowl','Plain COR + LD Strawberry Shortcake — strawberries 70 g as the berry'],
+  ['Strawberry Shortcake Bowl','Plain COR + LD Strawberry Shortcake — strawberries as the berry'],
   ['Fruity Pebbles Cereal Milk','Plain COR + Fruity Pebbles protein'],
  ],
  [
-  ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — strawberries 70 g'],
+  ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — strawberries'],
   ['Carrot Cake Cheesecake','Carrot Cake COR + Vanilla Ice Cream Ryse'],
-  ['Lemon Loaf','Plain COR + Lemon Cake — blueberries 70 g'],
+  ['Lemon Loaf','Plain COR + Lemon Cake — blueberries'],
   ['Cookie Butter Crunch','Cookie Butter COR + Cinnamon Toast Ryse'],
   ['Apple Fritter','Apple Pie COR + Cinnamon Toast Ryse — 70 g diced apple (replaces the berries) + extra cinnamon'],
   ['Mint Chocolate','Chocolate Cake COR + Mint Chip Ice Cream'],
-  ['Coconut Blueberry','Coconut Cream Pie COR + Blueberry Muffin Ryse — blueberries 70 g'],
+  ['Coconut Blueberry','Coconut Cream Pie COR + Blueberry Muffin Ryse — blueberries'],
  ],
 ];
 /* rotating weekly flavor themes — flips every Sunday, cycles automatically */
@@ -1830,8 +1830,7 @@ function viewToday(){
   <h2 class="sec">Today’s flavors</h2>
   <div class="card">
     <div class="opt"><div class="head"><b>🥣 ${corToday[0]}</b>${tchip('breakfast')}</div>
-      <div class="sub" style="margin-top:4px">${corToday[1]}</div>
-      <div class="ingmac" style="margin-top:3px">Base every day: COR 25 g · oats 25 g · protein 1 scoop · fruit 70 g (berries unless the combo swaps it) · almond butter 32 g</div></div>
+      <div class="sub" style="margin-top:4px">${corToday[1]}</div></div>
     <div class="opt">
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
@@ -3066,7 +3065,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784215133';
+const BUILD = 'b1784216149';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
