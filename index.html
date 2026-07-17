@@ -1503,6 +1503,120 @@ const store = {
   get(k,f){ try{ const v=JSON.parse(localStorage.getItem(k)); return v===null?f:v; }catch(e){ return f; } },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
 };
+
+/* ---------- cloud sync · phone ↔ computer via a secret GitHub gist ----------
+   Every localStorage write stamps a per-key clock (qpcut.syncmeta). Sync pulls the
+   gist, merges per key by newest stamp (deletes carry tombstones), and pushes back
+   only when this device holds something newer. Photos live in IndexedDB — not synced. */
+const SYNC_FILE = 'thecut-data.json', SYNC_DESC = 'the-cut-sync';
+const RAWSET = localStorage.setItem.bind(localStorage), RAWRM = localStorage.removeItem.bind(localStorage);
+function syncable(k){ return !!k && k.startsWith('qpcut.') && !k.startsWith('qpcut.sync'); }
+function syncCfg(){ return { token: localStorage.getItem('qpcut.sync.token')||'', gist: localStorage.getItem('qpcut.sync.gist')||'' }; }
+function syncMeta(){ try{ const m = JSON.parse(localStorage.getItem('qpcut.syncmeta')); return (m && m.w && m.t)? m : {w:{},t:{}}; }catch(e){ return {w:{},t:{}}; } }
+function syncSaveMeta(m){ RAWSET('qpcut.syncmeta', JSON.stringify(m)); }
+let syncTimer = null, SYNC_BUSY = false;
+function syncTouch(k, dead){
+  if(!syncable(k)) return;
+  const m = syncMeta();
+  if(dead){ delete m.w[k]; m.t[k] = Date.now(); }
+  else { delete m.t[k]; m.w[k] = Date.now(); }
+  syncSaveMeta(m);
+  if(syncCfg().gist){ clearTimeout(syncTimer); syncTimer = setTimeout(()=>syncNow(), 8000); }
+}
+if(typeof Storage !== 'undefined'){
+  const _set = Storage.prototype.setItem, _rm = Storage.prototype.removeItem;
+  Storage.prototype.setItem = function(k,v){ _set.apply(this,arguments); try{ if(this===window.localStorage) syncTouch(String(k)); }catch(e){} };
+  Storage.prototype.removeItem = function(k){ _rm.apply(this,arguments); try{ if(this===window.localStorage) syncTouch(String(k), true); }catch(e){} };
+}
+function syncLocalKeys(){
+  const out = [];
+  for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(syncable(k)) out.push(k); }
+  return out;
+}
+function syncPayload(){
+  const m = syncMeta(), data = {};
+  syncLocalKeys().forEach(k=>{ data[k] = localStorage.getItem(k); });
+  return JSON.stringify({v:1, at:Date.now(), data, w:m.w, t:m.t});
+}
+async function ghApi(path, opts){
+  opts = opts || {};
+  const r = await fetch('https://api.github.com'+path, Object.assign({}, opts, {
+    headers: Object.assign({'Authorization':'token '+syncCfg().token, 'Accept':'application/vnd.github+json'}, opts.headers||{})
+  }));
+  if(!r.ok) throw new Error('GitHub said '+r.status);
+  return r.json();
+}
+/* merge a remote payload into localStorage — per key, the newest stamp wins */
+function syncMerge(remote){
+  const m = syncMeta();
+  const rd = remote.data||{}, rw = remote.w||{}, rt = remote.t||{};
+  let changed = 0, dirty = false;
+  const keys = new Set([].concat(Object.keys(rd), Object.keys(rt), syncLocalKeys(), Object.keys(m.w), Object.keys(m.t)));
+  keys.forEach(k=>{
+    if(!syncable(k)) return;
+    const lS = Math.max(m.w[k]||0, m.t[k]||0), rS = Math.max(rw[k]||0, rt[k]||0);
+    const lVal = localStorage.getItem(k), rHas = Object.prototype.hasOwnProperty.call(rd, k);
+    if(rS > lS){
+      if((rt[k]||0) >= (rw[k]||0)){            /* newer remote delete */
+        if(lVal!==null){ RAWRM(k); changed++; }
+        m.t[k] = rt[k]; delete m.w[k];
+      } else if(rHas){                          /* newer remote write */
+        if(lVal !== rd[k]){ RAWSET(k, rd[k]); changed++; }
+        m.w[k] = rw[k]; delete m.t[k];
+      }
+    } else if(rS < lS){
+      dirty = true;                             /* this device is newer — push after merge */
+    } else {                                    /* tie — usually both unstamped legacy data */
+      if(rHas && lVal===null){ RAWSET(k, rd[k]); changed++; if(rw[k]) m.w[k] = rw[k]; }
+      else if(rHas && lVal!==rd[k]){
+        if(!m.w[k]){ RAWSET(k, rd[k]); changed++; if(rw[k]) m.w[k] = rw[k]; }
+        else dirty = true;
+      }
+      else if(!rHas && lVal!==null){ dirty = true; }
+    }
+  });
+  syncSaveMeta(m);
+  return {changed, dirty};
+}
+function syncStatus(msg){ const el = document.getElementById('syState'); if(el) el.textContent = msg; }
+async function syncNow(){
+  const cfg = syncCfg(); if(!cfg.token || !cfg.gist || SYNC_BUSY) return;
+  SYNC_BUSY = true; syncStatus('⏳ syncing…');
+  try{
+    const g = await ghApi('/gists/'+cfg.gist);
+    const f = g.files && g.files[SYNC_FILE];
+    let remote = {};
+    if(f){
+      const txt = f.truncated ? await (await fetch(f.raw_url)).text() : f.content;
+      try{ remote = JSON.parse(txt)||{}; }catch(e){}
+    }
+    const res = syncMerge(remote);
+    if(res.dirty || !f){
+      await ghApi('/gists/'+cfg.gist, {method:'PATCH', body: JSON.stringify({files:{[SYNC_FILE]:{content: syncPayload()}}})});
+    }
+    RAWSET('qpcut.sync.last', String(Date.now()));
+    syncStatus('✓ synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
+    if(res.changed){ (typeof renderWhenIdle==='function') ? renderWhenIdle() : render(); }
+  }catch(e){
+    syncStatus('⚠ sync failed — check internet; it retries on the next edit or app-open');
+  }
+  SYNC_BUSY = false;
+}
+async function syncConnect(token){
+  RAWSET('qpcut.sync.token', token.trim());
+  const mine = await ghApi('/gists?per_page=100');
+  let g = (mine||[]).find(x => x.description===SYNC_DESC && x.files && x.files[SYNC_FILE]);
+  if(!g){
+    /* first device in — stamp everything it holds so this copy wins on every other device */
+    const m = syncMeta(), now = Date.now();
+    syncLocalKeys().forEach(k=>{ if(!m.w[k]) m.w[k] = now; });
+    syncSaveMeta(m);
+    g = await ghApi('/gists', {method:'POST', body: JSON.stringify({description:SYNC_DESC, public:false, files:{[SYNC_FILE]:{content: syncPayload()}}})});
+  }
+  RAWSET('qpcut.sync.gist', g.id);
+  await syncNow();
+}
+function syncDisconnect(){ RAWRM('qpcut.sync.token'); RAWRM('qpcut.sync.gist'); RAWRM('qpcut.sync.last'); }
 /* one-time migration: Monday hack squat (pr_mon_hack) merged into the shared pr_hack row (Jul 13) */
 (()=>{ const p = store.get('qpcut.prset',{});
   const had = (p['pr_mon_hack']||[]).some(v=>v);
@@ -2496,6 +2610,31 @@ function viewTrack(){
     </div>
   </div>
 
+  <h2 class="sec">Cloud sync · phone ↔ computer</h2>
+  <div class="card">
+    ${(()=>{ const c = syncCfg();
+      if(c.token && c.gist){
+        const last = +(localStorage.getItem('qpcut.sync.last')||0);
+        const when = last? new Date(last).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'}) : 'not yet';
+        return `<div class="formrow" style="margin-top:0">
+          <button class="btn" id="syNow">☁️ Sync now</button>
+          <button class="btn ghost" id="syOff">disconnect</button>
+        </div>
+        <div class="formrow" style="margin-top:6px"><span class="sub" id="syState">✓ connected · last sync: ${when}</span></div>
+        <div class="sub" style="margin-top:8px">Syncs by itself: when you open the app, when you leave it, and ~8 s after any edit. If both devices edited the same thing, the newest edit wins. Photos don't sync — they stay on the device that took them.</div>`;
+      }
+      return `<div class="sub" style="margin-top:0">One-time setup — after this, phone and computer share the same logs automatically.</div>
+      <ol class="sub" style="margin:8px 0 0 18px; padding:0; line-height:1.55">
+        <li>In a browser: <b>github.com</b> → log in → Settings → Developer settings → <b>Personal access tokens → Tokens (classic)</b> → Generate new token (classic).</li>
+        <li>Name it <b>the-cut-sync</b> · Expiration <b>No expiration</b> · tick ONLY the <b>gist</b> box → Generate → copy the token.</li>
+        <li>Paste it below on the device that has your REAL data <b>first</b> (your phone) → Connect. Then paste the SAME token on the other device.</li>
+      </ol>
+      <div class="formrow"><input type="password" id="syTok" placeholder="paste token (ghp_… or gho_…)" autocomplete="off" style="flex:1;min-width:0"><button class="btn" id="syGo">☁️ Connect</button></div>
+      <div class="formrow" style="margin-top:4px"><span class="sub" id="syState"></span></div>
+      <div class="sub" style="margin-top:8px">Your logs live in a secret gist on YOUR GitHub account — only your token can read it. Photos don't sync (too big) — they stay per-device.</div>`;
+    })()}
+  </div>
+
   <h2 class="sec">Data backup · move logs between devices</h2>
   <div class="card">
     <div class="formrow" style="margin-top:0">
@@ -2508,7 +2647,7 @@ function viewTrack(){
       const stale = !le || (Date.now()-new Date(le+'T12:00:00').getTime() > 7*864e5);
       return stale? `<div class="note" style="margin-top:8px">⚠ Last backup: <b>${le||'never'}</b>. Export takes 5 seconds — after July’s storage scare, don’t skip it.</div>` : '';
     })()}
-    <div class="sub" style="margin-top:8px">Export saves a dated file (the-cut-backup-…json) to Files. Import reads one back — it overwrites matching data, so restore FROM the good backup TO the empty device. Photos stay per-device. Log only in the home-screen app; export weekly.</div>
+    <div class="sub" style="margin-top:8px">Export saves a dated file (the-cut-backup-…json) to Files. Import reads one back — it overwrites matching data, so restore FROM the good backup TO the empty device. Photos stay per-device. Cloud sync moves data day-to-day; this file is your disaster backup — export weekly.</div>
   </div>
 
   <h2 class="sec">Food photos</h2>
@@ -3048,18 +3187,33 @@ function wireTrack(){
     notes.splice(+del.dataset.nx,1);
     store.set('qpcut.notes',notes); render();
   });
+  const syGo = $('#syGo');
+  if(syGo) syGo.addEventListener('click', async ()=>{
+    const t = $('#syTok').value.trim();
+    if(!t){ alert('Paste the token first.'); return; }
+    syGo.disabled = true; syncStatus('⏳ connecting…');
+    try{ await syncConnect(t); render(); }
+    catch(e){ syncDisconnect(); syncStatus('⚠ '+e.message+' — token wrong, expired, or missing the gist permission'); syGo.disabled = false; }
+  });
+  const syNow = $('#syNow');
+  if(syNow) syNow.addEventListener('click', ()=>syncNow());
+  const syOff = $('#syOff');
+  if(syOff) syOff.addEventListener('click', ()=>{
+    if(confirm('Disconnect cloud sync on THIS device? Your data stays here — it just stops syncing.')){ syncDisconnect(); render(); }
+  });
   const dumpData = ()=>{
     const out = {};
     for(let i=0;i<localStorage.length;i++){
       const k = localStorage.key(i);
-      if(k && k.startsWith('qpcut.')) out[k] = localStorage.getItem(k);
+      if(syncable(k)) out[k] = localStorage.getItem(k); /* sync token/meta never leave in a backup file */
     }
     return JSON.stringify(out);
   };
   const applyData = txt=>{
     const obj = JSON.parse(txt);
     let n = 0;
-    Object.entries(obj).forEach(([k,v])=>{ if(k.startsWith('qpcut.')){ localStorage.setItem(k,v); n++; } });
+    /* patched setItem stamps each imported key as fresh, so a restore beats stale cloud copies */
+    Object.entries(obj).forEach(([k,v])=>{ if(syncable(k)){ localStorage.setItem(k,v); n++; } });
     alert(`Imported ${n} data blocks ✓`);
     render();
   };
@@ -3110,9 +3264,13 @@ function wireTrack(){
   });
 }
 render();
+/* cloud sync: pull on open, then again whenever the app is left or re-entered
+   (the 8 s edit-debounce inside syncTouch covers mid-session pushes) */
+if(syncCfg().gist) syncNow();
+document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTimeout(syncTimer); syncNow(); } });
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784293999';
+const BUILD = 'b1784300190';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
