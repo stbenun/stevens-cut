@@ -1046,7 +1046,7 @@ const DAYS = {
 const OVERRIDES = {
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
-       ['1:30','Lunch as planned'],
+       ['1:30','Lunch — salmon bowl (last night’s poke salmon, air-fried this AM · log it under lunch → ↔ swaps row)'],
        ['~2:30','Cook the Shawarma feast — afternoon is free, recipe on this page (thin-sliced cutlets 2½–3 min/side) · salad + sides'],
        ['3:00','Shabbat-prep reminder fires: Saturday COR (cold-prep tonight) + grandma card printed/written'],
        ['—','NO snack today — skipped, it goes into the feast'],
@@ -1847,8 +1847,10 @@ function allWeights(){
 }
 function weekOf(dISO){ return Math.floor((new Date(dISO+'T12:00:00').getTime()-W0)/(7*864e5))+1; }
 function eatenCountThisWeek(optId, slotKey){
+  /* counts the option across ALL slots — a dinner eaten at lunch (slot swap) still
+     burns one of its menu portions */
   const eaten = store.get('qpcut.eaten',{});
-  return menuWeekDates().filter(d=>eaten[d] && eaten[d][slotKey]===optId).length;
+  return menuWeekDates().filter(d=>eaten[d] && Object.values(eaten[d]).includes(optId)).length;
 }
 
 /* ---------- photos (IndexedDB) ---------- */
@@ -2517,14 +2519,23 @@ function viewToday(){
     const panel = expandSlot? (()=>{
       const s = SLOTS.find(x=>x.key===expandSlot);
       if(!s) return '';
-      const picks = s.opts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id);
-      const list = (picks.length?picks:s.opts).map(oo=>{
+      const pill = oo=>{
         const rem = Math.max(0,(counts[oo.id]||0) - eatenCountThisWeek(oo.id,s.key));
         const on = todayEaten[s.key]===oo.id;
         return `<button class="mealpick${on?' on':''}" data-slot="${s.key}" data-opt="${oo.id}">
           ${oo.name}${counts[oo.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
-      }).join('');
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>`;
+      };
+      const picks = s.opts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id);
+      const list = (picks.length?picks:s.opts).map(pill).join('');
+      /* lunch ⇄ dinner run near-identical budgets — a skipped dinner can be logged as lunch */
+      const sib = expandSlot==='lu'? 'di' : expandSlot==='di'? 'lu' : null;
+      let swapRow = '';
+      if(sib){
+        const s2 = SLOTS.find(x=>x.key===sib);
+        const picks2 = s2.opts.filter(oo=>((counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id) && !s.opts.some(x=>x.id===oo.id));
+        if(picks2.length) swapRow = `<div class="slotlbl" style="margin-top:8px">↔ ${s2.slot.toLowerCase()} swaps · same budget</div><div class="pickrow">${picks2.map(pill).join('')}</div>`;
+      }
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${swapRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -3958,7 +3969,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784310399';
+const BUILD = 'b1784310722';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
