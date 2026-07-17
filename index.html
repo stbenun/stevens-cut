@@ -569,11 +569,11 @@ function exBlockHTML(o){
     const lv = ls? verdict(ls.reps, o.t) : null;
     const wlLast = ls? (store.get('qpcut.wlog.'+dkey(ls.date),{}))[prId] : null;
     const lsRir = ls? (store.get('qpcut.rir.'+dkey(ls.date),{}))[o.ex] : undefined;
-    const lastLine = ls? `<span class="ingmac">last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}${lsRir!=null?` · RIR ${lsRir===3?'3+':lsRir}`:''}</span>` : '';
+    const lastLine = ls? `<div class="coachline" style="opacity:.85">📜 Last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}${lsRir!=null?` · RIR ${lsRir===3?'3+':lsRir}`:''}</div>` : '';
     if(doneCount===0){
       guide = `<div class="coachline">🎯 ${lv? prescribe(lv, wlLast, vals, o.sets)
         : (vals.some(x=>x)? `Plan: ${vals.filter(x=>x).join(' / ')} · ${o.t.type==='ladder'?'climb the boxes':`${o.t.lo}–${o.t.hi} reps every set`} · finish each set with 1–2 in the tank`
-        : 'No weight yet — 📖 calibration guide is at the top of Train → PRs')}${lastLine?'<br>'+lastLine:''}</div>`;
+        : 'No weight yet — 📖 calibration guide is at the top of Train → PRs')}</div>`;
       if(o.day!=null){
         const past3 = lastSessions(o.day, o.ex, 3);
         if(past3.length===3 && past3.every(s=>verdict(s.reps, o.t)==='hold'))
@@ -585,16 +585,23 @@ function exBlockHTML(o){
       if(idx>0){
         const prev = reps[idx-1];
         const wNum = parseFloat(vals[idx-1]);
+        const j = isNaN(wNum)? null : jumpFor(wNum);
+        let msg;
         if(o.t.type==='ladder'){
+          const tPrev = o.t.per[idx-1]!=null? o.t.per[idx-1] : o.t.per[o.t.per.length-1];
           const tNext = o.t.per[idx]!=null? o.t.per[idx] : o.t.per[o.t.per.length-1];
-          guide = `<div class="coachline">▶ Set ${idx+1}: next box up${vals[idx]?` (${esc(String(vals[idx]))})`:''} · target ${tNext} reps · 1–2 in the tank.</div>`;
-        } else if(idx===1 && prev>=o.t.hi+3){
-          guide = `<div class="coachline">▶ Way too light (${prev} vs target ${o.t.hi}) — add ${isNaN(wNum)?'the smallest jump':`${jumpFor(wNum)} lb (${r25(wNum+jumpFor(wNum))})`} NOW and call this set 1.</div>`;
-        } else if(idx===1 && prev<=o.t.lo-3){
-          guide = `<div class="coachline">▶ Too heavy today — drop ~10%${isNaN(wNum)?'':` (${r25(wNum*0.9)})`} NOW. A bad day isn’t a bad plan.</div>`;
+          if(prev>=tPrev) msg = `${prev} ✓. Ladder climbs — set ${idx+1}: next box up${vals[idx]?` (${esc(String(vals[idx]))})`:''} · target ${tNext} · 1–2 in the tank.`;
+          else if(prev>=tPrev-2) msg = `${prev} vs ${tPrev} — close. HOLD this weight for set ${idx+1} instead of climbing; get ${tNext}+ clean reps. The ladder waits for the reps.`;
+          else msg = `${prev} vs ${tPrev} — the climb died. Go BACK to your set-1 weight for the rest. Reps first, weight later — that’s the plan, trust it.`;
         } else {
-          guide = `<div class="coachline">▶ Set ${idx+1} of ${o.sets}: SAME weight · ${Math.max(o.t.lo, Math.min(prev, o.t.hi))}–${o.t.hi} reps · stop with 1–2 in the tank. Weight changes between sessions, not mid-exercise.</div>`;
+          if(idx===1 && prev>=o.t.hi+3) msg = `Way too light (${prev} vs ${o.t.hi}) — add ${j?`${j} lb (${r25(wNum+j)})`:'the smallest jump'} NOW and call this set 1.`;
+          else if(prev>=o.t.hi+3) msg = `${prev} reps — you’ve outgrown this weight, and the GO UP is already locked for next session. DON’T jump mid-exercise (it costs your remaining sets): set ${idx+1} at the SAME weight, cap it at ${o.t.hi}, slow every rep to 3–5 s. Make it hard the honest way.`;
+          else if(prev>=o.t.hi) msg = `${prev} ✓ top of range. Set ${idx+1}: SAME weight — do it again. Every set at ${o.t.hi}+ locks the GO UP. 1–2 in the tank.`;
+          else if(prev>=o.t.lo) msg = `${prev} in range. Set ${idx+1}: SAME weight — beat ${Math.min(prev+1,o.t.hi)} if it’s there, ${o.t.lo} is the floor. Fatigue pushes back now; brace and grind. Staying at this weight IS the plan — chasing more mid-exercise costs sets.`;
+          else if(prev>=o.t.lo-2) msg = `${prev} — just under range. One more set at the SAME weight, fight for ${o.t.lo}+. If it lands under ${o.t.lo} again → drop ~10%${isNaN(wNum)?'':` (${r25(wNum*0.9)})`} for the last set.`;
+          else msg = `${prev} vs ${o.t.lo}–${o.t.hi} — too heavy today. Drop ~10%${isNaN(wNum)?'':` (${r25(wNum*0.9)})`} for the remaining sets and log honest reps. A bad day isn’t a bad plan.`;
         }
+        guide = `<div class="coachline">▶ ${msg}</div>`;
       }
     } else {
       const nums = vals.slice(0,o.sets).map(x=>parseFloat(x));
@@ -612,6 +619,7 @@ function exBlockHTML(o){
           : `<div class="coachline">HOLD — same weight next session, beat today by one rep anywhere. That’s the whole game.</div>`;
       }
     }
+    guide = lastLine + guide; /* last session stays visible in every state — that's the reference point */
   }
   /* RIR chips — tap after the final set */
   let rirHTML = '';
@@ -3072,7 +3080,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784291261';
+const BUILD = 'b1784292602';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
