@@ -563,11 +563,38 @@ function exBlockHTML(o){
       }
     }
   }
-  const v = hasReps? verdict(reps, o.t) : null;
-  /* ---- ONE voice: target (pre-session) → live call (mid-session) → verdict (done). Never two at once. ---- */
+  /* live guidance is delegated to exGuideHTML via a registry so it can refresh IN PLACE
+     (full re-renders while typing destroy the focused input and kill the iOS keyboard) */
+  const egi = (o.t && prId && hasReps)? EG_REG.push({sets:o.sets, t:o.t, rd:o.rd, ex:o.ex, day:o.day, prId})-1 : -1;
+  const guideWrap = egi>=0? `<div class="exguide" id="eg-${egi}">${exGuideHTML(EG_REG[egi])}</div>` : '';
+  const legNote = (prId && !vals.some(x=>x) && leg)? `<div class="ingmac" style="text-align:right;margin-top:3px">was ${esc(String(leg))}</div>`:'';
+  /* 🧮 plate math for flagged exercises */
+  let pmLine = '';
+  const pm = prId? PLATEMATH[prId] : null;
+  if(pm){
+    const parts = vals.slice(0,o.sets).map((x,i)=>{
+      const n = parseFloat(x); if(isNaN(n)) return null;
+      if(pm==='db') return `S${i+1}: ${Math.round(n/5)*5}s`;
+      const side = pm==='bar'? (n-45)/2 : n;
+      return side<=0? `S${i+1}: bar only` : `S${i+1}: ${plateCombo(side)}`;
+    }).filter(Boolean);
+    if(parts.length) pmLine = `<div class="ingmac" style="text-align:right;margin-top:4px">🧮 ${pm==='db'?'DBs':pm==='bar'?'45-lb bar · per side':'per side'} → ${parts.join(' · ')}</div>`;
+  }
+  return selHTML + legNote + rows + armHTML + pmLine + guideWrap;
+}
+/* ---- ONE voice: target (pre-session) → live call (mid-session) → verdict (done). Never two at once.
+   Reads the store FRESH each call so refreshGuides() can update panels without a full render. ---- */
+let EG_REG = [];
+function exGuideHTML(p){
+  const prId = p.prId;
+  const vals = (store.get('qpcut.prset',{}))[prId]||[];
+  const reps = (store.get('qpcut.reps.'+dkey(p.rd),{}))[p.ex]||[];
+  const rir = (store.get('qpcut.rir.'+dkey(p.rd),{}))[p.ex];
+  const o = p;
+  const v = verdict(reps, o.t);
   let guide = '';
-  const doneCount = hasReps? reps.slice(0,o.sets).filter(x=>x!=null).length : 0;
-  if(o.t && prId && hasReps){
+  const doneCount = reps.slice(0,o.sets).filter(x=>x!=null).length;
+  {
     const ls = (o.day!=null)? lastSessionInfo(o.day, o.ex) : null;
     const lv = ls? verdict(ls.reps, o.t) : null;
     const wlLast = ls? (store.get('qpcut.wlog.'+dkey(ls.date),{}))[prId] : null;
@@ -626,26 +653,27 @@ function exBlockHTML(o){
   }
   /* RIR chips — tap after the final set */
   let rirHTML = '';
-  if(hasReps && o.t && doneCount>0){
+  if(doneCount>0){
     rirHTML = `<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px">
       <span class="ingmac">last set — reps left in tank:</span>
       ${[0,1,2,3].map(n=>`<button class="mealpick${rir===n?' on':''}" style="padding:3px 10px;font-size:12px" data-rir="${o.rd}|${o.ex}|${n}">${n===3?'3+':n}</button>`).join('')}
     </div>`;
   }
-  const legNote = (prId && !vals.some(x=>x) && leg)? `<div class="ingmac" style="text-align:right;margin-top:3px">was ${esc(String(leg))}</div>`:'';
-  /* 🧮 plate math for flagged exercises */
-  let pmLine = '';
-  const pm = prId? PLATEMATH[prId] : null;
-  if(pm){
-    const parts = vals.slice(0,o.sets).map((x,i)=>{
-      const n = parseFloat(x); if(isNaN(n)) return null;
-      if(pm==='db') return `S${i+1}: ${Math.round(n/5)*5}s`;
-      const side = pm==='bar'? (n-45)/2 : n;
-      return side<=0? `S${i+1}: bar only` : `S${i+1}: ${plateCombo(side)}`;
-    }).filter(Boolean);
-    if(parts.length) pmLine = `<div class="ingmac" style="text-align:right;margin-top:4px">🧮 ${pm==='db'?'DBs':pm==='bar'?'45-lb bar · per side':'per side'} → ${parts.join(' · ')}</div>`;
-  }
-  return selHTML + legNote + rows + armHTML + pmLine + guide + rirHTML;
+  return guide + rirHTML;
+}
+function refreshGuides(){
+  EG_REG.forEach((p,i)=>{ const el = document.getElementById('eg-'+i); if(el) el.innerHTML = exGuideHTML(p); });
+}
+/* full render only once no weight/rep box is focused — keeps the keyboard alive between taps */
+let idleTimer = null;
+function renderWhenIdle(){
+  clearTimeout(idleTimer);
+  const tick = ()=>{
+    const a = document.activeElement;
+    if(a && a.classList && (a.classList.contains('prw2')||a.classList.contains('repin'))){ idleTimer = setTimeout(tick, 400); return; }
+    render();
+  };
+  idleTimer = setTimeout(tick, 300);
 }
 function wireArm(){
   document.querySelectorAll('[data-arm]').forEach(b=>b.addEventListener('click',()=>{
@@ -679,7 +707,7 @@ function wireWeights(){
       wl[inp.dataset.pr] = arr.slice();
       store.set(wk,wl);
     }
-    render();
+    refreshGuides(); renderWhenIdle();
   }));
 }
 /* Saturday print card — clean one-pager for the no-phone day */
@@ -723,7 +751,7 @@ function wireReps(){
     const key = 'qpcut.rir.'+dkey(rd);
     const m = store.get(key,{});
     m[ex] = m[ex]===+n? null : +n;
-    store.set(key,m); render();
+    store.set(key,m); refreshGuides();
   }));
   document.querySelectorAll('input.repin').forEach(inp=>inp.addEventListener('change',()=>{
     const key = 'qpcut.reps.'+dkey(inp.dataset.rd);
@@ -731,7 +759,7 @@ function wireReps(){
     const arr = rp[inp.dataset.ex] = rp[inp.dataset.ex]||[];
     const v = parseInt(inp.value);
     arr[+inp.dataset.set] = isNaN(v)? null : v;
-    store.set(key,rp); render();
+    store.set(key,rp); refreshGuides(); renderWhenIdle();
   }));
 }
 function workoutFor(dayIdx, loc){
@@ -2696,6 +2724,7 @@ function render(){
   const tISO = isoToday();
   if(renderDay===null) renderDay = tISO;
   else if(renderDay!==tISO){ renderDay = tISO; logDate = null; }
+  EG_REG = []; /* guide registry rebuilds with every full render */
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
   $('#macroStrip').style.display = (current==='meals'||current==='prep') ? 'grid' : 'none';
   $('#view').innerHTML = VIEWS[current]();
@@ -3083,7 +3112,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784293480';
+const BUILD = 'b1784293999';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
