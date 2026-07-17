@@ -456,8 +456,8 @@ function prLoc(id, loc){
   return null;
 }
 /* progression coaching helpers */
-function jumpFor(w){ return w>=100? 10 : w>=50? 5 : 2.5; }
-function r25(x){ return Math.round(x/2.5)*2.5; }
+function jumpFor(w){ return w>=100? 10 : 5; } /* his gym: bars & DBs move in 5s — no 2.5s exist */
+function r25(x){ return Math.round(x/5)*5; } /* round every prescribed load to the nearest 5 */
 function lastSessions(dayIdx, exIdx, want){
   const out = []; const base = menuWeekDates()[dayIdx];
   for(let k=1;k<=8 && out.length<want;k++){
@@ -480,7 +480,7 @@ const PLATEMATH = {
 };
 function plateCombo(v){
   let rem = v; const out = [];
-  for(const p of [45,35,25,10,5,2.5]){ while(rem >= p-0.01){ out.push(p); rem -= p; } }
+  for(const p of [45,35,25,10,5]){ while(rem >= p-0.01){ out.push(p); rem -= p; } }
   return out.length? out.join('+') + (rem>0.01? ` +${rem.toFixed(1)}`:'') : 'empty';
 }
 function prescribe(lv, baseVals, curVals, sets){
@@ -609,7 +609,7 @@ function exBlockHTML(o){
       const fmt = f => vals.slice(0,o.sets).map((x,i)=> isNaN(nums[i])? (x||'?') : String(r25(f(nums[i])))).join(' / ');
       if(v==='up'){
         guide = rir===0
-          ? `<div class="coachline">🎉 GO UP — but that was failure (0 in the tank), so next session take the SMALLEST jump only${hasNums?`: ${fmt(n=>n+2.5)}`:''}.</div>`
+          ? `<div class="coachline">🎉 GO UP — but that was failure (0 in the tank), so next session take the SMALLEST jump only${hasNums?`: ${fmt(n=>n+5)}`:''}.</div>`
           : `<div class="coachline">🎉 GO UP next session → ${hasNums? fmt(n=>n+jumpFor(n)) : 'smallest solid jump every set'}. Update the boxes at the gym next time, not now.</div>`;
       } else if(v==='down'){
         guide = `<div class="coachline">⬇ LIGHTEN next session → ${hasNums? fmt(n=>n*0.9) : '~10% down'}, rebuild from there.</div>`;
@@ -3080,7 +3080,7 @@ function wireTrack(){
 render();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784292602';
+const BUILD = 'b1784292869';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
