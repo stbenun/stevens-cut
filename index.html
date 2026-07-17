@@ -174,6 +174,8 @@
   .sched li .t{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--brass);
                font-size:12.5px;min-width:64px;flex-shrink:0}
   .sched li.past{opacity:.42}
+  #dayTL:not(.showpast) li.past{display:none}
+  #dayTL li.tlpast{cursor:pointer;font-size:12.5px;opacity:.55;user-select:none;-webkit-user-select:none}
   .sched li.cur{position:relative;opacity:1}
   .sched li.cur::before{content:"";position:absolute;left:-13px;top:4px;bottom:4px;width:3px;
         border-radius:2px;background:var(--brass)}
@@ -2068,11 +2070,20 @@ function mergedTimeline(){
 function timelineCardHTML(){
   const T = mergedTimeline();
   if(!T.length) return '';
+  /* live day: rows already behind you collapse into a "✓ n done" toggle — only what's left shows */
+  const live = logDate==null || logDate===isoToday();
+  const m = live? nowMin() : -1;
+  let curIdx = -1; T.forEach((it,i)=>{ if(it.m<=m) curIdx=i; });
+  const doneN = Math.max(0, curIdx);
   return `
   <div class="card">
     <div class="slotlbl" style="margin-top:0">📋 The day</div>
     <ul class="sched" id="dayTL" style="margin-top:8px">
-      ${T.map(it=>`<li data-min="${it.m}"${it.rem?' class="rem"':''}><span class="t">${it.m>1440?'—':fmtMin(it.m)}</span><span>${it.l}</span></li>`).join('')}
+      ${live? `<li class="tlpast" id="tlPast" data-tlpast${doneN>0?'':' hidden'}><span class="t">✓</span><span id="tlPastTxt">${doneN} done · show</span></li>`:''}
+      ${T.map((it,i)=>{
+        const cls = [it.rem?'rem':'', live&&i<curIdx?'past':'', live&&i===curIdx?'cur':''].filter(Boolean).join(' ');
+        return `<li data-min="${it.m}"${cls?` class="${cls}"`:''}><span class="t">${it.m>1440?'—':fmtMin(it.m)}</span><span>${it.l}</span></li>`;
+      }).join('')}
     </ul>
   </div>`;
 }
@@ -2199,14 +2210,21 @@ function tickNow(){
     const strip = document.getElementById('nowStrip');
     if(strip) strip.innerHTML = nowStripInner();
     const m = nowMin();
-    let curLi = null;
+    let curLi = null, doneN = 0;
     document.querySelectorAll('#dayTL li[data-min]').forEach(li=>{
       const tm = +li.dataset.min;
       li.classList.remove('cur');
       li.classList.toggle('past', tm <= m);
-      if(tm <= m) curLi = li;
+      if(tm <= m){ curLi = li; doneN++; }
     });
-    if(curLi){ curLi.classList.remove('past'); curLi.classList.add('cur'); }
+    if(curLi){ curLi.classList.remove('past'); curLi.classList.add('cur'); doneN--; }
+    const tp = document.getElementById('tlPast');
+    if(tp){
+      tp.hidden = doneN<1;
+      const tl = document.getElementById('dayTL');
+      const tx = document.getElementById('tlPastTxt');
+      if(tx) tx.textContent = `${doneN} done · ${tl && tl.classList && tl.classList.contains('showpast')? 'hide':'show'}`;
+    }
   }
   refreshTabBadges();
 }
@@ -2793,6 +2811,25 @@ function viewMeals(){
        ${PP_G.filter(([,g])=>g!=null).map(([n,g])=>`<li><span>${n}</span><span class="q"><b>${g} g</b> · ½ = ${Math.round(g/2*10)/10} g</span></li>`).join('')}
      </ul>
      <div class="sub" style="margin-top:8px">⚠ Missing labels: <b>Blueberry Muffin Ryse</b> and <b>RAW Milk N Cookies</b> — send Claude their serving sizes and they’ll fill in here.</div>
+   </div>
+   <h2 class="sec">🥔 Carb swap · lean mashed potatoes</h2>
+   <div class="card">
+     <div class="sub" style="margin-top:0"><b>Any dinner’s rice can become mash — same budget.</b> Boiled potatoes are the most filling food per calorie ever tested (~2½× white rice), so this is the hungry-night power move. The trap is classic mash: butter + milk + cream roughly doubles the calories, and it’s dairy — can’t sit at a meat dinner anyway. This version is pareve and macro-identical to the rice it replaces.</div>
+     <div class="varlbl" style="margin-top:10px">Swap rates (scale in proportion)</div>
+     <ul class="ing">
+       <li><span>150 g cooked white rice</span><span class="q">→ <b>250 g</b> potato, mashed</span></li>
+       <li><span>200 g sweet potato</span><span class="q">→ <b>225 g</b> potato, mashed</span></li>
+     </ul>
+     <div class="varlbl" style="margin-top:10px">Lean mash · 250 g batch ≈ 195 cal · 44C · 5P · 0F</div>
+     <ul class="sched" style="margin-top:4px">
+       <li><span class="t">1</span><span>Peel <b>250 g</b> Yukon Gold potatoes (1 big or 2 small — weigh AFTER peeling), cut each into 4 chunks.</span></li>
+       <li><span class="t">2</span><span>Small pot (2–3 qt): chunks in, COLD water to cover by an inch, 1 tsp salt. Burner <b>8/10</b>, no lid.</span></li>
+       <li><span class="t">3</span><span>When it hits a rolling boil (big bubbles that don’t stop when you stir), drop to <b>6/10</b>. Timer: <b>15 min</b>.</span></li>
+       <li><span class="t">4</span><span>Done cue: a fork slides into a chunk with <b>no push-back</b>. If it resists, give it 3 more min.</span></li>
+       <li><span class="t">5</span><span>Before draining, scoop <b>50 g of the cooking water</b> (~3 tbsp) into a cup. Drain the rest in a colander.</span></li>
+       <li><span class="t">6</span><span>Potatoes back into the empty pot, burner <b>OFF</b>. Add the saved water + ¼ tsp salt + ¼ tsp garlic powder + ¼ tsp onion powder. Mash ~1 min until smooth — the starchy water is what makes it creamy with zero butter.</span></li>
+     </ul>
+     <div class="sub" style="margin-top:8px">Richer version: mash in <b>5 g olive oil</b> (= 1 tsp) → +45 cal · +5F. Only when the day’s fat bar has room — check the hero first.</div>
    </div>`;
 }
 
@@ -3957,6 +3994,8 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
       if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
       return;
     }
+    const tpl = e.target.closest('[data-tlpast]');
+    if(tpl){ const tl=document.getElementById('dayTL'); if(tl && tl.classList){ tl.classList.toggle('showpast'); tickNow(); } return; }
     const sn = e.target.closest('[data-nsnooze]');
     if(sn){ try{ sessionStorage.setItem('nudge.'+sn.dataset.nsnooze+'.'+isoToday(),'1'); }catch(err){} tickNow(); }
   });
@@ -3969,7 +4008,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784310722';
+const BUILD = 'b1784316382';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
