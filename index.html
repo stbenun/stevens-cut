@@ -2001,6 +2001,31 @@ function winsHTML(){
 const PLAN_T = [2220,187,227,64];
 function fmtMin(t){ t=((t%1440)+1440)%1440; let h=Math.floor(t/60), mm=t%60; const ap=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${String(mm).padStart(2,'0')} ${ap}`; }
 function parseClock(s){ const m=/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(s).trim()); if(!m) return null; let h=(+m[1])%12; if(/pm/i.test(m[3])) h+=12; return h*60+(+m[2]); }
+/* loose parser for OVERRIDES schedule time labels: "1:30", "~2:30", "7:00", "11:00", "AM", "After", "—".
+   Returns {m:minutes, timed:true} for real clock rows, or {m:anchor, timed:false} for text rows that
+   should sort into place but NEVER get hidden as "past". Bare H:MM with no AM/PM is AMBIGUOUS — resolved
+   against prevMin (the previous timed row): pick the AM-or-PM reading that keeps the day moving forward,
+   since these lists are chronological. So 9:00 first → AM, 7:00 after 3:00 → PM, 11:00 after 7 PM → PM.
+   "AM" anchors to 6:00 so it collapses once the day's rolling; "After"/"—" stay unhidden forever. */
+function ovMin(s, prevMin){
+  const raw = String(s||'').trim();
+  /* "AM" = a done-this-morning status row; treat as timed at 6:00 so it folds into "N done" after dawn */
+  if(/^am$/i.test(raw)) return {m:360, timed:true};
+  const hm = /^~?\s*(\d{1,2}):(\d{2})\s*(AM|PM)?$/i.exec(raw);
+  if(hm){
+    const hRaw=+hm[1], h12=hRaw%12, mm=+hm[2], ap=hm[3];
+    if(ap){ const h=/pm/i.test(ap)? h12+12 : h12; return {m:h*60+mm, timed:true}; }
+    /* bare hour, no AM/PM. His day has nothing scheduled 1:00-6:59 AM (minyan/gym own that window),
+       so hours 1-6 are ALWAYS PM. Hours 7-12 are genuinely ambiguous → resolve chronologically:
+       prefer the earliest reading not before the previous timed row so the list stays ordered. */
+    if(hRaw>=1 && hRaw<=6) return {m:(h12+12)*60+mm, timed:true};
+    const am=h12*60+mm, pm=(h12+12)*60+mm;
+    const prev = (typeof prevMin==='number')? prevMin : -1;
+    const m = (am>=prev)? am : (pm>=prev? pm : am);
+    return {m, timed:true};
+  }
+  return {m:1441, timed:false}; // "After", "—", anything untimed → sorts last, never hidden
+}
 const nowMin = () => { const n=new Date(); return n.getHours()*60+n.getMinutes(); };
 function gymLeaveMin(wd){
   const GYM_DEF = {1:'07:55',2:'07:55',3:'07:55',5:'15:30'};
@@ -2367,12 +2392,27 @@ function viewToday(){
   ${runCoaching().map(e=>`
     <div class="note" style="margin-top:14px"><b>${e.title}</b><br>${e.msg}</div>`).join('')}
   ${OVERRIDES[isoToday()]?(()=>{
-    /* adjusted day: the override schedule is the truth, but calendar-mirror reminders still fire */
+    /* adjusted day: the override schedule is the truth, but calendar-mirror reminders still fire.
+       Same "only what's left" collapse as the live timeline — reuses #dayTL + its ✓-done toggle. */
     const wd = now.getDay();
     const rem = [...(REMIND_MIRROR[wd]||[]), ...(feastDefrostLine(wd)?[feastDefrostLine(wd)]:[])];
+    const live = !backfill;
+    const m = live? nowMin() : -1;
+    /* mark passed rows; only TIMED rows can be hidden, text rows (After/—) always stay.
+       Chronological AM/PM resolution: each bare hour is read against the previous timed row. */
+    let prevMn = -1;
+    const rows = sch.map(([t,x])=>{ const p=ovMin(t, prevMn); if(p.timed) prevMn=p.m; return {t,x,mn:p.timed?p.m:null,timed:p.timed}; });
+    let curIdx=-1; rows.forEach((r,i)=>{ if(r.timed && r.mn<=m) curIdx=i; });
+    const doneN = rows.filter((r,i)=>r.timed && r.mn<=m && i!==curIdx).length;
     return `
   <div class="card" style="margin-top:14px">
-    <ul class="sched">${sch.map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}</ul>
+    <ul class="sched" id="dayTL">
+      ${live? `<li class="tlpast" id="tlPast" data-tlpast${doneN>0?'':' hidden'}><span class="t">✓</span><span id="tlPastTxt">${doneN} done · show</span></li>`:''}
+      ${rows.map((r,i)=>{
+        const cls=[live&&r.timed&&r.mn<=m&&i!==curIdx?'past':'', live&&i===curIdx?'cur':''].filter(Boolean).join(' ');
+        return `<li${r.timed?` data-min="${r.mn}"`:''}${cls?` class="${cls}"`:''}><span class="t">${r.t}</span><span>${r.x}</span></li>`;
+      }).join('')}
+    </ul>
     ${rem.length?`<div class="slotlbl" style="margin-top:10px">🔔 Reminders still on</div>
     <ul class="sched" style="margin-top:2px">${rem.map(([t,x])=>`<li class="rem"><span class="t">${t}</span><span>${x}</span></li>`).join('')}</ul>`:''}
     ${d.note?`<div class="note">${d.note}</div>`:''}
@@ -4008,7 +4048,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784316382';
+const BUILD = 'b1784317084';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
