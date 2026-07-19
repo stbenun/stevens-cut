@@ -2982,12 +2982,34 @@ function viewPrep(){
         </span></div>`).join('')}`).join('');
   const planned = Object.values(counts).reduce((a,v)=>a+(v||0),0);
   const toBuy = stillToBuyItems().length;
+  /* the chosen menu: every option with a count, grouped by slot, each with its own how-to roll-up */
+  const chosen = SLOTS.filter(s=>s.key!=='pre'&&s.key!=='bf').map(s=>{
+    const picked = s.opts.filter(o=>(counts[o.id]||0)>0);
+    if(!picked.length) return '';
+    return `<div class="slotlbl" style="margin-top:10px">${s.slot}</div>` + picked.map(o=>{
+      const t = o.vars[0].t;
+      const how = HOWTO[o.id];
+      return `
+      <details class="card acc" data-acc="mchosen-${o.id}"${openAcc.has('mchosen-'+o.id)?' open':''} style="margin-top:6px">
+        <summary><h3 style="display:inline;font-size:15px">${o.name}</h3> <span class="statline">×${counts[o.id]} · <b>${t[0]}</b> cal · ${t[1]}P</span></summary>
+        <ul class="ing" style="margin-top:8px">${o.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l)}</span><span class="q">${q}</span></li>`).join('')}</ul>
+        ${how?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${how.map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:'<div class="sub" style="margin-top:6px">No cooking — assemble and eat.</div>'}
+        ${typeof sideDishesHTML==='function'?sideDishesHTML(o.id):''}
+      </details>`;
+    }).join('');
+  }).join('');
   return `
   <section id="p-menu">
   <div class="zhead" style="margin-top:16px"><span class="zt">① Set the menu</span><span class="zn">${wk[0].slice(5).replace('-','/')} – ${wk[6].slice(5).replace('-','/')}${planned?` · ${planned} meals planned`:''}</span></div>
-  <div class="card">${builder}
+  <details class="card acc" data-acc="menu-builder"${openAcc.has('menu-builder')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">➕ Set the counts</h3> <span class="statline">${planned?`${planned} meals planned`:'tap to set'}</span></summary>
+    <div style="margin-top:8px">${builder}</div>
     <div class="note">Set it Sunday, adjust anytime. Then tell Claude the menu — he sets that week’s defrost reminders (poke &amp; burger/tomato-beef nights need a morning pull from the freezer).</div>
-  </div>
+  </details>
+  ${planned?`
+  <div class="zhead" style="margin-top:14px"><span class="zt">🍽 This week’s menu</span><span class="zn">what you chose · tap a meal for the recipe</span></div>
+  <div>${chosen}</div>`:`
+  <div class="note" style="margin-top:10px">No meals set yet — open “Set the counts” above and pick this week’s meals. They’ll show here with recipes.</div>`}
   </section>
 
   <section id="p-buy">
@@ -4100,7 +4122,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784482687';
+const BUILD = 'b1784486439';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
