@@ -1050,6 +1050,10 @@ const DAYS = {
 
 /* one-off schedule overrides, keyed by ISO date */
 const OVERRIDES = {
+ '2026-07-22': {title:'Pull AM · Tisha B’Av fast starts tonight ~8:15', sub:'Wednesday · eat normally all day, then the fast',
+  sch:[['6:00 AM','Wake up'],['7:00 AM','Minyan'],['7:35 AM','Leave to gym — Pull as normal (fast is tonight, train this AM)'],['9:00 AM','Work'],['10:30 AM','Breakfast on time · water: 30 oz by now'],['1:30 PM','Lunch = Chicken Meal with RICE · 60 oz water by now'],['4:00 PM','90 oz water by now · both hydration sticks today'],['5:15 PM','S.'],['6:15 PM','⛔ PRE-FAST MEAL (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber. Carbs UP, salt DOWN — skip most of the soy, salt now = misery at 2 AM'],['7:15 PM','Arbit'],['8:00 PM','Last 20 min before sundown: 16–24 oz water + final stick, then DONE'],['8:15 PM','Fast begins. Early night.'],['—','Tomorrow’s 8.5 mi run moves to Sunday 7/26']]},
+ '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends ~9:05 PM', sub:'Thursday · break the fast smart',
+  sch:[['AM','Fast day — no food, no water, no training. Take it easy.'],['9:05 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['9:20 PM','Banana or 70 g berries'],['9:35 PM','Jiben (2 eggs + 100 g whites + 113 g cottage + 28 g mozz + 150 g greens + 2 Ezekiel) — 55 g protein, one pan'],['10:30 PM','Optional: Fairlife 320 mL + ½ scoop shake'],['—','STOP ~950 cal — don’t chase 2,220. Water to 60–80 oz by bed + magnesium. Scale is fake for 2 days.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
        ['1:30','Lunch — salmon bowl (last night’s poke salmon, air-fried this AM · log it under lunch → ↔ swaps row)'],
@@ -2024,13 +2028,18 @@ function ovMin(s, prevMin){
   if(hm){
     const hRaw=+hm[1], h12=hRaw%12, mm=+hm[2], ap=hm[3];
     if(ap){ const h=/pm/i.test(ap)? h12+12 : h12; return {m:h*60+mm, timed:true}; }
-    /* bare hour, no AM/PM. His day has nothing scheduled 1:00-6:59 AM (minyan/gym own that window),
-       so hours 1-6 are ALWAYS PM. Hours 7-12 are genuinely ambiguous → resolve chronologically:
-       prefer the earliest reading not before the previous timed row so the list stays ordered. */
-    if(hRaw>=1 && hRaw<=6) return {m:(h12+12)*60+mm, timed:true};
+    /* bare hour, no AM/PM — AMBIGUOUS. Resolve CHRONOLOGICALLY so the list stays ordered whether the day
+       starts in the morning or the afternoon: pick the reading (AM or PM) that is >= the previous timed
+       row and closest to it. First row (prev<0): a bare 7-12 defaults to AM (mornings start early); a bare
+       1-6 defaults to PM (his day has nothing 1-6 AM — minyan/gym own that window). Best practice for NEW
+       overrides: write an explicit "AM"/"PM" and skip the guessing entirely. */
     const am=h12*60+mm, pm=(h12+12)*60+mm;
     const prev = (typeof prevMin==='number')? prevMin : -1;
-    const m = (am>=prev)? am : (pm>=prev? pm : am);
+    let m;
+    if(prev<0){ m = (hRaw>=1&&hRaw<=6)? pm : am; }
+    else if(am>=prev) m=am;      // earliest reading that doesn't go backwards
+    else if(pm>=prev) m=pm;
+    else m=am;
     return {m, timed:true};
   }
   return {m:1441, timed:false}; // "After", "—", anything untimed → sorts last, never hidden
@@ -4072,7 +4081,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784467119';
+const BUILD = 'b1784470078';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
