@@ -499,6 +499,7 @@ const SLOTS = [
    {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',[255,35,0,12]],['Tomato paste','33 g',[27,1,6,0]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]]], t:[590,55,62,19]}]},
    {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[170,3,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[120,10,9,5]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[585,51,55,17]}]},
    {id:'d3', name:'Blackened Salmon Plate', k:[['pareve']], vars:[{ing:[['Salmon (any — it’s cooked, raw weight)','6 oz',[250,37,0,10]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]],['Edamame','85 g',[120,10,9,5]],['Rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne','—',[0,0,0,0]],['SF ketchup','32 g',[20,0,2,0]]], t:[570,53,51,15]}]},
+   {id:'d16', name:'Teriyaki-Glaze Salmon Bowl (fresh · seared)', k:[['pareve']], vars:[{ing:[['Salmon cubes (raw weight)','7 oz',[290,42,0,13]],['White rice (dry)','65 g',[225,4,50,0]],['Edamame','80 g',[115,11,8,5]],['Cucumber','free, sliced',[10,0,2,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto 8 g · sriracha ½ tsp · garlic ¼ tsp','—',[15,1,3,0]],['Scallion + everything-bagel seasoning','—',[5,0,1,0]]], t:[660,58,64,18]}]},
  ]},
 ];
 const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
@@ -530,6 +531,7 @@ const HOWTO = {
  d15:['Medium pot, medium-high (7/10), no oil, 2-min preheat. Beef in, crumbled small, 4–5 min to zero pink.','This week’s spices 30 sec → tomato paste + 60 mL water, stir till dissolved → LOW (2/10) 10–12 min till thick.','Over potatoes, egg on top, asparagus on the side (side methods: Prep → Recipes).'],
  d2:['Rice revived: ~10 mL water, 45–60 sec microwave, fluff. Salmon stays fridge-cold till now: ¾" cubes.','Build: rice → salmon, edamame, cucumber in piles → 30 mL soy over → seaweed crumbled on top.','This week’s twist (jalapeño-lime, dill, scallion…) is on the Prep recipe card. Eat immediately.'],
  d3:['Pat the salmon dry. Rub: paprika ½ tsp + garlic ¼ tsp + salt ¼ tsp + pinch cayenne, pressed on.','Air fryer 390°F, 7–9 min — flakes under a fork. Any salmon works; it’s cooked.','Plate with crispy-cube potatoes (micro 4 min → fryer 390°F 12–14), asparagus (fryer 7 min), edamame (2-min micro from frozen). SF ketchup if you want it.'],
+ d16:['Defrost frozen cubes fast + safe: sealed ziplock, air pushed out, submerged in COLD water ~10 min. Weigh 7 oz, pat bone-dry — wet fish steams instead of searing.','Rice first: 65 g dry, rinsed till the water runs clear, + 105 mL water + a pinch of salt. Boil 8/10, then low (3/10), lid on, 12 min, off the heat 5 min — don’t peek.','Glaze in a small bowl while the rice cooks: soy 20 mL + rice vinegar 5 mL + Lakanto 8 g + ½ tsp sriracha + ¼ tsp garlic. Stir till the Lakanto dissolves.','Salmon: nonstick pan medium-high (7/10), 2-min preheat, 3 sprays. Dry cubes spread out, not touching. 2 min untouched for a brown edge → turn → 2 more min. Done = opaque, browned, flakes with a fork.','Glaze in: pour over the cubes, drop to low (2/10), toss 60–90 sec till it thickens to a sticky coat — pull it the moment it clings.','Edamame: 80 g microwaved with a splash of water, 90 sec. Build: rice → glazed cubes → edamame + cucumber → scallion + everything seasoning. Warm, seared — nothing like cold poke.'],
 };
 
 /* ---------- training ---------- */
@@ -1320,6 +1322,7 @@ const GROC = {
  d15:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Tomato paste',33,'g'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
  d2:[['Proteins','Salmon, sushi-grade',6,'oz'],['Pantry &amp; Frozen','Rice (dry)',50,'g'],['Produce','Edamame (frozen)',85,'g'],['Pantry &amp; Frozen','Seaweed packets',1,'ct'],['Produce','Cucumbers',75,'g']],
  d3:[['Proteins','Salmon (any cut)',6,'oz'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g'],['Produce','Edamame (frozen)',85,'g']],
+ d16:[['Proteins','Salmon cubes',7,'oz'],['Pantry &amp; Frozen','White rice (dry)',65,'g'],['Produce','Edamame (frozen)',80,'g'],['Produce','Cucumbers',1,'ct'],['Produce','Scallions',1,'ct']],
 };
 const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
 const GRP_ORDER = ['Proteins','Dairy &amp; Fridge','Produce','Pantry &amp; Frozen'];
@@ -2599,7 +2602,12 @@ function viewToday(){
         const picks2 = s2.opts.filter(oo=>((counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id) && !s.opts.some(x=>x.id===oo.id));
         if(picks2.length) swapRow = `<div class="slotlbl" style="margin-top:8px">↔ ${s2.slot.toLowerCase()} swaps · same budget</div><div class="pickrow">${picks2.map(pill).join('')}</div>`;
       }
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${swapRow}`;
+      /* off-menu FRESH options (no weekly count, not already eaten) — cook-tonight one-offs still need a tap */
+      const freshRow = (()=>{
+        const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
+        return fresh.length? `<div class="slotlbl" style="margin-top:8px">🍳 fresh tonight · off the weekly menu</div><div class="pickrow">${fresh.map(pill).join('')}</div>` : '';
+      })();
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -4054,7 +4062,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784328293';
+const BUILD = 'b1784424605';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
