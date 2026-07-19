@@ -2109,9 +2109,12 @@ function timelineCardHTML(){
   const m = live? nowMin() : -1;
   let curIdx = -1; T.forEach((it,i)=>{ if(it.m<=m) curIdx=i; });
   const doneN = Math.max(0, curIdx);
+  /* the whole schedule rolls up — tap the header. Defaults OPEN (not in openAcc = open on first sight). */
+  const closed = openAcc.has('schedule-closed');
+  const cur = live && curIdx>=0 ? T[curIdx] : null;
   return `
-  <div class="card">
-    <div class="slotlbl" style="margin-top:0">📋 The day</div>
+  <details class="card acc" data-acc="schedule-closed"${closed?'':' open'}>
+    <summary><span class="slotlbl" style="margin-top:0;display:inline">📋 The day</span>${cur?`<span class="statline">now · <b>${cur.l.replace(/<[^>]+>/g,'').slice(0,28)}</b></span>`:''}</summary>
     <ul class="sched" id="dayTL" style="margin-top:8px">
       ${live? `<li class="tlpast" id="tlPast" data-tlpast${doneN>0?'':' hidden'}><span class="t">✓</span><span id="tlPastTxt">${doneN} done · show</span></li>`:''}
       ${T.map((it,i)=>{
@@ -2119,7 +2122,7 @@ function timelineCardHTML(){
         return `<li data-min="${it.m}"${cls?` class="${cls}"`:''}><span class="t">${it.m>1440?'—':fmtMin(it.m)}</span><span>${it.l}</span></li>`;
       }).join('')}
     </ul>
-  </div>`;
+  </details>`;
 }
 
 /* -- session lifecycle (additive key qpcut.sesh.<dkey>) -- */
@@ -2413,9 +2416,12 @@ function viewToday(){
     const rows = sch.map(([t,x])=>{ const p=ovMin(t, prevMn); if(p.timed) prevMn=p.m; return {t,x,mn:p.timed?p.m:null,timed:p.timed}; });
     let curIdx=-1; rows.forEach((r,i)=>{ if(r.timed && r.mn<=m) curIdx=i; });
     const doneN = rows.filter((r,i)=>r.timed && r.mn<=m && i!==curIdx).length;
+    const closed = openAcc.has('schedule-closed');
+    const cur = live && curIdx>=0 ? rows[curIdx] : null;
     return `
-  <div class="card" style="margin-top:14px">
-    <ul class="sched" id="dayTL">
+  <details class="card acc" data-acc="schedule-closed" style="margin-top:14px"${closed?'':' open'}>
+    <summary><span class="slotlbl" style="margin-top:0;display:inline">📋 ${dTitle||'The day'}</span>${cur?`<span class="statline">now · <b>${cur.x.replace(/<[^>]+>/g,'').slice(0,28)}</b></span>`:''}</summary>
+    <ul class="sched" id="dayTL" style="margin-top:8px">
       ${live? `<li class="tlpast" id="tlPast" data-tlpast${doneN>0?'':' hidden'}><span class="t">✓</span><span id="tlPastTxt">${doneN} done · show</span></li>`:''}
       ${rows.map((r,i)=>{
         const cls=[live&&r.timed&&r.mn<=m&&i!==curIdx?'past':'', live&&i===curIdx?'cur':''].filter(Boolean).join(' ');
@@ -2425,7 +2431,7 @@ function viewToday(){
     ${rem.length?`<div class="slotlbl" style="margin-top:10px">🔔 Reminders still on</div>
     <ul class="sched" style="margin-top:2px">${rem.map(([t,x])=>`<li class="rem"><span class="t">${t}</span><span>${x}</span></li>`).join('')}</ul>`:''}
     ${d.note?`<div class="note">${d.note}</div>`:''}
-  </div>`;
+  </details>`;
   })():`
   ${timelineCardHTML()}
   ${d.note?`<div class="note">${d.note}</div>`:''}`}
@@ -2519,7 +2525,11 @@ function viewToday(){
     const corToday = weekPick(COR_SETS)[now.getDay()];
     const cbT = store.get('qpcut.creamibatch',{idx:0,started:null});
     const batchT = CREAMI_BATCHES[cbT.idx%CREAMI_BATCHES.length];
-    const eatenNT = cbT.started? Object.entries(eaten).filter(([dd,m])=>dd>=cbT.started&&m.sn==='s1').length : 0;
+    /* count Creamis logged since the batch started — TODAY counts only once its own s1 is logged, so the
+       card shows TODAY'S cup until you mark it eaten, then advances. `eaten` here is only today's slots,
+       so read the full history. */
+    const creamiHist = store.get('qpcut.eaten',{});
+    const eatenNT = cbT.started? Object.entries(creamiHist).filter(([dd,m])=>dd>=cbT.started&&m.sn==='s1').length : 0;
     const cupT = batchT.cups[Math.min(eatenNT,7)];
     const tonight = (store.get('qpcut.tonight',{}))[isoToday()] || todayEaten.di || null;
     const dOpts = SLOTS.find(s=>s.key==='di').opts;
@@ -2533,7 +2543,7 @@ function viewToday(){
     <div class="opt">
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
-        : `<div class="head"><b>🍦 ${cupT[0].replace(/^\\d+ · /,'')}</b>${tchip(cbT.started?'up next in the freezer':'batch not started')}</div>
+        : `<div class="head"><b>🍦 ${cupT[0].replace(/^\d+ · /,'')}</b>${tchip(cbT.started?'up next in the freezer':'batch not started')}</div>
            <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>`}
     </div>
   </div>
@@ -4062,7 +4072,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784424605';
+const BUILD = 'b1784467119';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
