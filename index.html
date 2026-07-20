@@ -403,6 +403,13 @@
        color:var(--faint);transition:transform .15s}
   details.acc[open] summary::after{transform:rotate(180deg)}
   details.acc summary h3{font-size:16px}
+  /* Meals tab: each SLOT is a big collapsible section; meal cards nest inside it */
+  details.slotsec{background:var(--panel);border-color:var(--line2)}
+  details.slotsec>summary{min-height:34px}
+  details.slotsec>summary b{font-size:16px}
+  details.slotsec[open]{padding-bottom:6px}
+  details.slotsec .mealcard{background:var(--panel2);margin-top:8px}
+  details.slotsec .mealcard:first-of-type{margin-top:10px}
   details.innerrow{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);
        margin-top:12px;padding-top:12px}
   details.innerrow summary{font-weight:650;font-size:14.5px}
@@ -2380,15 +2387,22 @@ function renderZoneBar(){
 function applyMealFilter(){
   if(current!=='meals') return;
   const q = mealQ.trim().toLowerCase();
+  const filtering = !!(q || mealKF);
   document.querySelectorAll('#view details[data-search]').forEach(d=>{
     const okQ = !q || d.dataset.search.includes(q);
     const okK = !mealKF || (d.dataset.kosher||'').includes(mealKF);
     d.style.display = (okQ && okK)? '' : 'none';
   });
+  window.__filterOpening = true; /* suppress openAcc persistence for the programmatic opens below */
   document.querySelectorAll('#view [data-slotsec]').forEach(sec=>{
     const any = [...sec.querySelectorAll('details[data-search]')].some(d=>d.style.display!=='none');
     sec.style.display = any? '' : 'none';
+    /* while filtering, force matching slots OPEN so results aren't hidden inside a collapsed slot.
+       Not persisted to openAcc — it's a transient search state that clears when the query does. */
+    if(filtering && any) sec.open = true;
+    else if(!filtering) sec.open = openAcc.has('meals-'+sec.dataset.slotsec); /* no filter → restore user's toggle */
   });
+  window.__filterOpening = false;
 }
 
 /* -- once-per-day time-aware open seeding (user closes stick all day) -- */
@@ -2908,18 +2922,20 @@ function ingRow([n,q,m]){
   </li>`;
 }
 function viewMeals(){
-  return `<h2 class="sec" style="margin-top:14px">The cookbook · tap any meal — ingredients, macros &amp; method inside · all weights RAW / dry</h2>` +
+  return `<h2 class="sec" style="margin-top:14px">The cookbook · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
   SLOTS.map(s=>`
-   <section data-slotsec="${s.key}">
-   <h2 class="sec" style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-     <span>${s.slot} <span style="text-transform:none;letter-spacing:0;color:var(--muted)">· ${s.time}</span></span>
-     <span style="font-weight:400;color:var(--muted);white-space:nowrap">${s.b[0]} · ${s.b[1]}P budget</span>
-   </h2>
+   <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
+   <summary>
+     <span style="display:flex;align-items:baseline;gap:8px;width:100%">
+       <b style="flex:1;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${s.time}</span></b>
+       <span class="r" style="flex-shrink:0;color:var(--muted)">${s.opts.length} · ${s.b[0]}·${s.b[1]}P</span>
+     </span>
+   </summary>
    ${s.opts.map(m=>{
      const t = m.vars[0].t;
      const hay = (m.name+' '+m.vars.map(v=>v.ing.map(x=>x[0]).join(' ')).join(' ')).toLowerCase().replace(/<[^>]*>/g,'');
      return `
-     <details class="card acc" data-acc="opt-${m.id}"${openAcc.has('opt-'+m.id)?' open':''} data-search="${esc(hay)}" data-kosher="${m.k.map(c=>c[0]).join(' ')}">
+     <details class="card acc mealcard" data-acc="opt-${m.id}"${openAcc.has('opt-'+m.id)?' open':''} data-search="${esc(hay)}" data-kosher="${m.k.map(c=>c[0]).join(' ')}">
        <summary>
          <span style="display:flex;align-items:center;gap:8px;width:100%">
            <b style="flex:1;min-width:0">${m.name}</b>
@@ -2937,7 +2953,7 @@ function viewMeals(){
        ${sideDishesHTML(m.id)}`:''}
      </details>`;
    }).join('')}
-   </section>`).join('') + `
+   </details>`).join('') + `
    <h2 class="sec">⚖️ Protein powder · weigh from the ziplock</h2>
    <div class="card">
      <div class="sub" style="margin-top:0">No containers at the office — so <b>never scoop, always weigh</b>. 1 serving per flavor (½ scoop in any recipe = half this number):</div>
@@ -3673,6 +3689,7 @@ function render(){
   $('#view').innerHTML = VIEWS[current]();
   ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
   document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{
+    if(window.__filterOpening) return; /* transient search force-open — don't persist */
     if(d.open) openAcc.add(d.dataset.acc); else openAcc.delete(d.dataset.acc);
   }));
   /* v14 chrome: zone bar, session dim, filters, live tick */
@@ -4164,7 +4181,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784492049';
+const BUILD = 'b1784505751';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
