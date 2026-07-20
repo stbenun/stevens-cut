@@ -2142,6 +2142,53 @@ function eatenMacros(ld){
   });
   return t;
 }
+/* ---- meal timing: when each slot was eaten + the healthiest next-eat window ---- */
+/* eat-times live in qpcut.eatenAt.<date> = {slot:"HH:MM"} — synced, device-local editable. */
+function eatTimes(ld){ return store.get('qpcut.eatenAt.'+dkey(ld), {}); }
+function setEatTime(ld, slot, hhmm){ const m=eatTimes(ld); if(hhmm) m[slot]=hhmm; else delete m[slot]; store.set('qpcut.eatenAt.'+dkey(ld), m); }
+/* the slot order + a base gap (minutes) that scales with the meal's calories */
+const SLOT_SEQ = ['pre','bf','lu','sn','di'];
+function healthyGap(slotKey){
+  /* bigger meal → longer gap. base 3h; +/- by the slot's calorie budget. */
+  const s = SLOTS.find(x=>x.key===slotKey); const cal = s? s.b[0] : 400;
+  if(cal<=250) return 150;            // pre-lift / small → 2.5 h
+  if(cal<=360) return 195;            // snack → ~3.25 h
+  return 225;                         // full meal (bf/lu/di ~545-585) → 3.75 h
+}
+/* given the last logged meal + time, suggest when to eat NEXT.
+   Accounts for: base gap by meal size, a SKIPPED next slot (stretch toward the meal after it),
+   and a bedtime cap (nothing past ~30 min before bed). Returns {mins, label, why} or null. */
+function nextEatSuggestion(ld){
+  const now = new Date(ld+'T12:00:00').getDay()===new Date().getDay()? nowMin() : null;
+  const eaten = (store.get('qpcut.eaten',{}))[ld]||{};
+  const times = eatTimes(ld);
+  const isFri = new Date(ld+'T12:00:00').getDay()===5;
+  /* find the most recent slot that has BOTH a logged option and a time */
+  let last=null, lastMin=-1;
+  SLOT_SEQ.forEach(k=>{ if(eaten[k] && times[k]){ const [h,m]=times[k].split(':').map(Number); const mm=h*60+m; if(mm>=lastMin){ lastMin=mm; last=k; } } });
+  if(!last) return null;
+  /* which slots are "skipped" today: Friday snack is always skipped; any slot with no menu presence + past its window */
+  const skipped = k => (isFri && k==='sn');
+  /* walk forward from the last-eaten slot to the next NON-skipped, NOT-yet-eaten slot */
+  let idx = SLOT_SEQ.indexOf(last), target=null, stretched=false;
+  for(let i=idx+1;i<SLOT_SEQ.length;i++){
+    const k=SLOT_SEQ[i];
+    if(eaten[k]) continue;              // already ate it
+    if(skipped(k)){ stretched=true; continue; } // skip it, and note we stretched
+    target=k; break;
+  }
+  if(!target) return null;             // nothing left to eat today
+  /* base next-eat = last time + gap for the last meal's size; if we stretched past a skipped slot, add ~45 min
+     so he doesn't get hungry from the gap the skip left. */
+  let mins = lastMin + healthyGap(last) + (stretched? 45 : 0);
+  /* bedtime cap ~ 11:00 PM (1380) minus 30 */
+  const cap = 1380-30;
+  let why;
+  if(stretched) why = `snack’s skipped today — eating a bit later so you’re not starving before ${SLOTS.find(s=>s.key===target).slot.toLowerCase()}`;
+  else why = `~${Math.round(healthyGap(last)/60*10)/10} h after your last meal keeps energy + digestion steady`;
+  if(mins>cap){ mins=cap; why='capped before bed so it doesn’t hurt sleep'; }
+  return { mins, target, label: SLOTS.find(s=>s.key===target).slot, why, past: now!=null && now>=mins };
+}
 function heroHTML(ld){
   const got = eatenMacros(ld);
   const left = PLAN_T.map((v,i)=>Math.max(0,Math.round(v-got[i])));
@@ -2739,7 +2786,15 @@ function viewToday(){
         const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
         return fresh.length? `<div class="slotlbl" style="margin-top:8px">🍳 fresh tonight · off the weekly menu</div><div class="pickrow">${fresh.map(pill).join('')}</div>` : '';
       })();
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}`;
+      /* eat-time: when this slot was logged (editable) + when to eat next */
+      let timeRow = '';
+      if(todayEaten[s.key]){
+        const et = eatTimes(ld)[s.key] || '';
+        const sug = nextEatSuggestion(ld);
+        const sugLine = (sug && sug.target)? `<div class="sub" style="margin-top:6px">⏱ <b>Next: eat around ${fmtMin(sug.mins)}</b> (${sug.label.toLowerCase()}) — ${sug.why}.${sug.past?' <b>You’re past it — eat soon.</b>':''}</div>` : '';
+        timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${sugLine}`;
+      }
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${timeRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -3443,8 +3498,6 @@ function viewTrack(){
       <div id="etaCard"></div>
     </details>
     <div class="formrow"><button class="btn" id="wkCopy"${isSun?' style="box-shadow:0 0 0 2px color-mix(in srgb,var(--brass) 45%,transparent)"':''}>📋 Copy week report for Claude${isSun?' · it’s Sunday':''}</button></div>
-    <div class="formrow"><button class="btn ghost" id="wkSent">✅ Sent to Q — clear this week’s notes</button></div>
-    <div class="sub" style="margin-top:2px">Tap after you’ve actually sent the report. Clears this Q-week’s notes + Ask-Q questions so next week starts fresh. Older notes are kept.</div>
   </div>
 
   <h2 class="sec">Notes · off-track log · coach HW</h2>
@@ -3464,6 +3517,8 @@ function viewTrack(){
           <p>${esc(n.text)}</p></div>`;
       }).join('')||'<div class="sub" style="margin-top:8px">No notes yet.</div>'}
     </div>
+    <div class="formrow" style="margin-top:12px"><button class="btn ghost" id="wkSent">✅ Sent to Q — clear reported notes</button></div>
+    <div class="sub" style="margin-top:2px">Tap AFTER you’ve sent the week report to Q. Clears every note dated before today + your Ask-Q questions, so the new week starts clean. Anything you jot today is kept.</div>
   </div>
 
   <h2 class="sec">App &amp; data</h2>
@@ -3897,8 +3952,22 @@ function wireToday(){
     const eaten = store.get('qpcut.eaten',{});
     const d = logDate || isoToday();
     eaten[d] = eaten[d]||{};
-    eaten[d][b.dataset.slot] = eaten[d][b.dataset.slot]===b.dataset.opt ? null : b.dataset.opt;
-    store.set('qpcut.eaten',eaten); render();
+    const slot = b.dataset.slot;
+    const nowLogging = eaten[d][slot]!==b.dataset.opt; // true = we're SETTING it (not un-toggling)
+    eaten[d][slot] = eaten[d][slot]===b.dataset.opt ? null : b.dataset.opt;
+    store.set('qpcut.eaten',eaten);
+    /* stamp the eat-time to NOW when logging on the actual day (backfill days: leave it for manual set).
+       Un-logging clears the time. */
+    if(!logDate || logDate===isoToday()){
+      if(nowLogging){ const n=new Date(); setEatTime(d, slot, `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`); }
+      else setEatTime(d, slot, null);
+    }
+    render();
+  });
+  const eatTimeEl = $('#eatTime');
+  if(eatTimeEl) eatTimeEl.addEventListener('change',()=>{
+    setEatTime(logDate||isoToday(), eatTimeEl.dataset.slot, eatTimeEl.value);
+    render();
   });
   const lp = $('#ldPick');
   if(lp) lp.addEventListener('change',()=>{
@@ -4072,13 +4141,19 @@ function wireTrack(){
     }
   });
   $('#wkSent') && $('#wkSent').addEventListener('click',()=>{
-    const wk = qWeekDates();
+    /* clear everything from the REPORTED week and earlier — i.e. notes dated on/before this Q-week's
+       Sunday. Works whether he taps Sunday night OR Monday after the week rolls over (the bug: the old
+       version only matched the CURRENT Mon–Sun, so Monday-morning taps found "nothing" while last week's
+       notes sat there). "This week's" fresh notes (today onward, if he's already jotting) are kept. */
     const notes = store.get('qpcut.notes',[]);
-    const thisWeek = notes.filter(n=>wk.includes(n.d)).length;
+    /* clear all notes dated BEFORE today (everything already reported); keep anything dated today
+       (a new week's fresh jots). This is why it works Sunday-night OR Monday-after-rollover. */
+    const keep = notes.filter(n=>n.d >= isoToday());
+    const cleared = notes.length - keep.length;
     const askq = store.get('qpcut.askq',[]);
-    if(!thisWeek && !askq.length){ alert('Nothing from this week to clear.'); return; }
-    if(!confirm(`Clear ${thisWeek} note${thisWeek===1?'':'s'} + ${askq.length} Ask-Q question${askq.length===1?'':'s'} from this week? Older notes are kept. Do this only AFTER you’ve sent the report to Q.`)) return;
-    store.set('qpcut.notes', notes.filter(n=>!wk.includes(n.d)));
+    if(!cleared && !askq.length){ alert('No past-week notes or Ask-Q questions to clear.'); return; }
+    if(!confirm(`Clear ${cleared} note${cleared===1?'':'s'} + ${askq.length} Ask-Q question${askq.length===1?'':'s'} from the week you just reported? Anything dated today is kept. Do this only AFTER you’ve sent the report to Q.`)) return;
+    store.set('qpcut.notes', keep);
     store.set('qpcut.askq', []);
     render();
   });
@@ -4235,7 +4310,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784565448';
+const BUILD = 'b1784565868';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
