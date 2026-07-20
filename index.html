@@ -85,7 +85,10 @@
   .card .sub{color:var(--muted);font-size:13px;margin-top:2px}
   .statline{display:flex;align-items:center;gap:8px;color:var(--muted);
         font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;margin-left:auto;
-        flex-shrink:0;padding-right:2px}
+        flex-shrink:0;padding-right:2px;white-space:nowrap}
+  /* let a long title + statline wrap instead of overflowing the card edge */
+  details.acc summary{flex-wrap:wrap;row-gap:2px}
+  details.acc summary h3{min-width:0;overflow-wrap:anywhere}
   details.acc summary .statline b{color:var(--brass);font-weight:700}
 
   /* ---- chips ---- */
@@ -2648,8 +2651,8 @@ function viewToday(){
   </div>
   ${bowlToday?`
   <details class="card acc" data-acc="bowl-day"${openAcc.has('bowl-day')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">yogurt bowl of the day · ${bowlToday.vars[0].t[0]} cal · ${bowlToday.vars[0].t[1]}P</span></summary>
-    <div class="sub" style="margin-top:6px">Swap it in for breakfast or a snack. Rotates daily.</div>
+    <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span></summary>
+    <div class="sub" style="margin-top:6px">Yogurt bowl of the day — swap it in for breakfast or a snack. Rotates daily.</div>
     <ul class="ing" style="margin-top:8px">${bowlToday.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l)}</span><span class="q">${q}</span></li>`).join('')}</ul>
     ${HOWTO[bowlToday.id]?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${HOWTO[bowlToday.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
   </details>`:''}
@@ -4200,7 +4203,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784549543';
+const BUILD = 'b1784550041';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
