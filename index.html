@@ -1167,6 +1167,8 @@ const FIXPOOL = [
  ['Dinner: skip bun + egg', 130],
  ['Pre-lift: skip (rest days only)', 200],
 ];
+/* label → calories, for netting off-plan fixes out of the day's total */
+const FIXVAL = Object.fromEntries(FIXPOOL.map(([l,c])=>[l,c]));
 const EATOUT = {
  bbq:{name:'BBQ', rules:[
   'Protein anchor, two palms: grilled chicken, turkey, sirloin, lean brisket flat (skip ribs/wings — fat bombs)',
@@ -2121,6 +2123,14 @@ function eatenMacros(ld){
   const eaten = (store.get('qpcut.eaten',{}))[ld]||{};
   const t = [0,0,0,0];
   Object.values(eaten).forEach(id=>{ const o = OPTBYID[id]; if(o) o.vars[0].t.forEach((v,i)=>t[i]+=v); });
+  /* off-plan items (incl. ones Claude logged from chat) count toward the day's totals too —
+     each carries {cal, p?, c?, f?}; fixes[] are subtractions applied elsewhere, so ADD net cal here. */
+  const ops = (store.get('qpcut.offplan',{}))[ld]||[];
+  ops.forEach(o=>{
+    const net = (+o.cal||0) - (o.fixes||[]).reduce((a,f)=>a+(FIXVAL[f]||0),0);
+    t[0]+=net;
+    if(+o.p) t[1]+=+o.p; if(+o.c) t[2]+=+o.c; if(+o.f) t[3]+=+o.f;
+  });
   return t;
 }
 function heroHTML(ld){
@@ -2845,7 +2855,8 @@ function viewToday(){
       const covered = FIXPOOL.filter(([l])=>chosen.includes(l)).reduce((a,[,c])=>a+c,0);
       return `
       <div class="noteitem"><div class="meta"><span class="chip notetag off">~${o.cal} cal</span>
-        <span class="d">${chosen.length? `offset −${covered}${covered>=o.cal?' ✓ covered':` (need ~${o.cal-covered} more)`}`:'pick where it comes off ↓'}</span>
+        ${o.src==='chat'?'<span class="chip notetag">💬 via chat</span>':''}
+        <span class="d">${chosen.length? `offset −${covered}${covered>=o.cal?' ✓ covered':` (need ~${o.cal-covered} more)`}`:'⚠ subtract from a meal later ↓'}</span>
         <button class="xdel" data-opx="${i}" aria-label="delete">×</button></div>
         <p>${esc(o.text)}</p>
         <div class="pickrow" style="margin-top:6px">
@@ -4162,7 +4173,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784518520';
+const BUILD = 'b1784519035';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
