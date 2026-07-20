@@ -1116,14 +1116,13 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
- {d:'2026-07-20', title:'🍣 Sushi night out tonight — plan set', msg:`<b>Eat normal through lunch.</b> Skip today’s snack and put those calories toward tonight — log via 🍽 Eating out → Sushi (uses dinner + snack budget).<br>
-<b>🫙 Hummus was skipped at lunch</b> — you’re down ~45 cal + a little fat, so cover it here: make one of your rolls a <b>salmon-AVOCADO</b> (avocado replaces that fat), OR add <b>2–3 extra sashimi</b>. Don’t add a 3rd roll or more rice — you’re short on fat/protein, not carbs.<br>
-<b>At the table, in order:</b><br>
-① <b>START — order BOTH:</b> 1 miso soup AND 1 edamame (not one or the other — both, ~170 cal together). Eat first so you’re not starving when rolls arrive.<br>
-② <b>PROTEIN, before any rolls:</b> 8–10 pieces plain sashimi (salmon or tuna).<br>
-③ <b>ROLLS:</b> up to <b>2 simple rolls</b> — make one <b>salmon-avocado</b> tonight to cover the skipped hummus.<br>
-④ <b>DO NOT order:</b> anything tempura (fried), “spicy” (= mayo), or “crunch” (fried batter).<br>
-⑤ <b>Free:</b> wasabi, ginger, extra miso/edamame. <b>Soy:</b> dip the piece, don’t pour. Still hungry → 2–3 more sashimi (~100 cal), never more rice. Done eating when you leave.`},
+ {d:'2026-07-20', title:'🍣 Sushi tonight — order this', msg:`<b>Get, in order:</b><br>
+🥣 1 miso soup + 1 edamame<br>
+🐟 8–10 pieces sashimi (salmon/tuna)<br>
+🍣 2 rolls — 1 salmon-avocado, 1 salmon or tuna<br>
+✅ Free: wasabi, ginger, extra edamame<br>
+🚫 Skip: tempura, “spicy,” “crunch,” extra rice<br>
+<span class="sub">Salmon-avocado covers the hummus you skipped. Log via 🍽 Eating out → Sushi.</span>`},
  {d:'2026-07-16', title:'🎓 Moreshet Alumni event tonight — plan set', msg:`<b>Run:</b> long run MOVES to Sunday morning (replaces the short run) — tonight is rest, enjoy it.<br>
 <b>Eat:</b> normal through lunch. <b>Skip the snack</b> — log it via 🍽 Eating out → Simcha/Event (915 for the night).<br>
 <b>At the event (SIYUM = meat is served):</b> ① anchor: LEAN meat first — grilled chicken or lean roast, two palms ② skip wings/ribs/anything glazed ③ ONE fist of carbs ④ nothing fried ⑤ pareve desserts aren’t worth it — one max ⑥ seltzer in hand all night.<br>
@@ -4345,7 +4344,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784573730';
+const BUILD = 'b1784573886';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
