@@ -1116,9 +1116,13 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
- {d:'2026-07-20', title:'🍣 Sushi night out tonight — plan set', msg:`<b>Eat normal through lunch.</b> Skip the snack and bank it toward tonight — log via 🍽 Eating out → Sushi (dinner + snack budget).<br>
-<b>At the table:</b> ① open with <b>edamame</b> (+ miso if they have it) ② anchor: <b>8–10 pieces sashimi</b> (salmon/tuna) FIRST — that’s your protein ③ then up to <b>2 simple rolls</b> (salmon · tuna · salmon-avocado) since the snack’s banked ④ SKIP: tempura, anything “spicy” (that’s mayo), “crunch” (fried batter).<br>
-<b>Free:</b> wasabi, ginger. <b>Soy:</b> dip, don’t pour — tomorrow’s scale is listening. Still hungry → 2–3 more pieces sashimi (~100 cal), never more rice. Done eating when you leave.`},
+ {d:'2026-07-20', title:'🍣 Sushi night out tonight — plan set', msg:`<b>Eat normal through lunch.</b> Skip today’s snack and put those calories toward tonight — log via 🍽 Eating out → Sushi (uses dinner + snack budget).<br>
+<b>At the table, in order:</b><br>
+① <b>START — order BOTH:</b> 1 miso soup AND 1 edamame (not one or the other — both, ~170 cal together). Eat first so you’re not starving when rolls arrive.<br>
+② <b>PROTEIN, before any rolls:</b> 8–10 pieces plain sashimi (salmon or tuna).<br>
+③ <b>ROLLS:</b> up to <b>2 simple rolls</b> (plain salmon, tuna, or salmon-avocado) since the snack’s banked.<br>
+④ <b>DO NOT order:</b> anything tempura (fried), “spicy” (= mayo), or “crunch” (fried batter).<br>
+⑤ <b>Free:</b> wasabi, ginger, extra miso/edamame. <b>Soy:</b> dip the piece, don’t pour. Still hungry → 2–3 more sashimi (~100 cal), never more rice. Done eating when you leave.`},
  {d:'2026-07-16', title:'🎓 Moreshet Alumni event tonight — plan set', msg:`<b>Run:</b> long run MOVES to Sunday morning (replaces the short run) — tonight is rest, enjoy it.<br>
 <b>Eat:</b> normal through lunch. <b>Skip the snack</b> — log it via 🍽 Eating out → Simcha/Event (915 for the night).<br>
 <b>At the event (SIYUM = meat is served):</b> ① anchor: LEAN meat first — grilled chicken or lean roast, two palms ② skip wings/ribs/anything glazed ③ ONE fist of carbs ④ nothing fried ⑤ pareve desserts aren’t worth it — one max ⑥ seltzer in hand all night.<br>
@@ -1211,12 +1215,12 @@ const EATOUT = {
   'Salads dressed light or lemon',
   '⚠ Nut check on salads/desserts — ask']},
  sushi:{name:'Sushi', rules:[
-  'Open with edamame (and miso if they have it)',
-  'Anchor: 8–10 pieces of sashimi (salmon/tuna), FIRST',
-  'Rolls: snack skipped → up to 2 simple rolls (salmon · tuna · salmon-avocado). Dinner budget only → 1 roll, 10–12 pc sashimi',
-  'Skip: tempura anything, “spicy” anything (that’s mayo), “crunch” topping (fried batter)',
-  'Wasabi, ginger — free. Soy: dip, don’t pour — tomorrow’s scale is listening',
-  'Still hungry → more sashimi (2–3 pc ≈ 100 cal), never more rice']},
+  'START — order BOTH (not one or the other): 1 bowl miso soup (~40 cal) AND 1 side edamame (~130 cal, 11 g protein). Eat these first — they fill you up before the rolls so you eat fewer.',
+  'MAIN protein — eat this BEFORE any rolls: 8–10 pieces of plain sashimi (salmon or tuna). This is your real protein for the meal.',
+  'ROLLS — how many depends on your budget: if you skipped your snack today → up to 2 simple rolls (plain salmon, tuna, or salmon-avocado). If dinner budget only → 1 roll + bump sashimi to 10–12 pieces.',
+  'DO NOT order: anything tempura (deep-fried), anything labeled “spicy” (that means mayo), anything with a “crunch” topping (fried batter). These are the calorie traps.',
+  'FREE — as much as you want: wasabi, pickled ginger, miso, edamame pods. Soy sauce: DIP the piece, don’t pour it over the rice (salt spikes tomorrow’s scale).',
+  'STILL HUNGRY after all that? Order 2–3 more pieces of sashimi (~100 cal). Never more rice/rolls — protein fills you, rice doesn’t.']},
  pizza:{name:'Pizza Night', rules:[
   'Big salad FIRST — it decides how slice 3 feels',
   '2 slices cap, thin crust beats thick',
@@ -4210,7 +4214,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784559946';
+const BUILD = 'b1784562638';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
