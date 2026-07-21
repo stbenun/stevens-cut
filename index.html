@@ -2205,7 +2205,7 @@ function heroHTML(ld){
   const eaten = (store.get('qpcut.eaten',{}))[ld]||{};
   const isFri = new Date(ld+'T12:00:00').getDay()===5;
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
-  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12;
+  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
   const supDone = (store.get('qpcut.supps.'+dkey(ld),[])).length;
   const wd = new Date(ld+'T12:00:00').getDay();
   const wo = workoutFor(wd, store.get('qpcut.loc','deal'));
@@ -2560,7 +2560,7 @@ function viewToday(){
   const ld = logDate || isoToday();
   const backfill = ld !== isoToday();
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
-  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12;
+  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
   const DRINKS = [
     ['bottle','🚰 Water bottle','30 oz'],['pre','⚡ Pre-workout','~9 oz'],
     ['eaa','💪 EAA','~9 oz'],['soda','🥤 Seltzer / diet soda','12 oz'],
@@ -2856,6 +2856,14 @@ function viewToday(){
             <span class="stepn">${drinks[id]||0}</span>
             <button class="step" data-dinc="${id}">+</button>
           </span></div>`).join('')}
+      <div class="mrow" style="flex-wrap:wrap;gap:6px">
+        <span class="nm">➕ Log oz directly ${drinks.custom?`<span class="daytag">+${drinks.custom} oz${drinks.custom?` · <a href="#" data-dclear="1" style="color:var(--muted)">reset</a>`:''}</span>`:''}</span>
+        <span style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+          ${[8,12,16,20].map(n=>`<button class="step" data-dozq="${n}" style="width:auto;padding:0 9px">+${n}</button>`).join('')}
+          <input type="number" id="ozAdd" inputmode="numeric" min="1" placeholder="oz" style="width:56px;padding:6px 8px;font-size:13px" aria-label="Add ounces of water">
+          <button class="step" id="ozAddBtn" style="width:auto;padding:0 11px">Add</button>
+        </span>
+      </div>
       <div class="water-label">${oz} / 128 oz${oz>=128?' · 🎉 gallon done':''} · plus 10k steps minimum</div>
     </details>
     <details class="acc innerrow" data-acc="log-dials"${openAcc.has('log-dials')?' open':''}>
@@ -4031,6 +4039,25 @@ function wireToday(){
     d[id] = Math.max(0,(d[id]||0)+(b.dataset.dinc?1:-1));
     store.set(key,d); render();
   }));
+  const addOz = n=>{
+    n = Math.round(n); if(!n) return;
+    const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
+    const d = store.get(key,{});
+    d.custom = Math.max(0,(d.custom||0)+n);
+    store.set(key,d); render();
+  };
+  document.querySelectorAll('[data-dozq]').forEach(b=>b.addEventListener('click',()=>addOz(+b.dataset.dozq)));
+  const ozBtn = $('#ozAddBtn'), ozIn = $('#ozAdd');
+  if(ozBtn && ozIn){
+    const go = ()=>{ const v = parseInt(ozIn.value,10); if(v>0){ addOz(v); ozIn.value=''; } };
+    ozBtn.addEventListener('click',go);
+    ozIn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
+  }
+  document.querySelectorAll('[data-dclear]').forEach(a=>a.addEventListener('click',e=>{
+    e.preventDefault();
+    const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
+    const d = store.get(key,{}); d.custom = 0; store.set(key,d); render();
+  }));
   $('#suppList').addEventListener('click',e=>{
     const it = e.target.closest('.suppitem'); if(!it) return;
     const i = +it.dataset.i, key = 'qpcut.supps.'+dkey(logDate||isoToday());
@@ -4347,7 +4374,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784646504';
+const BUILD = 'b1784649528';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
