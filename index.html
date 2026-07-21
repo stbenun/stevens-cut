@@ -1093,7 +1093,7 @@ const DAYS = {
 /* one-off schedule overrides, keyed by ISO date */
 const OVERRIDES = {
  '2026-07-22': {title:'Pull AM · Tisha B’Av fast starts 8:17 PM', sub:'Wednesday · eat + hydrate all day, then the fast',
-  sch:[['6:00 AM','Wake up'],['7:00 AM','Minyan'],['7:35 AM','Leave to gym — Pull as normal (fast is tonight, train this AM)'],['9:00 AM','Work'],['10:30 AM','Breakfast on time — <b>protein-loaded</b> (aim ~200g+ today) · water: 30 oz by now'],['1:30 PM','Lunch — Broccoli Jiben + rice side (Nine Days, no meat) · 60 oz water by now'],['4:00 PM','90 oz water by now (go OVER the gallon today) · both hydration sticks'],['5:15 PM','S.'],['6:30 PM','Minha (Berit Shalom)'],['7:00 PM','⛔ SEUDAT MAFSEKET at home (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber + ½ Ryse shake after. Carbs UP, salt DOWN — no soy, salt now = misery at 2 AM'],['8:05 PM','Last water: 16–24 oz + final stick, then DONE (before 8:17)'],['8:17 PM','Fast begins'],['8:25 PM','Arbit — bring NON-LEATHER shoes'],['—','Thursday’s 8.5 mi run moves to Sunday 7/26']]},
+  sch:[['6:00 AM','Wake up'],['7:00 AM','Minyan'],['7:35 AM','Leave to gym — Pull as normal (fast is tonight, train this AM)'],['9:00 AM','Work'],['10:30 AM','Breakfast on time — <b>protein-loaded</b> (aim ~200g+ today) · water: 30 oz by now · 💧 <b>Ryse stick #1</b>'],['1:30 PM','Lunch — Broccoli Jiben + rice side (Nine Days, no meat) · 60 oz water by now'],['4:00 PM','90 oz water by now (go OVER the gallon today) · 💧 <b>Ryse stick #2</b> (that’s both for today — done before the fast, no late-night salt)'],['5:15 PM','S.'],['6:30 PM','Minha (Berit Shalom)'],['7:00 PM','⛔ SEUDAT MAFSEKET at home (replaces snack + dinner): salmon 6 oz + rice 75 g dry + cucumber + ½ Ryse shake after. Carbs UP, salt DOWN — no soy, salt now = misery at 2 AM'],['8:05 PM','Last water: 16–24 oz + final stick, then DONE (before 8:17)'],['8:17 PM','Fast begins'],['8:25 PM','Arbit — bring NON-LEATHER shoes'],['—','Thursday’s 8.5 mi run moves to Sunday 7/26']]},
  '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends 8:40 PM', sub:'Thursday · break the fast smart',
   sch:[['AM','Fast — no food, no water, no training. Shaharit 7:30 (1st minyan) or 9:00 (2nd). Take it easy.'],['7:00 PM','Pre-Minha class'],['7:45 PM','Minha with tefillin'],['8:40 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['8:55 PM','Banana or 70 g berries'],['9:10 PM','Jiben (2 eggs + 100 g whites + 113 g cottage + 28 g mozz + 150 g greens + 2 Ezekiel) — 55 g protein, one pan'],['10:00 PM','Optional: Fairlife 320 mL + ½ scoop shake'],['—','STOP ~950 cal — don’t chase 2,220. Water to 60–80 oz by bed + magnesium. Scale is fake for 2 days.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
@@ -2089,22 +2089,22 @@ function dayTimeline(){
   const lift = glM!=null? glM+15 : null;
   const T = [];
   const A=(m,l)=>{ if(m!=null&&!isNaN(m)) T.push([m,l]); };
-  if(wd===0){ A(480,'Minyan'); A(510,'Class'); A(555,'Runna run (banner above) → weigh-in report to Claude'); A(645,'Groceries + Sunday prep — Prep tab is the checklist'); A(810,'Lunch'); A(1155,'Arbit'); A(1230,'Snack + dials'); A(1320,'Bed by 10:30 — tomorrow wakes at 6:40'); }
+  if(wd===0){ A(480,'Minyan'); A(510,'Class'); A(555,'Runna run (banner above) · 💧 Ryse stick → weigh-in report to Claude'); A(645,'Groceries + Sunday prep — Prep tab is the checklist'); A(810,'Lunch'); A(1155,'Arbit'); A(1230,'Snack + dials'); A(1320,'Bed by 10:30 — tomorrow wakes at 6:40'); }
   if(wd===1){ A(400,'Wake'); A(420,'Minyan'); A(465,'Yogurt + banana right out of minyan');
-    if(lift&&lift<720){ A(lift-25,'Pump Caps'); A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs · log reps live'); }
+    if(lift&&lift<720){ A(lift-25,'Pump Caps'); A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs · log reps live · 💧 Ryse stick'); }
     A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
-    if(lift&&lift>=720){ A(lift-45,'Pre-lift meal'); A(lift-25,'Pump Caps'); A(glM,'Leave — EAA only this late, no stim'); A(lift,'Lift — Legs · log reps live'); }
+    if(lift&&lift>=720){ A(lift-45,'Pre-lift meal'); A(lift-25,'Pump Caps'); A(glM,'Leave — EAA only this late, no stim'); A(lift,'Lift — Legs · log reps live · 💧 Ryse stick'); }
     A(1155,'Arbit'); A(1200,'Rabbi B.'); A(1260,'Rabbi N.'); A(1325,'Dinner (Monday runs late) + dials + magnesium'); A(1425,'Lights out — 11:45 is the Monday reality'); }
   if(wd===2||wd===3){ A(360,'Wake'); A(370,'Class'); A(420,'Minyan'); A(465,'Yogurt + banana right out of minyan');
-    if(lift&&lift<720){ A(lift-25,'Pump Caps'); A(glM,'Leave — sip pre-workout'); A(lift, wd===2?'Lift — Push · log reps live':'Lift — Pull · log reps live'); }
+    if(lift&&lift<720){ A(lift-25,'Pump Caps'); A(glM,'Leave — sip pre-workout'); A(lift, wd===2?'Lift — Push · log reps live · 💧 Ryse stick':'Lift — Pull · log reps live · 💧 Ryse stick'); }
     A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1110,'Dinner BEFORE Arbit — classes run late');
     (wd===2?[[1155,'Arbit + Rabbi R.'],[1215,'Rabbi B. or Rabbi N.']]:[[1155,'Arbit'],[1200,'Rabbi B.']]).forEach(([m,l])=>A(m,l));
     A(1290,'Snack + dials + magnesium'); A(1350,'Bed by 10:30 — recovery night'); }
-  if(wd===4){ A(400,'Wake'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080,'Walk + Runna run (banner above)'); A(1155,'Arbit'); A(1200,'Rabbi A.'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1350,'Bed by 10:30'); }
+  if(wd===4){ A(400,'Wake'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080,'Walk + Runna run (banner above) · 💧 LMNT or 2 Ryse — long run needs the extra sodium'); A(1155,'Arbit'); A(1200,'Rabbi A.'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1350,'Bed by 10:30'); }
   if(wd===5){ A(400,'Wake'); A(420,'Minyan'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
-    if(lift){ A(lift-45,'Pre-lift meal + Shabbat prep window'); A(lift-25,'Pump Caps'); A(glM,'Leave — EAA only, no stim'); A(lift,'Lift — Legs #2'); }
+    if(lift){ A(lift-45,'Pre-lift meal + Shabbat prep window'); A(lift-25,'Pump Caps'); A(glM,'Leave — EAA only, no stim'); A(lift,'Lift — Legs #2 · 💧 Ryse stick'); }
     A(1020,'Bank'); A(1140,'Shul'); A(1200,'Shabbat dinner — feast + challah rules on the Friday card'); }
-  if(wd===6){ A(390,'Wake'); A(405,'Minyan'); A(525,'Class'); A(585,'Walk to grandma’s'); A(600,'Lift — the printed card'); A(750,'Shabbat lunch'); }
+  if(wd===6){ A(390,'Wake'); A(405,'Minyan'); A(525,'Class'); A(585,'Walk to grandma’s'); A(600,'Lift — the printed card · 💧 Ryse stick'); A(750,'Shabbat lunch'); }
   return T.sort((a,b)=>a[0]-b[0]);
 }
 /* ---------- wins strip + weekly GO UP collector ---------- */
@@ -4458,7 +4458,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784670513';
+const BUILD = 'b1784671083';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
