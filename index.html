@@ -2741,13 +2741,16 @@ function viewToday(){
            <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>`}
     </div>
   </div>
-  ${bowlToday?`
+  ${bowlToday?(()=>{
+    const bowlNote = (store.get('qpcut.bowlnote',{}))[isoToday()]; // one-day recipe tweak, auto-clears tomorrow
+    return `
   <details class="card acc" data-acc="bowl-day"${openAcc.has('bowl-day')?' open':''}>
     <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span></summary>
     <div class="sub" style="margin-top:6px">Yogurt bowl of the day — swap it in for breakfast or a snack. Rotates daily.</div>
+    ${bowlNote?`<div class="note" style="margin-top:8px">📌 <b>Today’s swap:</b> ${bowlNote}</div>`:''}
     <ul class="ing" style="margin-top:8px">${bowlToday.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l)}</span><span class="q">${q}</span></li>`).join('')}</ul>
     ${HOWTO[bowlToday.id]?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${HOWTO[bowlToday.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
-  </details>`:''}
+  </details>`;})():''}
   <details class="card acc" data-acc="tonight"${openAcc.has('tonight')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">🌙 Tonight’s dinner</h3><span class="statline">${o?`<b>${o.name}</b>`:'pick it'}</span></summary>
     <div class="pickrow" style="margin-top:10px">${dOpts.map(x=>{
@@ -4344,7 +4347,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784635479';
+const BUILD = 'b1784644132';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
