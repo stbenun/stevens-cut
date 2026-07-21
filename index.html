@@ -1785,6 +1785,59 @@ const isoToday = () => iso(new Date());
 const NOMEAT_WINDOWS = [['2026-07-17','2026-07-23']];
 function isNoMeat(isoStr){ const d = isoStr || isoToday(); return NOMEAT_WINDOWS.some(([a,b])=> d>=a && d<=b); }
 function isMeatOpt(o){ return !!o && (o.k||[]).some(kk=>(kk||[]).includes('meat')); }
+
+/* ---- Dynamic hydration target ----
+   Base gallon (128 oz) flexes with the day's real load: runs, lifts, salty meals,
+   and the fast + its bookend days. Returns {oz, base, why:[strings]}.
+   Fast day itself → 0 (no water permitted); the note points to the eat-window. */
+const HYDR_BASE = 128;
+const FAST_DATES = ['2026-07-23'];               // full-fast days (no food/water)
+const HISODIUM_EO = ['sushi','bbq','restmeat','restdairy','pizza','simcha','homemeat'];
+function runOzBump(txt){                          // scale water to run distance
+  if(!txt) return 0;
+  const m = txt.match(/(\d+(?:\.\d+)?)\s*mi/); if(!m) return 0;
+  const mi = parseFloat(m[1]);
+  if(mi>=16) return 40; if(mi>=11) return 32; if(mi>=7) return 24; if(mi>=4.5) return 16; return 12;
+}
+function hydrTarget(ld){
+  const iso = ld || isoToday();
+  const why = [];
+  // Fast day: no water. Everything else is moot.
+  if(FAST_DATES.includes(iso)) return {oz:0, base:HYDR_BASE, why:['Tisha B’Av fast — no water. Hydrate hard in the break-fast window tonight.'], fast:true};
+  let oz = HYDR_BASE;
+  const d = new Date(iso+'T12:00:00'), wd = d.getDay();
+  const dayInfo = OVERRIDES[iso] || DAYS[wd] || {};
+  const title = (dayInfo.title||'') + ' ' + (dayInfo.sub||'');
+  // Day before / after a fast — Q's extra-water rule
+  const dayMs = 864e5, tms = d.getTime();
+  const isPreFast  = FAST_DATES.some(f=> new Date(f+'T12:00:00').getTime() - tms === dayMs);
+  const isPostFast = FAST_DATES.some(f=> tms - new Date(f+'T12:00:00').getTime() === dayMs);
+  if(isPreFast){  oz += 24; why.push('+24 — day before the fast (Q’s rule: load water so you start topped off).'); }
+  if(isPostFast){ oz += 24; why.push('+24 — day after the fast (rebuilding what you lost).'); }
+  // Runs — read the week's Runna row; long run (Thu / moved) vs short (Sun)
+  const rw = runnaWeek(d);
+  if(rw){
+    const longTxt = rw[2], shortTxt = rw[3];
+    const isThu = wd===4, isSun = wd===0;
+    // honor moved-run overrides: if the override title mentions a run today, treat it as the run day
+    const ovRun = /run|\bmi\b/i.test(title) && !/no run|moved/i.test(title);
+    if(isThu || (ovRun && /long/i.test(longTxt))){
+      const b = runOzBump(longTxt); if(b){ oz += b; why.push(`+${b} — long run (${longTxt.replace(/^Long Run · /,'')}). Sweat loss; drink through the day, not all at once.`); }
+    } else if(isSun){
+      const b = 12; oz += b; why.push(`+${b} — run today (${shortTxt}).`);
+    }
+  }
+  // Lifts — any resistance day (skip pure rest/run days)
+  const isLiftDay = /legs|push|pull|upper|lift/i.test(title) && !/rest ·/i.test(dayInfo.title||'');
+  if(isLiftDay){ oz += 8; why.push('+8 — lift day.'); }
+  // High-sodium meal out today → flush the sodium
+  const eo = (store.get('qpcut.eatout',{}))[iso];
+  if(eo && eo.v && HISODIUM_EO.includes(eo.v)){
+    oz += 16; why.push(`+16 — salty meal out (${(EATOUT[eo.v]||{}).name||eo.v}). Extra water flushes the sodium so tomorrow’s scale isn’t a lie.`);
+  }
+  oz = Math.min(oz, 192);                          // sane ceiling ~1.5 gal
+  return {oz, base:HYDR_BASE, why, fast:false};
+}
 function menuWeekDates(){ /* Sun-Sat containing today */
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
   return Array.from({length:7},(_,i)=>{ const d=new Date(sun); d.setDate(sun.getDate()+i); return iso(d); });
@@ -2206,6 +2259,7 @@ function heroHTML(ld){
   const isFri = new Date(ld+'T12:00:00').getDay()===5;
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
   const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
+  const ht = hydrTarget(ld);
   const supDone = (store.get('qpcut.supps.'+dkey(ld),[])).length;
   const wd = new Date(ld+'T12:00:00').getDay();
   const wo = workoutFor(wd, store.get('qpcut.loc','deal'));
@@ -2227,7 +2281,7 @@ function heroHTML(ld){
     </div></div>
     <div class="glance">
       <span class="gslots">${slots}</span>
-      <span class="gstat">💧<span class="gwater"><i style="width:${Math.min(100,oz/128*100)}%"></i></span>${oz}</span>
+      <span class="gstat">💧<span class="gwater"><i style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></i></span>${oz}<small style="opacity:.6">/${ht.oz}</small></span>
       <span class="gstat">💊 ${supDone}/${SUPPS.length}</span>
       <span class="gstat">🏋 ${liftG}</span>
     </div>
@@ -2561,6 +2615,7 @@ function viewToday(){
   const backfill = ld !== isoToday();
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
   const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
+  const ht = hydrTarget(ld);
   const DRINKS = [
     ['bottle','🚰 Water bottle','30 oz'],['pre','⚡ Pre-workout','~9 oz'],
     ['eaa','💪 EAA','~9 oz'],['soda','🥤 Seltzer / diet soda','12 oz'],
@@ -2848,7 +2903,8 @@ function viewToday(){
     <div class="mtiles">${tileHTML}</div>
     ${panel}
     <details class="acc innerrow" data-acc="log-hydr"${openAcc.has('log-hydr')?' open':''}>
-      <summary><span>💧 Hydration</span><span class="statline"><span class="pbar mini"><span class="pfill" style="width:${Math.min(100,oz/128*100)}%"></span></span><b>${oz}</b>/128 oz</span></summary>
+      <summary><span>💧 Hydration</span><span class="statline"><span class="pbar mini"><span class="pfill" style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></span></span><b>${oz}</b>/${ht.oz} oz</span></summary>
+      ${ht.why.length?`<div class="note" style="margin:2px 0 9px">${ht.fast?'':`Today’s target: <b>${ht.oz} oz</b> (base gallon ${ht.base}). `}${ht.why.join(' ')}</div>`:''}
       ${DRINKS.map(([id,name,size])=>`
         <div class="mrow"><span class="nm">${name} <span class="daytag">${size}</span></span>
           <span class="stepper">
@@ -2864,7 +2920,7 @@ function viewToday(){
           <button class="step" id="ozAddBtn" style="width:auto;padding:0 11px">Add</button>
         </span>
       </div>
-      <div class="water-label">${oz} / 128 oz${oz>=128?' · 🎉 gallon done':''} · plus 10k steps minimum</div>
+      <div class="water-label">${oz} / ${ht.oz} oz${ht.oz&&oz>=ht.oz?' · 🎉 target hit':''} · plus 10k steps minimum</div>
     </details>
     <details class="acc innerrow" data-acc="log-dials"${openAcc.has('log-dials')?' open':''}>
       <summary><span>🎛 Daily dials</span><span class="statline">⚡${dl.e||'–'} · 🍽${dl.h||'–'} · 🩹${dl.s||'–'}</span></summary>
@@ -4374,7 +4430,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784649528';
+const BUILD = 'b1784649907';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
