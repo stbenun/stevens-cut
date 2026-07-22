@@ -2639,19 +2639,22 @@ function sparkHTML(vals, w, h, color){
 
 /* ---------- views ---------- */
 function viewToday(){
-  const now = new Date(), d = OVERRIDES[isoToday()] || DAYS[now.getDay()];
-  const dateStr = now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
-  const isFri = now.getDay()===5;
-  const rw = runnaWeek(now);
-  const daysToRace = Math.ceil((RACE_DAY - now)/864e5);
+  const now = new Date();
+  const ld = logDate || isoToday();            /* the day being VIEWED (global date picker) */
+  const backfill = ld !== isoToday();          /* not today = preview/backfill: no live "now" behavior */
+  const ldDate = new Date(ld+'T12:00:00');
+  const wd = ldDate.getDay();
+  const d = OVERRIDES[ld] || DAYS[wd];          /* schedule now follows the VIEWED day, not always today */
+  const dateStr = ldDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const isFri = wd===5;
+  const rw = runnaWeek(ldDate);
+  const daysToRace = Math.ceil((RACE_DAY - ldDate)/864e5);
   let sch = d.sch.map(([t,x])=>{
     if(x==='RUNNA_THU') x = rw? `Runna: ${rw[2]}` : 'Runna long run';
     if(x==='RUNNA_SUN') x = rw? `Runna: ${rw[3]}` : 'Runna short run';
     return [t,x];
   });
   let dTitle = d.title;
-  const ld = logDate || isoToday();
-  const backfill = ld !== isoToday();
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
   const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
   const ht = hydrTarget(ld);
@@ -2672,14 +2675,13 @@ function viewToday(){
   ${backfill? '' : `<div class="card nowstrip" id="nowStrip">${nowStripInner()}</div>`}
   ${isNoMeat(ld)?`<div class="note" style="margin-top:14px"><b>🥛 Nine Days — no meat or chicken.</b> Fish, dairy, and pareve only through the Tisha B’Av fast (meat resumes Fri 7/24). Meat options are crossed out in the log; lean on Poke, salmon, jiben, and tuna meals this week.</div>`:''}
   ${storageFresh?`<div class="note" style="margin-top:14px"><b>⚠️ Storage check:</b> this browser has no saved app data. If this is your first time here, ignore this. If you HAVE logged here before, this browser is wiping data between visits — <b>don’t log here</b>, and tell Claude exactly how you opened the app (Safari tab / home-screen icon / inside the Claude app) so he can fix it.</div>`:''}
-  ${EVENTS.filter(e=>e.d===isoToday()).map(e=>`
+  ${EVENTS.filter(e=>e.d===ld).map(e=>`
     <div class="note" style="margin-top:14px"><b>⚠️ ${e.title}</b><br>${e.msg}</div>`).join('')}
-  ${runCoaching().map(e=>`
+  ${backfill? '' : runCoaching().map(e=>`
     <div class="note" style="margin-top:14px"><b>${e.title}</b><br>${e.msg}</div>`).join('')}
-  ${OVERRIDES[isoToday()]?(()=>{
+  ${(OVERRIDES[ld]||backfill)?(()=>{
     /* adjusted day: the override schedule is the truth, but calendar-mirror reminders still fire.
        Same "only what's left" collapse as the live timeline — reuses #dayTL + its ✓-done toggle. */
-    const wd = now.getDay();
     const rem = [...(REMIND_MIRROR[wd]||[]), ...(feastDefrostLine(wd)?[feastDefrostLine(wd)]:[])];
     const live = !backfill;
     const m = live? nowMin() : -1;
@@ -2710,7 +2712,7 @@ function viewToday(){
   })():`
   ${timelineCardHTML()}
   ${d.note?`<div class="note">${d.note}</div>`:''}`}
-  ${now.getDay()===0?(()=>{
+  ${(!backfill && now.getDay()===0)?(()=>{
     const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
     const wdone = store.get('qpcut.wiz.'+dkey(isoToday()),[]);
     return `
@@ -2930,14 +2932,7 @@ function viewToday(){
   <section class="zone" id="z-log">
   <div class="zhead"><span class="zt">✏️ Log</span><span class="zn">${backfill?`backfill ${ld}`:'today'}</span></div>
   <div class="card" id="mealLog">
-    <div class="pickrow" style="margin:0">
-      ${menuWeekDates().filter(dd=>dd<=isoToday()).map(dd=>{
-        const wd2 = new Date(dd+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
-        return `<button class="mealpick${dd===ld?' on':''}" data-ld="${dd}">${wd2} ${+dd.slice(8)}</button>`;
-      }).join('')}
-      <input type="date" id="ldPick" value="${ld}" max="${isoToday()}" style="padding:6px 8px;font-size:13px" aria-label="Log a different date">
-    </div>
-    ${backfill?`<div class="note" style="margin:10px 0 0">Backfill mode — everything below saves to <b>${ld}</b>.</div>`:''}
+    ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
     <div class="mtiles">${tileHTML}</div>
     ${panel}
     <details class="acc innerrow" data-acc="log-hydr"${openAcc.has('log-hydr')?' open':''}>
@@ -3142,6 +3137,10 @@ function viewToday(){
   const Z = {lift:liftZone, food:foodZone, log:logZone, tools:toolsZone};
   const order = backfill? ['lift','food','log','tools'] : zoneOrder();
   return `
+  <div class="pickrow" style="margin:0 0 10px;align-items:center;gap:8px">
+    <input type="date" id="viewDate" value="${ld}" style="padding:6px 9px;font-size:13px" aria-label="View any day — past or upcoming">
+    ${backfill?`<button class="mealpick on" id="viewTodayBtn">← Today</button><span class="zn">${ld>isoToday()?'preview':'backfill'}</span>`:'<span class="zn">viewing today</span>'}
+  </div>
   <div class="today-sub"><span>${d.sub} · ${dateStr}</span>
     ${daysToRace>0?tchip(`🏁 race in ${daysToRace}d`):''}</div>
   <div class="today-date">${dTitle}</div>
@@ -4113,12 +4112,14 @@ function wireToday(){
     setEatTime(logDate||isoToday(), eatTimeEl.dataset.slot, eatTimeEl.value);
     render();
   });
-  const lp = $('#ldPick');
-  if(lp) lp.addEventListener('change',()=>{
-    if(!lp.value) return;
-    logDate = lp.value===isoToday()? null : lp.value;
+  const vd = $('#viewDate');   /* global day picker — drives the WHOLE Today tab; future dates allowed (preview) */
+  if(vd) vd.addEventListener('change',()=>{
+    if(!vd.value) return;
+    logDate = vd.value===isoToday()? null : vd.value;
     render();
   });
+  const vtBtn = $('#viewTodayBtn');
+  if(vtBtn) vtBtn.addEventListener('click',()=>{ logDate=null; render(); });
   document.querySelectorAll('[data-tn]').forEach(b=>b.addEventListener('click',()=>{
     const m = store.get('qpcut.tonight',{});
     m[isoToday()] = m[isoToday()]===b.dataset.tn? null : b.dataset.tn;
@@ -4473,7 +4474,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784755478';
+const BUILD = 'b1784756188';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
