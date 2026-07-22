@@ -505,6 +505,7 @@ const SLOTS = [
    {id:'b17', name:'Apple Pie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','350 g',[196,35,10,7]],['Fairlife 0% milk','120 mL',[36,8,5,0]],['RAW Grandma’s Apple Pie protein + ¾ tsp cinnamon','½ serving · 17 g',[67,14,3,1.5]],['Warm cinnamon apples','100 g',[60,0,15,0]],['Cinnamon Fiber One bar, crumbled','1',[70,1,17,2]],['Almond butter (for breakfast size)','19 g',[114,5,4,10]]], t:[543,63,54,21]}]},
    {id:'b18', name:'Chocolate Cookie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','350 g',[196,35,10,7]],['Fairlife 0% milk','120 mL',[36,8,5,0]],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[80,16,3,2]],['Banana','1 med',[105,1,27,0]],['De-creamed Oreo Thins, crushed','4',[100,1,16,3]],['Almond butter (for breakfast size)','5 g',[30,1,1,3]]], t:[547,62,64,15]}]},
    {id:'b4', name:'Oikos Power Parfait — no scale / no cook', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','2 cups',[180,30,12,0]],['Banana','1 med',[110,1,27,0]],['Cereal (Fruity Pebbles etc.)','~1 cup',[120,1,26,1]],['Justin’s almond butter','½ packet (~16 g)',[100,3,3,8]],['Berries','handful (optional)',[15,0,3,0]]], t:[525,35,71,9]}]},
+   {id:'b19', name:'Warm COR + Yogurt Cup — 2 plates', k:[['dairy']], vars:[{ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats','15 g',[57,1.8,10,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',[263,47,13,9.4]],['🥶 Banana','½ med',[53,0.5,14,0]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',[30,1,1,2.7]],['Cinnamon · vanilla · Lakanto (free flavor)','—',[0,0,0,0]]], t:[640,77,64,16]}]},
  ]},
  {key:'lu', slot:'Lunch', time:'1:30 PM', b:[580,51,63,15], opts:[
    {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight)','7 oz',[245,44,0,7]],['Sweet potato','225 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,51,63,15]}]},
@@ -543,6 +544,7 @@ const HOWTO = {
  b2:['Toast the bagel. Cream cheese on both halves, lox over, balsamic drizzled thin.','Banana or berries on the side. No cooking.'],
  b3:['Waffles/flapjacks in the toaster till crisp.','Yogurt on top or as the dip, Lakanto syrup over. Weigh the syrup — it’s the sneaky line.'],
  b4:['The whole point: everything is portioned by the cup/count, so <b>nothing gets weighed</b> — the Shabbat / forgot-the-COR breakfast.','2 Oikos cups into a bowl, stir smooth. Slice the banana in.','Cereal on top (keep it in a baggie till now so it stays crunchy), half an almond-butter packet squeezed over, berries if you have them.','No blending, no toasting, no stove — fully Shabbat-safe. Dead-simple version: 3 Oikos + 1 banana.'],
+ b19:['<b>🔥 WARM PLATE (make this first).</b> Bowl → 25 g Cinnamon Roll COR + 15 g oats + ~120 mL water. Stir 10 sec until no dry pockets. Microwave 90 sec, stir — it should hold a soft mound on the spoon (15 more sec if runny).','<b>Cool it 60 seconds</b> (count it — hot base clumps the whey). Then whisk in the <b>36 g Cinnamon Toast protein</b> hard with a fork ~20 sec until totally smooth. Pinch of cinnamon + Lakanto. That’s a thick, warm cinnamon-roll oatmeal, ~30 g protein.','<b>🥶 COLD PLATE — the yogurt cup (separate bowl, keeps the warm plate warm).</b> 470 g FAGE 2% + a few drops vanilla + a pinch Lakanto, stir smooth and creamy.','Slice ½ banana + 25 g berries over the yogurt. Soften 5 g almond butter 8 sec in the microwave, then drizzle it over the top in thin lines (it sets against the cold yogurt).','<b>Eat side by side</b> — warm cinnamon COR + cold vanilla-berry yogurt cup. Two plates on purpose: neither goes lukewarm. ~640 cal · 77P · 64C · 16F. <b>FAGE 0% only?</b> use 470 g of it and bump the almond butter to 12 g to hold the fat.'],
  b5:['<b>ANTI-CHALK STEP FIRST:</b> in a small cup, whisk the 24 g SF Jell-O mix into the 90 mL Fairlife until totally smooth — no dry lumps. Dry mix dumped into thick yogurt = chalk + dry mouth; dissolving it in liquid first is the fix, and the extra Fairlife gives the pudding starch the water it needs to actually SET.','In a BIG bowl, whisk the 400 g FAGE 2% smooth (2%, not 0% — the little fat kills the dry, squeaky nonfat mouthfeel). Pour in the dissolved Jell-O liquid, whisk through.','<b>Rest it 5 min in the fridge</b> — this is the taste step: the pudding starch hydrates and the bowl sets into real banana-cream texture instead of tasting powdery. (In a hurry? Blend 15 sec instead.)','Fold in 100 g frozen berries (they thicken it cold + add big volume), banana coins, 3 de-creamed Biscoff crushed on top. Biscoff carries the flavor + a little fat — no almond butter needed here.'],
  b6:['Same method as all these yogurt bowls: whisk the 24 g cheesecake Jell-O into the 90 mL Fairlife until smooth (dissolve FIRST — that’s the anti-chalk step).','Whisk into 400 g FAGE 2%, then REST 5 min in the fridge so it sets to cheesecake-filling texture.','Fold in 150 g strawberries (frozen thickens it best), crushed Nilla wafers on top. The FAGE tang reads as real cheesecake here.','<b>Freeze-dried strawberries instead?</b> Use only ~12 g (they’re ~10× more concentrated than fresh — same ~18 C, don’t do a 1:1 gram swap). Crush half IN + leave half on top for crunch, and add a splash more Fairlife (~15 mL) since freeze-dried soaks up moisture. Don’t stir it all in early or it turns to mush.'],
  b7:['Whisk the 24 g chocolate Jell-O into 90 mL Fairlife until smooth, then into 400 g FAGE 2%. Rest 5 min — sets like chocolate pudding.','Banana coins in, 5 de-creamed Oreo Thins crushed on top (scrape the cream out first, his way). Dessert-tier, nut-free.'],
@@ -1116,11 +1118,11 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
- {d:'2026-07-21', title:'📋 Erev Tisha B’Av — tomorrow', msg:`<b>🧊 Prep tonight:</b> defrost 1 salmon (6 oz) · set out 1 Oikos + Fairlife · take out extra FAGE (500 g for breakfast) · portion 130 g dry rice (55 lunch + 75 Seudat Mafseket)<br>
+ {d:'2026-07-21', title:'📋 Erev Tisha B’Av — tomorrow', msg:`<b>🧊 Prep tonight:</b> defrost 1 salmon (6 oz) · set out 1 Oikos + a big FAGE 2% (470 g for the breakfast yogurt cup) · portion 130 g dry rice (55 lunch + 75 Seudat Mafseket)<br>
 <br>
 <b>🍽 Menu (no meat):</b><br>
 ① 7:45 — 3 rice cakes + 1 Oikos<br>
-② 10:30 — Chocolate Cookie Bowl (b18) · <b>500 g FAGE</b> (protein built into the bowl)<br>
+② 10:30 — <b>2-plate breakfast</b>: warm Cinnamon COR + cold yogurt cup (recipe → Meals → Breakfast)<br>
 ③ 1:30 — Broccoli Jiben + 55 g rice side<br>
 ④ 4:45 — 2 Ezekiel + SF jelly + banana<br>
 ⑤ ~7:00 — Seudat Mafseket: salmon 6 oz + rice 75 g + cucumber + ½ Ryse shake · <b>salt down</b><br>
@@ -1161,7 +1163,7 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · b
  {d:'2026-07-05', title:'Moved run — 6 easy miles this morning', msg:'Thursday’s long run was lost to the fast, so today: 6 mi EASY replaces the 3.3 mi intervals. Before: Yogurt + Banana (200 cal) + 8–16 oz water, 45–60 min out. Conversational pace the whole way. Then weigh-in report to Claude, groceries, prep, Creamis.'},
  {d:'2026-07-22', title:'🍽 Erev Tisha B’Av', msg:`<b>🍽 Menu (no meat):</b><br>
 ① 7:45 — 3 rice cakes + 1 Oikos<br>
-② 10:30 — Chocolate Cookie Bowl (b18) · <b>500 g FAGE</b> (protein built into the bowl)<br>
+② 10:30 — <b>2-plate breakfast</b>: warm Cinnamon COR + cold yogurt cup (recipe → Meals → Breakfast)<br>
 ③ 1:30 — Broccoli Jiben + 55 g rice side<br>
 ④ 4:45 — 2 Ezekiel + SF jelly + banana<br>
 ⑤ ~7:00 — Seudat Mafseket: salmon 6 oz + rice 75 g + cucumber + ½ Ryse shake · <b>salt down, no soy</b><br>
@@ -1390,6 +1392,7 @@ const GROC = {
  b2:[['Pantry &amp; Frozen','Sola everything bagels',1,'ct'],['Dairy &amp; Fridge','Cream cheese',45,'g'],['Proteins','Latitude smoked salmon',75,'g'],['Produce','Bananas',1,'ct']],
  b3:[['Pantry &amp; Frozen','Kodiak waffles (2) or flapjacks (4)',1,'serving'],['Dairy &amp; Fridge','Fage Greek yogurt',1,'ct']],
  b4:[['Dairy &amp; Fridge','Oikos Triple Zero',2,'ct'],['Produce','Bananas',1,'ct'],['Pantry &amp; Frozen','Cereal (Fruity Pebbles)',30,'g'],['Pantry &amp; Frozen','Almond butter',16,'g']],
+ b19:[['Pantry &amp; Frozen','Elev8 Cream of Rice',25,'g'],['Pantry &amp; Frozen','Oats',15,'g'],['Dairy &amp; Fridge','FAGE 2% Greek yogurt',470,'g'],['Produce','Bananas',1,'ct'],['Produce','Berries',25,'g'],['Pantry &amp; Frozen','Almond butter',5,'g']],
  b5:[['Dairy &amp; Fridge','FAGE 2% Greek yogurt',400,'g'],['Dairy &amp; Fridge','Fairlife 0% milk',90,'ml'],['Produce','Frozen berries',100,'g'],['Produce','Bananas',1,'ct'],['Pantry &amp; Frozen','SF vanilla Jell-O',1,'box'],['Pantry &amp; Frozen','Biscoff cookies',3,'ct']],
  b6:[['Dairy &amp; Fridge','FAGE 2% Greek yogurt',400,'g'],['Dairy &amp; Fridge','Fairlife 0% milk',90,'ml'],['Produce','Frozen strawberries',150,'g'],['Pantry &amp; Frozen','SF vanilla cheesecake Jell-O',1,'box'],['Pantry &amp; Frozen','Nilla wafers',3,'ct']],
  b7:[['Dairy &amp; Fridge','FAGE 2% Greek yogurt',400,'g'],['Dairy &amp; Fridge','Fairlife 0% milk',90,'ml'],['Produce','Bananas',1,'ct'],['Pantry &amp; Frozen','SF chocolate Jell-O',1,'box'],['Pantry &amp; Frozen','Oreo Thins',5,'ct']],
@@ -4470,7 +4473,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784729901';
+const BUILD = 'b1784732143';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
