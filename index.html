@@ -1541,6 +1541,15 @@ const CREAMI_BATCHES = [
   ['7 · Fruity Pebbles Round 2','Fruity Pebbles','vanilla Jell-O 5 g','¼ tsp lemon','30 g Fruity Pebbles + whip'],
   ['8 · Vanilla Bean Classic','Vanilla Ice Cream','vanilla Jell-O 5 g','1 tsp vanilla bean paste','33 g cereal of choice + whip'],
  ]},
+ {name:'Batch 4 — made Jul 23 (4 cups)', shop:[
+   ['✅ Already made — 4 cups','Creamsicle · Banana · Butterscotch · Cake Batter'],
+   ['Cake batter extract','NEW — bought Jul 23'],
+  ], cups:[
+  ['1 · Creamsicle','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp orange','9 Nilla wafers + whip'],
+  ['2 · Banana Pudding','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp banana','9 Nilla wafers + whip'],
+  ['3 · Butterscotch','TL unflavored (or Vanilla)','butterscotch Jell-O 5 g','½ tsp caramel','3 crushed Biscoff + whip'],
+  ['4 · Cake Batter','Vanilla Ice Cream','vanilla cheesecake Jell-O 5 g','1 tsp cake batter extract','Nilla + whip (or SF sprinkles)'],
+ ]},
 ];
 /* weekly recipe sets — full recipes, spice amounts scale with the menu.
    s = scale source: 'chix' = all chicken meals, 'l1' = sweet-potato chicken meals, null = per portion */
@@ -2053,7 +2062,7 @@ function stillToBuyItems(){
   const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
   const eatenAll = store.get('qpcut.eaten',{});
   const eatenN = cb.started? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-  const cbDone = cb.started && eatenN>=8;
+  const cbDone = cb.started && eatenN >= CREAMI_BATCHES[cb.idx%CREAMI_BATCHES.length].cups.length;
   const shopBatch = CREAMI_BATCHES[(cb.idx + (cbDone?1:0)) % CREAMI_BATCHES.length];
   shopBatch.shop.forEach(([n,q])=>{ const id='Creami|'+n; if(!gDone.includes(id)) items.push([id,n,q]); });
   weekPick(RECIPES).shop.forEach(n=>{ const id='Flavor|'+n; if(!gDone.includes(id)) items.push([id,n,'']); });
@@ -2819,7 +2828,7 @@ function viewToday(){
        so read the full history. */
     const creamiHist = store.get('qpcut.eaten',{});
     const eatenNT = cbT.started? Object.entries(creamiHist).filter(([dd,m])=>dd>=cbT.started&&m.sn==='s1').length : 0;
-    const cupT = batchT.cups[Math.min(eatenNT,7)];
+    const cupT = batchT.cups[Math.min(eatenNT, batchT.cups.length-1)];
     const tonight = (store.get('qpcut.tonight',{}))[isoToday()] || todayEaten.di || null;
     const dOpts = SLOTS.find(s=>s.key==='di').opts;
     const o = tonight? OPTBYID[tonight] : null;
@@ -3328,7 +3337,7 @@ function viewPrep(){
     const batches = CREAMI_BATCHES;
     const eatenAll = store.get('qpcut.eaten',{});
     const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-    const done = cb.started && eatenN>=8;
+    const done = cb.started && eatenN >= batches[cb.idx%batches.length].cups.length;
     const shopBatch = batches[(cb.idx + (done?1:0)) % batches.length];
     return `
   <div style="margin-top:14px"><span class="daytag">Creami batch · shopping for ${shopBatch.name}${done?' (next up)':''}</span>
@@ -3402,8 +3411,8 @@ function viewPrep(){
     const batch = batches[cb.idx%batches.length];
     const eatenAll = store.get('qpcut.eaten',{});
     const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-    const left = Math.max(0,8-eatenN);
-    const done = cb.started && eatenN>=8;
+    const left = Math.max(0,batch.cups.length-eatenN);
+    const done = cb.started && eatenN >= batches[cb.idx%batches.length].cups.length;
     const nextBatch = batches[(cb.idx+1)%batches.length];
     const cupHTML = cups => cups.map(([n,p,th,ex,top])=>`
       <div class="opt"><div class="head"><b>${n}</b></div>
@@ -3416,9 +3425,9 @@ function viewPrep(){
       </div>`).join('');
     return `
   <section id="p-creami">
-  <div class="zhead"><span class="zt">④ Creami batch</span><span class="zn">${cb.started?`${left}/8 in the freezer`:'not started'}</span></div>
+  <div class="zhead"><span class="zt">④ Creami batch</span><span class="zn">${cb.started?`${left}/${batch.cups.length} in the freezer`:'not started'}</span></div>
   <details class="card acc" data-acc="creami"${openAcc.has('creami')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">${batch.name}</h3> ${tchip(cb.started?`${left}/8 in the freezer`:'tap to open')}</summary>
+    <summary><h3 style="display:inline;font-size:16px">${batch.name}</h3> ${tchip(cb.started?`${left}/${batch.cups.length} in the freezer`:'tap to open')}</summary>
     <div class="sub" style="margin-top:8px">Every cup: <b>320 mL Fairlife FF · 40 g Lakanto · ½ scoop protein · thickener · extract</b> → blend, lid, freeze 24 h. ≈210 cal / 32 P before topping; topping budget = the plan’s <b>140-cal mix-in</b>, added after the spin (all amounts sized to 140). Re-spin with a splash of Fairlife if crumbly. Counter runs off your Ninja Creami snack logs on Today. <b>Spin at eat time, not ahead</b> — a pre-spun cup refreezes icy. No machine that night (Shabbat, travel)? Spin it before, keep it in the freezer ≤ 2 h and eat it soft-ish, or make bark: spread the spun cup thin on parchment, freeze, snap into pieces — bark stays good for days.</div>
     ${done ? `
       <div class="note">🎉 ${batch.name} finished — <b>${nextBatch.name}</b> is up. Recipes below; hit the button once you’ve made them.</div>
@@ -4474,7 +4483,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784829180';
+const BUILD = 'b1784839404';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
