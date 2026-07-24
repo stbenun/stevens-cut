@@ -1,13 +1,19 @@
-name: COR weekend push
+name: Reminder push
 
 on:
   schedule:
-    - cron: '5 19 * * 5'   # Fri 19:05 UTC = 3:05 PM EDT (summer)
-    - cron: '5 20 * * 5'   # Fri 20:05 UTC = 3:05 PM EST (winter)
+    - cron: '15 10 * * *'   # 10:15 UTC = 6:15 AM EDT (morning: defrost + weigh-in)
+    - cron: '15 11 * * *'   # 11:15 UTC = 6:15 AM EST (morning)
+    - cron: '5 19 * * 5'    # Fri 19:05 UTC = 3:05 PM EDT (COR + Shabbat prep)
+    - cron: '5 20 * * 5'    # Fri 20:05 UTC = 3:05 PM EST
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'morning | friday'
+        required: false
+        default: 'friday'
       force:
-        description: 'Send now regardless of the 3 PM ET gate (for testing)'
+        description: 'Send regardless of the ET-hour gate (testing)'
         required: false
         default: 'false'
 
@@ -20,8 +26,9 @@ jobs:
         with:
           node-version: '20'
       - run: npm install web-push --no-audit --no-fund
-      - run: node push-cor.js
+      - run: node push-reminders.js
         env:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           GIST_ID: ${{ secrets.GIST_ID }}
+          MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || ((github.event.schedule == '5 19 * * 5' || github.event.schedule == '5 20 * * 5') && 'friday' || 'morning') }}
           FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force == 'true') && '1' || '0' }}
