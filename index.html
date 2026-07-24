@@ -1099,7 +1099,7 @@ const OVERRIDES = {
  '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends 8:38 PM', sub:'Thursday · break the fast smart',
   sch:[['AM','Fast — no food, no water, no training. Shaharit 7:30 (1st minyan) or 9:00 (2nd). Take it easy.'],['7:00 PM','Pre-Minha class'],['7:45 PM','Minha with tefillin'],['8:38 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['8:55 PM','Banana or 70 g berries (ease in)'],['9:15 PM','⛔ DINNER — Teriyaki Salmon Rice Bowl: salmon 6 oz + rice 65 g dry + edamame 80 g + glaze + cucumber. ~620 cal · 53P. No shake.'],['—','Night total ~710 cal — don’t chase 2,220. Water to 60–80 oz by bed (magnesium PAUSED — levels high). Scale is fake for 2 days.']]},
  '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Friday · rebuild day (lift moved to morning)',
-  sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting AM (not 3:45). Pre-lift stim fine before 3 PM: Ryse scoop + Pump Caps.'],['9:45 AM','Work'],['10:30 AM','Breakfast — your bowl + <b>1 Oikos</b> + <b>1 Ezekiel + 32 g Smucker’s SF jelly</b> (rebuild adds, in before 4 PM). 💧 Ryse stick #1.'],['1:30 PM','Lunch — Cold Crunch Bowl. No adds.'],['3:00 PM','🕯 Shabbat prep.'],['4:00 PM','💧 Ryse stick #2.'],['7:00 PM','Shul.'],['8:00 PM','Shabbat dinner — Za’atar feast tray + full pita (~925 · 86P). No adds.'],['—','Rebuild day: gallon+ water · no snack (rolls into the feast) · scale is fake today, rebound water · lands ~205–210g protein.']]},
+  sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting AM (not 3:45). Pre-lift: 💧 Ryse stick #1 ✅ · stim fine before 3 PM (Ryse scoop + Pump Caps).'],['9:45 AM','Work'],['10:30 AM','Breakfast — your bowl + <b>1 Oikos</b> + <b>1 Ezekiel + 32 g Smucker’s SF jelly</b> (rebuild adds, in before 4 PM).'],['1:30 PM','Lunch — Cold Crunch Bowl. No adds.'],['3:00 PM','🕯 Shabbat prep.'],['4:00 PM','💧 Ryse stick #2.'],['7:00 PM','Shul.'],['8:00 PM','Shabbat dinner — Za’atar feast tray + full pita (~925 · 86P). No adds.'],['—','Rebuild day: gallon+ water · no snack (rolls into the feast) · scale is fake today, rebound water · lands ~205–210g protein.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
        ['1:30','Lunch — salmon bowl (last night’s poke salmon, air-fried this AM · log it under lunch → ↔ swaps row)'],
@@ -4479,7 +4479,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784905907';
+const BUILD = 'b1784906546';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
