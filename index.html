@@ -1336,6 +1336,18 @@ function feastDefrostLine(day){
   if(!friFresh && day===4) return ['7:05 AM',`🧊 Feast protein out — ${f.n} cooks tonight`];
   return null;
 }
+/* Friday 3 PM: grab the COR flavors for the weekend before Shabbat (no shopping Sat). Flavors come from the
+   rotating COR_SETS so the reminder always names the RIGHT ones: Saturday = this week; Sunday starts the next
+   Sun–Sat week, so it reads from weekIdx()+1. The COR flavor is the part of the combo spec before " COR". */
+function friCorLine(day){
+  if(day!==5) return null;
+  const pick = i => COR_SETS[((i%COR_SETS.length)+COR_SETS.length)%COR_SETS.length];
+  const cor = spec => String(spec).split(' COR')[0].trim(); // "Maple &amp; Brown Sugar COR + …" → "Maple &amp; Brown Sugar"
+  const wi = weekIdx();
+  const sat = cor(pick(wi)[6][1]);     // this week's Saturday
+  const sun = cor(pick(wi+1)[0][1]);   // the upcoming Sunday (start of next week's rotation)
+  return ['3:00 PM', `🥣 Bring COR home for the weekend — <b>Sat: ${sat}</b> · <b>Sun: ${sun}</b> (no shopping Shabbat)`];
+}
 
 /* auto run-coaching banners from the Runna plan; manual EVENTS for the day take priority */
 function runCoaching(){
@@ -2363,6 +2375,7 @@ function mergedTimeline(){
   const strip = s => String(s).toLowerCase().replace(/[^a-z0-9 ]/g,'').trim();
   const rows = [...(REMIND_MIRROR[wd]||[])];
   const fd = feastDefrostLine(wd); if(fd) rows.push(fd);
+  const fc = friCorLine(wd); if(fc) rows.push(fc);
   rows.forEach(([tStr,x])=>{
     const m = parseClock(tStr);
     if(m==null){ T.push({m:1441, l:x, rem:true}); return; }
@@ -2730,7 +2743,7 @@ function viewToday(){
   ${(OVERRIDES[ld]||backfill)?(()=>{
     /* adjusted day: the override schedule is the truth, but calendar-mirror reminders still fire.
        Same "only what's left" collapse as the live timeline — reuses #dayTL + its ✓-done toggle. */
-    const rem = [...(REMIND_MIRROR[wd]||[]), ...(feastDefrostLine(wd)?[feastDefrostLine(wd)]:[])];
+    const rem = [...(REMIND_MIRROR[wd]||[]), ...(feastDefrostLine(wd)?[feastDefrostLine(wd)]:[]), ...(friCorLine(wd)?[friCorLine(wd)]:[])];
     const live = !backfill;
     const m = live? nowMin() : -1;
     /* mark passed rows; only TIMED rows can be hidden, text rows (After/—) always stay.
@@ -4547,7 +4560,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784911394';
+const BUILD = 'b1784912091';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
