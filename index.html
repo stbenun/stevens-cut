@@ -1098,7 +1098,7 @@ const OVERRIDES = {
   sch:[['6:00 AM','Wake up'],['7:00 AM','Minyan'],['8:00 AM','Leave to gym — Pull ~8:15, done ~9:30 (train this AM, fast is tonight)'],['9:45 AM','Work'],['10:30 AM','Breakfast on time — <b>protein-loaded</b> (aim ~200g+ today) · water: 30 oz by now · 💧 <b>Ryse stick #1</b>'],['1:30 PM','Lunch — Broccoli Jiben + rice side (Nine Days, no meat) · 60 oz water by now'],['4:00 PM','90 oz water by now (go OVER the gallon today) · 💧 <b>Ryse stick #2</b> (that’s both for today — done before the fast, no late-night salt)'],['5:15 PM','Pre-fast carb bowl (lunch ran late ~3:35, so snack shifts here) — 40 g COR + 20 g blended oats cooked in ~220 mL water (microwave 90 sec, stir), ½ banana + SF jelly on top. Big warm bowl, carb-load (~290 cal · 7P · 66C)'],['5:15 PM','S.'],['~7:00 PM','⛔ SEUDAT MAFSEKET at home (Mincha ✓ done at the office ~4 PM, so no waiting on a 6:30 shul Minha — eat this late for the fast): salmon 6 oz + rice 75 g dry + cucumber + ½ Ryse shake after. Carbs UP, salt DOWN — no soy, salt now = misery at 2 AM'],['8:05 PM','Last water: 16–24 oz + final stick, then DONE (before 8:17)'],['8:17 PM','Fast begins'],['8:25 PM','Arbit + Eicha at Berit Shalom — bring NON-LEATHER shoes (the office 4 PM was just Mincha; the Tisha B’Av night service is here)'],['—','Thursday’s 8.5 mi run moves to Sunday 7/26']]},
  '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends 8:38 PM', sub:'Thursday · break the fast smart',
   sch:[['AM','Fast — no food, no water, no training. Shaharit 7:30 (1st minyan) or 9:00 (2nd). Take it easy.'],['7:00 PM','Pre-Minha class'],['7:45 PM','Minha with tefillin'],['8:38 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['8:55 PM','Banana or 70 g berries (ease in)'],['9:15 PM','⛔ DINNER — Teriyaki Salmon Rice Bowl: salmon 6 oz + rice 65 g dry + edamame 80 g + glaze + cucumber. ~620 cal · 53P. No shake.'],['—','Night total ~710 cal — don’t chase 2,220. Water to 60–80 oz by bed (magnesium PAUSED — levels high). Scale is fake for 2 days.']]},
- '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Friday · rebuild day (lift moved to morning)', madj:[190,20,31,0], mwhy:'rebuild day — Q’s rule: +1 Oikos, +1 Ezekiel + 32 g jelly',
+ '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Friday · rebuild day (lift moved to morning)', gymleave:'07:55', madj:[190,20,31,0], mwhy:'rebuild day — Q’s rule: +1 Oikos, +1 Ezekiel + 32 g jelly',
   sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting AM (not 3:45). Pre-lift: 💧 Ryse stick #1 ✅ · stim fine before 3 PM (Ryse scoop + Pump Caps).'],['9:45 AM','Work'],['10:30 AM','Breakfast — your bowl + <b>1 Oikos</b> + <b>1 Ezekiel + 32 g Smucker’s SF jelly</b> (rebuild adds, in before 4 PM).'],['1:30 PM','Lunch — Cold Crunch Bowl. No adds.'],['3:00 PM','🕯 Shabbat prep.'],['4:00 PM','💧 Ryse stick #2.'],['7:00 PM','Shul.'],['8:00 PM','Shabbat dinner — Za’atar feast tray + full pita (~925 · 86P). No adds.'],['—','Rebuild day: gallon+ water · no snack (rolls into the feast) · scale is fake today, rebound water · lands ~205–210g protein.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
@@ -2103,9 +2103,7 @@ function wireBuy(){
 /* ---------- Right Now: curated daily timeline (minutes from midnight) ---------- */
 function dayTimeline(){
   const wd = new Date().getDay();
-  const GYM_DEF = {1:'08:00',2:'08:00',3:'08:00',5:'15:30'};
-  const gl = (store.get('qpcut.gymleave',{}))[wd] || GYM_DEF[wd];
-  const glM = gl? (+gl.slice(0,2))*60+(+gl.slice(3,5)) : null;
+  const glM = gymLeaveMin(wd, isoToday());
   const lift = glM!=null? glM+15 : null;
   const T = [];
   const A=(m,l)=>{ if(m!=null&&!isNaN(m)) T.push([m,l]); };
@@ -2221,9 +2219,12 @@ function ovMin(s, prevMin){
   return {m:1441, timed:false}; // "After", "—", anything untimed → sorts last, never hidden
 }
 const nowMin = () => { const n=new Date(); return n.getHours()*60+n.getMinutes(); };
-function gymLeaveMin(wd){
-  const GYM_DEF = {1:'08:00',2:'08:00',3:'08:00',5:'15:30'};
-  const gl = (store.get('qpcut.gymleave',{}))[wd] || GYM_DEF[wd];
+const GYM_DEF = {1:'08:00',2:'08:00',3:'08:00',5:'15:30'};
+/* leave time is per-WEEKDAY by default, but a per-DATE override wins (a shifted day like an AM Friday
+   lift must not read the standing PM time). ld defaults to today. */
+function gymLeaveMin(wd, ld){
+  const ov = ld && OVERRIDES[ld] && OVERRIDES[ld].gymleave;
+  const gl = ov || (store.get('qpcut.gymleave',{}))[wd] || GYM_DEF[wd];
   return gl? (+gl.slice(0,2))*60+(+gl.slice(3,5)) : null;
 }
 
@@ -2449,7 +2450,7 @@ function nextAction(){
   const sesh = seshGet(t);
   const wToday = allWeights().some(e=>e.d===t && e.w!=null);
   if(!wToday && m>=440 && m<660 && wd!==6) return {label:'⚖️ Log the weigh-in', tab:'track'};
-  const glM = gymLeaveMin(wd);
+  const glM = gymLeaveMin(wd, t);
   if(wo && glM!=null && wd!==6){
     const lift = glM+15;
     if(sesh && !sesh.end) return {label:`🏋 Lift live — ${setsDone(t)}/${setsPlanned(wo)} sets`, jump:'z-lift'};
@@ -2625,25 +2626,34 @@ function seedOpenAcc(){
   if(m>=1200){ seed('log-dials'); seed('log-stack'); }
   if(m>=960) seed('tonight');
   if(wd===5 && m>=720) seed('friday');
-  const glM = gymLeaveMin(wd);
+  const glM = gymLeaveMin(wd, isoToday());
   if(glM!=null && wd!==6 && m>=glM-60 && m<=glM+180) seed('lift');
 }
 
 /* -- time-aware zone order: the hour decides what sits under the NOW hero -- */
 function zoneOrder(){
-  const m = nowMin(), wd = new Date().getDay();
-  const glM = gymLeaveMin(wd);
+  const m = nowMin(), wd = new Date().getDay(), td = isoToday();
+  const glM = gymLeaveMin(wd, td);
   const lift = glM!=null? glM+15 : null;
   const wo = workoutFor(wd, store.get('qpcut.loc','deal'));
-  const sesh = seshGet(isoToday());
+  const sesh = seshGet(td);
   const liftLive = sesh && sesh.start && !sesh.end;
-  const inLiftWindow = wo && lift!=null && wd!==6 && m>=lift-75 && m<=lift+150;
+  /* the lift is DONE (or irrelevant) when: the session ended, sets were logged, the whole lift window
+     is now behind you, or there's no lift today. A done/irrelevant lift must NOT sit on top — it drops
+     to the bottom so what's actually next (food/log) leads. */
+  const liftDone = !wo || !!(sesh && sesh.end) || setsDone(td)>0 || (lift!=null && m>lift+150);
+  const inLiftWindow = wo && !liftDone && lift!=null && wd!==6 && m>=lift-75 && m<=lift+150;
   const eating = (m>=560&&m<=720) || (m>=770&&m<=930) || (m>=1140&&m<=1380); /* bf · lunch · dinner+snack */
   const dinnerPrep = m>=960 && m<1140;
   if(liftLive || inLiftWindow) return ['lift','log','food','tools'];
+  if(liftDone){                                      /* lift handled → send it to the back */
+    if(eating)     return ['log','food','tools','lift'];
+    if(dinnerPrep) return ['food','log','tools','lift'];
+    return ['food','log','tools','lift'];
+  }
   if(eating)                   return ['log','food','lift','tools'];
   if(dinnerPrep)               return ['food','log','lift','tools'];
-  return ['lift','food','log','tools'];
+  return ['lift','food','log','tools'];             /* pre-lift, upcoming → lift leads */
 }
 
 /* -- tiny sparkline -- */
@@ -2755,14 +2765,18 @@ function viewToday(){
     const repLog = store.get('qpcut.reps.'+dkey(ld), {});
     const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[wd]||[];
     const sesh = seshGet(ld);
+    /* date-aware leave/lift time (per-date override beats the weekday default) + done detection, so a
+       shifted AM lift reads correctly and a FINISHED lift stops advertising "leave at 3:30". */
+    const glMap = store.get('qpcut.gymleave',{});
+    const leave = (OVERRIDES[ld]&&OVERRIDES[ld].gymleave) || glMap[wd] || GYM_DEF[wd];
+    const leaveMin = leave? (+leave.slice(0,2))*60+(+leave.slice(3,5)) : null;
+    const liftMin = leaveMin!=null? leaveMin+15 : null;
+    const liftDone = !!(sesh && sesh.end) || setsDone(ld)>0 || (!backfill && liftMin!=null && nowMin()>liftMin+150);
+    /* show the real lift time in the tag/zonebar, not the static "3:30 PM" baked into WORKOUTS */
+    const woTag = (liftMin!=null && !backfill) ? wo.tag.replace(/·\s*\d{1,2}:\d{2}\s*[AP]M/i, '· '+fmtMin(liftMin)) : wo.tag;
     let timingHTML = '';
-    if(!backfill){
-      const GYM_DEF = {1:'08:00',2:'08:00',3:'08:00',5:'15:30'};
-      const glMap = store.get('qpcut.gymleave',{});
-      const leave = glMap[wd] || GYM_DEF[wd];
-      if(leave && wd!==6){
-        const [h,m] = leave.split(':').map(Number);
-        const mins = h*60+m, lift = mins+15;
+    if(!backfill && !liftDone && leave && wd!==6){
+        const mins = leaveMin, lift = liftMin;
         const inMinyan = t => wd>=1 && wd<=5 && t>=420 && t<465;
         const meal = lift-45, caps = lift-25;
         /* roll-up: summary shows the leave time (still editable there); tap to see the pre-workout timeline.
@@ -2780,7 +2794,6 @@ function viewToday(){
     </ul>
     <div class="sub" style="margin-top:6px">Assumes lifting starts ~15 min after you leave. Saved for every ${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][wd]}. Calendar pings stay at the usual times — when today shifts, this card is the truth.</div>
   </details>`;
-      }
     }
     const seshRow = backfill? '' : `
     <div class="timer-row" style="margin-top:4px">
@@ -2793,11 +2806,11 @@ function viewToday(){
     </div>`;
     return `
   <section class="zone" id="z-lift">
-  <div class="zhead"><span class="zt">🏋 Lift</span><span class="zn">${backfill?ld:wo.tag.toLowerCase()}</span></div>
+  <div class="zhead"><span class="zt">🏋 Lift</span><span class="zn">${backfill?ld:woTag.toLowerCase()}</span></div>
   ${seshSummaryHTML(ld, wo)}
   ${timingHTML}
   <details class="card acc" data-acc="lift"${openAcc.has('lift')?' open':''} id="liftLog">
-    <summary><span class="daytag">${wo.tag}</span><span class="statline"><b>${setsDone(ld)}</b>/${setsPlanned(wo)} sets</span></summary>
+    <summary><span class="daytag">${woTag}</span><span class="statline"><b>${setsDone(ld)}</b>/${setsPlanned(wo)} sets</span></summary>
     ${seshRow}
     <ul class="ex">${wo.ex.map(([n,r],i)=>{
       const t = parseTargets(r);
@@ -4495,7 +4508,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784908786';
+const BUILD = 'b1784909653';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
