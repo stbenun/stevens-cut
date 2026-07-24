@@ -1311,9 +1311,9 @@ const DRAFT_SLOT_MEALS = {
 /* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
    covering snack + dinner budgets: ~915 cal · ~85P · ~90C · ~25F. Rotates Sundays. */
 const SHABBAT_FEAST = [
- {n:'Za’atar Chicken & Potato Tray', when:'cook THURSDAY night — reheats covered with zero loss', mac:'≈950 · 84P · 92C · 26F (incl. 1 challah slice at the table)',
-  ing:[['Chicken breast (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Olive oil','12 g (1 scant Tbsp)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Challah at the table','1 slice']],
-  st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken, the 12 g oil, and all the spices — toss with your hands until everything is coated.','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
+ {n:'Za’atar Chicken & Potato Tray', when:'cook THURSDAY night — reheats covered with zero loss', mac:'≈925 · 86P · 104C · 14F (oil cut · incl. 1 FULL pita, 190 cal)',
+  ing:[['Chicken breast (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Olive oil spray','a few sprays (~10 cal — not the 12 g pour; you run low-fat)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Pita (his: 190 cal)','1 FULL pita — skip the challah half-slice (the trade)']],
+  st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken — hit it with a few sprays of oil, add all the spices, and toss with your hands until everything is coated (no 12 g pour — the spray + spices carry it).','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
  {n:'Friday Tomato Beef & Mejadra', when:'cook THURSDAY night — genuinely better on day two', mac:'≈965 · 85P · 96C · 25F',
   ing:[['93/7 ground beef (raw)','12 oz'],['Rice (dry)','60 g'],['Lentils (dry)','45 g'],['Onion, sliced','80 g'],['Tomato paste','33 g'],['Allspice','1 tsp'],['Cinnamon','½ tsp'],['Salt','¾ tsp'],['Cucumber-tomato salad, lemon only','big bowl']],
   st:['Pot 1 (the mejadra): lentils into boiling water, 10 min. Then add the rice + ¾ tsp salt, turn to low (3/10), lid on, 12 more min. Kill the heat and leave the lid on — it finishes itself.','Pot 2, while that cooks: empty DRY pot on high (8/10), 2-min preheat. Onion slices in, spread flat, untouched 2 min, then stirred another 2–3 — you want real dark-brown edges (that’s "charred," and it’s the flavor of the dish). Take HALF the onions out and set aside for topping.','Same pot, medium-high (7/10): beef in with the remaining onions. Crumble small, 4–5 min to zero pink.','Spices in, 30 seconds. Tomato paste + ½ cup water, stir until dissolved, then LOW (2/10) for 10 min until thick.','Assemble: mejadra on the platter, beef over it, the reserved charred onions on top. Reheats beautifully — honestly better on day two. Active time ~25 min.']},
@@ -4482,7 +4482,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784851298';
+const BUILD = 'b1784893394';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
