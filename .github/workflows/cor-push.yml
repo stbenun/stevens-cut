@@ -1,0 +1,27 @@
+name: COR weekend push
+
+on:
+  schedule:
+    - cron: '5 19 * * 5'   # Fri 19:05 UTC = 3:05 PM EDT (summer)
+    - cron: '5 20 * * 5'   # Fri 20:05 UTC = 3:05 PM EST (winter)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Send now regardless of the 3 PM ET gate (for testing)'
+        required: false
+        default: 'false'
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install web-push --no-audit --no-fund
+      - run: node push-cor.js
+        env:
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+          FORCE: ${{ (github.event_name == 'workflow_dispatch' && inputs.force == 'true') && '1' || '0' }}

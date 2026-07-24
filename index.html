@@ -6,7 +6,10 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Cut">
 <meta name="theme-color" content="#171915">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
 <title>The Cut</title>
 </head>
 <body style="margin:0">
@@ -2007,6 +2010,42 @@ async function syncConnect(token){
   await syncNow();
 }
 function syncDisconnect(){ RAWRM('qpcut.sync.token'); RAWRM('qpcut.sync.gist'); RAWRM('qpcut.sync.last'); }
+/* ---- Web Push (reminders) ---- the subscription is stored as qpcut.pushsub, which rides the normal gist
+   sync; a weekly GitHub Action reads it from the gist and sends the Friday 3 PM COR push. */
+const VAPID_PUB = 'BBFdK2pympLwLgo4LwVVpkz1g9KOfRFQ9611TQOt7xYbNRHprxyz0ALB582eBsY8jo1E9-_e_f5Wvnzi4eFVXBg';
+function pushSupported(){ return ('Notification' in window) && ('serviceWorker' in navigator) && ('PushManager' in window); }
+function pushStateLabel(){
+  if(!pushSupported()) return 'add to Home Screen first';
+  if(typeof Notification!=='undefined' && Notification.permission==='denied') return 'blocked in Settings';
+  return (localStorage.getItem('qpcut.pushsub') && typeof Notification!=='undefined' && Notification.permission==='granted') ? '✓ on' : 'off';
+}
+function urlB64ToUint8(b64){
+  const pad='='.repeat((4-b64.length%4)%4); const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(s); const a=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) a[i]=raw.charCodeAt(i); return a;
+}
+async function enablePush(){
+  const msg=m=>{ const e=document.getElementById('remMsg'); if(e) e.textContent=m; };
+  if(!pushSupported()){ msg('This browser can’t do push. On iPhone: Share → Add to Home Screen, then open the app from that icon and try again.'); return; }
+  try{
+    const perm = await Notification.requestPermission();
+    if(perm!=='granted'){ msg(perm==='denied'?'Blocked — turn it on in iPhone Settings → Notifications → The Cut.':'Permission not granted — tap Enable again.'); render(); return; }
+    const reg = await navigator.serviceWorker.register('sw.js');
+    await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlB64ToUint8(VAPID_PUB)});
+    localStorage.setItem('qpcut.pushsub', JSON.stringify(sub));  /* rides the gist sync → the weekly Action reads it */
+    try{ await reg.showNotification('The Cut', {body:'✓ Reminders on — I’ll buzz you Friday at 3 for the COR flavors.', icon:'icon-192.png'}); }catch(e){}
+    if(typeof syncNow==='function') syncNow();
+    msg('✓ Reminders on. A test notification just fired. You’ll get one every Friday 3 PM.');
+    render();
+  }catch(err){ msg('Couldn’t enable: '+((err&&err.message)||err)+'. On iPhone this must be the Home-Screen app, not a Safari tab.'); }
+}
+async function disablePush(){
+  try{ const reg=await navigator.serviceWorker.getRegistration(); if(reg){ const s=await reg.pushManager.getSubscription(); if(s) await s.unsubscribe(); } }catch(e){}
+  localStorage.removeItem('qpcut.pushsub');
+  if(typeof syncNow==='function') syncNow();
+  render();
+}
 /* one-time migration: Monday hack squat (pr_mon_hack) merged into the shared pr_hack row (Jul 13) */
 (()=>{ const p = store.get('qpcut.prset',{});
   const had = (p['pr_mon_hack']||[]).some(v=>v);
@@ -3759,6 +3798,16 @@ function viewTrack(){
     })()}
   </details>
 
+  <details class="card acc adm" data-acc="adm-remind"${openAcc.has('adm-remind')?' open':''}>
+    <summary><span class="tt-i">🔔</span><span>Reminders</span><span class="statline" id="remState">${pushStateLabel()}</span></summary>
+    <div class="formrow" style="margin-top:10px">
+      <button class="btn" id="remOn">🔔 Enable reminders</button>
+      <button class="btn ghost" id="remOff">turn off</button>
+    </div>
+    <div class="sub" id="remMsg" style="margin-top:8px"></div>
+    <div class="sub" style="margin-top:8px"><b>iPhone:</b> push works only from the app <b>installed to your Home Screen</b> — Share → Add to Home Screen, open it from that icon, then tap Enable. You’ll get a push every <b>Friday 3 PM</b> with the weekend’s COR flavors.</div>
+  </details>
+
   <details class="card acc adm" data-acc="adm-backup"${openAcc.has('adm-backup')?' open':''}>
     <summary><span class="tt-i">📤</span><span>Backup</span><span class="statline">${(()=>{ const le = store.get('qpcut.lastexport',null); const stale = !le || (Date.now()-new Date(le+'T12:00:00').getTime() > 7*864e5); return stale? '⚠ '+(le||'never') : '✓ '+le; })()}</span></summary>
     <div class="formrow" style="margin-top:10px">
@@ -4433,6 +4482,8 @@ function wireTrack(){
   if(syOff) syOff.addEventListener('click', ()=>{
     if(confirm('Disconnect cloud sync on THIS device? Your data stays here — it just stops syncing.')){ syncDisconnect(); render(); }
   });
+  const remOn = $('#remOn'); if(remOn) remOn.addEventListener('click', enablePush);
+  const remOff = $('#remOff'); if(remOff) remOff.addEventListener('click', disablePush);
   const dumpData = ()=>{
     const out = {};
     for(let i=0;i<localStorage.length;i++){
@@ -4496,6 +4547,8 @@ function wireTrack(){
   });
 }
 render();
+/* register the push service worker on boot (harmless where unsupported / not served) */
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
 /* cloud sync: pull on open, then again whenever the app is left or re-entered
    (the 8 s edit-debounce inside syncTouch covers mid-session pushes) */
 if(syncCfg().gist) syncNow();
@@ -4560,7 +4613,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784912244';
+const BUILD = 'b1784914890';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
