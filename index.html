@@ -480,7 +480,7 @@ const SLOTS = [
  {key:'pre', slot:'Pre-Lift', time:'7:45 AM · Fri 3:30 PM', b:[200,16,32,1], opts:[
    {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Tuna packet','1',[70,17,0,0]]], t:[175,18,21,0]}]},
    {id:'p3', name:'Rice Cakes + Yogurt', k:[['dairy']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Oikos Triple Zero','1',[90,15,6,0]]], t:[195,16,27,0]}]},
-   {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',[160,10,30,1]],['Sugar-free jelly','32 g',[20,0,10,0]]], t:[180,10,40,1]}]},
+   {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',[160,10,30,1]],['Smucker’s SF jelly','32 g',[20,0,10,0]]], t:[180,10,40,1]}]},
    {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',[90,15,6,0]],['Banana','1 med',[110,1,27,0]]], t:[200,16,33,0]}]},
    {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',[70,17,0,0]],['Banana','1 med',[110,1,27,0]]], t:[180,18,27,0]}]},
  ]},
@@ -1099,7 +1099,7 @@ const OVERRIDES = {
  '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends 8:38 PM', sub:'Thursday · break the fast smart',
   sch:[['AM','Fast — no food, no water, no training. Shaharit 7:30 (1st minyan) or 9:00 (2nd). Take it easy.'],['7:00 PM','Pre-Minha class'],['7:45 PM','Minha with tefillin'],['8:38 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['8:55 PM','Banana or 70 g berries (ease in)'],['9:15 PM','⛔ DINNER — Teriyaki Salmon Rice Bowl: salmon 6 oz + rice 65 g dry + edamame 80 g + glaze + cucumber. ~620 cal · 53P. No shake.'],['—','Night total ~710 cal — don’t chase 2,220. Water to 60–80 oz by bed (magnesium PAUSED — levels high). Scale is fake for 2 days.']]},
  '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Friday · rebuild day (lift moved to morning)',
-  sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting NOW (AM, not 3:45). Stim OK before 3 PM — Ryse scoop + Pump Caps fine this morning.'],['9:45 AM','Work'],['10:30 AM','Breakfast + <b>1 Oikos</b> (rebuild +15P) + <b>1 Ezekiel + 32 g SF jelly</b> (rebuild carbs, before 4 PM) · 💧 <b>Ryse stick #1</b> with the meal'],['1:30 PM','Lunch — Cold Crunch Bowl (as-is, already high-protein)'],['3:00 PM','🕯 Shabbat prep (afternoon free now — lift done AM)'],['4:00 PM','💧 <b>Ryse stick #2</b> — same as any day; get it in before Shabbat starts'],['7:00 PM','Shul'],['8:00 PM','Shabbat dinner — Za’atar feast tray, full pita (~925 cal · 86P)'],['—','Day after fast: gallon+ water, both sticks in (breakfast + 4 PM) · scale FAKE today, ignore it · NO snack (rolls into the feast) · lands ~205–210g protein']]},
+  sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting AM (not 3:45). Pre-lift stim fine before 3 PM: Ryse scoop + Pump Caps.'],['9:45 AM','Work'],['10:30 AM','Breakfast — your bowl + <b>1 Oikos</b> + <b>1 Ezekiel + 32 g Smucker’s SF jelly</b> (rebuild adds, in before 4 PM). 💧 Ryse stick #1.'],['1:30 PM','Lunch — Cold Crunch Bowl. No adds.'],['3:00 PM','🕯 Shabbat prep.'],['4:00 PM','💧 Ryse stick #2.'],['7:00 PM','Shul.'],['8:00 PM','Shabbat dinner — Za’atar feast tray + full pita (~925 · 86P). No adds.'],['—','Rebuild day: gallon+ water · no snack (rolls into the feast) · scale is fake today, rebound water · lands ~205–210g protein.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
        ['1:30','Lunch — salmon bowl (last night’s poke salmon, air-fried this AM · log it under lunch → ↔ swaps row)'],
@@ -1181,13 +1181,7 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · b
 ② <b>~8:55</b> — banana or 70 g berries.<br>
 ③ <b>~9:15</b> — <b>Teriyaki Salmon Rice Bowl</b>: salmon 6 oz + rice 65 g dry + edamame 80 g + glaze (soy 20 mL · rice vinegar 5 mL · Lakanto 8 g · sriracha · garlic) + cucumber. ~620 cal · 53P. (No shake — you wanted a bigger dinner.)<br>
 ④ <b>Night total ~710 cal</b> (banana + bowl). Water to 60–80 oz by bed. <b>(Magnesium paused — levels high.)</b> Tomorrow: all meals + 1 extra Ezekiel + jelly before 4 PM, gallon front-loaded, scale is fake for 2 days.`},
- {d:'2026-07-24', title:'☀️ Day after the fast — rebuild (Q’s rule)', msg:`<b>Q’s rule: extra protein + water today. Friday has NO snack (rolls into the feast), so the adds go here — exactly:</b><br>
-① <b>+ Protein → BREAKFAST:</b> add <b>1 Oikos Triple Zero</b> to your morning bowl (+15P). Puts the day ~205–210g. That’s the only protein add needed.<br>
-② <b>+ Carbs → BREAKFAST:</b> add <b>1 slice Ezekiel + 32 g SF jelly</b> (you’re lifting AM today — no 3 PM pre-lift, so get the carbs in with breakfast, before 4 PM). You ran low yesterday.<br>
-③ <b>Lunch + Dinner: add NOTHING.</b> Lunch (your pick) is already high-protein; dinner (the Za’atar feast tray) is already loaded ~86P/104C — don’t pile adds there.<br>
-④ <b>Water + sticks:</b> gallon+ front-loaded. <b>Ryse stick #1 with breakfast, stick #2 at 4:00 PM</b> (before Shabbat starts) — still catching up on sodium from the fast.<br>
-⑤ <b>Scale is FAKE today</b> — rebound water reads high. Ignore it; real deficit resumes tomorrow.`},
- {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
+ {d:'2026-07-26', title:'Moved run — 8.5 mi this morning (from Tisha B’Av Thursday)', msg:'Long run replaces the hills run today. 45–60 min before: Ezekiel + Smucker’s SF jelly + 16 oz water with a stick. Easy rolling pace. Legs day is tomorrow — keep this genuinely easy so Monday doesn’t suffer.'},
 ];
 /* eating-out presets — kosher venues + plate rules */
 const SLOT_BUDGET = {bf:[545,'breakfast'], pre:[200,'pre-lift'], lu:[580,'lunch'], sn:[330,'snack'], di:[585,'dinner']};
@@ -1284,7 +1278,7 @@ const DRAFT_SLOT_MEALS = {
    {n:'🥛 Oikos Power Parfait — NO scale, NO cook (Shabbat / forgot-COR backup)', mac:'≈545 · 37P · 66C · 8F', ing:[['Oikos Triple Zero','2 cups'],['Banana','1 med'],['Cereal (Fruity Pebbles etc.)','~1 cup'],['Justin’s almond butter','½ packet (~16 g)'],['Berries','handful, optional']],
     st:['Everything is pre-portioned by the cup/count — nothing gets weighed.','2 Oikos in a bowl, stir smooth → banana coins → cereal on top → half an AB packet squeezed over.','No blending, no toasting, no stove: fully Shabbat-safe and the go-to when the COR is at the office.','Dead-simple version: 3 Oikos cups + 1 banana ≈ 380 · 46P · 45C · 0F.']}],
   pareve:[
-   {n:'🐟 Eggs & AB Toast', mac:'≈560 · 35P · 55C · 24F', ing:[['Eggs','2'],['Egg whites','100 g'],['Ezekiel bread','3 slices'],['Justin’s Classic almond butter','24 g'],['SF jelly','16 g']],
+   {n:'🐟 Eggs & AB Toast', mac:'≈560 · 35P · 55C · 24F', ing:[['Eggs','2'],['Egg whites','100 g'],['Ezekiel bread','3 slices'],['Justin’s Classic almond butter','24 g'],['Smucker’s SF jelly','16 g']],
     st:['Scramble eggs + whites.','Toast ×3: one AB+jelly, two for the eggs.','Fully pareve — works any morning, meat night before or not.']}]}},
  lu:{t:'Lunch · target 580 · 51P · 63C · 15F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
  sn:{t:'Snack · target 330 · 34P · 31C · 7F', lanes:{
@@ -1302,7 +1296,7 @@ const DRAFT_SLOT_MEALS = {
    {n:'🥛 Hot Chocolate + Dunkers', mac:'≈320 · 38P · 21C · 6F', ing:[['Fairlife 0%, warmed','240 mL'],['Ryse Chocolate Cookie Blast','41 g (1 serving)'],['Biscoff','2'],['FF whip','on top']],
     st:['Warm the Fairlife (not boiling), whisk the Ryse in OFF the heat.','Whip on top, Biscoff for dunking. Winter-soul option.']}],
   pareve:[
-   {n:'🐟 Tuna Rice-Cake Stack', mac:'≈255 · 35P · 26C · 0F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['SF jelly — trust the sweet-savory','16 g']],
+   {n:'🐟 Tuna Rice-Cake Stack', mac:'≈255 · 35P · 26C · 0F', ing:[['Tuna packets in water','2'],['Rice cakes','3'],['Smucker’s SF jelly — trust the sweet-savory','16 g']],
     st:['Tuna on cakes, thin jelly stripe. 2 minutes. Sounds wrong, eats right.']},
    {n:'🐟 Egg-White Scramble & Cakes', mac:'≈305 · 32P · 25C · 6F', ing:[['Egg whites','250 g'],['Egg','1'],['Rice cakes','3'],['Everything-bagel seasoning','½ tsp']],
     st:['Fast scramble in a sprayed pan, 3 min.','Pile on the cakes, season. Pareve protein without touching tuna.']},
@@ -1427,7 +1421,7 @@ const GROC = {
  d3:[['Proteins','Salmon (any cut)',6,'oz'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g'],['Produce','Edamame (frozen)',85,'g']],
  d16:[['Proteins','Salmon cubes',7,'oz'],['Pantry &amp; Frozen','White rice (dry)',65,'g'],['Produce','Edamame (frozen)',80,'g'],['Produce','Cucumbers',1,'ct'],['Produce','Scallions',1,'ct']],
 };
-const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
+const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · Smucker’s SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
 const GRP_ORDER = ['Proteins','Dairy &amp; Fridge','Produce','Pantry &amp; Frozen'];
 function buildGrocery(counts){
   const agg = new Map();
@@ -1469,7 +1463,7 @@ const GROCERY = [
    ['Ezekiel bread','1 loaf (freeze half)'],['Sola everything bagels','1 pack'],
    ['Kodiak waffles / flapjacks','1 box'],['Rice','bag (55 g dry / meal)'],['Rice cakes','1 pack'],
    ['Keto buns','1 pack'],['Tomato paste','1 can/tube'],['Edamame (frozen)','1 bag'],['Seaweed packets','1 box'],
-   ['SF jelly · SF ketchup · soy sauce','check stock'],['Snack packs / mix-ins','5']]],
+   ['Smucker’s SF jelly · SF ketchup · soy sauce','check stock'],['Snack packs / mix-ins','5']]],
 ];
 const COOKFLOW = [
  ['1','Weigh everything RAW first: 4 × 7 oz chicken, 2-3 × 6 oz beef, 3 × 6 oz salmon. Label the bags.'],
@@ -4485,7 +4479,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784905598';
+const BUILD = 'b1784905907';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
