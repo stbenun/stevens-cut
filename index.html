@@ -516,7 +516,7 @@ const SLOTS = [
    {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','55 g',[187,3,43,0]],['Edamame','85 g',[120,10,9,5]],['Israeli salad — pile it (tomato 150 g · cucumber 150 g · lemon · sumac)','big bowl',[36,1,8,0]],['Hummus — optional 15 g smear (or skip, lean on lemon + sumac)','15 g',[27,1,2,1.5]],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',[0,0,0,0]]], t:[620,52,62,17]}]},
    {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Rice (dry)','45 g',[153,3,36,0]],['Mayo: Hellmann’s Real 8 g (weighed) OR light 20 g · + sriracha 5 g','—',[60,0,1,6]],['Edamame','85 g',[120,10,9,5]],['Cucumber','75 g',[15,0,3,0]],['Soy sauce','15 mL',[5,0,1,0]],['Rice cake, crushed on top','1',[35,0,7,0]]], t:[598,64,57,11]}]},
    {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',[250,37,0,10]],['Egg whites (binder)','15 g',[8,2,0,0]],['Keto bun','1',[50,6,16,2]],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','220 g',[160,4,36,0]],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',[0,0,0,0]]], t:[528,50,57,15]}]},
-   {id:'l9', name:'Cold Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Toasted sesame oil','2 g',[18,0,0,2]],['Mini guac cup','1',[100,1,6,8]],['Rice cakes','5',[175,1,35,0]],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',[0,0,0,0]]], t:[593,53,46,18]}]},
+   {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Toasted sesame oil','2 g',[18,0,0,2]],['Mini guac cup','1',[100,1,6,8]],['Rice cakes','5',[175,1,35,0]],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',[0,0,0,0]]], t:[593,53,46,18]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
    {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['BROWNIE wet: egg whites 60 mL · pumpkin purée 40 g · Oikos vanilla 40 g · ¼ tsp vanilla — NO Fairlife (the old flood is why it was watery)','bowl 1',[78,12,7,0]],['BROWNIE dry: all-purpose flour 18 g · Lakanto 28 g · Ryse Choc Cookie Blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt','bowl 2',[137,13,20,2]],['COOKIE DOUGH (thick + scoopable, brown-sugar flavor): oat flour 10 g · AP flour 7 g · Ryse vanilla 7 g · Lakanto GOLDEN 14 g · softened butter 3 g · egg white 10 mL · ¼ tsp vanilla · pinch soda + salt','one bowl',[118,9,12,3.5]]], t:[333,34,39,6]}]},
@@ -1098,7 +1098,7 @@ const OVERRIDES = {
   sch:[['6:00 AM','Wake up'],['7:00 AM','Minyan'],['8:00 AM','Leave to gym — Pull ~8:15, done ~9:30 (train this AM, fast is tonight)'],['9:45 AM','Work'],['10:30 AM','Breakfast on time — <b>protein-loaded</b> (aim ~200g+ today) · water: 30 oz by now · 💧 <b>Ryse stick #1</b>'],['1:30 PM','Lunch — Broccoli Jiben + rice side (Nine Days, no meat) · 60 oz water by now'],['4:00 PM','90 oz water by now (go OVER the gallon today) · 💧 <b>Ryse stick #2</b> (that’s both for today — done before the fast, no late-night salt)'],['5:15 PM','Pre-fast carb bowl (lunch ran late ~3:35, so snack shifts here) — 40 g COR + 20 g blended oats cooked in ~220 mL water (microwave 90 sec, stir), ½ banana + SF jelly on top. Big warm bowl, carb-load (~290 cal · 7P · 66C)'],['5:15 PM','S.'],['~7:00 PM','⛔ SEUDAT MAFSEKET at home (Mincha ✓ done at the office ~4 PM, so no waiting on a 6:30 shul Minha — eat this late for the fast): salmon 6 oz + rice 75 g dry + cucumber + ½ Ryse shake after. Carbs UP, salt DOWN — no soy, salt now = misery at 2 AM'],['8:05 PM','Last water: 16–24 oz + final stick, then DONE (before 8:17)'],['8:17 PM','Fast begins'],['8:25 PM','Arbit + Eicha at Berit Shalom — bring NON-LEATHER shoes (the office 4 PM was just Mincha; the Tisha B’Av night service is here)'],['—','Thursday’s 8.5 mi run moves to Sunday 7/26']]},
  '2026-07-23': {title:'Tisha B’Av — full fast · no training · ends 8:38 PM', sub:'Thursday · break the fast smart',
   sch:[['AM','Fast — no food, no water, no training. Shaharit 7:30 (1st minyan) or 9:00 (2nd). Take it easy.'],['7:00 PM','Pre-Minha class'],['7:45 PM','Minha with tefillin'],['8:38 PM','Fast ends: 16–24 oz water + hydration stick, nothing solid 10 min'],['8:55 PM','Banana or 70 g berries (ease in)'],['9:15 PM','⛔ DINNER — Teriyaki Salmon Rice Bowl: salmon 6 oz + rice 65 g dry + edamame 80 g + glaze + cucumber. ~620 cal · 53P. No shake.'],['—','Night total ~710 cal — don’t chase 2,220. Water to 60–80 oz by bed (magnesium PAUSED — levels high). Scale is fake for 2 days.']]},
- '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Friday · rebuild day (lift moved to morning)', gymleave:'07:55', madj:[190,20,31,0], mwhy:'rebuild day — Q’s rule: +1 Oikos, +1 Ezekiel + 32 g jelly',
+ '2026-07-24': {title:'Legs #2 ✅ lifting AM · day after fast · Shabbat', sub:'Rebuild day · lift moved to morning', gymleave:'07:55', madj:[190,20,31,0], mwhy:'rebuild day — Q’s rule: +1 Oikos, +1 Ezekiel + 32 g jelly',
   sch:[['6:40 AM','Wake'],['7:00 AM','Minyan'],['~8:10 AM','✅ Legs #2 — lifting AM (not 3:45). Pre-lift: 💧 Ryse stick #1 ✅ · stim fine before 3 PM (Ryse scoop + Pump Caps).'],['9:45 AM','Work'],['10:30 AM','Breakfast — your bowl + <b>1 Oikos</b> + <b>1 Ezekiel + 32 g Smucker’s SF jelly</b> (rebuild adds, in before 4 PM).'],['1:30 PM','Lunch — Cold Crunch Bowl. No adds.'],['3:00 PM','🕯 Shabbat prep.'],['4:00 PM','💧 Ryse stick #2.'],['7:00 PM','Shul.'],['8:00 PM','Shabbat dinner — Za’atar feast tray + full pita (~925 · 86P). No adds.'],['—','Rebuild day: gallon+ water · no snack (rolls into the feast) · scale is fake today, rebound water · lands ~205–210g protein.']]},
  '2026-07-17': {title:'Legs #2 ✅ done this morning · Shabbat tonight', sub:'Friday · refeed day 2 — executed AM',
   sch:[['AM','✅ Lifted this morning — refeed pre-lift (3 rice cakes) + post-lift (190 g apple + 10 g AB) + Mint Chocolate COR all eaten'],
@@ -2701,7 +2701,7 @@ function viewToday(){
   const nowZone = `
   <section class="zone" id="z-now">
   ${heroHTML(ld)}
-  ${backfill? '' : `<div class="card nowstrip" id="nowStrip">${nowStripInner()}</div>`}
+  ${(backfill || OVERRIDES[ld])? '' : `<div class="card nowstrip" id="nowStrip">${nowStripInner()}</div>`}
   ${isNoMeat(ld)?`<div class="note" style="margin-top:14px"><b>🥛 Nine Days — no meat or chicken.</b> Fish, dairy, and pareve only through the Tisha B’Av fast (meat resumes Fri 7/24). Meat options are crossed out in the log; lean on Poke, salmon, jiben, and tuna meals this week.</div>`:''}
   ${storageFresh?`<div class="note" style="margin-top:14px"><b>⚠️ Storage check:</b> this browser has no saved app data. If this is your first time here, ignore this. If you HAVE logged here before, this browser is wiping data between visits — <b>don’t log here</b>, and tell Claude exactly how you opened the app (Safari tab / home-screen icon / inside the Claude app) so he can fix it.</div>`:''}
   ${EVENTS.filter(e=>e.d===ld).map(e=>`
@@ -2726,7 +2726,7 @@ function viewToday(){
     const glance = cur? `now · <b>${cur.x.replace(/<[^>]+>/g,'').slice(0,24)}</b>${nextRow?` · next ${nextRow.t}`:''}` : '';
     return `
   <details class="card acc" data-acc="schedule" style="margin-top:14px"${open?' open':''}>
-    <summary><span class="slotlbl" style="margin-top:0;display:inline">📋 ${dTitle||'The day'}</span>${glance?`<span class="statline">${glance}</span>`:''}</summary>
+    <summary><span class="slotlbl" style="margin-top:0;display:inline">📋 The day</span>${glance?`<span class="statline">${glance}</span>`:''}</summary>
     <ul class="sched" id="dayTL" style="margin-top:8px">
       ${live? `<li class="tlpast" id="tlPast" data-tlpast${doneN>0?'':' hidden'}><span class="t">✓</span><span id="tlPastTxt">${doneN} done · show</span></li>`:''}
       ${rows.map((r,i)=>{
@@ -2935,7 +2935,9 @@ function viewToday(){
         return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">
           ${meatBlock?'🚫 ':''}${oo.name}${meatBlock?'<span class="rem">Nine Days</span>':counts[oo.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
       };
-      const picks = s.opts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id);
+      /* no-prep meals (assembled from pantry, never batch-prepped) are ALWAYS loggable — no need to
+         add them to the weekly menu first (e.g. Cold Crunch Bowl). */
+      const picks = s.opts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id || oo.noPrep);
       const list = (picks.length?picks:s.opts).map(pill).join('');
       /* lunch ⇄ dinner run near-identical budgets — a skipped dinner can be logged as lunch */
       const sib = expandSlot==='lu'? 'di' : expandSlot==='di'? 'lu' : null;
@@ -4508,7 +4510,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1784909653';
+const BUILD = 'b1784910126';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
