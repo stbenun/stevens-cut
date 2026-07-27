@@ -34,9 +34,11 @@ function grab(html, name) {
 
 (async () => {
   if (!VAPID_PRIVATE || !GIST_ID) { console.error('Missing VAPID_PRIVATE_KEY or GIST_ID'); process.exit(1); }
+  // GitHub's scheduler delays cron runs by hours, so gate on a WINDOW (not an exact hour) — a run that
+  // lands anywhere in the window still fires. One cron per mode means no double-send.
   const et = etNow();
-  const wantHour = MODE === 'friday' ? 15 : 6;
-  if (!FORCE && et.hour !== wantHour) { console.log(`ET hour ${et.hour} != ${wantHour} for MODE=${MODE} — skipping.`); return; }
+  const inWindow = MODE === 'friday' ? (et.hour >= 13 && et.hour < 21) : (et.hour >= 4 && et.hour < 12);
+  if (!FORCE && !inWindow) { console.log(`ET hour ${et.hour} outside the ${MODE} window — skipping.`); return; }
 
   const html = await (await fetch('https://stbenun.github.io/stevens-cut/index.html?cb=' + Date.now())).text();
   const CS = grab(html, 'COR_SETS');
