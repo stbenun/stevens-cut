@@ -307,6 +307,15 @@
   .mealpick.on .rem{color:#5c4715}
   .mealpick.nomeat{opacity:.5;text-decoration:line-through;border-style:dashed}
   .mealpick.nomeat .rem{color:var(--meat);text-decoration:none;font-weight:700}
+  /* ---- flavor rating (👍 😐 👎 on the daily COR / yogurt-bowl / Creami picks) ---- */
+  .rate{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
+  .rate .lbl{font-size:10px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;margin-right:1px}
+  .ratebtn{border:1px solid var(--line);background:var(--panel2);border-radius:var(--r-ctl);padding:4px 10px;font-size:15px;line-height:1;cursor:pointer;opacity:.4;filter:grayscale(.6);transition:opacity .12s,background .12s,border-color .12s}
+  .ratebtn:hover{opacity:.85}
+  .ratebtn.on{opacity:1;filter:none}
+  .ratebtn.on.up{border-color:var(--ok);background:rgba(143,170,114,.2)}
+  .ratebtn.on.mid{border-color:var(--muted);background:rgba(160,157,142,.16)}
+  .ratebtn.on.down{border-color:var(--danger);background:rgba(196,103,79,.2)}
 
   .pbar{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:99px;
         margin-top:12px;overflow:hidden}
@@ -1745,6 +1754,16 @@ function ppTag(txt, half){
   return ` · <b>weigh ${g} g</b>${half?' (½ serving)':''}`;
 }
 
+/* 👍/😐/👎 rating for the daily flavor picks (COR combo, yogurt bowl, Creami cup). Keyed by a readable
+   "type:flavor name" so the rating follows the flavor across the rotation and rides the gist sync
+   (qpcut.flavorRatings) → the coach reads which flavors land and which flop. Tap the same thumb to clear. */
+function rateBtns(key){
+  const v = (store.get('qpcut.flavorRatings',{}))[key] || '';
+  const k = encodeURIComponent(key);
+  const one = (val,emoji)=>`<button type="button" class="ratebtn${v===val?' on '+val:''}" data-rate="${k}" data-val="${val}" aria-label="rate ${val}">${emoji}</button>`;
+  return `<div class="rate"><span class="lbl">rate</span>${one('up','👍')}${one('mid','😐')}${one('down','👎')}</div>`;
+}
+
 const COR_SETS = [
  [
   ['Cinnabon Bowl','Cinnamon Roll COR + Cinnamon Toast Ryse — almond butter swirled on top'],
@@ -3038,19 +3057,21 @@ function viewToday(){
   <div class="zhead"><span class="zt">🍽 Food</span><span class="zn">${weekPick(RECIPES).name.toLowerCase().replace(/\s*week$/,'')} week</span></div>
   <div class="card">
     <div class="opt"><div class="head"><b>🥣 ${corToday[0]}</b>${tchip('breakfast')}</div>
-      <div class="sub" style="margin-top:4px">${corToday[1]}${ppTag(corToday[1])}</div></div>
+      <div class="sub" style="margin-top:4px">${corToday[1]}${ppTag(corToday[1])}</div>
+      ${rateBtns('cor:'+corToday[0])}</div>
     <div class="opt">
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
         : `<div class="head"><b>🍦 ${cupT[0].replace(/^\d+ · /,'')}</b>${tchip(cbT.started?'up next in the freezer':'batch not started')}</div>
-           <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>`}
+           <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>
+           ${rateBtns('creami:'+cupT[0].replace(/^\d+ · /,''))}`}
     </div>
   </div>
   ${bowlToday?(()=>{
     const bowlNote = (store.get('qpcut.bowlnote',{}))[isoToday()]; // one-day recipe tweak, auto-clears tomorrow
     return `
   <details class="card acc" data-acc="bowl-day"${openAcc.has('bowl-day')?' open':''}>
-    <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span></summary>
+    <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span>${rateBtns('bowl:'+bowlToday.name.replace(/ —.*$/,''))}</summary>
     <div class="sub" style="margin-top:6px">Yogurt bowl of the day — swap it in for breakfast or a snack. Rotates daily.</div>
     ${bowlNote?`<div class="note" style="margin-top:8px">📌 <b>Today’s swap:</b> ${bowlNote}</div>`:''}
     <ul class="ing" style="margin-top:8px">${bowlToday.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l)}</span><span class="q">${q}</span></li>`).join('')}</ul>
@@ -4359,6 +4380,13 @@ function wireToday(){
     m[isoToday()] = m[isoToday()]===b.dataset.tn? null : b.dataset.tn;
     store.set('qpcut.tonight',m); render();
   }));
+  document.querySelectorAll('[data-rate]').forEach(b=>b.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();   // don't toggle the bowl <details> when rating it
+    const key = decodeURIComponent(b.dataset.rate), val = b.dataset.val;
+    const m = store.get('qpcut.flavorRatings',{});
+    if(m[key]===val) delete m[key]; else m[key] = val;   // tap the lit thumb again to clear
+    store.set('qpcut.flavorRatings',m); render();
+  }));
   const gl = $('#gymLeave');
   if(gl) gl.addEventListener('change',()=>{
     if(!gl.value) return;
@@ -4712,7 +4740,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785249538';
+const BUILD = 'b1785250190';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
