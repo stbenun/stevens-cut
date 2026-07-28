@@ -1768,40 +1768,56 @@ function rateBtns(key){
    butter = 545/39/54/22. A quantified crunch add-in trades cal-for-cal against the almond butter, so corBuild
    returns the exact AB grams + the real macro split (which shifts — more carb, less fat — with a crunch). */
 const COR_CRUNCH = [['coconut chips',[45,0,3,4]],['Cinnamon Toast Crunch',[40,0.5,8,1]],['Fruity Pebbles on top',[40,0.5,8,0.5]],['Nilla',[42,0,8,1.5]],['Oreo',[50,0,8,2]],['Biscoff',[38,0.5,5,1.5]],['raisins',[45,0.5,11,0]]];
+const corKeyRe = k => new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
+const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
 function corBuild(spec){
   const ABP=[5.9375,0.21875,0.21875,0.53125], baseNoAB=[355,32,47,5]; /* b1 minus its 32 g almond butter */
-  const c = COR_CRUNCH.find(([k])=> new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(spec));
-  if(!c) return {ab:32, mac:[545,39,54,22], crunch:null};
-  const cm=c[1], abG=Math.round((190-cm[0])/ABP[0]*2)/2; /* drop AB by the crunch's calories, to the nearest 0.5 g */
-  return {ab:abG, mac:[0,1,2,3].map(i=> Math.round(baseNoAB[i] + abG*ABP[i] + cm[i])), crunch:c[0]};
+  /* parse "<CORflavor> COR + <Protein>[ + <extract>] — <fruit>[ + <crunch>][ + <spice>]" into clean parts */
+  const seg = spec.split(' — ');
+  const left = seg[0], addins = seg.slice(1).join(' — ');
+  const corFlavor = left.split(' COR')[0].trim();
+  const lp = left.slice(left.indexOf(' COR')+4).replace(/^\s*\+\s*/,'').split(' + ').map(x=>x.trim()).filter(Boolean);
+  const protein = lp[0]||'', extracts = lp.slice(1);
+  let fruitLabel='Berries', fruitQty='70 g', crunchLabel='', crunchQty='';
+  const spices=[];
+  (addins? addins.split(' + ').map(x=>x.trim()).filter(Boolean):[]).forEach(e=>{
+    if(/extract$/i.test(e)) extracts.push(e);
+    else if(COR_CRUNCH.some(([k])=>corKeyRe(k).test(e))){ const m=e.match(/^(\d+\s*g?)\s+(.*)$/); crunchQty=m?m[1]:''; crunchLabel=cap(m?m[2]:e); }
+    else if(/cinnamon/i.test(e)) spices.push('Cinnamon');
+    else { const m=e.match(/^(\d+\s*g?)\s+(.*)$/); if(m){ fruitQty=m[1]; fruitLabel=cap(m[2]); } else { fruitLabel=cap(e); fruitQty='70 g'; } }
+  });
+  const c = COR_CRUNCH.find(([k])=> corKeyRe(k).test(spec));
+  let ab=32, mac=[545,39,54,22];
+  if(c){ const cm=c[1]; ab=Math.round((190-cm[0])/ABP[0]*2)/2; mac=[0,1,2,3].map(i=> Math.round(baseNoAB[i] + ab*ABP[i] + cm[i])); }
+  return {ab, mac, crunch:c?c[0]:null, corFlavor, protein, extracts, fruitLabel, fruitQty, crunchLabel, crunchQty, spice:spices[0]||''};
 }
 
 const COR_SETS = [
  [
-  ['Cinnabon Bowl','Cinnamon Roll COR + Cinnamon Toast Ryse — almond butter swirled on top'],
-  ['Death by Chocolate','Chocolate Cake COR + Chocolate Cookie Blast — strawberries as the berry'],
+  ['Cinnabon Bowl','Cinnamon Roll COR + Cinnamon Toast Ryse — berries + extra cinnamon'],
+  ['Death by Chocolate','Chocolate Cake COR + Chocolate Cookie Blast — strawberries'],
   ['Lemon-Blueberry Loaf','Blueberry Muffin COR + Lemon Cake — blueberries'],
-  ['Biscoff Bowl','Cookie Butter COR + RAW Milk N Cookies'],
-  ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie + cinnamon — swap the berries for 70 g diced apple (same cals)'],
-  ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse'],
-  ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse'],
+  ['Biscoff Bowl','Cookie Butter COR + RAW Milk N Cookies — berries'],
+  ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie — 70 g diced apple + extra cinnamon'],
+  ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse — berries'],
+  ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse — berries'],
  ],
  [
-  ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream'],
+  ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream — berries'],
   ['Double Blueberry Muffin','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries'],
-  ['Tropical Bowl','Coconut Cream Pie COR + RAW Piña Colada'],
-  ['Cookies on Cookies','Cookies n Cream COR + RAW Milk N Cookies'],
-  ['Maple Apple Pie','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — 70 g diced apple (replaces the berries)'],
-  ['Strawberry Shortcake Bowl','Plain COR + LD Strawberry Shortcake — strawberries as the berry'],
-  ['Fruity Pebbles Cereal Milk','Plain COR + Fruity Pebbles protein'],
+  ['Tropical Bowl','Coconut Cream Pie COR + RAW Piña Colada — 70 g pineapple'],
+  ['Cookies on Cookies','Cookies n Cream COR + RAW Milk N Cookies — berries'],
+  ['Maple Apple Pie','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — 70 g diced apple'],
+  ['Strawberry Shortcake Bowl','Plain COR + LD Strawberry Shortcake — strawberries'],
+  ['Fruity Pebbles Cereal Milk','Plain COR + Fruity Pebbles Ryse — berries'],
  ],
  [
   ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — strawberries'],
-  ['Carrot Cake Cheesecake','Carrot Cake COR + Vanilla Ice Cream Ryse'],
+  ['Carrot Cake Cheesecake','Carrot Cake COR + Vanilla Ice Cream Ryse — berries'],
   ['Lemon Loaf','Plain COR + Lemon Cake — blueberries'],
-  ['Cookie Butter Crunch','Cookie Butter COR + Cinnamon Toast Ryse'],
-  ['Apple Fritter','Apple Pie COR + Cinnamon Toast Ryse — 70 g diced apple (replaces the berries) + extra cinnamon'],
-  ['Mint Chocolate','Chocolate Cake COR + Mint Chip Ice Cream'],
+  ['Cookie Butter Crunch','Cookie Butter COR + Cinnamon Toast Ryse — berries'],
+  ['Apple Fritter','Apple Pie COR + Cinnamon Toast Ryse — 70 g diced apple + extra cinnamon'],
+  ['Mint Chocolate','Chocolate Cake COR + Mint Chip Ice Cream — berries'],
   ['Coconut Blueberry','Coconut Cream Pie COR + Blueberry Muffin Ryse — blueberries'],
  ],
  [
@@ -3070,8 +3086,17 @@ function viewToday(){
   <div class="zhead"><span class="zt">🍽 Food</span><span class="zn">${weekPick(RECIPES).name.toLowerCase().replace(/\s*week$/,'')} week</span></div>
   <div class="card">
     <div class="opt"><div class="head"><b>🥣 ${corToday[0]}</b>${tchip('breakfast')}</div>
-      <div class="sub" style="margin-top:4px">${corToday[1]}${ppTag(corToday[1])}</div>
-      <div class="sub" style="margin-top:6px;color:var(--faint);font-size:12px;line-height:1.55"><b>Full build · ${corB.mac[0]} · ${corB.mac[1]}P · ${corB.mac[2]}C · ${corB.mac[3]}F</b><br>25 g Cream of Rice · 25 g oats · 1 scoop protein (flavor above) · 70 g berries/fruit · <b>${corB.ab} g almond butter</b>${corB.crunch?' + the crunch above — it swaps for part of the almond butter, so cals hold':''}</div>
+      <div class="sub" style="margin-top:2px;font-family:var(--mono);color:var(--brass);font-weight:700">${corB.mac[0]} · ${corB.mac[1]}P · ${corB.mac[2]}C · ${corB.mac[3]}F</div>
+      <ul class="ing" style="margin-top:6px">
+        <li><span>Cream of Rice · ${corB.corFlavor}</span><span class="q">25 g</span></li>
+        <li><span>Oats</span><span class="q">25 g</span></li>
+        <li><span>${corB.protein}${ppTag(corB.protein)}</span><span class="q">1 scoop</span></li>
+        <li><span>${corB.fruitLabel}</span><span class="q">${corB.fruitQty}</span></li>
+        <li><span>Almond butter</span><span class="q">${corB.ab} g</span></li>
+        ${corB.crunchLabel?`<li><span>${corB.crunchLabel}</span><span class="q">${corB.crunchQty||'1'}</span></li>`:''}
+        ${corB.extracts.map(x=>`<li><span>${cap(x)}</span><span class="q">splash</span></li>`).join('')}
+        ${corB.spice?`<li><span>${corB.spice}</span><span class="q">to taste</span></li>`:''}
+      </ul>
       ${rateBtns('cor:'+corToday[0])}</div>
     <div class="opt">
       ${isFri
@@ -4754,7 +4779,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785251870';
+const BUILD = 'b1785252415';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
