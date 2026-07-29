@@ -485,6 +485,10 @@
 const K = {meat:'Meat', dairy:'Dairy', pareve:'Pareve'};
 const chip = (k,txt) => `<span class="chip ${k}">${txt||K[k]}</span>`;
 const tchip = t => `<span class="chip time">${t}</span>`;
+/* Sleep is entered clock-style "H.MM" (his ask): "4.10" = 4 h 10 min. Parse to decimal hours for storage;
+   sleepFmt renders decimal hours back as "Hh Mm". Old decimal-hours data still displays right (4.5 → 4h 30m). */
+function sleepParse(v){ v=String(v==null?'':v).trim(); if(!v) return null; const p=v.split('.'); const H=parseInt(p[0],10); if(isNaN(H)) return null; const M=(p[1]!=null)?(parseInt(p[1],10)||0):0; return Math.round((H+M/60)*1000)/1000; }
+function sleepFmt(dec){ if(dec==null||isNaN(dec)) return ''; const H=Math.floor(dec+1e-9), M=Math.round((dec-H)*60); return M? `${H}h ${M}m` : `${H}h`; }
 
 /* ---------- meals: named options ---------- */
 /* ing rows: [label, qty, [cal, P, C, F]] — per-ingredient macros from his sheet */
@@ -3462,7 +3466,7 @@ function viewMeals(){
    <div class="card">
      <div class="sub" style="margin-top:0">No containers at the office — so <b>never scoop, always weigh</b>. 1 serving per flavor (½ scoop in any recipe = half this number):</div>
      <ul class="ing" style="margin-top:8px">
-       ${PP_G.filter(([,g])=>g!=null).map(([n,g])=>`<li><span>${n}</span><span class="q"><b>${g} g</b> · ½ = ${Math.round(g/2*10)/10} g</span></li>`).join('')}
+       ${PP_G.filter(([,g])=>g!=null).filter(([n])=>!PP_G.some(([m])=>m!==n && m.includes(n))).map(([n,g])=>`<li><span>${n}</span><span class="q"><b>${g} g</b> · ½ = ${Math.round(g/2*10)/10} g</span></li>`).join('')}
      </ul>
      ${(()=>{ const miss=PP_G.filter(([,g])=>g==null).map(([n])=>n); return miss.length?`<div class="sub" style="margin-top:8px">⚠ Missing labels: <b>${miss.join('</b>, <b>')}</b> — send Claude the serving sizes to fill in.</div>`:''; })()}
    </div>`;
@@ -3843,7 +3847,7 @@ function viewTrack(){
   const thisWeekRows = thisWeek.map(e=>{
     const day = new Date(e.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
     return `<tr><td>${day} ${e.d.slice(5).replace('-','/')}</td><td>${e.w!=null?e.w.toFixed(1):'—'}</td>
-      <td>${e.s!=null?e.s.toFixed(1)+'k':'—'}</td><td>${e.sl!=null?e.sl+'h':'—'}</td></tr>`;
+      <td>${e.s!=null?e.s.toFixed(1)+'k':'—'}</td><td>${e.sl!=null?sleepFmt(e.sl):'—'}</td></tr>`;
   }).join('');
   const withW = entries.filter(e=>e.w!=null);
   const lastE = withW.length? withW[withW.length-1] : null;
@@ -3871,7 +3875,7 @@ function viewTrack(){
       <label class="full">date<input type="date" id="wDate" value="${isoToday()}"></label>
       <label>weight · lbs<input type="number" id="wLbs" step="0.1" inputmode="decimal"></label>
       <label>steps · k<input type="number" id="wSteps" step="0.1" inputmode="decimal"></label>
-      <label>sleep · h<input type="number" id="wSleep" step="0.5" inputmode="decimal"></label>
+      <label>sleep · h.mm<input type="text" id="wSleep" inputmode="decimal" placeholder="4.10 = 4h 10m"></label>
       <button class="btn full" id="wAdd">Log</button>
     </div>
     ${lastE?`<div class="sub" style="margin-top:8px">last: <b>${lastE.w.toFixed(1)} lb</b> · ${new Date(lastE.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'numeric',day:'numeric'})}</div>`:''}
@@ -4105,7 +4109,7 @@ function weekReport(){
     const m = eaten[d]||{};
     const meals = ['pre','bf','lu','sn','di'].map(k=>m[k]&&OPTBYID[m[k]]?OPTBYID[m[k]].name:null).filter(Boolean).join(' / ');
     const parts = [];
-    if(e){ if(e.w!=null)parts.push(e.w.toFixed(1)+' lb'); if(e.s!=null)parts.push(e.s+'k steps'); if(e.sl!=null)parts.push(e.sl+'h sleep'); }
+    if(e){ if(e.w!=null)parts.push(e.w.toFixed(1)+' lb'); if(e.s!=null)parts.push(e.s+'k steps'); if(e.sl!=null)parts.push(sleepFmt(e.sl)+' sleep'); }
     if(meals) parts.push('ate: '+meals);
     const dl = store.get('qpcut.dials.'+dkey(d),{});
     if(dl.e||dl.h||dl.s) parts.push(`dials E${dl.e||'·'}/H${dl.h||'·'}/S${dl.s||'·'}`);
@@ -4581,7 +4585,7 @@ function wireTrack(){
   $('#wAdd').addEventListener('click',()=>{
     const btn = $('#wAdd');
     const d = $('#wDate').value;
-    const w = parseFloat($('#wLbs').value), s = parseFloat($('#wSteps').value), sl = parseFloat($('#wSleep').value);
+    const w = parseFloat($('#wLbs').value), s = parseFloat($('#wSteps').value), sl = sleepParse($('#wSleep').value);
     if(!d || (isNaN(w)&&isNaN(s)&&isNaN(sl))){
       btn.textContent='Enter a number first';
       setTimeout(()=>{ if($('#wAdd')) $('#wAdd').textContent='Log'; },1600);
@@ -4592,7 +4596,7 @@ function wireTrack(){
     user.push({d,
       w: isNaN(w) ? (prev.w!=null?prev.w:null) : w,
       s: isNaN(s) ? (prev.s!=null?prev.s:null) : s,
-      sl: isNaN(sl) ? (prev.sl!=null?prev.sl:null) : sl});
+      sl: (sl==null||isNaN(sl)) ? (prev.sl!=null?prev.sl:null) : sl});
     store.set('qpcut.weights',user);
     render();
   });
@@ -4779,7 +4783,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785334059';
+const BUILD = 'b1785335227';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
