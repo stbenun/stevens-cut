@@ -233,6 +233,19 @@
   input.prw2{width:72px;text-align:center;padding:6px 2px;font-size:16px}
   .coachline{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
        color:var(--brass);text-align:right;margin-top:6px;line-height:1.5}
+  /* coach FORM notes — static, distinct from the brass .coachline weight/rep prescriptions */
+  .cuebox{margin:7px 0 2px;padding:7px 9px;background:var(--panel3);border-left:2px solid var(--brass);
+       border-radius:4px}
+  .cuebox>summary{cursor:pointer;list-style:none;font-size:12px;line-height:1.45;color:var(--text)}
+  .cuebox>summary::-webkit-details-marker{display:none}
+  .cuebox>summary::after{content:' ▸';color:var(--brass)}
+  .cuebox[open]>summary::after{content:' ▾'}
+  .cuebox>summary b{color:var(--brass-hi);font-weight:600}
+  .cuefrom{font-size:10.5px;color:var(--faint);margin-top:5px}
+  .cuebox .sched li{font-size:11.5px}
+  /* anything I added that the coach did NOT say — visually separated so he never confuses the two */
+  .cuemine{display:block;margin-top:4px;color:var(--muted);font-style:italic}
+  .cueoff{color:var(--faint);font-size:10.5px}
   .setrow{display:grid;grid-template-columns:24px 88px 14px 60px;gap:7px;align-items:center;
        justify-content:end;margin-top:6px}
   .setrow.noreps{grid-template-columns:24px 88px}
@@ -808,7 +821,41 @@ function exBlockHTML(o){
     }).filter(Boolean);
     if(parts.length) pmLine = `<div class="ingmac" style="text-align:right;margin-top:4px">🧮 ${pm==='db'?'DBs':pm==='bar'?'45-lb bar · per side':'per side'} → ${parts.join(' · ')}</div>`;
   }
-  return selHTML + legNote + rows + armHTML + pmLine + guideWrap;
+  return selHTML + formCueHTML(prId, o.ids) + legNote + rows + armHTML + pmLine + guideWrap;
+}
+/* ---- Coach FORM cues, keyed by PR id. Deliberately NOT part of the EG_REG live-guide layer: that one owns
+   weight/rep prescriptions and refreshes in place mid-set. Form feedback is slow-moving, so this renders once
+   with the exercise block and never re-renders — nothing here touches .prw2/.repin/refreshGuides.
+   On an "A or B" exercise the cue only appears when that option is the SELECTED one (prId follows exsel).
+   Add a new entry whenever Q sends form notes; `mine` is anything I added that he did NOT say. ---- */
+const FORM_CUES = {
+ pr_hack: {
+  head:'Full depth · no brake at the bottom · slightly quicker tempo',
+  from:'Q · Jul 30, off the video you sent him',
+  pts:[
+   ['📐','<b>Depth is the main fix.</b> You’re stopping right around 90°. He wants as much knee flexion as you can get — all the way to the bottom.'],
+   ['🛑','<b>Stop braking into the bottom.</b> He can see you hesitate and force a stop at a fixed point. That deceleration is work you pay for and get nothing back from.'],
+   ['⏩','<b>Tempo slightly faster</b> through the whole rep.'],
+   ['💪','<b>Why this may make you STRONGER, not weaker:</b> reversing out of the hole uses the stretch you built on the way down. A dead stop at 90° throws that away and makes every rep start from a standstill. Q reckons you may press more from full depth than from a forced stop.'],
+   ['🔧','<b>Find the machine’s limit tomorrow.</b> Q flagged he doesn’t know how far Alpha’s hack squat travels. If the carriage bottoms out, that’s the machine and you stop chasing it. <span class="cuemine">Mine, not Q’s: feet a touch lower and closer together on the platform opens up knee flexion — but if your heels start lifting off, you’ve gone too low and that’s an ankle limit, not a depth win.</span>'],
+   ['⚖️','<b>Expect the weight to drop, and that’s correct.</b> 160 lb to 90° is not 160 lb to the bottom. Buying the depth with lighter plates is the trade, not a regression — so log a note when you do it, or a lighter set reads as a stall and the app starts prescribing a deload you don’t need.'],
+  ]},
+};
+/* Renders for ANY cued exercise on the line, not just the selected one. On "A or B" lines the dropdown
+   defaults to whichever option has stored data — so binding the cue to the selection alone would hide Q's
+   notes behind a dropdown he might never touch. Showing it labelled + collapsed costs one line; missing his
+   coach's form feedback costs the session. */
+function formCueHTML(prId, ids){
+  const list = (ids && ids.length)? ids : (prId? [prId] : []);
+  return list.filter(id=>FORM_CUES[id]).map(id=>{
+    const c = FORM_CUES[id], it = prItemById(id);
+    const off = (prId && id!==prId)? ' <span class="cueoff">— not the option selected above</span>' : '';
+    return `<details class="cuebox">
+      <summary>🎯 <b>${esc(it?it[1]:id)} form — ${esc(c.head)}</b>${off}</summary>
+      <div class="cuefrom">${esc(c.from)}</div>
+      <ul class="sched" style="margin-top:6px">${c.pts.map(([t,x])=>`<li><span class="t">${t}</span><span>${x}</span></li>`).join('')}</ul>
+    </details>`;
+  }).join('');
 }
 /* ---- ONE voice: target (pre-session) → live call (mid-session) → verdict (done). Never two at once.
    Reads the store FRESH each call so refreshGuides() can update panels without a full render. ---- */
@@ -4834,7 +4881,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785430183';
+const BUILD = 'b1785433580';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
