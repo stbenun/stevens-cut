@@ -2146,6 +2146,76 @@ function recoveryGate(ld){
   if(!out.why.length && hv!=null) out.why.push(`HRV ${hv} ms, above your ${base} ms floor. Train as programmed.`);
   return out;
 }
+/* ---------- bloodwork (Jul 31 2026) ----------
+   Storage: ONE KEY PER DRAW, qpcut.lab.<dkey> = {marker:value}, plus qpcut.labdates as the index.
+   Deliberately not one monolithic key: qpcut.weights / qpcut.eaten / qpcut.offplan each hold every
+   date inside a single key, so under the newest-stamp-wins gist merge one stale device can clobber
+   all of that history at once. Per-draw keys cap the blast radius at a single draw.
+   Rythm's own status and "optimal" columns are NOT stored, on purpose. Their reference_range means
+   opposite things depending on the marker: TG/HDL 1.08 is flagged optimal BELOW its stated range,
+   while uric acid 3.09 is flagged outOfRange BELOW its stated range. Only LAB_GATES sets thresholds. */
+const LAB_SEED_DATE = '2026-7-29';
+const LAB_SEED = {'ApoB':104,'Total Testosterone':533,'Free T3':2.54,'Thyroid Stimulating Hormone':3.42,
+  'SHBG':36.1,'Free Testosterone':96.08,'Estrogen':21.5,'LDL Cholesterol':125.18,'HDL Cholesterol':44.2,
+  'Total Cholesterol':179,'Triglycerides':48.1,'hs-CRP (High-Sensitivity C-Reactive Protein)':0.5,
+  'Albumin':5.25,'Fructosamine':308,'Uric Acid':3.09,'Vitamin B12':1301,'Vitamin D':73.6,'Ferritin':243,
+  'Hemoglobin':15.9,'Hematocrit':46.9,'Creatinine':1.01,
+  'eGFR (Estimated Glomerular Filtration Rate)':109.18,'GGT':18.6,'Alkaline Phosphatase (ALP)':46.3};
+/* The only three numbers allowed to change a decision. Everything else is reference. */
+const LAB_GATES = [
+  ['ApoB','under',80,'target','Diet ceiling is realistically 90–96. Lp(a) matters more than another swap.'],
+  ['Total Testosterone','over',350,'TRIPWIRE','Under 350 ends the cut that week, whatever the scale says.'],
+  ['Free T3','over',2.0,'TRIPWIRE','Under 2.0 ends the cut that week, whatever the scale says.'],
+];
+function labDates(){
+  const d = store.get('qpcut.labdates', []);
+  const all = d.includes(LAB_SEED_DATE)? d.slice() : d.concat([LAB_SEED_DATE]);
+  const key = x => { const [y,m,dd] = x.split('-').map(Number); return y*10000+m*100+dd; };
+  return all.sort((a,b)=>key(a)-key(b));
+}
+function labDraw(dk){
+  return dk===LAB_SEED_DATE
+    ? Object.assign({}, LAB_SEED, store.get('qpcut.lab.'+dk, {}))
+    : store.get('qpcut.lab.'+dk, {});
+}
+function labGate(){
+  const ds = labDates(), latest = ds[ds.length-1];
+  const cur = labDraw(latest), prevK = ds.length>1? ds[ds.length-2] : null;
+  const prev = prevK? labDraw(prevK) : null;
+  const rows = LAB_GATES.map(([mk,dir,lim,kind,note])=>{
+    const v = cur[mk]==null? null : +cur[mk];
+    const p = (prev && prev[mk]!=null)? +prev[mk] : null;
+    const fired = v!=null && (dir==='over'? v < lim : v > lim);
+    return {mk, v, p, lim, dir, kind, note, fired};
+  });
+  return {latest, prevK, rows, fired: rows.some(r=>r.fired && r.kind==='TRIPWIRE')};
+}
+/* Rythm's export is: marker,value,unit,reference_range,status,time — paste it whole. */
+function labImport(txt){
+  const lines = String(txt||'').trim().split(/\r?\n/).filter(Boolean);
+  const byDate = {};
+  lines.forEach(ln=>{
+    const p = ln.split(',');
+    if(p.length < 6) return;
+    const mk = p[0].trim(), raw = p[1].trim(), when = p[p.length-1].trim();
+    if(!mk || mk.toLowerCase()==='marker') return;
+    const v = parseFloat(raw.replace(/[<>]/g,''));
+    if(isNaN(v)) return;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(when)) return;
+    const dk = dkey(when);
+    (byDate[dk] = byDate[dk] || {})[mk] = v;
+  });
+  const dks = Object.keys(byDate);
+  if(!dks.length) return {ok:false, msg:'No rows I could read. Paste the whole Rythm CSV, header included.'};
+  const idx = store.get('qpcut.labdates', []).slice();
+  dks.forEach(dk=>{
+    store.set('qpcut.lab.'+dk, Object.assign(store.get('qpcut.lab.'+dk,{}), byDate[dk]));
+    if(!idx.includes(dk)) idx.push(dk);
+  });
+  store.set('qpcut.labdates', idx);
+  const n = dks.reduce((a,dk)=>a+Object.keys(byDate[dk]).length,0);
+  return {ok:true, msg:`Saved ${n} markers across ${dks.length} draw${dks.length===1?'':'s'}.`};
+}
 function menuWeekDates(){ /* Sun-Sat containing today */
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
   return Array.from({length:7},(_,i)=>{ const d=new Date(sun); d.setDate(sun.getDate()+i); return iso(d); });
@@ -2469,6 +2539,9 @@ function winsHTML(){
   let streak=0; const day=new Date();
   for(let i=0;i<90;i++){
     const dISO = iso(day);
+    /* Shabbat: no phone, so there can never be logged activity. Skip it entirely rather than
+       letting it break the streak — otherwise this read 1 every Sunday, forever. */
+    if(day.getDay()===6){ day.setDate(day.getDate()-1); continue; }
     const has = (eaten[dISO]&&Object.values(eaten[dISO]).some(Boolean))
       || Object.keys(store.get('qpcut.reps.'+dkey(dISO),{})).length
       || Object.keys(store.get('qpcut.drinks.'+dkey(dISO),{})).length
@@ -2799,7 +2872,15 @@ function nextAction(){
   }
   if(!(wd===5&&m>=1020) && wd!==6 && m>=1230 && !eaten.sn) return {label:'🍦 Log the snack', jump:'z-log', slot:'sn'};
   const dials = store.get('qpcut.dials.'+dkey(t),{});
-  if(m>=1230 && !(dials.e&&dials.h&&dials.s)) return {label:'🎛 Do tonight’s dials', jump:'z-log', acc:'log-dials'};
+  if(m>=1230 && !(dials.e&&dials.h)) return {label:'🎛 Do tonight’s dials', jump:'z-log', acc:'log-dials'};
+  /* Supplements get a real trigger. Before this they had none: the stack drawer is collapsed and
+     renders the same at 6 AM as at 11 PM, so adherence tracked list POSITION rather than value
+     (idx0 creatine 100% -> idx5 fish oil 52%, idx6 stick 57%). SUPPS indexes: 0 creatine,
+     5 fish oil, 6 stick. These sit LAST so a supp never outranks the weigh-in or an unlogged meal. */
+  const sup = store.get('qpcut.supps.'+dkey(t),[]);
+  if(m>=390 && m<720 && !sup.includes(6)) return {label:'💧 Take the Ryse stick', jump:'z-log', acc:'log-stack'};
+  if(m>=1140 && !sup.includes(5)) return {label:'💊 Fish oil — with dinner', jump:'z-log', acc:'log-stack'};
+  if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 5 g weighed', jump:'z-log', acc:'log-stack'};
   return null;
 }
 function nudgeInfo(){
@@ -3376,9 +3457,9 @@ function viewToday(){
       <div class="water-label">${oz} / ${ht.oz} oz${ht.oz&&oz>=ht.oz?' · 🎉 target hit':''} · plus 10k steps minimum</div>
     </details>
     <details class="acc innerrow" data-acc="log-dials"${openAcc.has('log-dials')?' open':''}>
-      <summary><span>🎛 Daily dials</span><span class="statline">⚡${dl.e||'–'} · 🍽${dl.h||'–'} · 🩹${dl.s||'–'}</span></summary>
+      <summary><span>🎛 Daily dials</span><span class="statline">⚡${dl.e||'–'} · 🍽${dl.h||'–'}</span></summary>
       <div id="dialCard">
-      ${[['e','⚡ Energy'],['h','🍽 Hunger'],['s','🩹 Soreness']].map(([k,lbl])=>`
+      ${[['e','⚡ Energy'],['h','🍽 Hunger']].map(([k,lbl])=>`
         <div class="mrow"><span class="nm">${lbl}</span>
           <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${(dl[k]||0)>=v?' on':''}" data-dial="${k}" data-v="${v}" aria-label="${lbl} ${v}"></button>`).join('')}</span>
         </div>`).join('')}
@@ -4091,6 +4172,44 @@ function viewTrack(){
     <div class="sub" style="margin-top:2px">Tap AFTER you’ve sent the week report to Q. Clears every note dated before today + your Ask-Q questions, so the new week starts clean. Anything you jot today is kept.</div>
   </div>
 
+  <h2 class="sec">Bloodwork</h2>
+  ${(()=>{ const g = labGate(); const lpa = store.get('qpcut.lpa', null);
+    const apo = g.rows.find(r=>r.mk==='ApoB');
+    const arrow = r => (r.p==null||r.v==null)? '' : (r.v===r.p? ' · flat' : ` · ${r.v<r.p?'▼':'▲'} ${Math.abs(r.v-r.p).toFixed(1)} vs last`);
+    return `
+  ${g.fired?`<div class="note" style="margin-top:10px;border-color:var(--danger)"><b>⚠ TRIPWIRE FIRED — the cut ends this week.</b><br>${g.rows.filter(r=>r.fired&&r.kind==='TRIPWIRE').map(r=>`${r.mk} ${r.v} (limit ${r.lim})`).join(' · ')}<br>Go to maintenance now. Do not wait for the scale.</div>`:''}
+  <div class="card">
+    <div class="statline" style="margin-bottom:8px">Latest draw <b>${g.latest.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}</b>${g.prevK?` · previous ${g.prevK.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}`:' · baseline'}</div>
+    ${apo&&apo.v!=null?`<div style="font-size:26px;font-weight:650;line-height:1.1">ApoB ${apo.v}<small style="font-size:13px;opacity:.6"> mg/dL${arrow(apo)}</small></div>
+    <div class="sub" style="margin-top:3px">Target under <b>80</b>. The one lab number that still matters in 40 years.</div>`:''}
+    <ul class="sched" style="margin-top:10px">
+      ${g.rows.filter(r=>r.kind==='TRIPWIRE').map(r=>`<li><span class="t">${r.fired?'⚠':'✓'}</span><span><b>${r.mk}</b> ${r.v!=null?r.v:'—'} · must stay above ${r.lim}${arrow(r)}</span></li>`).join('')}
+      <li><span class="t">${lpa!=null?'✓':'—'}</span><span><b>Lp(a)</b> ${lpa!=null?lpa+' nmol/L':'never drawn'} · once in your life, ask a doctor, request <b>nmol/L</b> not mg/dL
+        <input id="lpaIn" type="number" step="1" min="0" max="500" value="${lpa!=null?lpa:''}" placeholder="nmol/L" style="width:86px;text-align:right;margin-left:6px"></span></li>
+    </ul>
+    <div class="sub" style="margin-top:8px">Lp(a): under 75 → fine, never retest. 75–125 → ApoB target tightens to 70. Over 125 → lipidologist this year, target 60, and your parents and siblings should test too.</div>
+    <details class="acc innerrow" data-acc="lab-all"${openAcc.has('lab-all')?' open':''}>
+      <summary><span>🧪 All markers · latest draw</span><span class="statline">${Object.keys(labDraw(g.latest)).length}</span></summary>
+      <ul class="sched" style="margin-top:6px">${Object.entries(labDraw(g.latest)).map(([k,v])=>`<li><span class="t" style="min-width:52px">${v}</span><span>${k}</span></li>`).join('')}</ul>
+      <div class="sub" style="margin-top:6px">Values only. Rythm's own status and "optimal" bands are deliberately not stored — their range column means opposite things on different markers, so it can't be trusted as a threshold.</div>
+    </details>
+    <details class="acc innerrow" data-acc="lab-day"${openAcc.has('lab-day')?' open':''}>
+      <summary><span>🩸 Lab day · draw conditions</span></summary>
+      <ul class="sched" style="margin-top:6px">
+        <li><span class="t">Wed</span><span>Last food <b>9:30 PM</b>. Aim for a 10–12 h fast — never longer.</span></li>
+        <li><span class="t">6:40</span><span><b>500 mL plain water.</b> Another 500 mL at 7:30. Mandatory — this is the fix for the high albumin.</span></li>
+        <li><span class="t">—</span><span>No stick, no caffeine, no food, no supplements. <b>No lifting or running in the prior 12 h.</b></span></li>
+        <li><span class="t">8:00</span><span>Needle in <b>8:00–8:20 AM</b>. Skip the 7:45 class that morning only.</span></li>
+        <li><span class="t">—</span><span><b>Tell them about the pre-syncope and ask to be reclined.</b> Sit 10 min first. Don't clench your fist.</span></li>
+        <li><span class="t">—</span><span>Never within <b>5 days after a 25-hour fast</b>, and never within 2 weeks of illness.</span></li>
+      </ul>
+    </details>
+    <div class="formrow" style="margin-top:10px">
+      <textarea id="labPaste" rows="2" placeholder="Paste the whole Rythm CSV here (marker,value,unit,...)" style="width:100%;font-size:13px"></textarea>
+    </div>
+    <div class="formrow"><button class="btn ghost" id="labAdd">🧪 Import a draw</button><span id="labMsg" class="sub"></span></div>
+  </div>`; })()}
+
   <h2 class="sec">App &amp; data</h2>
   <details class="card acc adm" data-acc="adm-sync"${openAcc.has('adm-sync')?' open':''}>
     <summary><span class="tt-i">☁️</span><span>Cloud sync</span><span class="statline">${(()=>{ const c=syncCfg(); if(!(c.token&&c.gist)) return 'not set up'; const last=+(localStorage.getItem('qpcut.sync.last')||0); return last? '✓ '+new Date(last).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'}) : '✓ connected'; })()}</span></summary>
@@ -4222,14 +4341,15 @@ function drawTrack(){
     const avg = wv.length? wv.reduce((a,b)=>a+b.w,0)/wv.length : null;
     const st = es.filter(e=>e.s!=null);
     const sAvg = st.length? (st.reduce((a,b)=>a+b.s,0)/st.length):null;
-    return {k,avg,sAvg};
+    return {k,avg,sAvg,n:wv.length};
   });
   $('#wkTable').innerHTML = `<tr><th>Week</th><th>avg lbs</th><th>Δ</th><th>steps avg</th></tr>` +
     rows.map((r,i)=>{
       const p = i? rows[i-1].avg : null;
       const d = (r.avg!=null&&p!=null)? (r.avg-p) : null;
       const dTxt = d===null?'—':`<span class="${d<=0?'delta-dn':'delta-up'}">${d>0?'+':''}${d.toFixed(2)}</span>`;
-      return `<tr><td>Wk ${r.k}</td><td>${r.avg!=null?r.avg.toFixed(1):'—'}</td><td>${dTxt}</td><td>${r.sAvg?r.sAvg.toFixed(1)+'k':'—'}</td></tr>`;
+      const thin = r.n>0 && r.n<=4;
+      return `<tr><td>Wk ${r.k}</td><td>${r.avg!=null?r.avg.toFixed(1):'—'}${thin?`<span style="opacity:.6;font-size:12px" title="only ${r.n} weigh-ins this week — low confidence"> ⚠${r.n}</span>`:''}</td><td>${dTxt}</td><td>${r.sAvg?r.sAvg.toFixed(1)+'k':'—'}</td></tr>`;
     }).join('');
   /* 🎯 goal ETA from the last 3 completed weekly averages */
   const eta = $('#etaCard');
@@ -4240,13 +4360,15 @@ function drawTrack(){
       const a = full[full.length-1], b = full[full.length-3];
       const rate = (a.avg-b.avg)/2; /* lb per week, negative = losing */
       const cur = full[full.length-1].avg;
+      const thin3 = full.slice(-3).filter(r=>r.n<=4).length;
+      const warn = thin3? `<br><span style="opacity:.75">⚠ ${thin3} of these 3 weeks had ≤4 weigh-ins — read that as missing data, not a stall.</span>` : '';
       if(rate<-0.05){
-        const wk165 = (cur-165)/(-rate), wk160 = (cur-160)/(-rate);
+        const wk165 = (cur-165)/(-rate);
         const dISO = w => { const d = new Date(); d.setDate(d.getDate()+Math.round(w*7));
           return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); };
-        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 <b>Trend: ${rate.toFixed(2)} lb/wk.</b> At this pace: <b>165 around ${cur<=165?'— you’re there':dISO(wk165)}</b> · <b>160 around ${cur<=160?'— there':dISO(wk160)}</b>. Recalculates every completed week.</div>`;
+        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 <b>Trend: ${rate.toFixed(2)} lb/wk.</b> At this pace, <b>165 around ${cur<=165?'— you’re there':dISO(wk165)}</b>. Target is 165 by Sept 30, then reassess by look — 160 and 155 are off the table for 2026.${warn}</div>`;
       } else {
-        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 Trend over the last 3 weeks is flat (${rate>=0?'+':''}${rate.toFixed(2)} lb/wk) — no ETA. First lever: steps back to 11–12k; then it’s a Q conversation.</div>`;
+        eta.innerHTML = `<div class="note" style="margin-top:12px">🎯 Last 3 weeks read flat (${rate>=0?'+':''}${rate.toFixed(2)} lb/wk).${warn} Steps are already ~10.1k/day measured — <b>do not add steps.</b> Check sleep and the recovery gate first; if it stays flat two more weeks with full weigh-ins, it’s a food conversation.</div>`;
       }
     }
   }
@@ -4268,7 +4390,7 @@ function weekReport(){
     if(e){ if(e.w!=null)parts.push(e.w.toFixed(1)+' lb'); if(e.s!=null)parts.push(e.s+'k steps'); if(e.sl!=null)parts.push(sleepFmt(e.sl)+' sleep'); }
     if(meals) parts.push('ate: '+meals);
     const dl = store.get('qpcut.dials.'+dkey(d),{});
-    if(dl.e||dl.h||dl.s) parts.push(`dials E${dl.e||'·'}/H${dl.h||'·'}/S${dl.s||'·'}`);
+    if(dl.e||dl.h) parts.push(`dials E${dl.e||'·'}/H${dl.h||'·'}`);
     const rpe = store.get('qpcut.rpe.'+dkey(d),0);
     if(rpe) parts.push(`session RPE ${rpe}/5`);
     const eo = (store.get('qpcut.eatout',{}))[d];
@@ -4615,6 +4737,17 @@ function wireToday(){
     ozBtn.addEventListener('click',go);
     ozIn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
   }
+  const lpaIn = $('#lpaIn');
+  if(lpaIn) lpaIn.addEventListener('change',()=>{
+    const v = parseFloat(lpaIn.value);
+    store.set('qpcut.lpa', isNaN(v)? null : v); render();
+  });
+  const labAdd = $('#labAdd'), labPaste = $('#labPaste'), labMsg = $('#labMsg');
+  if(labAdd && labPaste) labAdd.addEventListener('click',()=>{
+    const r = labImport(labPaste.value);
+    if(labMsg) labMsg.textContent = r.msg;
+    if(r.ok){ labPaste.value=''; render(); }
+  });
   const hrvIn = $('#hrvIn');
   if(hrvIn) hrvIn.addEventListener('change',()=>{
     const k = 'qpcut.hrv.'+dkey(logDate||isoToday());
@@ -4953,7 +5086,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785527328';
+const BUILD = 'b1785527901';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
