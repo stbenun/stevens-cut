@@ -4326,7 +4326,7 @@ function viewTrack(){
     <div class="statline" style="margin-bottom:8px">Latest draw <b>${g.latest.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}</b>${g.prevK?` · previous ${g.prevK.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}`:' · baseline'}</div>
     ${(()=>{ const dleft = Math.ceil((new Date(LAB_NEXT+'T12:00:00') - new Date(isoToday()+'T12:00:00'))/864e5);
       if(dleft<0) return '';
-      return `<div class="sub" style="margin-bottom:8px">🩸 Next Rythm order <b>${LAB_NEXT.slice(5).replace('-','/')}</b> — ${dleft===0?'today':dleft+' day'+(dleft===1?'':'s')+' out'}. ${dleft<=7?'<b>Open the lab-day card below and set up the night before.</b>':'At-home kit, so you pick the morning.'}</div>`; })()}
+      return `<div class="sub" style="margin-bottom:8px">🩸 Next Rythm order <b>${LAB_NEXT.slice(5).replace('-','/')}</b> — ${dleft===0?'today':dleft+' day'+(dleft===1?'':'s')+' out'}. ${dleft<=7?'<b>Open the lab-day card below and set up the night before.</b>':'At-home kit, so you pick the morning.'}</div><div class="sub" style="margin-bottom:8px">🧪 <b>Add HbA1c to this order.</b> It's on Rythm's catalog, it's stable in shipped whole blood, and it settles the fructosamine question properly. Do <b>not</b> rely on a shipped fasting glucose — without a fluoride tube the cells consume it in transit and it reads falsely low.</div>`; })()}
     ${apo&&apo.v!=null?`<div style="font-size:26px;font-weight:650;line-height:1.1">ApoB ${apo.v}<small style="font-size:13px;opacity:.6"> mg/dL${arrow(apo)}</small></div>
     <div class="sub" style="margin-top:3px">Target under <b>80</b>. The one lab number that still matters in 40 years.</div>`:''}
     <ul class="sched" style="margin-top:10px">
@@ -4341,15 +4341,19 @@ function viewTrack(){
       <div class="sub" style="margin-top:6px">Values only. Rythm's own status and "optimal" bands are deliberately not stored — their range column means opposite things on different markers, so it can't be trusted as a threshold.</div>
     </details>
     <details class="acc innerrow" data-acc="lab-day"${openAcc.has('lab-day')?' open':''}>
-      <summary><span>🩸 Lab day · draw conditions</span></summary>
+      <summary><span>🩸 Collection day · Tasso+ at home</span></summary>
       <ul class="sched" style="margin-top:6px">
-        <li><span class="t">Wed</span><span>Last food <b>9:30 PM</b>. Aim for a 10–12 h fast — never longer.</span></li>
-        <li><span class="t">6:40</span><span><b>500 mL plain water.</b> Another 500 mL at 7:30. Mandatory — this is the fix for the high albumin.</span></li>
-        <li><span class="t">—</span><span>No stick, no caffeine, no food, no supplements. <b>No lifting or running in the prior 12 h.</b></span></li>
-        <li><span class="t">8:00</span><span>Needle in <b>8:00–8:20 AM</b>. Skip the 7:45 class that morning only.</span></li>
-        <li><span class="t">—</span><span><b>Tell them about the pre-syncope and ask to be reclined.</b> Sit 10 min first. Don't clench your fist.</span></li>
-        <li><span class="t">—</span><span>Never within <b>5 days after a 25-hour fast</b>, and never within 2 weeks of illness.</span></li>
+        <li><span class="t">DAY</span><span><b>Monday, Tuesday or Wednesday morning only — never Thu–Sun.</b> Rythm designed the panel around analytes stable for <b>4 days at ambient temperature</b>, and it's analysed on day 4–5. A weekend sitting in transit eats the whole window.</span></li>
+        <li><span class="t">BEST</span><span><b>Monday.</b> Your last lift was Saturday, so you're ~44 h clear of training, you're fasted overnight anyway, and it ships same-day.</span></li>
+        <li><span class="t">Sun</span><span><b>Protect the Sunday night before.</b> Home by 11. Testosterone is made during sleep and it's one of the two tripwire markers — a 5 h night reads as a lower number for the wrong reason.</span></li>
+        <li><span class="t">9:30</span><span>Last food Sunday <b>9:30 PM</b>. Target a 10–12 h fast — never longer.</span></li>
+        <li><span class="t">Wake</span><span><b>500 mL plain water on waking</b>, another 500 mL 45 min before you collect. Do it <b>before</b> the stick.</span></li>
+        <li><span class="t">—</span><span>Nothing else first: no caffeine, no food, no supplements, no stick until the tube is sealed. <b>No lifting or running in the prior 12 h.</b></span></li>
+        <li><span class="t">SAME</span><span><b>Standardise it or the months aren't comparable.</b> Same arm, same clock time, sit upright 10 min first, warm the arm the full time the instructions say. You control every one of these — the lab doesn't.</span></li>
+        <li><span class="t">SHIP</span><span><b>Post it the same day.</b> Never collect the day before a holiday.</span></li>
+        <li><span class="t">—</span><span>Never within <b>5 days after a 25-hour fast</b>, and never within 2 weeks of illness or a vaccination.</span></li>
       </ul>
+      <div class="sub" style="margin-top:6px">Upper-arm vacuum patch, not a fingerstick — no squeezing, so far less hemolysis and no interstitial dilution. Lithium heparin microtube, so these are <b>plasma</b> values read against venous reference ranges. That alone puts a 5.25 albumin against a 5.2 ceiling inside the noise of the method.</div>
     </details>
     <div class="formrow" style="margin-top:10px">
       <textarea id="labPaste" rows="2" placeholder="Paste the whole Rythm CSV here (marker,value,unit,...)" style="width:100%;font-size:13px"></textarea>
@@ -5233,7 +5237,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785528242';
+const BUILD = 'b1785528801';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
