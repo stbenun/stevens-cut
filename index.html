@@ -2155,6 +2155,11 @@ function recoveryGate(ld){
    opposite things depending on the marker: TG/HDL 1.08 is flagged optimal BELOW its stated range,
    while uric acid 3.09 is flagged outOfRange BELOW its stated range. Only LAB_GATES sets thresholds. */
 const LAB_SEED_DATE = '2026-7-29';
+/* His next Rythm order is Aug 23 2026. Rythm is an AT-HOME kit, so he picks the draw morning
+   himself — which means no class conflict and no lab appointment to schedule. Unconfirmed:
+   whether Aug 23 is the ORDER date or the DRAW date, and whether the collection is venous or
+   fingerstick. Update this once he says. */
+const LAB_NEXT = '2026-08-23';
 const LAB_SEED = {'ApoB':104,'Total Testosterone':533,'Free T3':2.54,'Thyroid Stimulating Hormone':3.42,
   'SHBG':36.1,'Free Testosterone':96.08,'Estrogen':21.5,'LDL Cholesterol':125.18,'HDL Cholesterol':44.2,
   'Total Cholesterol':179,'Triglycerides':48.1,'hs-CRP (High-Sensitivity C-Reactive Protein)':0.5,
@@ -2215,6 +2220,130 @@ function labImport(txt){
   store.set('qpcut.labdates', idx);
   const n = dks.reduce((a,dk)=>a+Object.keys(byDate[dk]).length,0);
   return {ok:true, msg:`Saved ${n} markers across ${dks.length} draw${dks.length===1?'':'s'}.`};
+}
+/* ---------- Garmin import (Jul 31 2026) ----------
+   There is no Garmin OAuth, so this is a paste box: he exports from Garmin Connect on the PC and
+   pastes one file at a time. Four exports matter, and they do NOT share a shape:
+     HRV Status.csv          DAILY    Date,Overnight HRV,Baseline,7d Avg
+     Sleep.csv               WEEKLY   Date,Avg Score,Avg Quality,Avg Duration,Avg Sleep Need,Avg Bedtime,Avg Wake Time
+     Resting Heart Rate.csv  WEEKLY   ,Resting Heart Rate     (dates mm/dd/yyyy)
+     Steps.csv               WEEKLY   ,Actual                 (parsed, then DISCARDED — he logs steps
+                             himself, and Garmin misses ~1 day/week because the watch comes off for
+                             Shabbat, so storing it would create a second source that disagrees.)
+   Only HRV is daily. 2026 rows carry NO year ("Jul 31", "Jul 25-31") while 2025 rows do, so the year
+   is inferred from today and rolled back when the result lands in the future.
+   HRV writes straight into qpcut.hrv.<dkey> — the key recoveryGate already reads — so an import feeds
+   the deload gate and the daily typing obligation disappears. Weekly series live in one qpcut.garmin
+   key, which is safe to keep monolithic because it is re-importable from source at any time, unlike
+   the weigh-ins. Deliberately NOT stored: sleep stages (unreliable), sleep score, Garmin stress,
+   Body Battery, respiration (it already answered the apnea question and never needs to again). */
+const CUT_START = '2026-05-11';
+const GMON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function gYear(mon, day, explicit){
+  if(explicit) return explicit;
+  const now = new Date(); let y = now.getFullYear();
+  if(new Date(y, mon, day) - now > 60*864e5) y--;   /* >2 months ahead => it's last year's row */
+  return y;
+}
+function gParseDay(txt){                            /* "Jul 31" or "Jul 31, 2025" -> Date */
+  const m = /([A-Za-z]{3})[a-z]*\s+(\d{1,2})(?:,\s*(\d{4}))?/.exec(String(txt||''));
+  if(!m) return null;
+  const mo = GMON[m[1].toLowerCase()]; if(mo==null) return null;
+  return new Date(gYear(mo, +m[2], m[3]?+m[3]:null), mo, +m[2]);
+}
+function gParseSlash(txt){                          /* "07/25/2026" -> Date */
+  const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(txt||''));
+  return m? new Date(+m[3], +m[1]-1, +m[2]) : null;
+}
+function gWeekEnd(label){                           /* weekly label -> the LAST day of the range */
+  const parts = String(label||'').split(/\s*-\s*/);
+  const tail = (parts[parts.length-1]||'').trim(), head = parts[0]||'';
+  let d = gParseDay(tail);                          /* "Apr 3" / "Jan 2, 2026" / "Oct 3, 2025" */
+  if(!d){
+    /* The tail can be a BARE day that borrows the head's month, with the year optionally hanging
+       off it: "Jul 25-31" -> 31, and "Dec 20-26, 2025" -> 26 + 2025. That second form is why this
+       needs its own branch — a plain \d{1,2} test rejects "26, 2025" and loses every 2025 row. */
+    const bare = /^(\d{1,2})(?:,\s*(\d{4}))?$/.exec(tail);
+    const h = /([A-Za-z]{3})/.exec(head);
+    if(bare && h){
+      const mo = GMON[h[1].toLowerCase()];
+      if(mo!=null) d = new Date(gYear(mo, +bare[1], bare[2]?+bare[2]:null), mo, +bare[1]);
+    }
+  }
+  return d;
+}
+function gNum(txt){ const m = /(-?\d+(?:\.\d+)?)/.exec(String(txt||'')); return m? +m[1] : null; }
+function gDur(txt){                                 /* "5h 22min" -> 5.37 */
+  const h = /(\d+)\s*h/.exec(String(txt||'')), mi = /(\d+)\s*min/.exec(String(txt||''));
+  if(!h && !mi) return null;
+  return +(((h?+h[1]:0) + (mi?+mi[1]:0)/60).toFixed(2));
+}
+function garminImport(txt){
+  const lines = String(txt||'').replace(/^﻿/,'').trim().split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) return {ok:false, msg:'Paste a whole Garmin CSV, header row included.'};
+  const head = lines[0].toLowerCase();
+  const G = store.get('qpcut.garmin', {});
+  let kind=null, n=0;
+
+  if(head.indexOf('overnight hrv')>=0){             /* DAILY */
+    kind='HRV';
+    /* Garmin exports NEWEST ROW FIRST, so "the last baseline I saw" is the OLDEST one. Track the
+       baseline attached to the newest date explicitly — a stale floor makes the gate fire late. */
+    let bestD=null, bestLo=null;
+    lines.slice(1).forEach(ln=>{
+      const p = ln.split(',');
+      const d = gParseDay(p[0]); if(!d) return;
+      const a7 = gNum(p[3]), lo = gNum(p[2]);
+      if(lo!=null && (bestD===null || d>bestD)){ bestD=d; bestLo=lo; }
+      /* Store on the 7-DAY AVERAGE, not the overnight value. Saturdays have no overnight reading
+         (the watch is off for Shabbat) but Garmin still reports a rolling average, and that average
+         is what the deload gate compares against the floor. */
+      if(a7==null) return;
+      store.set('qpcut.hrv.'+dkey(iso(d)), a7); n++;
+    });
+    if(bestLo!=null) store.set('qpcut.hrvbase', bestLo);
+  } else if(head.indexOf('avg duration')>=0){       /* WEEKLY */
+    kind='Sleep';
+    G.sleep = G.sleep || {};
+    lines.slice(1).forEach(ln=>{
+      const p = ln.split(',');
+      if(p.length<7) return;
+      const tail = p.slice(-6), label = p.slice(0, p.length-6).join(',');
+      const d = gWeekEnd(label); if(!d) return;
+      const h = gDur(tail[2]); if(h==null) return;
+      G.sleep[iso(d)] = {h, need:gDur(tail[3]), bed:(tail[4]||'').trim(), wake:(tail[5]||'').trim()};
+      n++;
+    });
+  } else if(head.indexOf('resting heart rate')>=0){ /* WEEKLY */
+    kind='Resting HR';
+    G.rhr = G.rhr || {};
+    lines.slice(1).forEach(ln=>{
+      const p = ln.split(',');
+      const d = gParseSlash(p[0]); const v = gNum(p[1]);
+      if(d && v!=null){ G.rhr[iso(d)] = v; n++; }
+    });
+  } else if(head.indexOf('actual')>=0){
+    return {ok:false, msg:'That’s the Steps export — skipped on purpose. Your own step log is the source; Garmin misses Shabbat.'};
+  } else {
+    return {ok:false, msg:'Didn’t recognise that file. Paste HRV Status, Sleep, or Resting Heart Rate.'};
+  }
+  if(!n) return {ok:false, msg:'Recognised '+kind+' but read 0 rows.'};
+  G.last = isoToday();          /* so a stale import can be nudged on Monday */
+  store.set('qpcut.garmin', G);
+  return {ok:true, msg:`${kind}: ${n} row${n===1?'':'s'} imported.`};
+}
+function garminSummary(){
+  const G = store.get('qpcut.garmin', {});
+  const out = {rhrNow:null, rhrPre:null, sleep:[]};
+  const rhr = Object.entries(G.rhr||{}).sort((a,b)=>a[0]<b[0]?-1:1);
+  if(rhr.length){
+    out.rhrNow = rhr[rhr.length-1][1];
+    const pre = rhr.filter(([d])=>d < CUT_START).map(([,v])=>v);
+    if(pre.length>=8) out.rhrPre = +(pre.reduce((a,b)=>a+b,0)/pre.length).toFixed(1);
+  }
+  out.sleep = Object.entries(G.sleep||{}).sort((a,b)=>a[0]<b[0]?-1:1).slice(-4)
+    .map(([d,v])=>Object.assign({d}, v));
+  return out;
 }
 function menuWeekDates(){ /* Sun-Sat containing today */
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
@@ -2881,6 +3010,11 @@ function nextAction(){
   if(m>=390 && m<720 && !sup.includes(6)) return {label:'💧 Take the Ryse stick', jump:'z-log', acc:'log-stack'};
   if(m>=1140 && !sup.includes(5)) return {label:'💊 Fish oil — with dinner', jump:'z-log', acc:'log-stack'};
   if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 5 g weighed', jump:'z-log', acc:'log-stack'};
+  /* He exports Garmin every Monday morning. Weekly actions need a trigger too — that is the whole
+     lesson of the hydration stick sitting at 57% because its only trigger was a lift. */
+  const gLast = (store.get('qpcut.garmin',{})||{}).last;
+  const gStale = !gLast || (new Date(t+'T12:00:00') - new Date(gLast+'T12:00:00'))/864e5 >= 5;
+  if(wd===1 && m>=420 && m<840 && gStale) return {label:'⌚ Paste this week’s Garmin export', jump:'z-log', acc:'log-recov'};
   return null;
 }
 function nudgeInfo(){
@@ -3479,13 +3613,23 @@ function viewToday(){
     <details class="acc innerrow" data-acc="log-recov"${openAcc.has('log-recov')?' open':''}>
       <summary><span>🫀 Recovery gate</span><span class="statline">${rg.deload?'⚠ deload today':(rg.streak>=3?'⚠ deload week':(rg.hv!=null?'ok':'–'))}</span></summary>
       <div id="recovCard">
-        <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(watch)</small></span>
-          <span><input id="hrvIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.hv!=null?rg.hv:''}" placeholder="ms" style="width:74px;text-align:right"> ms</span></div>
+        <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(from Garmin)</small></span>
+          <span>${rg.hv!=null?`<b>${rg.hv}</b> ms`:'<small style="opacity:.6">import below</small>'}</span></div>
         <div class="mrow"><span class="nm">Your baseline floor</span>
           <span><input id="hrvBaseIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.base}" style="width:74px;text-align:right"> ms</span></div>
         <div class="mrow"><span class="nm">Slept</span><span>${rg.sl!=null?rg.sl+' h':'— log it in Track'}</span></div>
         ${rg.why.map(w=>`<div class="sub" style="margin-top:8px">${w}</div>`).join('')}
         <div class="sub" style="margin-top:8px;opacity:.65">Under 5.5 h → deload today. HRV under your floor 3 days running → deload week + 5 days at maintenance.</div>
+        ${(()=>{ const gs = garminSummary(); if(gs.rhrNow==null && !gs.sleep.length) return '';
+          return `<ul class="sched" style="margin-top:8px">
+          ${gs.rhrNow!=null?`<li><span class="t">${gs.rhrNow}</span><span>resting HR${gs.rhrPre!=null?` · pre-cut baseline was <b>${gs.rhrPre}</b> over ${'' }${Object.keys((store.get('qpcut.garmin',{}).rhr)||{}).filter(d=>d<CUT_START).length} weeks`:''}</span></li>`:''}
+          ${gs.sleep.map(w=>`<li><span class="t">${w.h}h</span><span>week to ${w.d.slice(5).replace('-','/')} · bed ${w.bed||'—'} · wake ${w.wake||'—'}</span></li>`).join('')}
+        </ul>
+        <div class="sub" style="margin-top:6px;opacity:.65">Garmin sleep is a WEEKLY average — the daily deload rule still reads the sleep you log in Track. Bedtime is the only variable that moves; your wake time is fixed by minyan.</div>`; })()}
+        <div class="formrow" style="margin-top:10px">
+          <textarea id="gmPaste" rows="2" placeholder="Paste a Garmin CSV: HRV Status, Sleep, or Resting Heart Rate" style="width:100%;font-size:13px"></textarea>
+        </div>
+        <div class="formrow"><button class="btn ghost" id="gmAdd">⌚ Import from Garmin</button><span id="gmMsg" class="sub"></span></div>
       </div>
     </details>
   </div>
@@ -4180,6 +4324,9 @@ function viewTrack(){
   ${g.fired?`<div class="note" style="margin-top:10px;border-color:var(--danger)"><b>⚠ TRIPWIRE FIRED — the cut ends this week.</b><br>${g.rows.filter(r=>r.fired&&r.kind==='TRIPWIRE').map(r=>`${r.mk} ${r.v} (limit ${r.lim})`).join(' · ')}<br>Go to maintenance now. Do not wait for the scale.</div>`:''}
   <div class="card">
     <div class="statline" style="margin-bottom:8px">Latest draw <b>${g.latest.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}</b>${g.prevK?` · previous ${g.prevK.replace(/^(\d{4})-(\d+)-(\d+)$/,'$2/$3')}`:' · baseline'}</div>
+    ${(()=>{ const dleft = Math.ceil((new Date(LAB_NEXT+'T12:00:00') - new Date(isoToday()+'T12:00:00'))/864e5);
+      if(dleft<0) return '';
+      return `<div class="sub" style="margin-bottom:8px">🩸 Next Rythm order <b>${LAB_NEXT.slice(5).replace('-','/')}</b> — ${dleft===0?'today':dleft+' day'+(dleft===1?'':'s')+' out'}. ${dleft<=7?'<b>Open the lab-day card below and set up the night before.</b>':'At-home kit, so you pick the morning.'}</div>`; })()}
     ${apo&&apo.v!=null?`<div style="font-size:26px;font-weight:650;line-height:1.1">ApoB ${apo.v}<small style="font-size:13px;opacity:.6"> mg/dL${arrow(apo)}</small></div>
     <div class="sub" style="margin-top:3px">Target under <b>80</b>. The one lab number that still matters in 40 years.</div>`:''}
     <ul class="sched" style="margin-top:10px">
@@ -4748,11 +4895,11 @@ function wireToday(){
     if(labMsg) labMsg.textContent = r.msg;
     if(r.ok){ labPaste.value=''; render(); }
   });
-  const hrvIn = $('#hrvIn');
-  if(hrvIn) hrvIn.addEventListener('change',()=>{
-    const k = 'qpcut.hrv.'+dkey(logDate||isoToday());
-    const v = parseFloat(hrvIn.value);
-    store.set(k, isNaN(v)? null : v); render();
+  const gmAdd = $('#gmAdd'), gmPaste = $('#gmPaste'), gmMsg = $('#gmMsg');
+  if(gmAdd && gmPaste) gmAdd.addEventListener('click',()=>{
+    const r = garminImport(gmPaste.value);
+    if(gmMsg) gmMsg.textContent = r.msg;
+    if(r.ok){ gmPaste.value=''; render(); }
   });
   const hrvBaseIn = $('#hrvBaseIn');
   if(hrvBaseIn) hrvBaseIn.addEventListener('change',()=>{
@@ -5086,7 +5233,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785527901';
+const BUILD = 'b1785528242';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
