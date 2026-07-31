@@ -6,16 +6,16 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Steven&#39;s Coach">
+<meta name="apple-mobile-web-app-title" content="The Cut">
 <meta name="theme-color" content="#171915">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
-<title>Steven's Coach</title>
+<title>The Cut</title>
 </head>
 <body style="margin:0">
 
 <style>
-  /* ============ STEVEN'S COACH v14 · design tokens ============ */
+  /* ============ THE CUT v14 · design tokens ============ */
   :root{
     --ink:#15170f; --ink2:#101208;
     --panel:#20231b; --panel2:#292c22; --panel3:#31342a; --line:#363a2e; --line2:#42462f;
@@ -1478,11 +1478,17 @@ function runCoaching(){
   return out;
 }
 
+/* ⚠ INDEX ORDER IS FROZEN. qpcut.supps.<date> stores checked INDEXES, so reordering or
+   shortening this array silently corrupts every historical log. Dropped items KEEP their slot
+   and carry a third element 'off'; the UI filters them out and SUPPS_ON counts what's live.
+   Updated Jul 31 2026: creatine 10→5 g · D3 halved · stick moved to on-waking · fish oil to dinner
+   · dropped Lion's mane, Pump Caps, multivitamin. */
 const SUPPS = [
- ['Creatine monohydrate — 10 g','daily'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift'],
- ['Multivitamin','daily'],['Vitamin D3','daily'],['Fish oil','daily'],['Ryse hydration stick','daily'],
- ['Magnesium ⏸ PAUSED — blood level high, ask Dr','hold'],['Allegra (if needed)','allergies'],
+ ['Creatine monohydrate — 5 g','8 PM, weighed'],['Lion’s mane','daily','off'],['Ryse Pump Caps','pre-lift','off'],
+ ['Multivitamin','daily','off'],['Vitamin D3 — half dose','daily'],['Fish oil','with dinner, daily'],['Ryse hydration stick','ON WAKING, before you stand up'],
+ ['Magnesium ⏸ STAYS PAUSED — 100 mg/day ceiling = this stick only','hold'],['Allegra (if needed)','allergies'],
 ];
+const SUPPS_ON = SUPPS.filter(x=>!x[2]).length;
 
 /* ---------- weigh-ins (preloaded weeks 1-8) ---------- */
 const W0 = new Date(2026,4,11).getTime();
@@ -2094,13 +2100,51 @@ function hydrTarget(ld){
   // Lifts — any resistance day (skip pure rest/run days)
   const isLiftDay = /legs|push|pull|upper|lift/i.test(title) && !/rest ·/i.test(dayInfo.title||'');
   if(isLiftDay){ oz += 8; why.push('+8 — lift day.'); }
-  // High-sodium meal out today → flush the sodium
+  // Salty meal out: NO water bump. Removed Jul 31 2026 — it was backwards for him.
+  // Sodium is what holds water in the bloodstream, so a salty meal is a plasma-volume EXPANSION
+  // event; half a litre of plain water on top drops osmolality, suppresses ADH and pushes the
+  // retained sodium straight back out. Flushing sodium is a hypertension intervention, not his.
   const eo = (store.get('qpcut.eatout',{}))[iso];
   if(eo && eo.v && HISODIUM_EO.includes(eo.v)){
-    oz += 16; why.push(`+16 — salty meal out (${(EATOUT[eo.v]||{}).name||eo.v}). Extra water flushes the sodium so tomorrow’s scale isn’t a lie.`);
+    why.push(`No bump for the salty meal out (${(EATOUT[eo.v]||{}).name||eo.v}) — sodium holds your fluid, it doesn’t need flushing. Just sit 10 min before standing.`);
   }
   oz = Math.min(oz, 192);                          // sane ceiling ~1.5 gal
   return {oz, base:HYDR_BASE, why, fast:false};
+}
+/* ---------- recovery gate (Jul 31 2026) ----------
+   Two objective rules, both driven by data he already collects on the Venu 3:
+     1. slept under 5.5 h            -> DELOAD today (2 sets/exercise, nothing to failure, no PRs)
+     2. HRV 7-day avg under his baseline floor for 3+ straight days -> deload WEEK + 5 days at maintenance
+   Sleep is read from the Track log (qpcut.weights .sl). HRV he types off the watch each morning.
+   Replaces the old self-reported "energy dial <=2 for 5 days" tripwire, which fired too late. */
+const HRV_BASE_DEFAULT = 78;
+function hrvBase(){ const v = +store.get('qpcut.hrvbase', HRV_BASE_DEFAULT); return v>0? v : HRV_BASE_DEFAULT; }
+function sleepFor(isoD){
+  const r = (store.get('qpcut.weights',[])||[]).find(x=> x && x.d===isoD);
+  return (r && r.sl!=null && r.sl!=='') ? +r.sl : null;
+}
+function recoveryGate(ld){
+  const isoD = ld || isoToday();
+  const base = hrvBase();
+  const sl = sleepFor(isoD);
+  const hv = store.get('qpcut.hrv.'+dkey(isoD), null);
+  const out = {sl, hv, base, deload:false, streak:0, why:[]};
+  if(sl!=null && sl < 5.5){
+    out.deload = true;
+    out.why.push(`Slept ${sl} h \u2014 under 5.5. <b>Today: 2 sets per exercise, nothing to failure, no PR attempts.</b>`);
+  }
+  let streak = 0;
+  for(let i=0;i<14;i++){
+    const d = new Date(isoD+'T12:00:00'); d.setDate(d.getDate()-i);
+    const v = store.get('qpcut.hrv.'+dkey(iso(d)), null);
+    if(v==null){ if(i===0) continue; break; }
+    if(+v < base) streak++; else break;
+  }
+  out.streak = streak;
+  if(streak>=3) out.why.push(`HRV 7-day avg under ${base} ms for <b>${streak} days straight</b> \u2014 take a deload week and eat at maintenance for 5 days.`);
+  else if(hv!=null && +hv < base) out.why.push(`HRV ${hv} ms is under your ${base} ms floor. ${3-streak} more day${3-streak===1?'':'s'} triggers a deload week.`);
+  if(!out.why.length && hv!=null) out.why.push(`HRV ${hv} ms, above your ${base} ms floor. Train as programmed.`);
+  return out;
 }
 function menuWeekDates(){ /* Sun-Sat containing today */
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
@@ -2252,7 +2296,7 @@ async function enablePush(){
     let sub = await reg.pushManager.getSubscription();
     if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly:true, applicationServerKey: urlB64ToUint8(VAPID_PUB)});
     localStorage.setItem('qpcut.pushsub', JSON.stringify(sub));  /* rides the gist sync → the weekly Action reads it */
-    try{ await reg.showNotification("Steven's Coach", {body:'✓ Reminders on — I’ll buzz you Friday at 3 for the COR flavors.', icon:'icon-192.png'}); }catch(e){}
+    try{ await reg.showNotification("The Cut", {body:'✓ Reminders on — I’ll buzz you Friday at 3 for the COR flavors.', icon:'icon-192.png'}); }catch(e){}
     if(typeof syncNow==='function') syncNow();
     msg('✓ Reminders on. A test notification just fired. You’ll get one every Friday 3 PM.');
     render();
@@ -2594,7 +2638,7 @@ function heroHTML(ld){
   const eaten = (store.get('qpcut.eaten',{}))[ld]||{};
   const isFri = new Date(ld+'T12:00:00').getDay()===5;
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
-  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
+  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.seltzer||0)*12 + (drinks.dietsoda||0)*12 + (drinks.custom||0);
   const ht = hydrTarget(ld);
   const supDone = (store.get('qpcut.supps.'+dkey(ld),[])).length;
   const wd = new Date(ld+'T12:00:00').getDay();
@@ -2619,7 +2663,7 @@ function heroHTML(ld){
     <div class="glance">
       <span class="gslots">${slots}</span>
       <span class="gstat">💧<span class="gwater"><i style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></i></span>${oz}<small style="opacity:.6">/${ht.oz}</small></span>
-      <span class="gstat">💊 ${supDone}/${SUPPS.length}</span>
+      <span class="gstat">💊 ${supDone}/${SUPPS_ON}</span>
       <span class="gstat">🏋 ${liftG}</span>
     </div>
     ${winsHTML().replace('class="sub" style="margin-top:6px"','class="wins"')}
@@ -2984,17 +3028,19 @@ function viewToday(){
   if(isNoRun(ld)||!RUNNING_ON) dTitle = dTitle.replace(/\s*·?\s*(short|long)\s+run/ig,'').replace(/·\s*·/g,'·').replace(/^\s*·\s*|\s*·\s*$/g,'').trim();
   if(!backfill && liftLoggedToday(ld)) dTitle = dTitle.replace(/\s*—\s*lift\s*~?\d{1,2}:\d{2}\s*(AM|PM)?/i,' ✅').replace(/\s+✅/,' ✅').trim();
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
-  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.custom||0);
+  const oz = (drinks.bottle||0)*30 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.seltzer||0)*12 + (drinks.dietsoda||0)*12 + (drinks.custom||0);
   const ht = hydrTarget(ld);
   const DRINKS = [
     ['bottle','🚰 Water bottle','30 oz'],['pre','⚡ Pre-workout','~9 oz'],
-    ['eaa','💪 EAA','~9 oz'],['soda','🥤 Seltzer / diet soda','12 oz'],
+    ['eaa','💪 EAA','~9 oz'],['seltzer','🫧 Seltzer','12 oz'],
+    ['dietsoda','🥤 Diet soda','12 oz · max 1/day'],
   ];
   const done = store.get('qpcut.supps.'+dkey(ld), []);
   const counts = store.get('qpcut.menucounts',{});
   const eaten = store.get('qpcut.eaten',{});
   const todayEaten = eaten[ld]||{};
   const dl = store.get('qpcut.dials.'+dkey(ld), {});
+  const rg = recoveryGate(ld);
 
   /* ---- NOW zone ---- */
   const nowZone = `
@@ -3341,13 +3387,25 @@ function viewToday(){
       </div>
     </details>
     <details class="acc innerrow" data-acc="log-stack"${openAcc.has('log-stack')?' open':''}>
-      <summary><span>💊 Stack</span><span class="statline"><b>${done.length}</b>/${SUPPS.length}</span></summary>
+      <summary><span>💊 Stack</span><span class="statline"><b>${done.length}</b>/${SUPPS_ON}</span></summary>
       <div id="suppList">
-      ${SUPPS.map(([n,w],i)=>`
+      ${SUPPS.map(([n,w,off],i)=> off?'':`
         <button class="suppitem${done.includes(i)?' done':''}" data-i="${i}">
           <span class="box">${done.includes(i)?'✓':''}</span>
           <span class="nm">${n}</span><span class="when">${w}</span>
         </button>`).join('')}
+      </div>
+    </details>
+    <details class="acc innerrow" data-acc="log-recov"${openAcc.has('log-recov')?' open':''}>
+      <summary><span>🫀 Recovery gate</span><span class="statline">${rg.deload?'⚠ deload today':(rg.streak>=3?'⚠ deload week':(rg.hv!=null?'ok':'–'))}</span></summary>
+      <div id="recovCard">
+        <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(watch)</small></span>
+          <span><input id="hrvIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.hv!=null?rg.hv:''}" placeholder="ms" style="width:74px;text-align:right"> ms</span></div>
+        <div class="mrow"><span class="nm">Your baseline floor</span>
+          <span><input id="hrvBaseIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.base}" style="width:74px;text-align:right"> ms</span></div>
+        <div class="mrow"><span class="nm">Slept</span><span>${rg.sl!=null?rg.sl+' h':'— log it in Track'}</span></div>
+        ${rg.why.map(w=>`<div class="sub" style="margin-top:8px">${w}</div>`).join('')}
+        <div class="sub" style="margin-top:8px;opacity:.65">Under 5.5 h → deload today. HRV under your floor 3 days running → deload week + 5 days at maintenance.</div>
       </div>
     </details>
   </div>
@@ -4558,6 +4616,17 @@ function wireToday(){
     ozBtn.addEventListener('click',go);
     ozIn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } });
   }
+  const hrvIn = $('#hrvIn');
+  if(hrvIn) hrvIn.addEventListener('change',()=>{
+    const k = 'qpcut.hrv.'+dkey(logDate||isoToday());
+    const v = parseFloat(hrvIn.value);
+    store.set(k, isNaN(v)? null : v); render();
+  });
+  const hrvBaseIn = $('#hrvBaseIn');
+  if(hrvBaseIn) hrvBaseIn.addEventListener('change',()=>{
+    const v = parseFloat(hrvBaseIn.value);
+    if(!isNaN(v) && v>0){ store.set('qpcut.hrvbase', v); render(); }
+  });
   document.querySelectorAll('[data-dclear]').forEach(a=>a.addEventListener('click',e=>{
     e.preventDefault();
     const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
@@ -4885,7 +4954,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785462375';
+const BUILD = 'b1785519525';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

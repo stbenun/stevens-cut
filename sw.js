@@ -6,7 +6,7 @@ self.addEventListener('push', event => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; }
   catch (e) { d = { title: 'The Cut', body: event.data ? event.data.text() : '' }; }
-  const title = d.title || "Steven's Coach";
+  const title = d.title || "The Cut";
   const options = {
     body: d.body || '',
     icon: d.icon || 'icon-192.png',
