@@ -1202,6 +1202,18 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
+ {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
+🍗 <b>Half chicken — $24.</b> Pull the skin off the <b>thigh and leg</b>, keep the breast skin.<br>
+🥖 <b>Carolina Gold — $25.</b> Roast beef on a panini’d baguette.<br>
+🍚 <b>Mexican rice — $7.</b><br>
+✅ Free, eat freely: pickles · cole slaw · sugar-free red cabbage slaw<br>
+🚫 Skip: burnt ends · lamb riblets · dino + short ribs · Meat Lovers Platter · anything fried<br>
+<br>
+<b>Numbers:</b> 450 logged today → <b>1,770 left</b>. This lands the day ≈<b>2,195 cal · 191 P · 202 C · 57 F</b> against 2,220 / 187 / 227 / 64.<br>
+<span class="sub">Restaurant figures are estimates, ±15%. What actually decides the night: one protein anchor, one starch, skin off the dark meat, nothing fried.</span><br>
+<br>
+🥛 Meat meal → <b>no dairy for 6 hours.</b> The Creami moves to tomorrow.<br>
+😴 Home ~10:15 → <b>lights out 11.</b> Legs tomorrow, and Sunday night is one of your two worst.`},
  {d:'2026-07-21', title:'📋 Erev Tisha B’Av — tomorrow', msg:`<b>🧊 Prep tonight:</b> defrost 1 salmon (6 oz) · set out 1 Oikos + a big FAGE 2% (470 g for the breakfast yogurt cup) · portion 130 g dry rice (55 lunch + 75 Seudat Mafseket)<br>
 <br>
 <b>🍽 Menu (no meat):</b><br>
@@ -5248,7 +5260,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785710896';
+const BUILD = 'b1785714127';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
