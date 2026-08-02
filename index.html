@@ -1281,6 +1281,17 @@ const FIXPOOL = [
 /* label → calories, for netting off-plan fixes out of the day's total */
 const FIXVAL = Object.fromEntries(FIXPOOL.map(([l,c])=>[l,c]));
 const EATOUT = {
+ southside:{name:'Southside · Lakewood', rules:[
+  '🍗 Smoked Half Chicken — $24. Pull the skin off the thigh and leg, keep the breast skin. ~85 g protein.',
+  '🥖 Carolina Gold — $25. Roast beef on a panini\u2019d baguette. Leaner than the brisket or pastrami sandwiches, and it brings the carbs.',
+  '🍚 Mexican Rice — $7. Not optional. BBQ is zero-carb and you finish the day ~130 g short without it.',
+  '✅ Free, eat as much as you want: pickles, cole slaw, sugar-free red cabbage slaw.',
+  '🚫 Skip: Burnt Ends (their best seller and the fattiest thing there) · Lamb Riblets (the menu itself says "fatty") · Dino Ribs · Short Bone Ribs · Prime Rib Plate $65 · Meat Lovers Platter $130 (serves 3–4, six fatty meats) · anything fried.',
+  '🔄 Swaps that still work: Smoked Turkey Breast on Rye $22 (leanest on the menu) · Smokey Tacos 2pc $18 (lighter, cheaper) · Grilled Chicken Sandwich $20 (menu calls it the healthy route) · White Russian $23, Russian dressing on the side.',
+  '🧊 Smoked wings 6pc $8 / 12pc $14 — smoked, not fried. A fine add.',
+  '📊 Lands ≈1,100–1,300 cal · 125–160 P for the meal.',
+  '🧀 Meat meal → no dairy for 6 h. The Creami moves to tomorrow — decide that before you go, not after.',
+  '🕒 Closed Fri + Sat. Sun opens 2 PM. 315 Cedar Bridge Ave, ~25 min from Deal.']},
  bbq:{name:'BBQ', rules:[
   'Protein anchor, two palms: grilled chicken, turkey, sirloin, lean brisket flat (skip ribs/wings — fat bombs)',
   'One bun or laffa max — or none, double pickles + slaw instead',
@@ -2062,7 +2073,7 @@ const HYDR_BASE = 128;
 const FAST_DATES = ['2026-07-23'];               // full-fast days (no food/water)
 const NORUN_DATES = ['2026-07-26'];              // days he told me he's NOT running — skip the run everywhere (schedule, fuel, water bump)
 function isNoRun(iso){ return NORUN_DATES.includes(iso||isoToday()); }
-const HISODIUM_EO = ['sushi','bbq','restmeat','restdairy','pizza','simcha','homemeat'];
+const HISODIUM_EO = ['sushi','bbq','southside','restmeat','restdairy','pizza','simcha','homemeat'];
 function runOzBump(txt){                          // scale water to run distance
   if(!txt) return 0;
   const m = txt.match(/(\d+(?:\.\d+)?)\s*mi/); if(!m) return 0;
@@ -5237,7 +5248,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785528801';
+const BUILD = 'b1785710896';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
