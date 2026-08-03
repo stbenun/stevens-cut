@@ -2266,46 +2266,6 @@ function labGate(){
   return {latest, prevK, rows, fired: rows.some(r=>r.fired && r.kind==='TRIPWIRE')};
 }
 /* Rythm's export is: marker,value,unit,reference_range,status,time — paste it whole. */
-function labImport(txt){
-  const lines = String(txt||'').trim().split(/\r?\n/).filter(Boolean);
-  const byDate = {};
-  lines.forEach(ln=>{
-    const p = ln.split(',');
-    if(p.length < 6) return;
-    const mk = p[0].trim(), raw = p[1].trim(), when = p[p.length-1].trim();
-    if(!mk || mk.toLowerCase()==='marker') return;
-    const v = parseFloat(raw.replace(/[<>]/g,''));
-    if(isNaN(v)) return;
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(when)) return;
-    const dk = dkey(when);
-    (byDate[dk] = byDate[dk] || {})[mk] = v;
-  });
-  const dks = Object.keys(byDate);
-  if(!dks.length) return {ok:false, msg:'No rows I could read. Paste the whole Rythm CSV, header included.'};
-  const idx = store.get('qpcut.labdates', []).slice();
-  dks.forEach(dk=>{
-    store.set('qpcut.lab.'+dk, Object.assign(store.get('qpcut.lab.'+dk,{}), byDate[dk]));
-    if(!idx.includes(dk)) idx.push(dk);
-  });
-  store.set('qpcut.labdates', idx);
-  const n = dks.reduce((a,dk)=>a+Object.keys(byDate[dk]).length,0);
-  return {ok:true, msg:`Saved ${n} markers across ${dks.length} draw${dks.length===1?'':'s'}.`};
-}
-/* ---------- Garmin data (Jul 31 2026 · import box removed Aug 3 2026) ----------
-   There is no Garmin OAuth, and he does not want a paste box on the phone either — his words:
-   "id rather send garmin info directly to you in the chat." So the exports go to Claude, who writes
-   them into the sync gist, and this app only READS them:
-     qpcut.hrv.<dkey>   = the HRV 7-DAY AVERAGE for that day (not the overnight value — Saturdays have
-                          no overnight reading but Garmin still reports a rolling average, and the
-                          average is what the deload gate compares against the floor)
-     qpcut.hrvbase      = the floor, taken from the LOW end of Garmin's own baseline range
-     qpcut.weights[].sl = hours slept that night, the key the daily deload rule reads
-     qpcut.garmin.rhr   = {iso: resting HR}, plus .last = the date of the newest write, which is what
-                          the Monday nudge checks for staleness
-   Deliberately NOT stored, and not worth asking him for: sleep stages, sleep score, Garmin stress,
-   Body Battery, Pulse Ox, respiration (it already answered the apnea question once and for all).
-   Steps stay HIS log — Garmin's step file only backfills days he left blank, never overwrites. */
-const CUT_START = '2026-05-11';
 function garminSummary(){
   const G = store.get('qpcut.garmin', {});
   const out = {rhrNow:null, rhrPre:null, sleep:[]};
@@ -3596,8 +3556,8 @@ function viewToday(){
       <div id="recovCard">
         <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(from Garmin)</small></span>
           <span>${rg.hv!=null?`<b>${rg.hv}</b> ms`:'<small style="opacity:.6">send me your export</small>'}</span></div>
-        <div class="mrow"><span class="nm">Your baseline floor</span>
-          <span><input id="hrvBaseIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.base}" style="width:74px;text-align:right"> ms</span></div>
+        <div class="mrow"><span class="nm">Your baseline floor</span><span><b>${rg.base}</b> ms</span></div>
+        <div class="sub" style="margin-top:2px;opacity:.6">Garmin raises this floor as your HRV improves, so judge the MARGIN over it, never the raw number.</div>
         <div class="mrow"><span class="nm">Slept</span><span>${rg.sl!=null?rg.sl+' h':'— log it in Track'}</span></div>
         ${rg.why.map(w=>`<div class="sub" style="margin-top:8px">${w}</div>`).join('')}
         <div class="sub" style="margin-top:8px;opacity:.65">Under 5.5 h → deload today. HRV under your floor 3 days running → deload week + 5 days at maintenance.</div>
@@ -4332,10 +4292,7 @@ function viewTrack(){
       </ul>
       <div class="sub" style="margin-top:6px">Upper-arm vacuum patch, not a fingerstick — no squeezing, so far less hemolysis and no interstitial dilution. Lithium heparin microtube, so these are <b>plasma</b> values read against venous reference ranges. That alone puts a 5.25 albumin against a 5.2 ceiling inside the noise of the method.</div>
     </details>
-    <div class="formrow" style="margin-top:10px">
-      <textarea id="labPaste" rows="2" placeholder="Paste the whole Rythm CSV here (marker,value,unit,...)" style="width:100%;font-size:13px"></textarea>
-    </div>
-    <div class="formrow"><button class="btn ghost" id="labAdd">🧪 Import a draw</button><span id="labMsg" class="sub"></span></div>
+    <div class="sub" style="margin-top:10px;opacity:.65">Send Claude the Rythm CSV when a draw lands and he writes it in — same as the Garmin export. Nothing to type here.</div>
   </div>`; })()}
 
   <h2 class="sec">App &amp; data</h2>
@@ -4870,17 +4827,6 @@ function wireToday(){
     const v = parseFloat(lpaIn.value);
     store.set('qpcut.lpa', isNaN(v)? null : v); render();
   });
-  const labAdd = $('#labAdd'), labPaste = $('#labPaste'), labMsg = $('#labMsg');
-  if(labAdd && labPaste) labAdd.addEventListener('click',()=>{
-    const r = labImport(labPaste.value);
-    if(labMsg) labMsg.textContent = r.msg;
-    if(r.ok){ labPaste.value=''; render(); }
-  });
-  const hrvBaseIn = $('#hrvBaseIn');
-  if(hrvBaseIn) hrvBaseIn.addEventListener('change',()=>{
-    const v = parseFloat(hrvBaseIn.value);
-    if(!isNaN(v) && v>0){ store.set('qpcut.hrvbase', v); render(); }
-  });
   document.querySelectorAll('[data-dclear]').forEach(a=>a.addEventListener('click',e=>{
     e.preventDefault();
     const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
@@ -5208,7 +5154,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785775330';
+const BUILD = 'b1785775535';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
