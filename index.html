@@ -1508,6 +1508,10 @@ function runCoaching(){
    and carry a third element 'off'; the UI filters them out and SUPPS_ON counts what's live.
    Updated Jul 31 2026: creatine 10→5 g · D3 halved · stick moved to on-waking · fish oil to dinner
    · dropped Lion's mane, Pump Caps, multivitamin.
+   Aug 3 2026: creatine is back to 10 g / 8 capsules. Q PRESCRIBED 10 - the Jul 31 cut to 5 g was my
+   minimum-effective-dose call and I did not know it came from his coach. 10 g is harmless; it is just
+   past the point of return for muscle saturation. Do not re-cut it without Q. Note for any doctor
+   reading his labs: 10 g raises serum creatinine more than 5 g does.
    Aug 3 2026: the MULTIVITAMIN is back on - he never actually stopped taking it, so the app was lying
    about his own stack. His Rythm intake answers then named the real products, which resolved the D3
    question the other way: Vitafusion D3 Berry & Peach is 2000 IU per 2 gummies and the Vitafusion
@@ -1527,7 +1531,7 @@ function runCoaching(){
    as-needed - he had never once checked it), and both were padding the x/N denominator so a perfect
    day could not read 4/4. Reasons live in memory and in this comment, NOT in the row labels. */
 const SUPPS = [
- ['Creatine — 5 g · 4 capsules','8 PM'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift','off'],
+ ['Creatine — 10 g · 8 capsules','8 PM'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift','off'],
  ['Multivitamin','daily'],['Vitamin D3','daily','off'],['Fish oil','dinner'],['Ryse hydration stick','on waking'],
  ['Magnesium','paused','off'],['Allegra','as needed','off'],
 ];
@@ -2951,7 +2955,7 @@ function nextAction(){
   const sup = store.get('qpcut.supps.'+dkey(t),[]);
   if(m>=390 && m<720 && !sup.includes(6)) return {label:'💧 Take the Ryse stick', jump:'z-log', acc:'log-stack'};
   if(m>=1140 && !sup.includes(5)) return {label:'💊 Fish oil — with dinner', jump:'z-log', acc:'log-stack'};
-  if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 4 capsules', jump:'z-log', acc:'log-stack'};
+  if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 8 capsules', jump:'z-log', acc:'log-stack'};
   /* He exports Garmin every Monday morning and sends the files to Claude in chat. Weekly actions need a trigger too — that is the whole
      lesson of the hydration stick sitting at 57% because its only trigger was a lift. */
   const gLast = (store.get('qpcut.garmin',{})||{}).last;
@@ -5160,7 +5164,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785776343';
+const BUILD = 'b1785777119';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
