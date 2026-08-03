@@ -1738,7 +1738,7 @@ function buildGrocery(counts){
 }
 const GROCERY = [
  ['Proteins',[
-   ['Chicken breast — regular cut, not thin-sliced','~2 lb (4 × 7 oz raw)'],['93/7 ground beef','1 lb (2 × 6 oz + spare)'],
+   ['Chicken breast — regular cut, not thin-sliced','~2 lb (4 × 7 oz raw = 1.8 lb, + spare)'],['93/7 ground beef','1 lb (2 × 6 oz + spare)'],
    ['Salmon','~1.2 lb (3 × 6 oz, freeze)'],['Eggs','1 dozen'],['Egg whites carton','1'],
    ['Acme Nova lox','1 pack'],['Tuna packets','3-4']]],
  ['Dairy &amp; Fridge',[
@@ -1754,8 +1754,12 @@ const GROCERY = [
    ['Keto buns','1 pack'],['Tomato paste','1 can/tube'],['Edamame (frozen)','1 bag'],['Seaweed packets','1 box'],
    ['Smucker’s SF jelly · SF ketchup · soy sauce','check stock'],['Snack packs / mix-ins','5']]],
 ];
+/* Step 1's portion counts are COMPUTED — see cookStep1(). The old hardcoded "4 × 7 oz chicken,
+   2-3 × 6 oz beef, 3 × 6 oz salmon" sat directly above recipe cards that scale to the real menu
+   counts, so on a 3-chicken week step 1 said 28 oz and the card below it said 21 oz. It also
+   assumed every salmon meal is 6 oz, which the Teriyaki bowl (7 oz) is not. */
 const COOKFLOW = [
- ['1','Weigh everything RAW first: 4 × 7 oz chicken, 2-3 × 6 oz beef, 3 × 6 oz salmon. Label the bags.'],
+ ['1','__STEP1__'],
  ['2','Beef portions &amp; salmon → freezer (defrost-reminder stock). Beef only gets cooked the night of — as burger or tomato beef.'],
  ['3','Cook the chicken per THIS WEEK’S recipe (Recipes cards below — spice amounts already scaled). Rice goes on at the same time — Rice Math card.'],
  ['4','Oven-roast the week’s sweet potatoes; regular potatoes stay raw-weighed for night-of air fryer / pan.'],
@@ -1847,6 +1851,29 @@ function tspF(x){
 function recipeCount(s,counts){
   if(s==='chix') return (counts.l1||0)+(counts.l1r||0);
   return s? (counts[s]||0) : 0;
+}
+/* Raw oz per portion for every option that gets weighed and bagged on Sunday. KEEP IN SYNC with the
+   ingredient weights in SLOTS — d16 is 7 oz, not 6, which is exactly the kind of drift that made the
+   old hardcoded step 1 wrong. Options absent from here are not batch-portioned (jiben, tuna, bowls). */
+const BATCH_PROTEIN = [
+  ['chicken', {l1:7, l1r:7}],
+  ['beef',    {d1:6, d15:6}],
+  ['salmon',  {d2:6, d3:6, d16:7, l6:6, l8:6}],
+];
+function cookStep1(counts){
+  const parts = [];
+  BATCH_PROTEIN.forEach(([label, per])=>{
+    /* group by portion SIZE, not by option id — three 6-oz meals read "3 × 6 oz", never "2 × 6 oz + 1 × 6 oz" */
+    const bySize = {};
+    Object.keys(per).forEach(id=>{ const n = counts[id]||0; if(n>0) bySize[per[id]] = (bySize[per[id]]||0) + n; });
+    const sizes = Object.keys(bySize).map(Number).sort((a,b)=>a-b);
+    if(!sizes.length) return;
+    const oz = sizes.reduce((t,z)=>t + z*bySize[z], 0);
+    parts.push(`${sizes.map(z=>`${bySize[z]} × ${z} oz`).join(' + ')} ${label} (${oz} oz = ${(oz/16).toFixed(1)} lb)`);
+  });
+  return parts.length
+    ? `Weigh everything RAW first: ${parts.join(' · ')}. Label the bags.`
+    : 'Weigh everything RAW first — but nothing in this week’s menu is batch-portioned. Nothing to bag.';
 }
 function qtyF(q,u,n){
   const m = q*n;
@@ -4187,7 +4214,7 @@ function viewPrep(){
   <div class="zhead"><span class="zt">③ Cook</span><span class="zn">${weekPick(RECIPES).name.replace(/\s*[Ww]eek$/,'')} week</span></div>
   <details class="card acc" data-acc="cookflow"${openAcc.has('cookflow')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">🔥 The Sunday 7 steps</h3> ${tchip('weigh RAW, always')}</summary>
-    <ul class="sched" style="margin-top:8px">${COOKFLOW.map(([n,s])=>`<li><span class="t">${n}</span><span>${s}</span></li>`).join('')}</ul>
+    <ul class="sched" style="margin-top:8px">${COOKFLOW.map(([n,s])=>`<li><span class="t">${n}</span><span>${s==='__STEP1__'?cookStep1(counts):s}</span></li>`).join('')}</ul>
   </details>
 
   <h2 class="sec">Recipes · ${weekPick(RECIPES).name} · Sunday batch first, then night-of</h2>
@@ -5389,7 +5416,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785793578';
+const BUILD = 'b1785798337';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
