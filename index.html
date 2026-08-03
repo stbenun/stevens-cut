@@ -1204,17 +1204,7 @@ const OVERRIDES = {
 };
 /* heads-up coaching, keyed by the ISO date it should DISPLAY */
 const EVENTS = [
- {d:'2026-08-03', title:'🥣 Yogurt bowls: no more pudding mix — and it’s a shake, not a whisk', msg:`<b>You said the Jell-O mix is a pain to get into a bowl. It’s out of all 14 bowls.</b><br>
-Flavor now comes from ½ serving of protein powder + an extract, nothing else. Every bowl b5–b18 uses the same method.<br>
-<br>
-🥛 <b>The mixing fix:</b> 120 mL Fairlife + the powder + the extract go in a <b>shaker bottle or any lidded jar — shake 15 seconds.</b> Then stir it into the 350 g FAGE 2% with a spoon. No frother, no immersion blender, nothing to wash but the bottle.<br>
-⏱ <b>And the 5-minute set step is gone</b> — that was the pudding starch hydrating. 2 min in the fridge and it’s done.<br>
-<br>
-Every bowl got re-balanced to the 545 breakfast slot and each one is now <b>56–59 P</b> (up ~10 P — the powder replaced a mix with no protein in it).<br>
-🍦 <b>Jell-O still earns its spot in the Creami base</b> — the machine does the mixing there, so it costs you nothing.<br>
-<br>
-🧮 <b>Also fixed:</b> stiff-leg deadlift and abductors no longer show a “per side” plate breakdown — the number you type is the whole load.`},
- {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
+  {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
 🍗 <b>Half chicken — $24.</b> Pull the skin off the <b>thigh and leg</b>, keep the breast skin.<br>
 🥖 <b>Carolina Gold — $25.</b> Roast beef on a panini’d baguette.<br>
 🍚 <b>Mexican rice — $7.</b><br>
@@ -2256,117 +2246,21 @@ function labImport(txt){
   const n = dks.reduce((a,dk)=>a+Object.keys(byDate[dk]).length,0);
   return {ok:true, msg:`Saved ${n} markers across ${dks.length} draw${dks.length===1?'':'s'}.`};
 }
-/* ---------- Garmin import (Jul 31 2026) ----------
-   There is no Garmin OAuth, so this is a paste box: he exports from Garmin Connect on the PC and
-   pastes one file at a time. Four exports matter, and they do NOT share a shape:
-     HRV Status.csv          DAILY    Date,Overnight HRV,Baseline,7d Avg
-     Sleep.csv               WEEKLY   Date,Avg Score,Avg Quality,Avg Duration,Avg Sleep Need,Avg Bedtime,Avg Wake Time
-     Resting Heart Rate.csv  WEEKLY   ,Resting Heart Rate     (dates mm/dd/yyyy)
-     Steps.csv               WEEKLY   ,Actual                 (parsed, then DISCARDED — he logs steps
-                             himself, and Garmin misses ~1 day/week because the watch comes off for
-                             Shabbat, so storing it would create a second source that disagrees.)
-   Only HRV is daily. 2026 rows carry NO year ("Jul 31", "Jul 25-31") while 2025 rows do, so the year
-   is inferred from today and rolled back when the result lands in the future.
-   HRV writes straight into qpcut.hrv.<dkey> — the key recoveryGate already reads — so an import feeds
-   the deload gate and the daily typing obligation disappears. Weekly series live in one qpcut.garmin
-   key, which is safe to keep monolithic because it is re-importable from source at any time, unlike
-   the weigh-ins. Deliberately NOT stored: sleep stages (unreliable), sleep score, Garmin stress,
-   Body Battery, respiration (it already answered the apnea question and never needs to again). */
+/* ---------- Garmin data (Jul 31 2026 · import box removed Aug 3 2026) ----------
+   There is no Garmin OAuth, and he does not want a paste box on the phone either — his words:
+   "id rather send garmin info directly to you in the chat." So the exports go to Claude, who writes
+   them into the sync gist, and this app only READS them:
+     qpcut.hrv.<dkey>   = the HRV 7-DAY AVERAGE for that day (not the overnight value — Saturdays have
+                          no overnight reading but Garmin still reports a rolling average, and the
+                          average is what the deload gate compares against the floor)
+     qpcut.hrvbase      = the floor, taken from the LOW end of Garmin's own baseline range
+     qpcut.weights[].sl = hours slept that night, the key the daily deload rule reads
+     qpcut.garmin.rhr   = {iso: resting HR}, plus .last = the date of the newest write, which is what
+                          the Monday nudge checks for staleness
+   Deliberately NOT stored, and not worth asking him for: sleep stages, sleep score, Garmin stress,
+   Body Battery, Pulse Ox, respiration (it already answered the apnea question once and for all).
+   Steps stay HIS log — Garmin's step file only backfills days he left blank, never overwrites. */
 const CUT_START = '2026-05-11';
-const GMON = {jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
-function gYear(mon, day, explicit){
-  if(explicit) return explicit;
-  const now = new Date(); let y = now.getFullYear();
-  if(new Date(y, mon, day) - now > 60*864e5) y--;   /* >2 months ahead => it's last year's row */
-  return y;
-}
-function gParseDay(txt){                            /* "Jul 31" or "Jul 31, 2025" -> Date */
-  const m = /([A-Za-z]{3})[a-z]*\s+(\d{1,2})(?:,\s*(\d{4}))?/.exec(String(txt||''));
-  if(!m) return null;
-  const mo = GMON[m[1].toLowerCase()]; if(mo==null) return null;
-  return new Date(gYear(mo, +m[2], m[3]?+m[3]:null), mo, +m[2]);
-}
-function gParseSlash(txt){                          /* "07/25/2026" -> Date */
-  const m = /(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(txt||''));
-  return m? new Date(+m[3], +m[1]-1, +m[2]) : null;
-}
-function gWeekEnd(label){                           /* weekly label -> the LAST day of the range */
-  const parts = String(label||'').split(/\s*-\s*/);
-  const tail = (parts[parts.length-1]||'').trim(), head = parts[0]||'';
-  let d = gParseDay(tail);                          /* "Apr 3" / "Jan 2, 2026" / "Oct 3, 2025" */
-  if(!d){
-    /* The tail can be a BARE day that borrows the head's month, with the year optionally hanging
-       off it: "Jul 25-31" -> 31, and "Dec 20-26, 2025" -> 26 + 2025. That second form is why this
-       needs its own branch — a plain \d{1,2} test rejects "26, 2025" and loses every 2025 row. */
-    const bare = /^(\d{1,2})(?:,\s*(\d{4}))?$/.exec(tail);
-    const h = /([A-Za-z]{3})/.exec(head);
-    if(bare && h){
-      const mo = GMON[h[1].toLowerCase()];
-      if(mo!=null) d = new Date(gYear(mo, +bare[1], bare[2]?+bare[2]:null), mo, +bare[1]);
-    }
-  }
-  return d;
-}
-function gNum(txt){ const m = /(-?\d+(?:\.\d+)?)/.exec(String(txt||'')); return m? +m[1] : null; }
-function gDur(txt){                                 /* "5h 22min" -> 5.37 */
-  const h = /(\d+)\s*h/.exec(String(txt||'')), mi = /(\d+)\s*min/.exec(String(txt||''));
-  if(!h && !mi) return null;
-  return +(((h?+h[1]:0) + (mi?+mi[1]:0)/60).toFixed(2));
-}
-function garminImport(txt){
-  const lines = String(txt||'').replace(/^﻿/,'').trim().split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length<2) return {ok:false, msg:'Paste a whole Garmin CSV, header row included.'};
-  const head = lines[0].toLowerCase();
-  const G = store.get('qpcut.garmin', {});
-  let kind=null, n=0;
-
-  if(head.indexOf('overnight hrv')>=0){             /* DAILY */
-    kind='HRV';
-    /* Garmin exports NEWEST ROW FIRST, so "the last baseline I saw" is the OLDEST one. Track the
-       baseline attached to the newest date explicitly — a stale floor makes the gate fire late. */
-    let bestD=null, bestLo=null;
-    lines.slice(1).forEach(ln=>{
-      const p = ln.split(',');
-      const d = gParseDay(p[0]); if(!d) return;
-      const a7 = gNum(p[3]), lo = gNum(p[2]);
-      if(lo!=null && (bestD===null || d>bestD)){ bestD=d; bestLo=lo; }
-      /* Store on the 7-DAY AVERAGE, not the overnight value. Saturdays have no overnight reading
-         (the watch is off for Shabbat) but Garmin still reports a rolling average, and that average
-         is what the deload gate compares against the floor. */
-      if(a7==null) return;
-      store.set('qpcut.hrv.'+dkey(iso(d)), a7); n++;
-    });
-    if(bestLo!=null) store.set('qpcut.hrvbase', bestLo);
-  } else if(head.indexOf('avg duration')>=0){       /* WEEKLY */
-    kind='Sleep';
-    G.sleep = G.sleep || {};
-    lines.slice(1).forEach(ln=>{
-      const p = ln.split(',');
-      if(p.length<7) return;
-      const tail = p.slice(-6), label = p.slice(0, p.length-6).join(',');
-      const d = gWeekEnd(label); if(!d) return;
-      const h = gDur(tail[2]); if(h==null) return;
-      G.sleep[iso(d)] = {h, need:gDur(tail[3]), bed:(tail[4]||'').trim(), wake:(tail[5]||'').trim()};
-      n++;
-    });
-  } else if(head.indexOf('resting heart rate')>=0){ /* WEEKLY */
-    kind='Resting HR';
-    G.rhr = G.rhr || {};
-    lines.slice(1).forEach(ln=>{
-      const p = ln.split(',');
-      const d = gParseSlash(p[0]); const v = gNum(p[1]);
-      if(d && v!=null){ G.rhr[iso(d)] = v; n++; }
-    });
-  } else if(head.indexOf('actual')>=0){
-    return {ok:false, msg:'That’s the Steps export — skipped on purpose. Your own step log is the source; Garmin misses Shabbat.'};
-  } else {
-    return {ok:false, msg:'Didn’t recognise that file. Paste HRV Status, Sleep, or Resting Heart Rate.'};
-  }
-  if(!n) return {ok:false, msg:'Recognised '+kind+' but read 0 rows.'};
-  G.last = isoToday();          /* so a stale import can be nudged on Monday */
-  store.set('qpcut.garmin', G);
-  return {ok:true, msg:`${kind}: ${n} row${n===1?'':'s'} imported.`};
-}
 function garminSummary(){
   const G = store.get('qpcut.garmin', {});
   const out = {rhrNow:null, rhrPre:null, sleep:[]};
@@ -3045,11 +2939,11 @@ function nextAction(){
   if(m>=390 && m<720 && !sup.includes(6)) return {label:'💧 Take the Ryse stick', jump:'z-log', acc:'log-stack'};
   if(m>=1140 && !sup.includes(5)) return {label:'💊 Fish oil — with dinner', jump:'z-log', acc:'log-stack'};
   if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 5 g weighed', jump:'z-log', acc:'log-stack'};
-  /* He exports Garmin every Monday morning. Weekly actions need a trigger too — that is the whole
+  /* He exports Garmin every Monday morning and sends the files to Claude in chat. Weekly actions need a trigger too — that is the whole
      lesson of the hydration stick sitting at 57% because its only trigger was a lift. */
   const gLast = (store.get('qpcut.garmin',{})||{}).last;
   const gStale = !gLast || (new Date(t+'T12:00:00') - new Date(gLast+'T12:00:00'))/864e5 >= 5;
-  if(wd===1 && m>=420 && m<840 && gStale) return {label:'⌚ Paste this week’s Garmin export', jump:'z-log', acc:'log-recov'};
+  if(wd===1 && m>=420 && m<840 && gStale) return {label:'⌚ Send Claude this week’s Garmin export', jump:'z-log', acc:'log-recov'};
   return null;
 }
 function nudgeInfo(){
@@ -3649,7 +3543,7 @@ function viewToday(){
       <summary><span>🫀 Recovery gate</span><span class="statline">${rg.deload?'⚠ deload today':(rg.streak>=3?'⚠ deload week':(rg.hv!=null?'ok':'–'))}</span></summary>
       <div id="recovCard">
         <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(from Garmin)</small></span>
-          <span>${rg.hv!=null?`<b>${rg.hv}</b> ms`:'<small style="opacity:.6">import below</small>'}</span></div>
+          <span>${rg.hv!=null?`<b>${rg.hv}</b> ms`:'<small style="opacity:.6">send me your export</small>'}</span></div>
         <div class="mrow"><span class="nm">Your baseline floor</span>
           <span><input id="hrvBaseIn" type="number" inputmode="decimal" step="1" min="0" max="250" value="${rg.base}" style="width:74px;text-align:right"> ms</span></div>
         <div class="mrow"><span class="nm">Slept</span><span>${rg.sl!=null?rg.sl+' h':'— log it in Track'}</span></div>
@@ -3660,11 +3554,7 @@ function viewToday(){
           ${gs.rhrNow!=null?`<li><span class="t">${gs.rhrNow}</span><span>resting HR${gs.rhrPre!=null?` · pre-cut baseline was <b>${gs.rhrPre}</b> over ${'' }${Object.keys((store.get('qpcut.garmin',{}).rhr)||{}).filter(d=>d<CUT_START).length} weeks`:''}</span></li>`:''}
           ${gs.sleep.map(w=>`<li><span class="t">${w.h}h</span><span>week to ${w.d.slice(5).replace('-','/')} · bed ${w.bed||'—'} · wake ${w.wake||'—'}</span></li>`).join('')}
         </ul>
-        <div class="sub" style="margin-top:6px;opacity:.65">Garmin sleep is a WEEKLY average — the daily deload rule still reads the sleep you log in Track. Bedtime is the only variable that moves; your wake time is fixed by minyan.</div>`; })()}
-        <div class="formrow" style="margin-top:10px">
-          <textarea id="gmPaste" rows="2" placeholder="Paste a Garmin CSV: HRV Status, Sleep, or Resting Heart Rate" style="width:100%;font-size:13px"></textarea>
-        </div>
-        <div class="formrow"><button class="btn ghost" id="gmAdd">⌚ Import from Garmin</button><span id="gmMsg" class="sub"></span></div>
+        <div class="sub" style="margin-top:6px;opacity:.65">Resting HR comes from the Garmin export you send Claude — he writes it in, along with the HRV average and the hours slept. Bedtime is the only variable that moves; your wake time is fixed by minyan.</div>`; })()}
       </div>
     </details>
   </div>
@@ -4934,12 +4824,6 @@ function wireToday(){
     if(labMsg) labMsg.textContent = r.msg;
     if(r.ok){ labPaste.value=''; render(); }
   });
-  const gmAdd = $('#gmAdd'), gmPaste = $('#gmPaste'), gmMsg = $('#gmMsg');
-  if(gmAdd && gmPaste) gmAdd.addEventListener('click',()=>{
-    const r = garminImport(gmPaste.value);
-    if(gmMsg) gmMsg.textContent = r.msg;
-    if(r.ok){ gmPaste.value=''; render(); }
-  });
   const hrvBaseIn = $('#hrvBaseIn');
   if(hrvBaseIn) hrvBaseIn.addEventListener('change',()=>{
     const v = parseFloat(hrvBaseIn.value);
@@ -5272,7 +5156,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785767359';
+const BUILD = 'b1785767932';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
