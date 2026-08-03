@@ -1514,8 +1514,10 @@ function runCoaching(){
    Men's Sugar Free multi already carries 100%+ DV of vitamin D, so he was on ~2800 IU/day and his
    level came back 73.6 ng/mL against a 30-80 range. STANDALONE D3 IS OFF; the multi carries it.
    Re-check at the Aug 23 draw, and revisit in November when the daily hour of sun disappears.
-   Products (from the questionnaire): creatine = Optimum Nutrition Micronized CAPSULES (count still
-   unconfirmed), fish oil = Nature Made 1200 mg x2, Lion's mane = Real Mushrooms x2 caps.
+   Products (from the questionnaire): creatine = Optimum Nutrition Micronized CAPSULES at 2.5 g per 2
+   capsules, so the 5 g dose is 4 CAPSULES - he had been taking 8 (10 g), which is why the row states
+   the capsule count and not just the grams. Fish oil = Nature Made 1200 mg x2 (~720 mg EPA+DHA),
+   Lion's mane = Real Mushrooms x2 caps, multi + D3 = Vitafusion gummies.
    Aug 3 2026: Lion's mane BACK ON at his request - he asked why it went, got the reasoning (no job on
    this protocol, and his own log had it at 22/24 while fish oil sat at 13/24), and chose to keep it.
    It costs a bottle and five seconds; his call. Needs no nudge trigger - adherence was already 92%.
@@ -1525,7 +1527,7 @@ function runCoaching(){
    as-needed - he had never once checked it), and both were padding the x/N denominator so a perfect
    day could not read 4/4. Reasons live in memory and in this comment, NOT in the row labels. */
 const SUPPS = [
- ['Creatine monohydrate — 5 g','8 PM'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift','off'],
+ ['Creatine — 5 g · 4 capsules','8 PM'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift','off'],
  ['Multivitamin','daily'],['Vitamin D3','daily','off'],['Fish oil','dinner'],['Ryse hydration stick','on waking'],
  ['Magnesium','paused','off'],['Allegra','as needed','off'],
 ];
@@ -2266,6 +2268,10 @@ function labGate(){
   return {latest, prevK, rows, fired: rows.some(r=>r.fired && r.kind==='TRIPWIRE')};
 }
 /* Rythm's export is: marker,value,unit,reference_range,status,time — paste it whole. */
+/* The cut start date. Lives here because garminSummary() splits his weekly resting-HR series into
+   pre-cut vs on-cut; it was defined next to labImport() and got swept out with it in f73b9cb,
+   which left two live references and a ReferenceError on every Recovery-gate render. */
+const CUT_START = '2026-05-11';
 function garminSummary(){
   const G = store.get('qpcut.garmin', {});
   const out = {rhrNow:null, rhrPre:null, sleep:[]};
@@ -2945,7 +2951,7 @@ function nextAction(){
   const sup = store.get('qpcut.supps.'+dkey(t),[]);
   if(m>=390 && m<720 && !sup.includes(6)) return {label:'💧 Take the Ryse stick', jump:'z-log', acc:'log-stack'};
   if(m>=1140 && !sup.includes(5)) return {label:'💊 Fish oil — with dinner', jump:'z-log', acc:'log-stack'};
-  if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 5 g', jump:'z-log', acc:'log-stack'};
+  if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 4 capsules', jump:'z-log', acc:'log-stack'};
   /* He exports Garmin every Monday morning and sends the files to Claude in chat. Weekly actions need a trigger too — that is the whole
      lesson of the hydration stick sitting at 57% because its only trigger was a lift. */
   const gLast = (store.get('qpcut.garmin',{})||{}).last;
@@ -5154,7 +5160,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785775535';
+const BUILD = 'b1785776343';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
