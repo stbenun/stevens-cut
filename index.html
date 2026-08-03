@@ -1279,7 +1279,10 @@ Then: sip to 60–80 oz water by bed (not the gallon) · magnesium as usual · b
 ④ <b>Night total ~710 cal</b> (banana + bowl). Water to 60–80 oz by bed. <b>(Magnesium paused — levels high.)</b> Tomorrow: all meals + 1 extra Ezekiel + jelly before 4 PM, gallon front-loaded, scale is fake for 2 days.`},
 ];
 /* eating-out presets — kosher venues + plate rules */
-const SLOT_BUDGET = {bf:[545,'breakfast'], pre:[200,'pre-lift'], lu:[580,'lunch'], sn:[330,'snack'], di:[585,'dinner']};
+/* [cal, label, protein, carb, fat] — macros mirror DRAFT_SLOT_MEALS targets below.
+   Readers that only want cal/name destructure the first two and ignore the rest. */
+const SLOT_BUDGET = {bf:[545,'breakfast',36,54,21], pre:[200,'pre-lift',16,32,1], lu:[580,'lunch',51,63,15],
+ sn:[330,'snack',34,31,7], di:[585,'dinner',54,58,19]};
 /* off-plan snack repair options — single source of truth */
 const FIXPOOL = [
  ['Breakfast: almond butter 32 g → 16 g', 95],
@@ -1294,6 +1297,127 @@ const FIXPOOL = [
 ];
 /* label → calories, for netting off-plan fixes out of the day's total */
 const FIXVAL = Object.fromEntries(FIXPOOL.map(([l,c])=>[l,c]));
+/* ---- EATING OUT: exact orders ----------------------------------------------
+   An order table turns a budget into a receipt. Items are real things you can say out
+   loud at the counter; macros are estimates (±15%) because restaurant portions vary.
+   anchor/carb scale in WHOLE units; `swaps` lists named substitutes WITH their macros so
+   a substitution is still an exact decision. */
+const EATOUT_ORDER = {
+ sushi:{
+  base:[{n:'Miso soup',cal:40,p:3,c:5,f:1,sp:'a miso soup'},
+        {n:'Edamame, 1 side',cal:130,p:11,c:10,f:5,sp:'one edamame'}],
+  anchor:{n:'Sashimi pieces — tuna (leanest) or salmon',cal:22,p:4.7,c:0,f:.3,min:6,max:16,
+          sp:'% pieces of tuna sashimi'},
+  carb:{n:'Tuna roll (6 pc)',cal:190,p:11,c:32,f:1.5,min:1,max:3,sp:'% tuna roll#'},
+  swaps:['Salmon instead of tuna sashimi: +5 cal and +1 g fat per piece. Order it — the fat is omega-3, it is not the fat you are cutting.',
+   'Naruto roll (cucumber-wrapped, NO rice) ≈145 cal · 21 P — swap it for a tuna roll to trade 30 g carbs for 10 g protein.',
+   'Salmon-avocado roll ≈245 cal · 11 P · 8 F — costs 55 cal and 6 g fat over the tuna roll.',
+   'Seaweed salad ≈70 cal · 4 F. Sunomono (cucumber salad) ≈35 cal — the cheaper add.'],
+  never:'Tempura (deep-fried) · anything labelled “spicy” (that means mayo) · anything with “crunch” (fried batter) · rainbow and dragon rolls. These are the traps — each one is 150–250 cal over its plain version.',
+  free:'Wasabi · pickled ginger · extra miso · edamame pods. Soy sauce: DIP the piece, never pour it over the rice.',
+  more:'Still hungry? +3 pieces of sashimi = 66 cal, 14 P. Never another roll — protein fills you, rice does not.'},
+
+ pizza:{
+  base:[{n:'Large house salad, dressing ON THE SIDE (use half)',cal:120,p:4,c:12,f:7,sp:'a large salad, dressing on the side'}],
+  anchor:{n:'Plain slices, thin crust',cal:285,p:12,c:35,f:11,min:1,max:3,sp:'% plain slice#'},
+  swaps:['Mushroom / onion / pepper slice — same numbers as plain, more volume.',
+   'Minestrone or vegetable soup ≈110 cal · 5 P — order it first, it costs one third of a slice and buys you the same fullness.',
+   'Baked ziti / penne vodka slice ≈420 cal · 20 F. That is 1.5 plain slices for the same protein — skip it.'],
+  never:'Garlic knots (130 cal each, they arrive free and disappear in seconds) · fries · fried mozzarella sticks · a third slice.',
+  free:'Crushed pepper · oregano · pickles if they have them · salad you have not dressed.',
+  more:'Pizza is the one venue that cannot hit your protein — the shake below is not optional, it is part of the order.'},
+
+ bbq:{
+  base:[{n:'Pickles + vinegar slaw',cal:30,p:1,c:5,f:0,sp:'pickles and vinegar slaw'}],
+  anchor:{n:'¼ lb smoked turkey breast or grilled chicken (sliced)',cal:140,p:29,c:0,f:2,min:1,max:4,
+          sp:'% quarter-pound# of smoked turkey breast'},
+  carb:{n:'Side of rice',cal:200,p:4,c:44,f:1,min:1,max:3,sp:'% side# of rice'},
+  swaps:['Sliced brisket FLAT, ¼ lb ≈280 cal · 33 P · 16 F — 140 cal and 14 g fat more than the turkey for 4 g more protein. Bad trade on a cut.',
+   'Smoked wings, 6 pc ≈330 cal · 30 P · 22 F — smoked not fried, so they are allowed, but they cost 2× the turkey in fat.',
+   'Laffa or baguette instead of rice ≈250 cal · 48 C — same job, 50 cal more.',
+   'Grilled vegetables ≈70 cal — the free-est real side on any BBQ menu.'],
+  never:'Burnt ends · short ribs · dino ribs · lamb riblets · anything fried · a basket of fries. Burnt ends are the single fattiest item on a BBQ menu and usually the best seller.',
+  free:'Pickles · vinegar slaw · raw onion · mustard · hot sauce.',
+  more:'Still hungry? Another ¼ lb of turkey breast = 140 cal, 29 P. Not more rice, not bread.'},
+
+ restmeat:{
+  base:[{n:'House salad, dressing on the side',cal:110,p:3,c:8,f:7,sp:'a house salad, dressing on the side'}],
+  anchor:{n:'Grilled chicken breast entrée (~8 oz)',cal:370,p:70,c:0,f:9,min:1,max:1,
+          sp:'the grilled chicken breast'},
+  carb:{n:'Side of rice',cal:220,p:5,c:42,f:4,min:1,max:3,sp:'% side# of rice'},
+  swaps:['London broil / sirloin, 6 oz ≈340 cal · 48 P · 15 F — 22 g less protein and 6 g more fat than the chicken.',
+   'Grilled salmon, 6 oz ≈350 cal · 40 P · 20 F — the fat is omega-3, so this is a fine swap despite the number.',
+   'Roasted potatoes instead of rice ≈210 cal · 34 C · 7 F.',
+   'Bread: ONE slice ≈90 cal. The basket is 6 slices — have them take it away.'],
+  never:'Fried starters · anything described as “crispy” · a second carb (bread AND rice AND potatoes) · sauce poured rather than served on the side.',
+  free:'Grilled or roasted vegetables · lemon · mustard · pickles · undressed salad.',
+  more:'Still hungry? Order a second vegetable side (~80 cal), not a second starch.'},
+
+ restdairy:{
+  base:[{n:'Salad, dressing on the side',cal:120,p:4,c:10,f:7,sp:'a salad, dressing on the side'}],
+  anchor:{n:'Grilled branzino or salmon entrée',cal:340,p:42,c:0,f:18,min:1,max:1,
+          sp:'the grilled branzino'},
+  carb:{n:'Pasta, marinara — TEACUP portion (share a full plate)',cal:180,p:6,c:34,f:2,min:1,max:3,
+        sp:'% small side# of pasta with marinara'},
+  swaps:['Baked ziti / vodka / alfredo instead of marinara: 2–3× the fat. Marinara is the only sauce that fits.',
+   'Two shared pizza slices instead of the pasta ≈570 cal — that is your whole starch budget and then some.',
+   'Minestrone ≈110 cal · 5 P as a starter — claim it, it blunts the bread basket.'],
+  never:'🚨 ANAPHYLACTIC — peanut · hazelnut · pistachio · cashew and every other nut EXCEPT almond. ASK about: pesto (pine nuts), Nutella/hazelnut spreads, candied-nut salads, biscotti, baklava, mortadella (pistachio). Ask for separate serving spoons and about the shared fryer. Carry your EpiPen. — Then: fried starters · cheese-forward mains · cream sauces.',
+  free:'Undressed salad · lemon · grilled vegetables · olives.',
+  more:'Still hungry? Fish before flour — a second portion of fish beats any amount of pasta.'},
+};
+/* protein / carb patches — used when the order lands short. Both are things he owns. */
+const EO_PATCH = {
+ p:'Fairlife 0% 240 mL + 1 scoop Ryse ≈230 cal · 45 P',
+ c:'1 banana ≈105 cal · 27 C  (or 3 rice cakes ≈105 cal · 22 C)'};
+
+/* He reads the `say` line out loud at the counter, so counts are words, not digits. */
+const NUMW = ['','one','two','three','four','five','six','seven','eight','nine','ten',
+ 'eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen'];
+const numw = n => NUMW[n] || String(n);
+/* Turn a macro budget into an exact order. DETERMINISTIC — the same budget always yields the
+   same order, so the card can never contradict itself between two renders. Calories are a HARD
+   ceiling: this must not tell him to overeat. Priority is fixed:
+     base (always) → anchor to the protein target → carb to fill → spare calories to anchor.
+   Anything still short comes home as a patch, which is always cheaper than guessing at the table. */
+function eatoutOrder(key, bud){
+  const o = EATOUT_ORDER[key];
+  if(!o) return null;
+  const rows = (o.base||[]).map(it=>({...it, q:1}));
+  const A = o.anchor ? {...o.anchor, q:0} : null;
+  const C = o.carb   ? {...o.carb,   q:0} : null;
+  if(A) rows.push(A);
+  if(C) rows.push(C);
+  const tot = ()=>rows.reduce((a,x)=>({cal:a.cal+x.cal*x.q, p:a.p+x.p*x.q, c:a.c+x.c*x.q, f:a.f+x.f*x.q}),
+                              {cal:0,p:0,c:0,f:0});
+  const fits = it => tot().cal + it.cal <= bud.cal;
+  /* reserve the carb's minimum up front so the anchor cannot eat the whole budget */
+  const hold = C ? C.cal*(C.min||0) : 0;
+  if(A){
+    while(A.q < A.min) A.q++;                                    /* protein floor is not negotiable */
+    while(A.q < A.max && tot().p < bud.p && tot().cal + A.cal + hold <= bud.cal) A.q++;
+  }
+  if(C){
+    /* ADVISORY, not mandatory. Forcing this unconditionally pushed Restaurant Meat to 700 cal
+       against a 585 budget. If the starch does not fit, it does not get ordered — the carb gap
+       is closed at home by a banana for half the calories. */
+    while(C.q < C.min && fits(C)) C.q++;
+    while(C.q < C.max && tot().c < bud.c && fits(C)) C.q++;
+  }
+  if(A) while(A.q < A.max && tot().cal + A.cal <= bud.cal - 20) A.q++;   /* spare cal → protein */
+  const t = tot();
+  const said = rows.filter(r=>r.q>0).map(r=>String(r.sp||r.n)
+    .replace('%', numw(r.q))         /* "nine pieces", never "9 pieces" */
+    .replace('#', r.q>1?'s':''));    /* marker sits ON the noun: "two sides of rice" */
+  return {rows: rows.filter(r=>r.q>0), tot:t,
+          say: said.length>1 ? said.slice(0,-1).join(', ') + ', and ' + said[said.length-1] : said[0],
+          shortP: Math.max(0, Math.round(bud.p - t.p)),
+          shortC: Math.max(0, Math.round(bud.c - t.c)),
+          /* the smallest order that is still a real order can exceed a small bank — say so
+             rather than pretend, and name the slot that buys the room */
+          over: Math.max(0, Math.round(t.cal - bud.cal)), o};
+}
+
 const EATOUT = {
  southside:{name:'Southside · Lakewood', rules:[
   '🍗 Smoked Half Chicken — $24. Pull the skin off the thigh and leg, keep the breast skin. ~85 g protein.',
@@ -3659,15 +3783,50 @@ function viewToday(){
     if(eo){
       const v = EATOUT[eo.v]||EATOUT.restdairy;
       const banks = eo.banks || [...(eo.bankL?['lu']:[]), ...(eo.bankS?['sn']:[]), 'di'];
-      const budget = banks.reduce((a,k)=>a+(SLOT_BUDGET[k]?SLOT_BUDGET[k][0]:0),0);
       const bankNames = banks.map(k=>SLOT_BUDGET[k]?SLOT_BUDGET[k][1]:k).join(' + ');
+      /* macro budget for the banked slots, not just calories — fat and carbs decide this meal
+         at least as much as calories do (ApoB 104, and he runs carbs short). */
+      const bud = banks.reduce((a,k)=>{const b=SLOT_BUDGET[k]; if(b){a.cal+=b[0];a.p+=b[2]||0;a.c+=b[3]||0;a.f+=b[4]||0;} return a;},
+                               {cal:0,p:0,c:0,f:0});
+      const ord = eatoutOrder(eo.v, bud);
+      const d = (a,b)=>{const n=Math.round(a-b); return (n>0?'+':'') + n;};
+      const body = ord ? `
+    <div class="slotlbl" style="margin-top:12px">Order exactly this</div>
+    <table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13.5px">
+      ${ord.rows.map(r=>`<tr>
+        <td style="text-align:right;padding:3px 8px 3px 0;width:2.2em;font-weight:700;color:var(--brass)">${r.q}</td>
+        <td style="padding:3px 0">${r.n}</td>
+        <td style="text-align:right;padding:3px 0 3px 8px;white-space:nowrap">${Math.round(r.cal*r.q)}</td>
+        <td style="text-align:right;padding:3px 0 3px 8px;white-space:nowrap;opacity:.75">${Math.round(r.p*r.q)} P</td></tr>`).join('')}
+      <tr style="border-top:1px solid color-mix(in srgb,var(--brass) 35%,transparent);font-weight:700">
+        <td></td><td style="padding:5px 0">TOTAL</td>
+        <td style="text-align:right;padding:5px 0 5px 8px">${Math.round(ord.tot.cal)}</td>
+        <td style="text-align:right;padding:5px 0 5px 8px">${Math.round(ord.tot.p)} P</td></tr>
+      <tr style="opacity:.7"><td></td><td style="padding:0 0 4px">vs budget</td>
+        <td style="text-align:right;padding:0 0 4px 8px">${d(ord.tot.cal,bud.cal)}</td>
+        <td style="text-align:right;padding:0 0 4px 8px">${d(ord.tot.p,bud.p)} P</td></tr>
+    </table>
+    <div class="sub" style="margin-top:2px;opacity:.65">Lands ${Math.round(ord.tot.c)} C · ${Math.round(ord.tot.f)} F against ${bud.c} C · ${bud.f} F. Restaurant portions vary — treat every number as ±15%.</div>
+    <div class="note" style="margin-top:8px">🗣 <b>Say this:</b> “${ord.say}.” That’s the whole order — nothing else.</div>
+    ${ord.over?`<div class="note" style="margin-top:8px;border-color:var(--warn)">⚠️ <b>Over by ${ord.over} cal.</b> That is already the smallest real order at ${v.name} — there is nothing smaller to buy. Bank another meal (tap Clear and re-pick) or choose a different venue.</div>`:''}
+    ${ord.shortP>=8?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortP} g protein short</b> — at home after: ${EO_PATCH.p}</div>`:''}
+    ${ord.shortC>=20?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortC} g carbs short</b> — at home: ${EO_PATCH.c}</div>`:''}
+    <div class="slotlbl" style="margin-top:12px">🚫 Do not order</div>
+    <div class="sub" style="margin-top:2px">${ord.o.never}</div>
+    <div class="slotlbl" style="margin-top:10px">✅ Free — eat as much as you want</div>
+    <div class="sub" style="margin-top:2px">${ord.o.free}</div>
+    ${ord.o.more?`<div class="sub" style="margin-top:8px">${ord.o.more}</div>`:''}
+    <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🔁 Swaps that still work (with the cost of each)</summary>
+      <ul class="sched" style="margin-top:6px">${(ord.o.swaps||[]).map(x=>`<li><span class="t">→</span><span>${x}</span></li>`).join('')}</ul>
+    </details>`
+      : `<ul class="sched" style="margin-top:8px">${(v.rules||[]).map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>`;
       eoBlock = `
   <div class="card" style="border-color:color-mix(in srgb,var(--brass) 40%,transparent)">
     <div class="slotlbl" style="margin-top:0">🍽 Tonight’s plan: ${v.name}</div>
-    <div class="budget"><span>Budget: <b>${budget}</b> kcal <span class="daytag">(${bankNames})</span></span></div>
-    ${budget>700?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
-    <ul class="sched" style="margin-top:8px">${v.rules.map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>
-    <div class="formrow"><button class="btn ghost" id="eoClear">Clear</button></div>
+    <div class="budget"><span>Budget: <b>${bud.cal}</b> kcal · <b>${bud.p}</b> P <span class="daytag">(${bankNames})</span></span></div>
+    ${bud.cal>700?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
+    ${body}
+    <div class="formrow" style="margin-top:10px"><button class="btn ghost" id="eoClear">Clear</button></div>
   </div>`;
     }
     return `
@@ -5217,7 +5376,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785779447';
+const BUILD = 'b1785788064';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
