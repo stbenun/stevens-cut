@@ -431,6 +431,17 @@
        color:var(--faint);transition:transform .15s}
   details.acc[open] summary::after{transform:rotate(180deg)}
   details.acc summary h3{font-size:16px}
+  /* Per-exercise roll-ups inside the lift card. Each starts OPEN; he collapses them as he finishes one.
+     Scoped with > so the FORM-cue .cuebox and any nested details inside the block keep their own marker. */
+  details.exfold>summary{cursor:pointer;list-style:none;position:relative;padding-right:20px;
+       display:flex;align-items:center;gap:8px;min-height:30px}
+  details.exfold>summary::-webkit-details-marker{display:none}
+  details.exfold>summary::after{content:'▾';position:absolute;right:0;top:50%;margin-top:-10px;
+       color:var(--faint);transition:transform .15s}
+  details.exfold[open]>summary::after{transform:rotate(180deg)}
+  details.exfold>summary .exnm{flex:1;min-width:0;overflow-wrap:anywhere}
+  .exdone{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
+       color:var(--pareve);flex-shrink:0;white-space:nowrap}
   /* Meals tab: each SLOT is a big collapsible section; meal cards nest inside it */
   details.slotsec{background:var(--panel);border-color:var(--line2)}
   details.slotsec>summary{min-height:34px}
@@ -2029,6 +2040,7 @@ const RECIPES = [
 const PP_G = [
   ['Chocolate Cookie Blast', 41],
   ['Mint Chip Ice Cream', 37],
+  ['Milk Chocolate', 37],            /* Ryse Loaded, 1 scoop 37 g = 140 cal · 25P · 4C · 3F, 2 g fiber, 27 servings (label Aug 4) */
   ['Cinnamon Toast', 36],
   ['Vanilla Ice Cream', 35],
   ['Strawberry Shortcake', 34.2],
@@ -2265,6 +2277,16 @@ function weekIdx(){
   return Math.floor((sun-FL_ANCHOR)/(7*864e5));
 }
 const weekPick = arr => arr[((weekIdx()%arr.length)+arr.length)%arr.length];
+/* One-off COR combos for a SINGLE date — a flavor that just landed, or anything he asks to try today.
+   Overrides the rotation for that date ONLY; the 12-week COR_SETS cycle is untouched, so nothing
+   downstream shifts and no future week repeats early. Old dates are harmless — they only fire on their day. */
+const COR_OVERRIDE = {
+  /* Ryse Milk Chocolate arrived Aug 4 and he wanted it that morning. Cookies n Cream is the quiet partner
+     ON PURPOSE: a milk chocolate is mild, so Chocolate Cake COR would bury the flavor he's trying to taste.
+     No crunch add-in, so it keeps the clean 545 · 39P · 54C · 22F and the full 32 g almond butter. */
+  '2026-08-04': ['Milk Chocolate Cookies n Cream','Cookies n Cream COR + Milk Chocolate Ryse — strawberries'],
+};
+const corFor = (iso, wd) => COR_OVERRIDE[iso] || weekPick(COR_SETS)[wd];
 const flavorTheme = () => weekPick(THEMES);
 
 /* ---------- helpers ---------- */
@@ -2623,6 +2645,26 @@ async function disablePush(){
 let logDate = null; /* null = today; ISO date when backfilling meals/drinks */
 const dkey = i => { const [y,m,d] = i.split('-'); return `${+y}-${+m}-${+d}`; };
 const openAcc = new Set(); /* which collapsible sections are open */
+/* ---- Per-exercise roll-ups on the lift card (his ask, Aug 4 2026): "i want each exercise to start
+   opened but then allow me to roll them up when im done with each one."
+   Deliberately NOT part of openAcc, for two reasons: openAcc is persisted AND synced to his other
+   devices, and its default is CLOSED. Here the default must be OPEN and it must reset every day, or
+   Tuesday's collapses would greet him already-closed on Wednesday.
+   So: sessionStorage, keyed by date + exercise index. A new day has no entries at all = everything
+   open · a mid-session reload restores exactly what he rolled up · nothing lands in his health data.
+   If sessionStorage is unavailable (a file:// copy), every exercise simply stays open — the default. */
+function exFoldAll(){
+  try{ const v = JSON.parse(sessionStorage.getItem('qpcut.exfold')||'[]'); return new Set(Array.isArray(v)?v:[]); }
+  catch(e){ return new Set(); }
+}
+function exFolded(key){ return exFoldAll().has(key); }
+function exFoldSet(key, folded){
+  try{
+    const s = exFoldAll();
+    folded? s.add(key) : s.delete(key);
+    sessionStorage.setItem('qpcut.exfold', JSON.stringify([...s]));
+  }catch(e){}
+}
 /* The day schedule's open/closed state PERSISTS across reloads (stored, so it survives page
    loads and syncs across devices). Default open only the very first time (no stored value). */
 function schedOpen(){ return store.get('qpcut.sched.open', true); }
@@ -3553,11 +3595,21 @@ function viewToday(){
       const sets = t? t.sets : (parseInt(r)||3);
       const reps = repLog[i]||[];
       const v = verdict(reps, t);
+      /* Rolled up, the summary still has to answer "did I do this one, and what did I get?" — otherwise
+         collapsing loses the at-a-glance the lift card exists for. */
+      const logged = reps.filter(x=>x!=null&&x!=='');
+      const tally = logged.length
+        ? `<span class="exdone">${logged.length>=sets?'✓ ':''}${logged.join('·')}</span>`
+        : '';
+      const foldKey = `${ld}|${i}`;
       return `<li style="display:block">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">
-          <span style="${v?'color:var(--muted)':''}">${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}</span><span class="r">${r}</span>
-        </div>
-        ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
+        <details class="exfold" data-exfold="${esc(foldKey)}"${exFolded(foldKey)?'':' open'}>
+          <summary>
+            <span class="exnm"${v?' style="color:var(--muted)"':''}>${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}</span>
+            ${tally}<span class="r">${r}</span>
+          </summary>
+          ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
+        </details>
       </li>`;
     }).join('')}</ul>
     ${(()=>{
@@ -3572,7 +3624,7 @@ function viewToday(){
 
   /* ---- FOOD zone ---- */
   const foodZone = (()=>{
-    const corToday = weekPick(COR_SETS)[now.getDay()];
+    const corToday = corFor(ld, wd);   /* wd, not now.getDay(): previewing a future date should show THAT day's combo */
     const corB = corBuild(corToday[1]);
     /* yogurt-bowl flavor of the day — rotates through the b5–b18 bowls by day-of-year, UNLESS a
        specific bowl is pinned for this date in qpcut.bowlpick.<date> (a manual "make today X" override). */
@@ -4280,11 +4332,15 @@ function viewPrep(){
   <section id="p-cor">
   <div class="zhead"><span class="zt">⑤ This week’s flavors</span><span class="zn">rotates Sunday</span></div>
   <details class="card acc" data-acc="cor"${openAcc.has('cor')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">Today: ${weekPick(COR_SETS)[new Date().getDay()][0]}</h3> ${tchip('tap for the week')}</summary>
+    <summary><h3 style="display:inline;font-size:16px">Today: ${corFor(isoToday(), new Date().getDay())[0]}</h3> ${tchip('tap for the week')}</summary>
     ${weekPick(COR_SETS).map(([n,s],i)=>{
       const today = new Date().getDay()===i;
-      return `<div class="opt"><div class="head"><b>${today?'▸ ':''}${n}</b>${today?tchip('today'):''}</div>
-        <div class="sub" style="margin-top:4px">${s}${ppTag(s)}</div></div>`;
+      /* a one-off COR_OVERRIDE has to show up HERE too, or this card and the Today card disagree */
+      const swap = today? COR_OVERRIDE[isoToday()] : null;
+      const [dn,ds] = swap || [n,s];
+      return `<div class="opt"><div class="head"><b>${today?'▸ ':''}${dn}</b>${today?tchip(swap?'today · swapped in':'today'):''}</div>
+        <div class="sub" style="margin-top:4px">${ds}${ppTag(ds)}</div>
+        ${swap?`<div class="ingmac" style="margin-top:3px">rotation had ${n} — back to the normal cycle tomorrow</div>`:''}</div>`;
     }).join('')}
     ${COR_WILDCARDS.map(([n,s])=>`<div class="opt"><div class="head"><b>${n}</b></div><div class="sub" style="margin-top:4px">${s}${ppTag(s)}</div></div>`).join('')}
     <div class="sub" style="margin-top:10px">Base is always B1: COR 25 g + oats 25 g + <b>1 serving protein, WEIGHED</b> (ziplocks — the gram number is on each combo line, servings run 30–41 g by flavor) + berries 70 g + almond butter 32 g.</div>
@@ -4856,6 +4912,11 @@ function render(){
     if(d.dataset.acc==='schedule') setSchedOpen(d.open); /* schedule persists across reloads */
     markToggled(d.dataset.acc, d.open); /* remember today's explicit toggles so a reload won't re-seed them open */
   }));
+  /* Per-exercise roll-ups. Bound per-element after each render like details.acc above — safe here because
+     refreshGuides only replaces the inner #eg-N guide markup, never these <details> elements themselves. */
+  document.querySelectorAll('details[data-exfold]').forEach(d=>d.addEventListener('toggle',()=>{
+    exFoldSet(d.dataset.exfold, !d.open);
+  }));
   /* v14 chrome: zone bar, session dim, filters, live tick */
   renderZoneBar();
   const sToday = seshGet(isoToday());
@@ -5416,7 +5477,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785798337';
+const BUILD = 'b1785854488';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
