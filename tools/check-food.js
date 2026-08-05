@@ -212,6 +212,22 @@ const ALT = /\bor\b|\/|\beither\b/i;
   if (!bad) pass('nuts', 'no non-almond nut appears as an ingredient or a cooking step');
 })();
 
+/* ============ 7. EVENTS time placeholders must be resolvable ============
+   Dated cards use {{LU}} / {{LU+165}} so their meal times track the schedule instead of a time I
+   typed. A typo would ship to his phone as literal "{{LUNCH}}" text, so check the syntax here. */
+(function placeholders() {
+  if (!EVENTS) return;
+  const OK = /^\{\{(PRE|BF|LU|SN|DI)([+-]\d+)?\}\}$/;
+  let found = 0, bad = 0;
+  EVENTS.forEach(e => {
+    (String(e.msg).match(/\{\{[^}]*\}\}/g) || []).forEach(ph => {
+      found++;
+      if (!OK.test(ph)) { bad++; fail('placeholders', e.d + ' has an unresolvable placeholder ' + ph + ' — it would render as literal text'); }
+    });
+  });
+  if (!bad) pass('placeholders', found + ' time placeholder(s) across EVENTS, all resolvable');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
