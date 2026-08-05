@@ -1240,8 +1240,8 @@ Broccoli Jiben<br>
 1 scoop Ryse in <b>water</b> + <b>half a Justin's packet</b> — squeeze it straight, do not shake it in<br>
 <br>
 <b>WEDDING — first one they have:</b><br>
-1. <b>Sashimi — 12 pieces</b> (tuna or salmon)<br>   <span class="sub">No sashimi? Go to 2. Rolls are rice — 12 pieces of roll is 18 P, sashimi is 56 P.</span><br>
-2. Carving station — <b>"slice from the middle, no gravy, no crust"</b> · 6 oz<br>
+1. <b>Sashimi — 12 pieces TUNA</b><br>   <span class="sub">Salmon instead = +240 cal. Rolls are rice — 12 pieces of roll is 18 P vs 59 P. No tuna sashimi? Go to 2.</span><br>
+2. Carving station — <b>"slice from the middle, no gravy, no crust"</b> · 6 oz<br>   <span class="sub">Turkey or roast beef. NOT brisket — that is +180 cal for the same 6 oz.</span><br>
 3. Grilled chicken · 6 oz<br>
 4. Nothing safe — skip the food, extra scoop before you leave<br>
 <br>
@@ -1255,7 +1255,7 @@ Skip: pasta · bourekas · fried · sliders · challah · starch · dessert tabl
 <b>🥂 DRINKS</b><br>
 Cap <b>6</b> · last one <b>3 h before bed</b><br>
 <br>
-Day lands ≈<b>2,200–2,270 · 190 P</b> depending which one you get<br>
+Day lands ≈<b>2,280 · 193 P</b><br>
 Tomorrow: rest day · scale up 2–4 lb = water`},
   {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
 🍗 <b>Half chicken — $24.</b> Pull the skin off the <b>thigh and leg</b>, keep the breast skin.<br>
@@ -1286,7 +1286,7 @@ Tomorrow: rest day · scale up 2–4 lb = water`},
 • Day for Q: ~2,610 · 223P · 322C · 46F`},
  {d:'2026-07-20', title:'🍣 Sushi tonight — order this', msg:`<b>Get, in order:</b><br>
 🥣 1 miso soup + 1 edamame<br>
-🐟 8–10 pieces sashimi (salmon/tuna)<br>
+🐟 8–10 pieces sashimi — <b>TUNA</b> (salmon is +20 cal each)<br>
 🍣 2 rolls — 1 salmon-avocado, 1 salmon or tuna<br>
 ✅ Free: wasabi, ginger, extra edamame<br>
 🚫 Skip: tempura, “spicy,” “crunch,” extra rice<br>
@@ -1359,10 +1359,10 @@ const EATOUT_ORDER = {
  sushi:{
   base:[{n:'Miso soup',cal:40,p:3,c:5,f:1,sp:'a miso soup'},
         {n:'Edamame, 1 side',cal:130,p:11,c:10,f:5,sp:'one edamame'}],
-  anchor:{n:'Sashimi pieces — tuna (leanest) or salmon',cal:22,p:4.7,c:0,f:.3,min:6,max:16,
+  anchor:{n:'Sashimi pieces — TUNA (these numbers are tuna; salmon is different, see swaps)',cal:22,p:4.7,c:0,f:.3,min:6,max:16,
           sp:'% pieces of tuna sashimi'},
   carb:{n:'Tuna roll (6 pc)',cal:190,p:11,c:32,f:1.5,min:1,max:3,sp:'% tuna roll#'},
-  swaps:['Salmon instead of tuna sashimi: +5 cal and +1 g fat per piece. Order it — the fat is omega-3, it is not the fat you are cutting.',
+  swaps:['Salmon instead of tuna sashimi: <b>+20 cal and +2.6 g fat per piece, and slightly LESS protein</b> (20 g slice: salmon 42 cal / 4.1 P, tuna 22 cal / 4.9 P). Fine to order — the fat is omega-3 — but 12 pieces of salmon is <b>240 cal over</b> 12 of tuna, so count it, do not treat them as the same thing.',
    'Naruto roll (cucumber-wrapped, NO rice) ≈145 cal · 21 P — swap it for a tuna roll to trade 30 g carbs for 10 g protein.',
    'Salmon-avocado roll ≈245 cal · 11 P · 8 F — costs 55 cal and 6 g fat over the tuna roll.',
    'Seaweed salad ≈70 cal · 4 F. Sunomono (cucumber salad) ≈35 cal — the cheaper add.'],
@@ -1520,11 +1520,11 @@ const EATOUT = {
   '⚠ Nut check on salads/desserts — ask']},
  sushi:{name:'Sushi', rules:[
   'START — order BOTH (not one or the other): 1 bowl miso soup (~40 cal) AND 1 side edamame (~130 cal, 11 g protein). Eat these first — they fill you up before the rolls so you eat fewer.',
-  'MAIN protein — eat this BEFORE any rolls: 8–10 pieces of plain sashimi (salmon or tuna). This is your real protein for the meal.',
+  'MAIN protein — eat this BEFORE any rolls: 8–10 pieces of plain <b>TUNA</b> sashimi. This is your real protein for the meal. Salmon is not a free swap: +20 cal a piece.',
   'ROLLS — how many depends on your budget: if you skipped your snack today → up to 2 simple rolls (plain salmon, tuna, or salmon-avocado). If dinner budget only → 1 roll + bump sashimi to 10–12 pieces.',
   'DO NOT order: anything tempura (deep-fried), anything labeled “spicy” (that means mayo), anything with a “crunch” topping (fried batter). These are the calorie traps.',
   'FREE — as much as you want: wasabi, pickled ginger, miso, edamame pods. Soy sauce: DIP the piece, don’t pour it over the rice (salt spikes tomorrow’s scale).',
-  'STILL HUNGRY after all that? Order 2–3 more pieces of sashimi (~100 cal). Never more rice/rolls — protein fills you, rice doesn’t.']},
+  'STILL HUNGRY after all that? Order 2–3 more pieces of <b>tuna</b> sashimi (~45–65 cal). Never more rice/rolls — protein fills you, rice doesn’t.']},
  pizza:{name:'Pizza Night', rules:[
   'Big salad FIRST — it decides how slice 3 feels',
   '2 slices cap, thin crust beats thick',
@@ -5562,7 +5562,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785952065';
+const BUILD = 'b1785952486';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
