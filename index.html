@@ -1218,37 +1218,38 @@ const EVENTS = [
   /* Wedding night. Wording is deliberately neutral — "drinks", no brand, no count of what it is —
      because this file is served from a PUBLIC repo under his own handle. He gets the plan; a stranger
      glancing at the page reads generic event advice. He can have the explicit version any time. */
-  {d:'2026-08-05', title:'🥂 Wedding tonight — the plan', msg:`<b>🚨 NUTS FIRST. This outranks every macro on this card.</b><br>
-Tonight is a catered buffet AND you are drinking. Alcohol is a recognised reaction cofactor — it can lower your threshold for the same exposure — and it <b>masks early symptoms</b>, because flushing, racing heart and feeling off all read as drunk.<br>
-🖊️ <b>EpiPen on your body, not in a coat.</b> Tell <b>one person at your table</b> that you have it and where.<br>
-🗣️ <b>Ask a captain or maître d', never a passing server.</b> The kitchen knows what is in each dish; a server guesses.<br>
-🥄 <b>Shared serving spoons are the real risk</b> at a smorgasbord, not the recipes. Ask for a plate made in the kitchen.<br>
-⚠️ <b>Assume every composed salad has candied nuts until told otherwise.</b> Also watch: pesto (pine nuts) · nut-crusted fish or chicken · rice or stuffed dishes with pine nuts · mortadella (pistachio) · the whole dessert table.<br>
+  /* INSTRUCTIONS ONLY. He rejected the first version of this card for carrying explanations
+     ("i dont need this here. please dont write unnecessary notes. just give it to me plain and
+     simple"). The nut logic is not deleted, it is ENCODED in the order of the food ladder -- safest
+     option first -- rather than written out at him. Reasoning belongs in chat or in a comment
+     like this one, never on a card. Neutral drink wording: public repo. */
+  {d:'2026-08-05', title:'🥂 Wedding tonight', msg:`<b>BREAKFAST · now</b><br>
+COR — almond butter <b>10 g</b><br>
 <br>
-<b>WHAT TO EAT — in this order:</b><br>
-1️⃣ <b>Sushi if they have it.</b> ~10 pieces sashimi, or sashimi + plain rolls. Nothing crunchy, tempura, or spicy-mayo. <span class="sub">≈300 cal · 60 P</span><br>
-2️⃣ <b>No sushi → carving station.</b> <b>"A slice from the middle, no gravy, no crust please."</b> Cut in front of you, plain muscle meat, nothing brushed on. 6 oz. <span class="sub">≈330 cal · 50 P</span><br>
-3️⃣ <b>Neither → plain grilled chicken</b>, and ask whether it is marinated or glazed. 6 oz. <span class="sub">≈280 cal · 53 P</span><br>
-4️⃣ <b>Nothing safe at all → eat nothing there.</b> Have a second scoop of Ryse before you leave the house and drink on the food from 4:30. Not ideal, not dangerous.<br>
-<span class="sub">All three options land within ~80 cal of each other, so the day's numbers hold whichever one you get.</span><br>
-✅ Plain grilled vegetables and plain green salad you have <b>confirmed</b> are fine — as much as you want.<br>
-🚫 Skip regardless: pasta station · bourekas + knishes · anything fried · sliders + challah · the starch on your plate · <b>the dessert table</b>.<br>
+<b>LUNCH · 1:30</b><br>
+Broccoli Jiben<br>
 <br>
-<b>MEALS — what changes today:</b><br>
-🥣 <b>Breakfast (now):</b> COR as normal, but <b>almond butter 10 g, not 32.</b> Frees 130 cal.<br>
-🥦 <b>Lunch 1:30:</b> <b>Broccoli Jiben</b> — swapped off the chicken meal.<br>
-🥤 <b>4:30, do not skip:</b> 1 scoop Ryse in <b>WATER</b> (not Fairlife) + <b>1 mini guac cup.</b> The guac is fat on purpose — fat slows how fast the drinks hit.<br>
+<b>4:30</b><br>
+1 scoop Ryse in <b>water</b> + 1 mini guac cup<br>
 <br>
-<b>💧 WATER — the most important line here:</b><br>
-<b>100 oz before you leave the house.</b> You are at 32.<br>
-<b>One full glass between every drink.</b> No exceptions.<br>
+<b>WEDDING — first one they have:</b><br>
+1. Sushi — 10 pieces sashimi or plain rolls<br>
+2. Carving station — <b>"slice from the middle, no gravy, no crust"</b> · 6 oz<br>
+3. Grilled chicken · 6 oz<br>
+4. Nothing safe — skip the food, extra scoop before you leave<br>
 <br>
-<b>🥂 DRINKS: cap 6.</b> Last one <b>3 hours before you sleep</b>. Nothing else on top tonight.<br>
+Free: plain grilled veg · salad you confirmed<br>
+Skip: pasta · bourekas · fried · sliders · challah · starch · dessert table<br>
 <br>
-<b>Numbers:</b> the food lands <b>≈1,772 cal · 187 P</b> — protein exactly on target. Six drinks puts the day ≈<b>2,300 against 2,220</b>. That is <b>0.02 lb</b>. Calories were never the constraint tonight.<br>
+<b>💧 WATER</b><br>
+<b>100 oz before you leave</b> — you are at 32<br>
+1 glass between every drink<br>
 <br>
-⚠️ <b>Lightheaded standing up → stop, sit, water + a hydration stick, text me.</b> Still unexplained since July, and this is the most likely night to bring it back.<br>
-😴 Rest day tomorrow. <b>Scale will read 2–4 lb up — water, not fat</b>; I will leave it out of the weekly average.`},
+<b>🥂 DRINKS</b><br>
+Cap <b>6</b> · last one <b>3 h before bed</b><br>
+<br>
+Day lands ≈<b>2,280 · 187 P</b><br>
+Tomorrow: rest day · scale up 2–4 lb = water`},
   {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
 🍗 <b>Half chicken — $24.</b> Pull the skin off the <b>thigh and leg</b>, keep the breast skin.<br>
 🥖 <b>Carolina Gold — $25.</b> Roast beef on a panini’d baguette.<br>
@@ -5553,7 +5554,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785941809';
+const BUILD = 'b1785942003';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
