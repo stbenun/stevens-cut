@@ -569,6 +569,12 @@ const SLOTS = [
    {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[170,3,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[120,10,9,5]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[585,51,55,17]}]},
    {id:'d3', name:'Blackened Salmon Plate', k:[['pareve']], vars:[{ing:[['Salmon (any — it’s cooked, raw weight)','6 oz',[250,37,0,10]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]],['Edamame','85 g',[120,10,9,5]],['Rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne','—',[0,0,0,0]],['SF ketchup','32 g',[20,0,2,0]]], t:[570,53,51,15]}]},
    {id:'d16', name:'Teriyaki-Glaze Salmon Bowl (fresh · seared)', k:[['pareve']], vars:[{ing:[['Salmon cubes (raw weight)','7 oz',[290,42,0,13]],['White rice (dry)','50 g',[173,3,38,0]],['Edamame','60 g',[86,8,6,4]],['Cucumber','free, sliced',[10,0,2,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto 8 g · sriracha ½ tsp · garlic ¼ tsp','—',[15,1,3,0]],['Scallion + everything-bagel seasoning','—',[5,0,1,0]]], t:[579,54,50,17]}]},
+   /* His Aug 4 wedding-week dinner, the first custom plate he called delicious. Scaled from the
+      one-off (7 oz salmon / 240 g potato, built for a 895-cal dinner+snack hole) to the 585 dinner
+      slot: salmon UP to 7.5 oz and potato DOWN to 200 g, which locks calories and puts protein at
+      55 against a 54 budget. Carbs land 9 under and that is fine — cals lock, protein holds, carbs flex.
+      Both sauces are in it: he confirmed the almond-chili drizzle worked once thinned. */
+   {id:'d17', name:'Sweet-Chili Salmon Plate (air fryer)', k:[['pareve']], vars:[{ing:[['Salmon fillet (raw weight)','7.5 oz',[311,45,0,14]],['Potatoes, ¾" cubes','200 g',[145,4,33,0]],['Broccoli (or asparagus / string beans)','150 g',[50,3,10,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto Golden 8 g · sriracha ½ tsp · garlic powder ¼ tsp','—',[15,1,3,0]],['Almond-chili drizzle: almond butter 8 g · sriracha 5 g · Lakanto 2 g · squeeze of lemon · warm water 2 tsp','—',[55,2,3,4]],['Chosen Foods avocado oil spray','~8 sprays',[10,0,0,1]]], t:[586,55,49,19]}]},
  ]},
 ];
 const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
@@ -615,6 +621,7 @@ const HOWTO = {
  d15:['Medium pot, medium-high (7/10), no oil, 2-min preheat. Beef in, crumbled small, 4–5 min to zero pink.','This week’s spices 30 sec → tomato paste + 60 mL water, stir till dissolved → LOW (2/10) 10–12 min till thick.','Over potatoes, egg on top, asparagus on the side (side methods: Prep → Recipes).'],
  d2:['Rice revived: ~10 mL water, 45–60 sec microwave, fluff. Salmon stays fridge-cold till now: ¾" cubes.','Build: rice → salmon, edamame, cucumber in piles → 30 mL soy over → seaweed crumbled on top.','This week’s twist (jalapeño-lime, dill, scallion…) is on the Prep recipe card. Eat immediately.'],
  d3:['Pat the salmon dry. Rub: paprika ½ tsp + garlic ¼ tsp + salt ¼ tsp + pinch cayenne, pressed on.','Air fryer 390°F, 7–9 min — flakes under a fork. Any salmon works; it’s cooked.','Plate with crispy-cube potatoes (micro 4 min → fryer 390°F 12–14), asparagus (fryer 7 min), edamame (2-min micro from frozen). SF ketchup if you want it.'],
+ d17:['Air fryer to 400°F, empty, 3 min. Potatoes in a bowl: 5 sprays, then paprika ½ tsp + garlic powder ¼ tsp + salt ¼ tsp, tossed by hand until every cube is coated.','Potatoes into the basket in a SINGLE layer — piled up they steam instead of crisping. 16 min, shake the basket hard at minute 8.','Glaze while they cook: whisk the five glaze ingredients, then microwave 30 sec. It goes from watery to a thin syrup — that is what makes it cling.','Drizzle in a second bowl: almond butter 10 sec in the microwave, stir the Lakanto in while warm, then sriracha, then lemon, then the water a little at a time until it ribbons off a fork. It will SEIZE stiff first — keep going, it comes back. Usually takes 4–5 tsp, not 2.','Pat the salmon completely dry with paper towels — that is the difference between a crust and grey steamed fish. 3 sprays, pinch of salt.','At minute 16: push the potatoes to one half, salmon on the other, broccoli scattered over the potatoes (5 sprays + pinch of salt on it first). 8 min.','At minute 5 of those 8, NOT sooner: brush the glaze on the salmon. Lakanto burns — early it goes black and bitter, last 3 minutes it lacquers.','Done = the thickest part flakes under light fork pressure, glaze looks glossy, a potato cube crunches. Drizzle over the salmon and broccoli at the table, not the potatoes.'],
  d16:['Defrost frozen cubes fast + safe: sealed ziplock, air pushed out, submerged in COLD water ~10 min. Weigh 7 oz, pat bone-dry — wet fish steams instead of searing.','Rice first: 65 g dry, rinsed till the water runs clear, + 105 mL water + a pinch of salt. Boil 8/10, then low (3/10), lid on, 12 min, off the heat 5 min — don’t peek.','Glaze in a small bowl while the rice cooks: soy 20 mL + rice vinegar 5 mL + Lakanto 8 g + ½ tsp sriracha + ¼ tsp garlic. Stir till the Lakanto dissolves.','Salmon: nonstick pan medium-high (7/10), 2-min preheat, 3 sprays. Dry cubes spread out, not touching. 2 min untouched for a brown edge → turn → 2 more min. Done = opaque, browned, flakes with a fork.','Glaze in: pour over the cubes, drop to low (2/10), toss 60–90 sec till it thickens to a sticky coat — pull it the moment it clings.','Edamame: 80 g microwaved with a splash of water, 90 sec. Build: rice → glazed cubes → edamame + cucumber → scallion + everything seasoning. Warm, seared — nothing like cold poke.'],
 };
 
@@ -1754,6 +1761,7 @@ const GROC = {
  d15:[['Proteins','93/7 ground beef',6,'oz'],['Pantry &amp; Frozen','Tomato paste',33,'g'],['Pantry &amp; Frozen','Keto buns',1,'ct'],['Proteins','Eggs',1,'ct'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g']],
  d2:[['Proteins','Salmon, sushi-grade',6,'oz'],['Pantry &amp; Frozen','Rice (dry)',50,'g'],['Produce','Edamame (frozen)',85,'g'],['Pantry &amp; Frozen','Seaweed packets',1,'ct'],['Produce','Cucumbers',75,'g']],
  d3:[['Proteins','Salmon (any cut)',6,'oz'],['Produce','Potatoes',220,'g'],['Produce','Asparagus',100,'g'],['Produce','Edamame (frozen)',85,'g']],
+ d17:[['Proteins','Salmon',7.5,'oz'],['Produce','Potatoes',200,'g'],['Produce','Broccoli',150,'g']],
  d16:[['Proteins','Salmon cubes',7,'oz'],['Pantry &amp; Frozen','White rice (dry)',65,'g'],['Produce','Edamame (frozen)',80,'g'],['Produce','Cucumbers',1,'ct'],['Produce','Scallions',1,'ct']],
 };
 const STAPLES = ['Breakfast stock: COR · oats · berries · almond butter · Sola bagels · cream cheese · smoked salmon · Kodiak · Fage','Pre-lift stock: rice cakes · tuna packets · Oikos · bananas · Ezekiel · Smucker’s SF jelly','Ryse protein + Ryse Loaded','Lakanto SF maple syrup','SF ketchup','Soy sauce · balsamic drizzle','Justin’s almond butter packs','COR toppings: Oreo Thins · Nilla · Biscoff · freeze-dried strawberries + blueberries · graham crackers','Tomato paste','Hydration sticks · gum','Seasonings (see the week’s recipes)'];
@@ -5554,7 +5562,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785942003';
+const BUILD = 'b1785942478';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
