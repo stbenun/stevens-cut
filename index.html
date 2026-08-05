@@ -1230,33 +1230,33 @@ const EVENTS = [
      simple"). The nut logic is not deleted, it is ENCODED in the order of the food ladder -- safest
      option first -- rather than written out at him. Reasoning belongs in chat or in a comment
      like this one, never on a card. Neutral drink wording: public repo. */
-  {d:'2026-08-05', title:'🥂 Wedding tonight', msg:`<b>BREAKFAST · {{BF}}</b><br>
-COR — almond butter <b>10 g</b><br>
+  /* WHAT TO HAVE, AND THE ALTERNATIVES. Nothing else.
+     Third correction of the day on the same theme: he asked for plain and simple, I shipped a
+     decision tree with calorie footnotes on every branch. He does not need to know salmon is +240 —
+     he needs to be told "tuna". The alternatives are a fallback CHAIN, so there is never a choice to
+     make, only the next line down. Times are {{...}} placeholders off the schedule engine.
+     Neutral drink wording: public repo. */
+  {d:'2026-08-05', title:'🥂 Wedding tonight', msg:`<b>MEALS</b><br>
+{{BF}} — COR · almond butter 10 g<br>
+{{LU}} — Broccoli Jiben<br>
+{{LU+165}} — 1 scoop Ryse in water + ½ Justin's packet<br>
 <br>
-<b>LUNCH · {{LU}}</b><br>
-Broccoli Jiben<br>
+<b>WEDDING — have this</b><br>
+<b>12 pieces tuna sashimi</b><br>
 <br>
-<b>{{LU+165}}</b><br>
-1 scoop Ryse in <b>water</b> + <b>half a Justin's packet</b> — squeeze it straight, do not shake it in<br>
+No tuna → <b>6 oz carved turkey or roast beef</b>, no gravy<br>
+No carving → <b>6 oz grilled chicken</b><br>
+Nothing safe → <b>skip the food</b>, extra scoop before you leave<br>
 <br>
-<b>WEDDING — first one they have:</b><br>
-1. <b>Sashimi — 12 pieces TUNA</b><br>   <span class="sub">Salmon instead = +240 cal. Rolls are rice — 12 pieces of roll is 18 P vs 59 P. No tuna sashimi? Go to 2.</span><br>
-2. Carving station — <b>"slice from the middle, no gravy, no crust"</b> · 6 oz<br>   <span class="sub">Turkey or roast beef. NOT brisket — that is +180 cal for the same 6 oz.</span><br>
-3. Grilled chicken · 6 oz<br>
-4. Nothing safe — skip the food, extra scoop before you leave<br>
-<br>
-Free: plain grilled veg · salad you confirmed<br>
-Skip: pasta · bourekas · fried · sliders · challah · starch · dessert table<br>
+Also have: plain grilled veg + salad, as much as you want<br>
+Skip: pasta · bourekas · fried · sliders · challah · starch · dessert<br>
 <br>
 <b>💧 WATER</b><br>
-<b>100 oz before you leave</b> — you are at 32<br>
+100 oz before you leave<br>
 1 glass between every drink<br>
 <br>
 <b>🥂 DRINKS</b><br>
-Cap <b>6</b> · last one <b>3 h before bed</b><br>
-<br>
-Day lands ≈<b>2,280 · 193 P</b><br>
-Tomorrow: rest day · scale up 2–4 lb = water`},
+6 max · last one 3 h before bed`},
   {d:'2026-08-02', title:'🔥 Southside tonight, 8:30 — order this', msg:`<b>Get:</b><br>
 🍗 <b>Half chicken — $24.</b> Pull the skin off the <b>thigh and leg</b>, keep the breast skin.<br>
 🥖 <b>Carolina Gold — $25.</b> Roast beef on a panini’d baguette.<br>
@@ -5605,7 +5605,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1785956066';
+const BUILD = 'b1785964791';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

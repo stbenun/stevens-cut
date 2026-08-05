@@ -14,9 +14,11 @@ const base = fs.readFileSync(SRC, 'utf8');
 const CASES = [
   { name: 'the real "+5 cal" salmon swap line', check: 'swap-math',
     from: '+20 cal and +2.6 g fat per piece', to: '+5 cal and +1 g fat per piece' },
-  { name: '"12 pieces TUNA" written back as "tuna or salmon"', check: 'conflation',
-    from: '1. <b>Sashimi \u2014 12 pieces TUNA</b><br>\u00a0\u00a0\u00a0<span class="sub">Salmon instead = +240 cal. Rolls are rice \u2014 12 pieces of roll is 18 P vs 59 P. No tuna sashimi? Go to 2.</span><br>',
-    to:   '1. Sashimi \u2014 12 pieces of tuna or salmon<br>' },
+  /* Anchor every case on PERMANENT app content, never on a dated EVENTS card. The first version of
+     this case quoted the wedding card and broke the same day the card was reworded. */
+  { name: 'sashimi written as "tuna or salmon" again', check: 'conflation',
+    from: 'pieces of plain <b>TUNA</b> sashimi. This is your real protein for the meal. Salmon is not a free swap: +20 cal a piece.',
+    to:   'pieces of plain sashimi, tuna or salmon, whichever they have.' },
   { name: 'sashimi and rolls offered as one option again', check: 'conflation',
     from: '\u{1F41F} 8\u201310 pieces sashimi \u2014 <b>TUNA</b> (salmon is +20 cal each)<br>',
     to:   '\u{1F41F} 8\u201310 pieces sashimi or a couple of rolls<br>' },
