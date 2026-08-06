@@ -197,12 +197,17 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       staleN: stale.length });
   `);
   const r = JSON.parse(res);
-  const low = [];
-  if (r.feastLeft <= 0) low.push(`the Shabbat feast rotation repeats NEXT week (${r.feastLeft} new dishes left)`);
-  else if (r.feastLeft <= 1) low.push(`the Shabbat feast rotation has ${r.feastLeft} new dish left`);
-  if (r.corLeft <= 2) low.push(`COR sets run out in ${r.corLeft} weeks`);
+  /* A rotation wrapping is normal; wrapping into a dish he had recently is not. Fail only at zero
+     headroom — the week BEFORE he would be served a repeat — so this is a deadline, not a permanent
+     red light. Note earlier than that, so the deadline never arrives as a surprise. */
+  const low = [], soon = [];
+  if (r.feastLeft <= 0) low.push(`the Shabbat feast rotation repeats NEXT Friday — add a dish`);
+  else if (r.feastLeft <= 2) soon.push(`feast rotation: ${r.feastLeft} new dish(es) left`);
+  if (r.corLeft <= 1) low.push(`COR sets run out next week`);
+  else if (r.corLeft <= 4) soon.push(`COR sets: ${r.corLeft} weeks left`);
   if (low.length) fail('rotation-headroom', low.join(' · ') + ' — he notices repeats and says so');
-  else ok('rotation-headroom', `feast has ${r.feastLeft} new dishes left, COR ${r.corLeft} weeks`);
+  else ok('rotation-headroom', `feast has ${r.feastLeft} new dish(es) left, COR ${r.corLeft} weeks`);
+  if (soon.length) warn('rotation-soon', soon.join(' · '));
 
   warn('creami-batch', `${r.creami.name}, cup ${r.creami.cup}/${r.creami.of}; next is ${r.creami.next}`);
   if (r.staleN) warn('dated-content', `${r.staleN} dated entries are in the past — inert, but if one ` +
