@@ -2402,14 +2402,16 @@ const COR_OVERRIDE = {
      call as Aug 4, which he liked. */
   '2026-08-05': ['Chocolate Cinnamon Bun','Cinnamon Roll COR + Milk Chocolate Ryse — strawberries + extra cinnamon'],
   /* Aug 6: Ryse x Jet-Puffed landed — Marshmallow + Birthday Cake — and he wanted the marshmallow that
-     morning. PLAIN COR on purpose, same lesson as Aug 4: a jet-puffed marshmallow is even milder than the
-     milk chocolate, so Chocolate Cake COR would have buried the one flavor he is trying to taste — which
-     is why this is not the obvious s'more. Graham carries the s'more identity without competing (it is
-     honey/cinnamon, not a third loud flavor), and the cinnamon is free and sits in his up-rated profile:
-     the only COR combos he has ever thumbed UP are Snickerdoodle and Milk Chocolate Cookies n Cream.
-     The 15 g graham crunch trades the almond butter 32 g → 21.5 g, so this one runs 546 · 38P · 63C · 18F
+     morning. I offered the quiet bases first — Plain, then Cookies n Cream — on the Aug 4 logic that a mild
+     new powder gets buried by a loud COR. HE REJECTED BOTH ("na not with plain cor" / "no not cookies n
+     cream"), so CHOCOLATE CAKE it is, and this is now the real s'more: chocolate + marshmallow + graham.
+     ⭐ THE LESSON, which outranks my Aug 4 note: the burial risk is real but it is MY concern, not his goal.
+     He would rather have a bowl that tastes like something than one engineered to showcase a new powder —
+     and a pale base reads to him as a wasted COR slot. Offer the quiet pairing ONCE for a brand-new flavor,
+     take the no, and go loud. Do not offer Plain again.
+     The 15 g graham crunch trades the almond butter 32 g → 21.5 g, so this runs 546 · 38P · 63C · 18F
      instead of the crunch-free 545/39/54/22 — same calories, carb-up split. */
-  '2026-08-06': ['Toasted S’more','Plain COR + Jet-Puffed Marshmallow Ryse — strawberries + 15 g graham + extra cinnamon'],
+  '2026-08-06': ['Toasted S’more','Chocolate Cake COR + Jet-Puffed Marshmallow Ryse — strawberries + 15 g graham'],
 };
 const corFor = (iso, wd) => COR_OVERRIDE[iso] || weekPick(COR_SETS)[wd];
 const flavorTheme = () => weekPick(THEMES);
@@ -5617,7 +5619,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786027919';
+const BUILD = 'b1786028221';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
