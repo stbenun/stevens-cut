@@ -480,7 +480,11 @@
 <div class="app">
   <header class="top">
     <div class="brand">
-      <h1>STEVEN'S <span>COACH</span></h1>
+      <!-- Header text is PUBLIC: this repo must stay public for GitHub Pages to serve it, so the
+           page carries no real name. The Jul 31 leak fix corrected <title>, the apple-mobile meta,
+           a CSS comment and the push-notification string — and missed this h1, which is the one
+           people actually see. Do not put his name back here. -->
+      <h1>THE <span>CUT</span></h1>
       <div class="coach">Cut Companion</div>
     </div>
     <div class="macrostrip" id="macroStrip">
@@ -524,7 +528,7 @@ const SLOTS = [
    {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',[90,15,6,0]],['Banana','1 med',[110,1,27,0]]], t:[200,16,33,0]}]},
    {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',[70,17,0,0]],['Banana','1 med',[110,1,27,0]]], t:[180,18,27,0]}]},
  ]},
- {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[545,36,54,21], opts:[
+ {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[540,36,50,21], opts:[
    {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',[95,5.0,16,2]],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',[190,7,7,17]]], t:[545,39,54,22]}]},
    {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',[140,15,36,5]],['Philadelphia ⅓-less-fat cream cheese','45 g',[98,3,3,8]],['Acme Nova lox','130 g',[161,29,0,5]],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[539,48,73,18]}]},
    {id:'b3', name:'Kodiak Breakfast', k:[['dairy']], vars:[
@@ -545,9 +549,17 @@ const SLOTS = [
    {id:'b17', name:'Apple Pie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['RAW Grandma’s Apple Pie protein + ¾ tsp cinnamon','½ serving · 17 g',[65,12.5,1,1.25]],['Warm cinnamon apples','100 g',[60,0,15,0]],['Cinnamon Fiber One bar, crumbled','1',[70,1,17,2]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[550,59,49,16]}]},
    {id:'b18', name:'Chocolate Cookie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Oreo Thins, crushed','2',[50,0,8,2]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[545,58,41,18]}]},
    {id:'b4', name:'Oikos Power Parfait — no scale / no cook', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','2 cups',[180,30,12,0]],['Banana','1 med',[110,1,27,0]],['Cereal (Fruity Pebbles etc.)','~1 cup',[120,1,26,1]],['Justin’s almond butter','½ packet (~16 g)',[100,3,3,8]],['Berries','handful (optional)',[15,0,3,0]]], t:[525,35,71,9]}]},
-   {id:'b19', name:'Warm COR + Yogurt Cup — 2 plates', k:[['dairy']], vars:[{ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',[332,47,14,9.7]],['🥶 Banana','½ med',[53,0.5,14,0]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',[30,1,1,2.7]],['Cinnamon + Lakanto (free flavor — no extract needed)','—',[0,0,0,0]]], t:[710,78,64,16]}]},
+   /* b19 shipped at 710 cal against a 545 slot — 165 over, the single worst-fitting option in the
+      app, and it only surfaced because he asked "what is b19?". Rather than edit his food out from
+      under him, the cut-day build is now the DEFAULT variant and the original two-plate version is
+      kept as its own labelled variant for a feast or refeed day. Yogurt 470→260 g and almond butter
+      5→11 g: the trim comes off the yogurt (the biggest single line) and the fat goes back up so the
+      bowl stays over the 14 g satiety floor the breakfast guard enforces. */
+   {id:'b19', name:'Warm COR + Yogurt Cup — 2 plates', k:[['dairy']], vars:[
+     {label:'Cut day (545)', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','260 g',[184,26,7.7,5.4]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','11 g',[66,2.2,2.2,5.9]],['Cinnamon + Lakanto (free flavor — no extract needed)','—',[0,0,0,0]]], t:[545,58,45,15]},
+     {label:'Two plates, full (710) — feast/refeed day', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',[332,47,14,9.7]],['🥶 Banana','½ med',[53,0.5,14,0]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',[30,1,1,2.7]],['Cinnamon + Lakanto (free flavor — no extract needed)','—',[0,0,0,0]]], t:[710,78,64,16]}]},
  ]},
- {key:'lu', slot:'Lunch', time:'1:30 PM', b:[580,51,63,15], opts:[
+ {key:'lu', slot:'Lunch', time:'1:30 PM', b:[575,50,59,15], opts:[
    {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['Sweet potato','225 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,52,63,15]}]},
    {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['White rice (dry)','55 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,52,63,15]}]},
    {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[580,55,47,18]}]},
@@ -558,12 +570,12 @@ const SLOTS = [
    {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',[250,37,0,10]],['Egg whites (binder)','15 g',[8,2,0,0]],['Keto bun','1',[50,6,16,2]],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','290 g',[211,5,47,0]],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',[0,0,0,0]]], t:[579,51,68,15]}]},
    {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Mini guac cup','1',[100,1,6,8]],['Rice cakes','5',[175,1,35,0]],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',[0,0,0,0]]], t:[575,53,46,16]}]},
  ]},
- {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[330,34,31,7], opts:[
+ {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[325,33,28,8], opts:[
    {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['BROWNIE wet: egg whites 60 mL · pumpkin purée 40 g · Oikos vanilla 40 g · ¼ tsp vanilla — NO Fairlife (the old flood is why it was watery)','bowl 1',[78,12,7,0]],['BROWNIE dry: all-purpose flour 18 g · Lakanto 28 g · Ryse Choc Cookie Blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt','bowl 2',[137,13,20,2]],['COOKIE DOUGH (thick + scoopable, brown-sugar flavor): oat flour 10 g · AP flour 7 g · Ryse vanilla 7 g · Lakanto GOLDEN 14 g · softened butter 3 g · egg white 10 mL · ¼ tsp vanilla · pinch soda + salt','one bowl',[118,9,12,3.5]]], t:[333,34,39,6]}]},
    {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',[107,17.3,8.0,0]],['Ryse protein','½ scoop',[70,13,2,1]],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[317,32,30,7]}]},
    {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',[43,8,3,0]],['Justin’s Classic almond butter','3.1 g',[21,1,1,2]],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[326,35,33,8]}]},
  ]},
- {key:'di', slot:'Dinner', time:'10:00 PM', b:[585,54,58,19], opts:[
+ {key:'di', slot:'Dinner', time:'10:00 PM', b:[580,52,58,19], opts:[
    {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',[255,35,0,12]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',[20,2,4,0]]], t:[585,54,58,19]}]},
    {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',[255,35,0,12]],['Tomato paste','33 g',[27,1,6,0]],['Keto bun','1',[50,6,16,2]],['Egg','1',[80,7,0,5]],['Potatoes','220 g',[160,4,36,0]],['Asparagus','100 g',[20,2,4,0]]], t:[592,55,62,19]}]},
    {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[170,3,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[120,10,9,5]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[585,51,55,17]}]},
@@ -2870,6 +2882,34 @@ async function getPhotos(){ const db=await pdb(); return new Promise(res=>{ cons
 async function delPhoto(key){ const db=await pdb(); return new Promise(res=>{
   const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').delete(key); tx.oncomplete=res; }); }
 
+/* ---------- Creami batch: ONE reader, and it advances itself ----------
+   The old code computed `cbDone` — it knew perfectly well the batch was finished — and used that
+   only to decide which batch to SHOP for. Moving to the next batch was wired exclusively to a
+   "next batch" button on the Prep tab, so it never happened: Batch 4 held 4 cups, he ate all four
+   by Aug 3, and the app kept serving him cups from a finished batch. That is exactly what he meant
+   by "the upcoming creami batch is the same as always" — and Batch 5, built to answer that
+   complaint, had never once appeared.
+
+   The rule this violated is already written down from the hydration-stick bug: a required action's
+   trigger may be ADJUSTED by a conditional event, never SUPPLIED by one. A tap is a conditional
+   event. Finishing the batch is the real trigger, so finishing the batch is what advances it. */
+function creamiState(){
+  const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
+  const at = i => CREAMI_BATCHES[((i % CREAMI_BATCHES.length) + CREAMI_BATCHES.length) % CREAMI_BATCHES.length];
+  const used = cb.started
+    ? Object.entries(store.get('qpcut.eaten',{})).filter(([d,m])=>d>=cb.started && m.sn==='s1').length
+    : 0;
+  const cur = at(cb.idx);
+  if(cb.started && used >= cur.cups.length){
+    const nx = { idx: (cb.idx+1) % CREAMI_BATCHES.length, started: isoToday() };
+    store.set('qpcut.creamibatch', nx);
+    return { idx:nx.idx, started:nx.started, used:0, batch:at(nx.idx), next:at(nx.idx+1),
+             cup:0, justAdvanced:true, prev:cur };
+  }
+  return { idx:cb.idx, started:cb.started, used, batch:cur, next:at(cb.idx+1),
+           cup:used, justAdvanced:false, prev:null };
+}
+
 /* ---------- shared "things to buy" component (Today + Prep, feeds grocery list) ---------- */
 /* everything still UNCHECKED in the grocery list (menu items + Creami + spices; staples excluded) */
 function stillToBuyItems(){
@@ -2880,12 +2920,9 @@ function stillToBuyItems(){
   const groups = hasMenu
     ? GRP_ORDER.map(g=>[g,(buildGrocery(counts)[g]||[])]).filter(([g,it])=>it.length)
     : GROCERY;
+  /* see creamiState() — one reader for the batch, and it advances itself */
   groups.forEach(([grp,its])=>its.forEach(([n,q])=>{ const id=grp+'|'+n; if(!gDone.includes(id)) items.push([id,n,q]); }));
-  const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
-  const eatenAll = store.get('qpcut.eaten',{});
-  const eatenN = cb.started? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-  const cbDone = cb.started && eatenN >= CREAMI_BATCHES[cb.idx%CREAMI_BATCHES.length].cups.length;
-  const shopBatch = CREAMI_BATCHES[(cb.idx + (cbDone?1:0)) % CREAMI_BATCHES.length];
+  const shopBatch = creamiState().next;
   shopBatch.shop.forEach(([n,q])=>{ const id='Creami|'+n; if(!gDone.includes(id)) items.push([id,n,q]); });
   weekPick(RECIPES).shop.forEach(n=>{ const id='Flavor|'+n; if(!gDone.includes(id)) items.push([id,n,'']); });
   return items;
@@ -2926,30 +2963,56 @@ function wireBuy(){
   }));
 }
 
-/* ---------- Right Now: curated daily timeline (minutes from midnight) ---------- */
-function dayTimeline(){
+/* ---------- Right Now: curated daily timeline (minutes from midnight) ----------
+   dayRows() is the PLAN as authored — no reference to what he logged. dayTimeline() is that plan
+   adjusted to reality. Keeping them separate matters: the next-meal engine needs to know the
+   planned ORDER of the day, and it cannot ask dayTimeline for it without looping back through
+   itself. It is also what fixes the ordering bug — Tue/Wed run dinner at 6:30 and the snack at
+   9:30, the reverse of the pre/bf/lu/sn/di constant the engine used to walk. */
+function dayRows(){
   const wd = new Date().getDay();
   const glM = gymLeaveMin(wd, isoToday());
   const lift = glM!=null? glM+15 : null;
   const done = liftLoggedToday(isoToday());   /* lift logged → drop the gym-approach rows */
   const T = [];
   const A=(m,l)=>{ if(m!=null&&!isNaN(m)) T.push([m,l]); };
-  if(wd===0){ A(435,'Wake + 💧 Ryse stick — drink it before you stand up'); A(480,'Minyan'); A(510,'Class'); A(555,((isNoRun(isoToday())||!RUNNING_ON)?'':'Runna run (banner above) · ')+'Weigh-in report to Claude'); A(645,'Groceries + Sunday prep — Prep tab is the checklist'); A(810,'Lunch'); A(1155,'Arbit'); A(1230,'Snack + dials'); A(1320,'Bed by 10:30 — tomorrow wakes at 6:40'); }
+  /* Sunday used to list only Lunch and Snack — breakfast and dinner were simply absent, ~1,130 cal
+     of the day missing from the plan, while his own logs show he eats breakfast 3 Sundays out of 4.
+     A day plan that omits meals he eats is why the day silently comes up short. */
+  if(wd===0){ A(435,'Wake + 💧 Ryse stick — drink it before you stand up'); A(480,'Minyan'); A(510,'Class'); A(555,((isNoRun(isoToday())||!RUNNING_ON)?'':'Runna run (banner above) · ')+'Weigh-in report to Claude'); A(600,'Breakfast'); A(645,'Groceries + Sunday prep — Prep tab is the checklist'); A(810,'Lunch'); A(1155,'Arbit'); A(1230,'Dinner + dials'); A(1290,'Snack'); A(1350,'Bed by 10:30 — tomorrow wakes at 6:40'); }
   if(wd===1){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(465,'Yogurt + banana right out of minyan');
     if(lift&&lift<720&&!done){ A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs · log reps live'); A(lift+75,'Gym done ~9:30 → shower + work'); }
     A(lift&&lift<720?585:540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
     if(lift&&lift>=720&&!done){ A(lift-45,'Pre-lift meal'); A(glM,'Leave — EAA only this late, no stim'); A(lift,'Lift — Legs · log reps live'); }
-    A(1155,'Arbit'); A(1200,'Rabbi B.'); A(1260,'Rabbi N.'); A(1325,'Dinner (Monday runs late) + dials'); A(1425,'Lights out — 11:45 is the Monday reality'); }
+    /* Monday had NO snack row at all, yet he logs the snack 4 Mondays out of 5. Dinner runs to
+       10:05, so the default place for a dairy Creami is after it — dairyWindow() moves it in front
+       of dinner on its own if dinner is meat. */
+    A(1155,'Arbit'); A(1200,'Rabbi B.'); A(1260,'Rabbi N.'); A(1325,'Dinner (Monday runs late) + dials'); A(1370,'Snack'); A(1425,'Lights out — 11:45 is the Monday reality'); }
   if(wd===2||wd===3){ A(360,'Wake + 💧 Ryse stick — drink it before you stand up'); A(370,'Class'); A(420,'Minyan'); A(465,'Yogurt + banana right out of minyan');
     if(lift&&lift<720&&!done){ A(glM,'Leave — sip pre-workout'); A(lift, wd===2?'Lift — Push · log reps live':'Lift — Pull · log reps live'); A(lift+75,'Gym done ~9:30 → shower + work'); }
     A(lift&&lift<720?585:540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1110,'Dinner BEFORE Arbit — classes run late');
     (wd===2?[[1155,'Arbit + Rabbi R.'],[1215,'Rabbi B. or Rabbi N.']]:[[1155,'Arbit'],[1200,'Rabbi B.']]).forEach(([m,l])=>A(m,l));
     A(1290,'Snack + dials'); A(1350,'Bed by 10:30 — recovery night'); }
-  if(wd===4){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080, (isNoRun(isoToday())||!RUNNING_ON)?'Walk':'Walk + Runna run (banner above) · 💧 LMNT or 2 Ryse — long run needs the extra sodium'); A(1155,'Arbit'); A(1200,'Rabbi A.'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1350,'Bed by 10:30'); }
+  if(wd===4){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080, (isNoRun(isoToday())||!RUNNING_ON)?'Walk':'Walk + Runna run (banner above) · 💧 LMNT or 2 Ryse — long run needs the extra sodium'); A(1155,'Arbit'); A(1200,'Rabbi A.'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1325,'Snack'); A(1350,'Bed by 10:30'); }
   if(wd===5){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
     if(lift&&!done){ A(lift-45,'Pre-lift meal'); A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs #2 · log reps live'); A(lift+75,'Gym done → shower + work'); }
     A(900,'🕯️ Shabbat prep — the afternoon is free now that Legs #2 is in the morning'); A(1020,'Bank'); A(1140,'Shul'); A(1200,'Shabbat dinner — feast + challah rules on the Friday card'); }
   if(wd===6){ A(390,'Wake + 💧 Ryse stick — drink it before you stand up'); A(405,'Minyan'); A(525,'Class'); A(585,'Walk to grandma’s'); if(!done) A(600,'Lift — the printed card'); A(750,'Shabbat lunch'); }
+  return T;
+}
+/* the planned clock time of each meal slot today, straight off the authored plan */
+function plannedMealMins(){
+  const out = {};
+  dayRows().forEach(([m,l])=>{ const s=mealSlotOfLabel(l); if(s && out[s]==null) out[s]=m; });
+  return out;
+}
+/* the day's meal slots in the order they ACTUALLY happen today, not the canonical slot order */
+function dayMealOrder(){
+  const p = plannedMealMins();
+  return Object.keys(p).sort((a,b)=>p[a]-p[b]);
+}
+function dayTimeline(){
+  const T = dayRows();
   /* reflect logged/suggested meal times: a logged meal moves to its actual time, the next meal moves to
      the suggested time. dayTimeline is always today, so this is always live. */
   T.forEach(row=>{ const slot=mealSlotOfLabel(row[1]); if(slot){ const mm=schedMealMin(slot, isoToday()); if(mm!=null) row[0]=mm; } });
@@ -3084,6 +3147,76 @@ function eatTimes(ld){ return store.get('qpcut.eatenAt.'+dkey(ld), {}); }
 function setEatTime(ld, slot, hhmm){ const m=eatTimes(ld); if(hhmm) m[slot]=hhmm; else delete m[slot]; store.set('qpcut.eatenAt.'+dkey(ld), m); }
 /* the slot order + a base gap (minutes) that scales with the meal's calories */
 const SLOT_SEQ = ['pre','bf','lu','sn','di'];
+
+/* ---------- kashrut-aware meal timing ----------
+   His rule, in his words (Aug 6 2026): "if i have meat for dinner then i have creami before class.
+   if dinner is dairy or pareve then ill have it after dinner."
+
+   That is not a schedule preference, it is the meat/dairy separation, and the app already knows
+   every option's status — SLOTS carries k:[['meat'|'dairy'|'pareve']] on all of them. It just never
+   used it for TIME. The cost of that was real: on 2026-07-29, 07-30 and 08-04 the next-eat engine
+   suggested the dairy Creami 3 h 45 after a chicken lunch, well inside the 6-hour wait. Every snack
+   he owns (s1/s2/s4) is dairy. He ignored the app and waited correctly on his own — on 07-28 he ate
+   it at 9:59 PM, 6.15 h out — which is also why the Wednesday/Thursday snack goes unlogged: the
+   suggested time is one he cannot use.
+
+   Anything that schedules a meal must go through here. A time the app prints that he cannot eat is
+   worse than no time at all. */
+const WAIT_MEAT_DAIRY = 360;   /* 6 h, his custom */
+const WAIT_DAIRY_MEAT = 30;    /* short — rinse + a neutral bite; a buffer, not a halachic ruling */
+function optK(id){
+  for(const s of SLOTS){ const f=s.opts.find(x=>x.id===id); if(f) return (f.k||[]).flat(); }
+  return [];
+}
+const isMeatId  = id => optK(id).includes('meat');
+const isDairyId = id => optK(id).includes('dairy');
+
+/* When may a DAIRY item be eaten on this date, given what he logged and what is planned?
+   Returns {from, until, blocked, why} in minutes-since-midnight; from/until may be null = unbounded. */
+function dairyWindow(ld, opts){
+  opts = opts || {};
+  const eaten = (store.get('qpcut.eaten',{}))[ld] || {};
+  const times = eatTimes(ld);
+  const toM = s => { if(!s) return null; const [h,m]=String(s).split(':').map(Number); return h*60+m; };
+  /* Only meat eaten BEFORE the moment in question imposes the 6-hour wait; meat eaten after it is
+     the other direction entirely, which is a short wait, not a long one. Without this the function
+     read a 10:45 PM meat dinner as blocking a 10:15 PM snack that had already happened — and, worse,
+     wrapped past midnight and reported the window opening at "4:45 AM". */
+  const asOf = opts.asOf != null ? opts.asOf : 1440;
+  let from = null, until = null, why = [];
+
+  /* a MEAT meal already eaten pushes the earliest dairy 6 h out */
+  ['bf','lu','di'].forEach(k=>{
+    if(!eaten[k] || !isMeatId(eaten[k])) return;
+    const t = toM(times[k]);
+    if(t==null || t >= asOf) return;
+    const e = t + WAIT_MEAT_DAIRY;
+    if(from==null || e>from){
+      from = e;
+      why = [`you had ${SLOTS.find(s=>s.key===k).slot.toLowerCase()} at ${fmtMin(t)} and it was meat — ` +
+             `dairy opens at ${fmtMin(e)}, 6 hours out`];
+    }
+  });
+  /* a wait that runs past midnight means there is no dairy left in this day at all */
+  if(from != null && from >= 1440){
+    return { from, until:null, blocked:true, overnight:true,
+             why: why.concat('that lands after midnight, so there is no dairy window left today — ' +
+                             'the Creami moves to tomorrow').join(' · ') };
+  }
+
+  /* a MEAT dinner still to come closes the window before it — this is his stated rule */
+  const dinId = opts.dinner || eaten.di || null;
+  const dinM  = opts.dinnerMin != null ? opts.dinnerMin : toM(times.di);
+  if(dinId && isMeatId(dinId) && !eaten.di && dinM != null){
+    until = dinM - WAIT_DAIRY_MEAT;
+    why.push(`dinner tonight is meat at ${fmtMin(dinM)}, so the Creami has to land before it — ` +
+             `after it you are locked out for 6 hours`);
+  }
+  const blocked = (from!=null && until!=null && from > until);
+  if(blocked) why.push('there is no dairy window today — a meat lunch and a meat dinner close it from ' +
+                       'both sides. Move the Creami to tomorrow, or make lunch a Jiben.');
+  return { from, until, blocked, why: why.join(' · ') };
+}
 function healthyGap(slotKey){
   /* bigger meal → longer gap. base 3h; +/- by the slot's calorie budget. */
   const s = SLOTS.find(x=>x.key===slotKey); const cal = s? s.b[0] : 400;
@@ -3105,10 +3238,17 @@ function nextEatSuggestion(ld){
   if(!last) return null;
   /* which slots are "skipped" today: Friday snack is always skipped; any slot with no menu presence + past its window */
   const skipped = k => (isFri && k==='sn');
+  /* Walk the order the day ACTUALLY runs in, not the canonical pre/bf/lu/sn/di. On Tue and Wed
+     dinner is at 6:30 and the snack at 9:30 — walking the constant made the engine offer the snack
+     as the "next" meal after lunch and compute 6:31 PM, one minute after the dinner already on the
+     schedule. Fall back to the constant for a date that is not today, where there is no plan to read. */
+  const isToday = ld === isoToday();
+  const SEQ = isToday ? (dayMealOrder().length ? dayMealOrder() : SLOT_SEQ) : SLOT_SEQ;
+  const planned = isToday ? plannedMealMins() : {};
   /* walk forward from the last-eaten slot to the next NON-skipped, NOT-yet-eaten slot */
-  let idx = SLOT_SEQ.indexOf(last), target=null, stretched=false;
-  for(let i=idx+1;i<SLOT_SEQ.length;i++){
-    const k=SLOT_SEQ[i];
+  let idx = SEQ.indexOf(last), target=null, stretched=false;
+  for(let i=idx+1;i<SEQ.length;i++){
+    const k=SEQ[i];
     if(eaten[k]) continue;              // already ate it
     if(skipped(k)){ stretched=true; continue; } // skip it, and note we stretched
     target=k; break;
@@ -3127,12 +3267,63 @@ function nextEatSuggestion(ld){
   /* bedtime cap ~ 11:00 PM (1380) minus 30 */
   const cap = 1380-30;
   const tName = SLOTS.find(s=>s.key===target).slot.toLowerCase();
-  let why, basis;
-  if(stretched){ basis='skip-adjusted'; why = `a slot before this is skipped today, so it’s pushed later so you’re not starving before ${tName}`; }
+  let why, basis, blocked=false;
+  /* COLLISION CLAMP — a suggested time may never reach the next meal already on today's plan.
+     Without this the snack could be proposed at 6:31 PM with dinner sitting at 6:30 PM. */
+  { const ti = SEQ.indexOf(target);
+    for(let j=ti+1;j<SEQ.length;j++){
+      const nk = SEQ[j];
+      if(eaten[nk] || skipped(nk)) continue;
+      const np = (times[nk] ? (()=>{const [h,m]=times[nk].split(':').map(Number); return h*60+m;})()
+                            : planned[nk]);
+      if(np!=null && mins > np-45){ mins = np-45; basis='crowded';
+        why = `pulled back so it isn’t on top of ${SLOTS.find(s=>s.key===nk).slot.toLowerCase()} at ${fmtMin(np)}`; }
+      break;
+    } }
+  /* KASHRUT CLAMP — the snack is always dairy, so it is the slot this can bite. Spacing is a
+     preference; the 6-hour wait is not, so it wins over every other adjustment here. */
+  if(target==='sn'){
+    const w = dairyWindow(ld);
+    if(w.blocked){ blocked = true; }
+    else {
+      if(w.from!=null && mins < w.from){ mins = w.from; basis='kashrut'; }
+      if(w.until!=null && mins > w.until){ mins = w.until; basis='kashrut'; }
+    }
+    if(basis==='kashrut' || w.blocked) why = w.why;
+  }
+  if(basis==='kashrut' || basis==='crowded' || blocked){ /* a hard constraint set the time; keep its reason */ }
+  else if(stretched){ basis='skip-adjusted'; why = `a slot before this is skipped today, so it’s pushed later so you’re not starving before ${tName}`; }
   else if(skipAhead){ basis='skip-adjusted'; why = `you’re skipping the snack after ${tName}, so eat ${tName} a bit later — it shortens the long gap to your next meal so you don’t get too hungry`; }
   else { basis='meal spacing'; why = `just standard spacing — ~${Math.round(healthyGap(last)/60*10)/10} h after your last meal for steady energy + digestion (nothing skipped factored in)`; }
-  if(mins>cap){ mins=cap; basis='bedtime cap'; why='capped ~30 min before bed so it doesn’t hurt sleep'; }
-  return { mins, target, label: SLOTS.find(s=>s.key===target).slot, why, basis, past: now!=null && now>=mins };
+  /* The bedtime cap is a preference and must never pull a dairy slot back inside the wait —
+     that would quietly re-introduce the exact bug this clamp exists to kill. When the two
+     genuinely conflict, keep the kosher time and say the honest thing. */
+  if(mins>cap){
+    const floor = (target==='sn') ? dairyWindow(ld).from : null;
+    if(floor!=null && floor>cap){
+      basis='kashrut'; why += ' · that is past your usual cutoff, so this one is late by ' +
+        'necessity, not by choice — or move it to tomorrow';
+    } else {
+      mins=cap; basis='bedtime cap'; why='capped ~30 min before bed so it doesn’t hurt sleep';
+    }
+  }
+  return { mins, target, label: SLOTS.find(s=>s.key===target).slot, why, basis, blocked,
+           past: now!=null && now>=mins };
+}
+/* The time to PRINT next to a meal slot. SLOTS[].time is a static string ("10:00 PM" for dinner)
+   that was written when every day looked the same; it now contradicts the schedule engine on most
+   days — Tue/Wed dinner is 6:30, not 10:00, and the snack floats with the kashrut window. Static
+   copy sitting beside a computed value it cannot see is the single most common complaint he has
+   made about this app, so the label comes from the engine and falls back to the string only when
+   there is nothing better. */
+function slotTimeLabel(key, ld){
+  const s = SLOTS.find(x=>x.key===key);
+  const stat = s ? s.time.split('·')[0].trim() : '';
+  if(ld !== isoToday()) return stat;
+  const m = schedMealMin(key, ld);
+  if(m != null) return fmtMin(m);
+  const p = plannedMealMins()[key];
+  return p != null ? fmtMin(p) : stat;
 }
 /* map a schedule row's text to a meal slot key (bf/lu/sn/di) so its time can track real eating */
 function mealSlotOfLabel(label){
@@ -3796,17 +3987,17 @@ function viewToday(){
        specific bowl is pinned for this date in qpcut.bowlpick.<date> (a manual "make today X" override). */
     const bowlId = bowlOfDay(isoToday());
     const bowlToday = bowlId? OPTBYID[bowlId] : null;
-    const cbT = store.get('qpcut.creamibatch',{idx:0,started:null});
-    const batchT = CREAMI_BATCHES[cbT.idx%CREAMI_BATCHES.length];
     /* count Creamis logged since the batch started — TODAY counts only once its own s1 is logged, so the
-       card shows TODAY'S cup until you mark it eaten, then advances. `eaten` here is only today's slots,
-       so read the full history. */
+       card shows TODAY'S cup until you mark it eaten, then advances. creamiState() rolls over to the
+       next batch on its own the moment the last cup is logged. */
+    const cs = creamiState();
+    const cbT = cs, batchT = cs.batch;
     const creamiHist = store.get('qpcut.eaten',{});
-    const eatenNT = cbT.started? Object.entries(creamiHist).filter(([dd,m])=>dd>=cbT.started&&m.sn==='s1').length : 0;
+    const eatenNT = cs.used;
     const cupT = batchT.cups[Math.min(eatenNT, batchT.cups.length-1)];
     const creamiTotal = batchT.cups.length;
     const creamiHadToday = ((creamiHist[isoToday()]||{}).sn === 's1');
-    const creamiDone = cbT.started && eatenNT >= creamiTotal;
+    const creamiDone = false;   /* a finished batch no longer exists — it has already rolled over */
     const creamiNo = Math.min(eatenNT, creamiTotal-1) + 1;
     const creamiChip = !cbT.started ? 'batch not started' : creamiDone ? 'batch done · start a new one' : creamiHadToday ? `next · cup ${creamiNo}/${creamiTotal} (today ✓)` : `today · cup ${creamiNo}/${creamiTotal}`;
     const tonight = (store.get('qpcut.tonight',{}))[isoToday()] || todayEaten.di || null;
@@ -3900,7 +4091,7 @@ function viewToday(){
       const pickedId = todayEaten[s.key];
       const picked = pickedId? OPTBYID[pickedId] : null;
       const skip = isFri && s.key==='sn';
-      const time = s.time.split('·')[0].trim();
+      const time = slotTimeLabel(s.key, ld);
       return {s, picked, skip, time};
     });
     const firstOpen = tiles.find(t=>!t.picked && !t.skip);
@@ -4219,7 +4410,7 @@ function viewMeals(){
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
      <span style="display:flex;align-items:baseline;gap:8px;width:100%">
-       <b style="flex:1;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${s.time}</span></b>
+       <b style="flex:1;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${slotTimeLabel(s.key, isoToday())}${s.key==='sn'?' · skip Friday':''}</span></b>
        <span class="r" style="flex-shrink:0;color:var(--muted)">${s.opts.length} · ${s.b[0]}·${s.b[1]}P</span>
      </span>
    </summary>
@@ -4384,14 +4575,9 @@ function viewPrep(){
       </div>`;}).join('');
   })()}
   ${(()=>{
-    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
-    const batches = CREAMI_BATCHES;
-    const eatenAll = store.get('qpcut.eaten',{});
-    const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-    const done = cb.started && eatenN >= batches[cb.idx%batches.length].cups.length;
-    const shopBatch = batches[(cb.idx + (done?1:0)) % batches.length];
+    const shopBatch = creamiState().next;
     return `
-  <div style="margin-top:14px"><span class="daytag">Creami batch · shopping for ${shopBatch.name}${done?' (next up)':''}</span>
+  <div style="margin-top:14px"><span class="daytag">Creami batch · shopping for ${shopBatch.name} (next up)</span>
     ${shopBatch.shop.map(([n,q])=>{
       const id = 'Creami|'+n, on = gDone.includes(id);
       return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
@@ -4457,14 +4643,12 @@ function viewPrep(){
   </section>
 
   ${(()=>{
-    const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
-    const batches = CREAMI_BATCHES;
-    const batch = batches[cb.idx%batches.length];
-    const eatenAll = store.get('qpcut.eaten',{});
-    const eatenN = cb.started ? Object.entries(eatenAll).filter(([d,m])=>d>=cb.started&&m.sn==='s1').length : 0;
-    const left = Math.max(0,batch.cups.length-eatenN);
-    const done = cb.started && eatenN >= batches[cb.idx%batches.length].cups.length;
-    const nextBatch = batches[(cb.idx+1)%batches.length];
+    const cs = creamiState();
+    const cb = cs, batches = CREAMI_BATCHES, batch = cs.batch;
+    const eatenN = cs.used;
+    const left = Math.max(0, batch.cups.length - eatenN);
+    const done = false;          /* rolled over automatically; a finished batch is never "current" */
+    const nextBatch = cs.next;
     const cupHTML = cups => cups.map(([n,p,th,ex,top])=>`
       <div class="opt"><div class="head"><b>${n}</b></div>
         <ul class="ing">
@@ -5643,7 +5827,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786046657';
+const BUILD = 'b1786051179';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
