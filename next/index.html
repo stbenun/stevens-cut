@@ -478,6 +478,7 @@
 </style>
 
 <div class="app">
+  <div id="nxPreviewFlag" style="background:#A8761F;color:#fff;font:600 12px/1.4 -apple-system,system-ui,sans-serif;padding:7px 14px;text-align:center">PREVIEW BUILD — the app you rely on is still at <a href="../" style="color:#fff">stbenun.github.io/stevens-cut</a>. This one shares the same data.</div>
   <header class="top">
     <div class="brand">
       <!-- Header text is PUBLIC: this repo must stay public for GitHub Pages to serve it, so the
@@ -5876,6 +5877,590 @@ async function checkUpdate(manual){
 const updLink = document.getElementById('updChk');
 if(updLink) updLink.addEventListener('click',e=>{ e.preventDefault(); checkUpdate(true); });
 setTimeout(()=>checkUpdate(false), 1500);
+</script>
+
+<!-- ============================================================================
+     THE NEXT SKIN — a new view layer bolted onto the SAME engine.
+
+     Why it is built this way: next/index.html is generated as index.html PLUS this file. It is not
+     a fork. Every recipe, rotation, macro and engine function comes from the one source, so a food
+     fix made once is correct in both apps. Forking the file would have created two copies of his
+     food data, and drift between them is exactly the class of bug this whole refresh was about.
+
+     How the override works: top-level `let`/`const` in a classic script live in the shared global
+     lexical environment, so this second script can read SLOTS, dayRows, dairyWindow, creamiState,
+     corBuild, store — all of it. VIEWS is a const OBJECT, so its properties can be reassigned. And
+     `render` is a function declaration, so redefining it here replaces the one the engine calls.
+
+     Same origin as the live app (only the path differs), so localStorage is SHARED: this reads and
+     writes his real data and syncs through the same gist. Nothing to migrate, and the two apps
+     always agree.
+
+     Tabs Now / Food / Trend are the new design. Lift and Prep render the EXISTING view HTML inside
+     the new frame and run the existing wiring — deliberately, because those two own rep logging and
+     the grocery state, and reimplementing them was the one way to actually lose data.
+     ============================================================================ -->
+<style>
+:root{
+  --nx-surface:#FFFFFF; --nx-raise:#F7F9FB; --nx-ground:#EEF1F5; --nx-line:#D9DFE7;
+  --nx-text:#12161C; --nx-muted:#68717E; --nx-faint:#98A1AD; --nx-brass:#A8761F;
+  --nx-meat:#A8443A; --nx-dairy:#3E7FA8; --nx-pareve:#4E8C5A;
+  --nx-meat-bg:#F7E7E5; --nx-dairy-bg:#E3EEF6; --nx-pareve-bg:#E4F0E7;
+  --nx-good:#3F7D52; --nx-btn-bg:#12161C; --nx-btn-fg:#FFFFFF;
+  --nx-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+  --nx-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --nx-surface:#171B22; --nx-raise:#1E242D; --nx-ground:#0E1116; --nx-line:#272D37;
+    --nx-text:#E8ECF2; --nx-muted:#98A1AD; --nx-faint:#68717E; --nx-brass:#D9A445;
+    --nx-meat:#E08076; --nx-dairy:#7FB6DC; --nx-pareve:#87BE93;
+    --nx-meat-bg:#2E1E1C; --nx-dairy-bg:#16262F; --nx-pareve-bg:#182A1D;
+    --nx-good:#7FB88F; --nx-btn-bg:#D9A445; --nx-btn-fg:#12161C;
+  }
+}
+/* the old shell is hidden rather than deleted: the engine's own code still queries #view and
+   #macroStrip, and removing them would throw inside code this skin does not own */
+body.nx .app > header.top, body.nx .app > .zonebar, body.nx .app > footer{ display:none !important; }
+body.nx{ background:var(--nx-ground); color:var(--nx-text); font-family:var(--nx-ui); margin:0;
+         -webkit-font-smoothing:antialiased; }
+body.nx .app{ max-width:520px; margin:0 auto; padding:0 0 74px; }
+
+.nxtop{position:sticky;top:0;z-index:20;background:var(--nx-surface);border-bottom:1px solid var(--nx-line)}
+.nxbrand{padding:11px 16px 9px;display:flex;align-items:baseline;gap:10px}
+.nxbrand h1{margin:0;font-size:12px;font-weight:700;letter-spacing:.16em}
+.nxbrand h1 span{color:var(--nx-brass)}
+.nxday{margin-left:auto;font-family:var(--nx-mono);font-size:11px;color:var(--nx-muted)}
+.nxrail{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--nx-line)}
+.nxrc{padding:8px 4px;text-align:center;border-right:1px solid var(--nx-line)}
+.nxrc:last-child{border-right:0}
+.nxrc .n{font-family:var(--nx-mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.nxrc .l{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--nx-faint);margin-top:1px}
+.nxrc.lead .n{color:var(--nx-brass)}
+
+body.nx #view{padding:15px;display:flex;flex-direction:column;gap:15px}
+.nxsect{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--nx-faint);font-weight:700}
+
+.nxnow{border-radius:14px;padding:14px;border:1px solid var(--nx-line);background:var(--nx-raise)}
+.nxnow.k-meat{background:var(--nx-meat-bg);border-color:var(--nx-meat)}
+.nxnow.k-dairy{background:var(--nx-dairy-bg);border-color:var(--nx-dairy)}
+.nxnow.k-pareve{background:var(--nx-pareve-bg);border-color:var(--nx-pareve)}
+.nxnow .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--nx-muted)}
+.nxnow.k-meat .eyebrow{color:var(--nx-meat)} .nxnow.k-dairy .eyebrow{color:var(--nx-dairy)}
+.nxnow.k-pareve .eyebrow{color:var(--nx-pareve)}
+.nxnow h2{margin:6px 0 2px;font-size:21px;letter-spacing:-.02em}
+.nxwhen{font-family:var(--nx-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.nxwhy{font-size:13px;color:var(--nx-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--nx-line)}
+.nxwhy b{color:var(--nx-text)}
+.nxbh{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--nx-faint);font-weight:700;margin:11px 0 5px}
+.nxing{display:flex;justify-content:space-between;gap:12px;padding:4px 0;font-size:13px;border-bottom:1px dotted var(--nx-line)}
+.nxing:last-of-type{border-bottom:0}
+.nxing .q{font-family:var(--nx-mono);font-variant-numeric:tabular-nums;color:var(--nx-muted);white-space:nowrap;text-align:right}
+.nxtot{display:flex;gap:10px;margin-top:8px;font-family:var(--nx-mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--nx-muted)}
+.nxtot b{color:var(--nx-text)}
+.nxact{margin-top:11px;width:100%;border:0;border-radius:10px;background:var(--nx-btn-bg);color:var(--nx-btn-fg);
+       font-family:var(--nx-ui);font-size:15px;font-weight:600;padding:11px;cursor:pointer}
+.nxact:active{transform:scale(.985)}
+.nxact:focus-visible{outline:2px solid var(--nx-brass);outline-offset:2px}
+.nxact.ghost{background:transparent;color:var(--nx-muted);border:1px solid var(--nx-line);font-weight:500}
+
+.nxspine{position:relative;padding-left:26px}
+.nxspine::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--nx-line);border-radius:2px}
+.nxev{position:relative;padding:6px 0;display:flex;gap:10px;align-items:baseline}
+.nxev::before{content:"";position:absolute;left:-23px;top:12px;width:9px;height:9px;border-radius:50%;
+              background:var(--nx-surface);border:2px solid var(--nx-line)}
+.nxev.done::before{background:var(--nx-line)}
+.nxev.k-meat::before{border-color:var(--nx-meat);background:var(--nx-meat)}
+.nxev.k-dairy::before{border-color:var(--nx-dairy);background:var(--nx-dairy)}
+.nxev.k-pareve::before{border-color:var(--nx-pareve);background:var(--nx-pareve)}
+.nxev.next::before{background:var(--nx-surface);border-color:var(--nx-brass);
+                   box-shadow:0 0 0 3px color-mix(in srgb,var(--nx-brass) 24%,transparent)}
+.nxev .t{font-family:var(--nx-mono);font-size:12px;color:var(--nx-muted);width:58px;flex:none;font-variant-numeric:tabular-nums}
+.nxev .l{font-size:14px}
+.nxev.done .l,.nxev.done .t{color:var(--nx-faint)}
+.nxev.done .l{text-decoration:line-through;text-decoration-color:var(--nx-line)}
+.nxtag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:6px;vertical-align:1px}
+.nxtag.k-meat{background:var(--nx-meat-bg);color:var(--nx-meat)}
+.nxtag.k-dairy{background:var(--nx-dairy-bg);color:var(--nx-dairy)}
+.nxtag.k-pareve{background:var(--nx-pareve-bg);color:var(--nx-pareve)}
+.nxwait{margin:5px 0 5px -26px;padding:8px 10px 8px 26px;background:var(--nx-meat-bg);border-left:2px solid var(--nx-meat);
+        border-radius:0 8px 8px 0;font-size:12px;color:var(--nx-meat)}
+.nxwait b{font-family:var(--nx-mono);font-variant-numeric:tabular-nums}
+.nxnowline{margin:7px 0 7px -26px;padding-left:26px;display:flex;align-items:center;gap:8px}
+.nxnowline::after{content:"";flex:1;height:1px;background:var(--nx-brass);opacity:.5}
+.nxnowline span{font-family:var(--nx-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--nx-brass);font-weight:700}
+
+.nxcard{border:1px solid var(--nx-line);border-radius:12px;padding:12px;background:var(--nx-raise)}
+.nxcard h3{margin:0 0 6px;font-size:14px}
+.nxcard p{margin:0;font-size:13px;color:var(--nx-muted)}
+.nxcard p+p{margin-top:6px}
+.nxkv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px dotted var(--nx-line)}
+.nxkv:last-child{border-bottom:0}
+.nxkv b{font-family:var(--nx-mono);font-variant-numeric:tabular-nums;font-weight:600}
+
+.nxmeal{border:1px solid var(--nx-line);border-radius:12px;overflow:hidden;background:var(--nx-raise)}
+.nxmeal>summary{padding:10px 12px;cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:9px}
+.nxmeal>summary::-webkit-details-marker{display:none}
+.nxmeal>summary:focus-visible{outline:2px solid var(--nx-brass);outline-offset:-2px}
+.nxmeal .mt{font-family:var(--nx-mono);font-size:12px;color:var(--nx-muted);width:58px;flex:none;font-variant-numeric:tabular-nums}
+.nxmeal .mn{font-size:14px;font-weight:600;flex:1;min-width:0}
+.nxmeal .mk{font-family:var(--nx-mono);font-size:11px;color:var(--nx-muted);font-variant-numeric:tabular-nums}
+.nxmeal[open]>summary{border-bottom:1px solid var(--nx-line)}
+.nxmeal .body{padding:11px 12px 13px}
+.nxmeal.eaten .mn{color:var(--nx-muted)}
+.nxchk{width:15px;height:15px;border-radius:50%;border:2px solid var(--nx-line);flex:none;display:grid;place-items:center;font-size:9px;color:transparent}
+.nxmeal.eaten .nxchk{background:var(--nx-good);border-color:var(--nx-good);color:#fff}
+
+.nxpips{display:flex;gap:4px;margin-top:8px}
+.nxpip{flex:1;height:6px;border-radius:3px;background:var(--nx-line)}
+.nxpip.on{background:var(--nx-brass)}
+.nxbig{font-family:var(--nx-mono);font-size:30px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.nxdelta{font-size:12px;color:var(--nx-good);font-weight:600}
+.nxbars{display:flex;align-items:flex-end;gap:3px;height:52px;margin-top:8px}
+.nxbar{flex:1;background:var(--nx-line);border-radius:2px 2px 0 0;min-height:2px}
+.nxbar.hi{background:var(--nx-brass)}
+.nxstep{display:flex;align-items:center;gap:8px;margin-top:9px}
+.nxstep button{width:34px;height:32px;border-radius:8px;border:1px solid var(--nx-line);background:var(--nx-surface);
+               color:var(--nx-text);font-size:16px;cursor:pointer;font-family:var(--nx-ui)}
+.nxstep button:focus-visible{outline:2px solid var(--nx-brass)}
+.nxstep .v{font-family:var(--nx-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--nx-muted)}
+
+.nxlegacy{border:1px dashed var(--nx-line);border-radius:12px;padding:2px 10px;background:var(--nx-surface)}
+.nxlegacy .nxnote{font-size:11px;color:var(--nx-faint);padding:8px 2px 2px}
+
+.nxtabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(5,1fr);
+        border-top:1px solid var(--nx-line);background:var(--nx-surface);max-width:520px;margin:0 auto;
+        padding-bottom:env(safe-area-inset-bottom)}
+.nxtb{padding:9px 2px 11px;text-align:center;font-size:10px;color:var(--nx-faint);border:0;background:none;
+      font-family:var(--nx-ui);cursor:pointer}
+.nxtb .g{display:block;font-size:15px;margin-bottom:2px;line-height:1}
+.nxtb.on{color:var(--nx-brass);font-weight:700}
+.nxtb:focus-visible{outline:2px solid var(--nx-brass);outline-offset:-2px}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+
+<script>
+/* ---------------------------------------------------------------------------
+   Everything below reads the SAME engine and writes the SAME storage keys as the
+   live app. Where this logs something, it mirrors the existing writer exactly —
+   copying an existing value's shape rather than inventing one is the rule that
+   came out of the qpcut.askq bug, where a bare string where an object belonged
+   took down a whole tab.
+   --------------------------------------------------------------------------- */
+(function () {
+  'use strict';
+  document.body.classList.add('nx');
+
+  var K = { meat: 'k-meat', dairy: 'k-dairy', pareve: 'k-pareve' };
+  function kOf(id) {
+    var k = (typeof optK === 'function' ? optK(id) : []) || [];
+    return k.indexOf('meat') >= 0 ? 'meat' : k.indexOf('dairy') >= 0 ? 'dairy'
+         : k.indexOf('pareve') >= 0 ? 'pareve' : '';
+  }
+  function optOf(id) { return (typeof OPTBYID !== 'undefined' && OPTBYID[id]) || null; }
+  function esc2(s) { return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function ld() { return (typeof logDate !== 'undefined' && logDate) || isoToday(); }
+
+  /* ---------- shell ---------- */
+  function shell() {
+    if (document.querySelector('.nxtop')) return;
+    var app = document.querySelector('.app');
+    var top = document.createElement('div');
+    top.className = 'nxtop';
+    top.innerHTML =
+      '<div class="nxbrand"><h1>THE <span>CUT</span></h1><div class="nxday" id="nxDay"></div></div>' +
+      '<div class="nxrail" id="nxRail"></div>';
+    app.insertBefore(top, app.firstChild);
+
+    var tabs = document.createElement('nav');
+    tabs.className = 'nxtabs';
+    tabs.innerHTML = [
+      ['today', '◉', 'Now'], ['meals', '✦', 'Food'], ['train', '▲', 'Lift'],
+      ['prep', '▤', 'Prep'], ['track', '◇', 'Trend']
+    ].map(function (t) {
+      return '<button class="nxtb" type="button" data-nxgo="' + t[0] + '">' +
+             '<span class="g">' + t[1] + '</span>' + t[2] + '</button>';
+    }).join('');
+    document.body.appendChild(tabs);
+    tabs.addEventListener('click', function (e) {
+      var b = e.target.closest('.nxtb'); if (!b) return;
+      setTab(b.dataset.nxgo);
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function paintChrome() {
+    var d = ld(), pt = planTarget(d), got = eatenMacros(d);
+    var left = pt.t.map(function (v, i) { return Math.round(v - got[i]); });
+    var lbl = ['kcal left', 'protein', 'carbs', 'fat'];
+    var rail = document.getElementById('nxRail');
+    if (rail) rail.innerHTML = left.map(function (v, i) {
+      return '<div class="nxrc' + (i === 0 ? ' lead' : '') + '"><div class="n">' + v +
+             '</div><div class="l">' + lbl[i] + '</div></div>';
+    }).join('');
+    var dayEl = document.getElementById('nxDay');
+    if (dayEl) {
+      var wd = new Date(d + 'T12:00:00');
+      var wo = (typeof workoutFor === 'function')
+        ? workoutFor(wd.getDay(), store.get('qpcut.loc', 'deal')) : null;
+      dayEl.textContent = wd.toDateString().slice(0, 3).toUpperCase() + ' · ' +
+        (wo ? String(wo.n || wo.name || 'LIFT').toUpperCase() : 'REST') + ' · ' +
+        fmtMin(new Date().getHours() * 60 + new Date().getMinutes());
+    }
+    document.querySelectorAll('.nxtb').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.nxgo === current);
+    });
+  }
+
+  /* ---------- NOW ---------- */
+  function slotName(key) { var s = SLOTS.find(function (x) { return x.key === key; }); return s ? s.slot : key; }
+
+  function buildHTML(opt) {
+    if (!opt || !opt.vars || !opt.vars[0]) return '';
+    var v = opt.vars[0];
+    return '<div class="nxbh">Build it</div>' +
+      v.ing.map(function (r) {
+        return '<div class="nxing"><span>' + esc2(String(r[0]).replace(/<[^>]+>/g, '')) +
+               '</span><span class="q">' + esc2(r[1]) + '</span></div>';
+      }).join('') +
+      '<div class="nxtot"><span><b>' + v.t[0] + '</b> kcal</span><span>P <b>' + v.t[1] +
+      '</b></span><span>C <b>' + v.t[2] + '</b></span><span>F <b>' + v.t[3] + '</b></span></div>';
+  }
+
+  /* which slot is next, and what is planned in it */
+  function nextUp(d) {
+    var eaten = (store.get('qpcut.eaten', {}))[d] || {};
+    var planned = (typeof plannedMealMins === 'function' && d === isoToday()) ? plannedMealMins() : {};
+    var order = Object.keys(planned).sort(function (a, b) { return planned[a] - planned[b]; });
+    if (!order.length) order = SLOT_SEQ.slice();
+    var isFri = new Date(d + 'T12:00:00').getDay() === 5;
+    for (var i = 0; i < order.length; i++) {
+      var k = order[i];
+      if (eaten[k]) continue;
+      if (isFri && k === 'sn') continue;
+      return { slot: k, min: (typeof schedMealMin === 'function' ? schedMealMin(k, d) : null) || planned[k] || null };
+    }
+    return null;
+  }
+
+  /* What is actually in a slot — and NOTHING if he has not decided.
+     The first version fell back to SLOTS[k].opts[0], which for dinner is the Burger. That put a
+     meal he never chose on his schedule AND, because the Burger is meat, it sat 45 minutes before
+     a dairy Creami — the app displaying the exact violation the kashrut engine exists to prevent.
+     There is no per-day dinner plan in the data (menucounts are weekly totals, not assignments),
+     so asserting one was fabrication. Breakfast is different: the COR bowl IS deterministic. */
+  function plannedOpt(k, d) {
+    var eaten = (store.get('qpcut.eaten', {}))[d] || {};
+    if (eaten[k]) return optOf(eaten[k]);
+    if (k === 'bf' && typeof bowlOfDay === 'function') { var b = bowlOfDay(d); if (b) return optOf(b); }
+    return null;
+  }
+
+  /* the options he can still pick in a slot, each with what it does to the dairy window */
+  function choicesFor(k, d) {
+    var s = SLOTS.find(function (x) { return x.key === k; });
+    if (!s) return [];
+    var noMeat = (typeof isNoMeat === 'function') && isNoMeat(d);
+    return s.opts.filter(function (o) { return !(noMeat && (typeof isMeatOpt === 'function') && isMeatOpt(o)); });
+  }
+
+  /* A meat meal PLANNED for later closes the dairy window just as surely as one already eaten —
+     dairyWindow only knows about logged meals, so tell it about the pick sitting in the slot. */
+  function windowWith(d) {
+    var eatenMap = (store.get('qpcut.eaten', {}))[d] || {};
+    var opts = {};
+    if (!eatenMap.di) {
+      var pd = plannedOpt('di', d);
+      if (pd) {
+        opts.dinner = pd.id;
+        var pm = (typeof plannedMealMins === 'function' && d === isoToday()) ? plannedMealMins().di : null;
+        if (pm != null) opts.dinnerMin = pm;
+      }
+    }
+    return dairyWindow(d, opts);
+  }
+
+  function viewNow() {
+    var d = ld(), out = [];
+    var nu = nextUp(d);
+
+    if (nu) {
+      var opt = plannedOpt(nu.slot, d);
+      var kk = opt ? kOf(opt.id) : '';
+      var mins = nu.min;
+      var nowM = new Date().getHours() * 60 + new Date().getMinutes();
+      var away = mins != null ? mins - nowM : null;
+      var eyebrow = mins == null ? 'Next'
+        : away > 0 ? 'Next · in ' + (away >= 60 ? Math.floor(away / 60) + ' h ' + (away % 60) + ' min' : away + ' min')
+        : 'Next · now';
+      var sug = (typeof nextEatSuggestion === 'function') ? nextEatSuggestion(d) : null;
+      var why = (sug && sug.target === nu.slot && sug.why) ? sug.why : '';
+      var blocked = sug && sug.blocked;
+
+      var slotB = (SLOTS.find(function (x) { return x.key === nu.slot; }) || {}).b || [];
+      var body;
+      if (opt) {
+        body = buildHTML(opt) +
+          (blocked ? '' :
+            '<button class="nxact" type="button" data-nxlog="' + esc2(nu.slot) + '" data-nxopt="' +
+            esc2(opt.id) + '">Ate it' + (mins != null ? ' — ' + fmtMin(nowM) : '') + '</button>');
+      } else {
+        /* nothing chosen yet — offer the real options and say what each does to the Creami,
+           instead of asserting a meal he never picked */
+        var dwNow = windowWith(d);
+        body = '<div class="nxbh">Pick one</div>' + choicesFor(nu.slot, d).map(function (o) {
+          var ok = kOf(o.id), cons = '';
+          if (nu.slot === 'di' && ok === 'meat') cons = ' · Creami moves before dinner';
+          else if (nu.slot === 'di' && ok) cons = ' · Creami stays after';
+          return '<button class="nxact ghost" style="text-align:left;margin-top:6px" type="button" ' +
+            'data-nxlog="' + esc2(nu.slot) + '" data-nxopt="' + esc2(o.id) + '">' +
+            esc2(o.name) + (ok ? ' <span class="nxtag ' + K[ok] + '">' + ok + '</span>' : '') +
+            '<span style="display:block;font-size:11px;color:var(--nx-faint);font-family:var(--nx-mono)">' +
+            o.vars[0].t[0] + ' kcal · P ' + o.vars[0].t[1] + esc2(cons) + '</span></button>';
+        }).join('');
+      }
+      out.push('<div class="nxnow ' + (K[kk] || '') + '">' +
+        '<div class="eyebrow">' + esc2(eyebrow) + '</div>' +
+        '<h2>' + esc2(opt ? opt.name : slotName(nu.slot)) + '</h2>' +
+        '<div class="nxwhen">' + (mins != null ? fmtMin(mins) : '—') +
+          ' &nbsp;·&nbsp; ' + (opt ? opt.vars[0].t[0] : (slotB[0] || '')) + ' kcal' +
+          (kk ? ' &nbsp;·&nbsp; ' + kk : '') + '</div>' +
+        body +
+        (why ? '<div class="nxwhy">' + why + '</div>' : '') +
+        '</div>');
+    } else {
+      out.push('<div class="nxnow"><div class="eyebrow">Done</div><h2>Everything logged</h2>' +
+        '<div class="nxwhy">Nothing left to eat today.</div></div>');
+    }
+
+    /* the day, as a spine */
+    var rows = (typeof dayTimeline === 'function' && d === isoToday()) ? dayTimeline() : [];
+    if (rows.length) {
+      var eaten = (store.get('qpcut.eaten', {}))[d] || {};
+      var nowM2 = new Date().getHours() * 60 + new Date().getMinutes();
+      var dw = windowWith(d);
+      var spine = [], placedNow = false, placedWait = false;
+      rows.forEach(function (r) {
+        var slot = (typeof mealSlotOfLabel === 'function') ? mealSlotOfLabel(r[1]) : null;
+        if (!placedWait && dw.from != null && r[0] >= dw.from) {
+          spine.push('<div class="nxwait">Dairy locked until <b>' + fmtMin(dw.from) +
+                     '</b> — six hours from the ' + (dw.why.indexOf('lunch') >= 0 ? 'chicken' : 'meat meal') + '.</div>');
+          placedWait = true;
+        }
+        if (!placedNow && r[0] > nowM2) {
+          spine.push('<div class="nxnowline"><span>now · ' + fmtMin(nowM2) + '</span></div>');
+          placedNow = true;
+        }
+        var id = slot ? eaten[slot] : null;
+        var planOpt = (!id && slot) ? plannedOpt(slot, d) : null;
+        var kk2 = id ? kOf(id) : (planOpt ? kOf(planOpt.id) : '');
+        var label = String(r[1]).replace(/<[^>]+>/g, '');
+        if (slot && id) { var o = optOf(id); if (o) label = o.name; }
+        else if (planOpt) { label = planOpt.name; }
+        else if (slot) { label = slotName(slot) + ' — not picked'; }
+        spine.push('<div class="nxev ' + (r[0] <= nowM2 ? 'done ' : '') +
+          (slot && !id && nu && nu.slot === slot ? 'next ' : '') + (K[kk2] || '') + '">' +
+          '<span class="t">' + fmtMin(r[0]) + '</span><span class="l">' + esc2(label) +
+          (kk2 ? '<span class="nxtag ' + K[kk2] + '">' + kk2 + '</span>' : '') + '</span></div>');
+      });
+      if (!placedWait && dw.from != null) {
+        spine.push('<div class="nxwait">Dairy locked until <b>' + fmtMin(dw.from) + '</b>.</div>');
+      }
+      out.push('<div><div class="nxsect" style="margin-bottom:3px">Today</div>' +
+               '<div class="nxspine">' + spine.join('') + '</div></div>');
+    }
+
+    /* water */
+    var drinks = store.get('qpcut.drinks.' + dkey(d), {});
+    var oz = (drinks.bottle || 0) * 30 + (drinks.stick || 0) * 14 + (drinks.pre || 0) * 9 +
+             (drinks.eaa || 0) * 9 + (drinks.soda || 0) * 12 + (drinks.seltzer || 0) * 12 +
+             (drinks.dietsoda || 0) * 12 + (drinks.custom || 0);
+    var ht = (typeof hydrTarget === 'function') ? hydrTarget(d) : { oz: 104 };
+    var target = ht && ht.oz ? ht.oz : (typeof ht === 'number' ? ht : 104);
+    var pips = 8, filled = Math.min(pips, Math.round(oz / target * pips));
+    var pipHTML = '';
+    for (var i = 0; i < pips; i++) pipHTML += '<span class="nxpip' + (i < filled ? ' on' : '') + '"></span>';
+    out.push('<div class="nxcard"><h3>Water · ' + Math.round(oz) + ' of ' + Math.round(target) + ' oz</h3>' +
+      '<div class="nxpips">' + pipHTML + '</div>' +
+      '<div class="nxstep"><button type="button" data-nxdrink="-1">−</button>' +
+      '<button type="button" data-nxdrink="1">+</button>' +
+      '<span class="v">1 bottle = 30 oz · ' + (drinks.bottle || 0) + ' logged</span></div></div>');
+
+    return out.join('');
+  }
+
+  /* ---------- FOOD ---------- */
+  function viewFood() {
+    var d = ld();
+    var eaten = (store.get('qpcut.eaten', {}))[d] || {};
+    var isFri = new Date(d + 'T12:00:00').getDay() === 5;
+    var planned = (typeof plannedMealMins === 'function' && d === isoToday()) ? plannedMealMins() : {};
+    /* order by the day's real clock; a slot the day plan does not place (pre-lift on a rest day)
+       falls back to its canonical position rather than being dumped at the bottom */
+    var order = SLOTS.map(function (s) { return s.key; }).sort(function (a, b) {
+      var pa = planned[a] != null ? planned[a] : SLOT_SEQ.indexOf(a) * 200;
+      var pb = planned[b] != null ? planned[b] : SLOT_SEQ.indexOf(b) * 200;
+      return pa - pb;
+    });
+    var dw = windowWith(d);
+
+    var out = ['<div class="nxsect">' + new Date(d + 'T12:00:00').toDateString().slice(0, 3) +
+               ' · ' + SLOTS.length + ' meals</div>'];
+
+    order.forEach(function (k) {
+      var s = SLOTS.find(function (x) { return x.key === k; });
+      var id = eaten[k];
+      var opt = id ? optOf(id) : plannedOpt(k, d);
+      var skip = isFri && k === 'sn';
+      var kk = opt ? kOf(opt.id) : '';
+      var t = (typeof slotTimeLabel === 'function') ? slotTimeLabel(k, d) : '';
+      var v = opt && opt.vars && opt.vars[0];
+      var lock = (k === 'sn' && kk === 'dairy' && dw.from != null)
+        ? '<p style="font-size:12px;color:var(--nx-dairy);margin:9px 0 0">Not before <b>' +
+          fmtMin(dw.from) + '</b> — ' + esc2(dw.why) + '</p>' : '';
+      /* With a pick: the build plus an un-log. Without one: the actual choices. The first version
+         printed a bare "Log it" with no option attached — a button that silently did nothing, which
+         is the failure mode that reads as "the app is broken". */
+      var body;
+      if (skip) body = '<p style="font-size:13px;color:var(--nx-muted);margin:0">Skipped — the feast covers it.</p>';
+      else if (opt) body = buildHTML(opt) + lock +
+        '<button class="nxact ghost" type="button" data-nxlog="' + k + '" data-nxopt="' +
+        esc2(opt.id) + '">' + (id ? 'Un-log' : 'Ate it') + '</button>';
+      else body = lock + '<div class="nxbh">Pick one</div>' + choicesFor(k, d).map(function (o) {
+        var ok = kOf(o.id);
+        return '<button class="nxact ghost" style="text-align:left;margin-top:6px" type="button" ' +
+          'data-nxlog="' + k + '" data-nxopt="' + esc2(o.id) + '">' + esc2(o.name) +
+          (ok ? ' <span class="nxtag ' + K[ok] + '">' + ok + '</span>' : '') +
+          '<span style="display:block;font-size:11px;color:var(--nx-faint);font-family:var(--nx-mono)">' +
+          o.vars[0].t[0] + ' kcal · P ' + o.vars[0].t[1] + ' · C ' + o.vars[0].t[2] +
+          ' · F ' + o.vars[0].t[3] + '</span></button>';
+      }).join('');
+
+      out.push('<details class="nxmeal' + (id ? ' eaten' : '') + '">' +
+        '<summary><span class="nxchk">✓</span><span class="mt">' + esc2(t) + '</span>' +
+        '<span class="mn">' + esc2(skip ? 'Skipped → feast' : (opt ? opt.name : s.slot)) +
+        (kk ? '<span class="nxtag ' + K[kk] + '">' + kk + '</span>' : '') + '</span>' +
+        '<span class="mk">' + s.b[0] + '</span></summary>' +
+        '<div class="body">' + body + '</div></details>');
+    });
+    return out.join('');
+  }
+
+  /* ---------- TREND ---------- */
+  function viewTrend() {
+    var w = (typeof allWeights === 'function' ? allWeights() : []).filter(function (e) { return e.w != null; });
+    var first = w.length ? w[0].w : null, last = w.length ? w[w.length - 1].w : null;
+    var out = [];
+    if (w.length > 1) {
+      var xs = w.slice(-60);
+      var lo = Math.min.apply(null, xs.map(function (e) { return e.w; }));
+      var hi = Math.max.apply(null, xs.map(function (e) { return e.w; }));
+      var span = (hi - lo) || 1;
+      var pts = xs.map(function (e, i) {
+        return (i / (xs.length - 1) * 296 + 2).toFixed(1) + ',' + (6 + (hi - e.w) / span * 74).toFixed(1);
+      }).join(' ');
+      out.push('<div class="nxcard"><h3>Weight</h3>' +
+        '<div style="display:flex;align-items:baseline;gap:9px"><span class="nxbig">' + last.toFixed(1) + '</span>' +
+        (first != null && first > last ? '<span class="nxdelta">▼ ' + (first - last).toFixed(1) + ' since the start</span>' : '') +
+        '</div><svg viewBox="0 0 300 90" preserveAspectRatio="none" style="width:100%;height:90px;display:block" ' +
+        'role="img" aria-label="Weight trend"><polyline fill="none" stroke="var(--nx-brass)" stroke-width="2" ' +
+        'stroke-linejoin="round" points="' + pts + '"/></svg>' +
+        '<p style="font-family:var(--nx-mono);font-size:11px">' + lo.toFixed(1) + ' – ' + hi.toFixed(1) +
+        ' over the last ' + xs.length + ' weigh-ins</p></div>');
+    }
+    var sl = (typeof allWeights === 'function' ? allWeights() : []).slice(-7)
+      .map(function (e) { return e.sl || 0; });
+    if (sl.length) {
+      var mx = Math.max.apply(null, sl.concat([8]));
+      var avg = sl.filter(Boolean).reduce(function (a, b) { return a + b; }, 0) / (sl.filter(Boolean).length || 1);
+      out.push('<div class="nxcard"><h3>Sleep · ' + avg.toFixed(1) + ' h average</h3><div class="nxbars">' +
+        sl.map(function (v) {
+          return '<div class="nxbar' + (v >= 7 ? ' hi' : '') + '" style="height:' +
+                 Math.round((v / mx) * 100) + '%"></div>';
+        }).join('') + '</div><p style="margin-top:8px">Last seven logged nights.</p></div>');
+    }
+    var gate = (typeof recoveryGate === 'function') ? recoveryGate() : null;
+    if (gate && gate.why && gate.why.length) {
+      out.push('<div class="nxcard"><h3>Recovery</h3><p>' + gate.why.join('</p><p>') + '</p></div>');
+    }
+    var ups = (typeof weekGoUps === 'function') ? weekGoUps() : [];
+    out.push('<div class="nxcard"><h3>Jumps this week · ' + ups.length + '</h3>' +
+      (ups.length ? ups.map(function (u) { return '<div class="nxkv"><span>' + esc2(u) + '</span><b>up</b></div>'; }).join('')
+                  : '<p>Nothing at the top of its range yet.</p>') + '</div>');
+    return out.join('');
+  }
+
+  /* ---------- legacy passthrough ----------
+     Lift and Prep keep the existing view and the existing wiring. They own rep logging and the
+     grocery/menu state, and rebuilding them from scratch was the one way to actually lose data.
+     They render inside the new frame; porting them properly comes after he has looked at this. */
+  function legacy(fn, note) {
+    return function () {
+      var html = '';
+      try { html = fn(); } catch (e) { html = '<div class="nxcard"><h3>Could not draw</h3><p>' + esc2(e.message) + '</p></div>'; }
+      return '<div class="nxlegacy"><div class="nxnote">' + note + '</div>' + html + '</div>';
+    };
+  }
+
+  VIEWS.today = viewNow;
+  VIEWS.meals = viewFood;
+  VIEWS.track = viewTrend;
+  VIEWS.train = legacy(viewTrain, 'Lift — existing screen, new frame. Rep logging untouched.');
+  VIEWS.prep  = legacy(viewPrep,  'Prep — existing screen, new frame. Grocery + menu state untouched.');
+
+  /* our own render: the engine's version wires handlers that expect the old markup */
+  var WIRE = { train: typeof wireTrain === 'function' ? wireTrain : null,
+               prep:  typeof wirePrep  === 'function' ? wirePrep  : null };
+
+  window.render = function render() {
+    shell();
+    var host = document.getElementById('view');
+    try { host.innerHTML = VIEWS[current](); }
+    catch (err) {
+      try { console.error('view render failed:', current, err); } catch (e) {}
+      host.innerHTML = '<div class="nxcard"><h3>The ' + current + ' tab failed to draw.</h3>' +
+        '<p style="font-family:var(--nx-mono);font-size:12px">' + esc2(err && err.message) + '</p>' +
+        '<p>Your data is safe — screenshot this and send it to Claude.</p></div>';
+    }
+    if (WIRE[current]) { try { WIRE[current](); } catch (e) { try { console.error('wiring failed:', current, e); } catch (_) {} } }
+    paintChrome();
+  };
+
+  /* ---------- our handlers ---------- */
+  document.addEventListener('click', function (e) {
+    var log = e.target.closest('[data-nxlog]');
+    if (log) {
+      var slot = log.dataset.nxlog, opt = log.dataset.nxopt;
+      if (!opt) return;
+      /* mirrors the live app's #mealLog writer exactly, including the eat-time stamp */
+      var eaten = store.get('qpcut.eaten', {}), d = ld();
+      eaten[d] = eaten[d] || {};
+      var setting = eaten[d][slot] !== opt;
+      eaten[d][slot] = setting ? opt : null;
+      store.set('qpcut.eaten', eaten);
+      if (d === isoToday()) {
+        if (setting) {
+          var n = new Date();
+          setEatTime(d, slot, String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0'));
+        } else setEatTime(d, slot, null);
+      }
+      render();
+      return;
+    }
+    var dr = e.target.closest('[data-nxdrink]');
+    if (dr) {
+      var key = 'qpcut.drinks.' + dkey(ld());
+      var cur = store.get(key, {});
+      cur.bottle = Math.max(0, (cur.bottle || 0) + (+dr.dataset.nxdrink));
+      store.set(key, cur);
+      render();
+    }
+  });
+
+  shell();
+  render();
+})();
 </script>
 
 </body>

@@ -102,9 +102,11 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if (at == null) return;
       /* judge the window as it stood AT the moment he ate — meat later that evening is irrelevant */
       const wAt = dairyWindow(d, { asOf: at });
-      if (wAt.from == null) return;
-      w.from = wAt.from;
-      if (at < w.from) out.push(d + ': dairy snack at ' + fmtMin(at) + ' but the window opens ' + fmtMin(w.from));
+      if (wAt.from != null && at < wAt.from)
+        out.push(d + ': dairy snack at ' + fmtMin(at) + ' but the window opens ' + fmtMin(wAt.from));
+      /* and the other direction — dairy must not land after a meat dinner either */
+      if (wAt.until != null && at > wAt.until)
+        out.push(d + ': dairy snack at ' + fmtMin(at) + ' but a meat dinner closes it at ' + fmtMin(wAt.until));
     });
     /* and the forward-looking one: what would the engine SUGGEST today? */
     const sug = nextEatSuggestion(isoToday());
