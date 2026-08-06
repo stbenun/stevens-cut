@@ -360,6 +360,55 @@ const ADVICE_ONLY = {
   if (!bad && !bare) pass('scoop-weights', n + ' ingredient rows, no stamped weight contradicts the row itself');
 })();
 
+/* ============ 11. a meat meal may never be handed a dairy item ============
+   Aug 6 2026, his words: "you also added for me to have a shake after dinner but thats dairy and the
+   dinner is meat. this goes for all meals." The Southside card prescribed the whey protein patch
+   three lines above its own "Meat meal -> no dairy for 6 h" warning. He is shomer kashrut; this is
+   not a rounding error, it is the card telling him to break the wait it just named.
+
+   WARNING copy is fine and necessary ("no dairy for 6 hours", "the Creami moves to tomorrow") — what
+   is banned is PRESCRIBING one. So a dairy term only fails when its sentence carries no negation. */
+const DAIRY_TERM = /\bmilk\b|\byogurt\b|\bcheese\b|\bwhey\b|Fairlife|Oikos|FAGE|\bshake\b|Creami/i;
+const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instead of|never/i;
+(function kashrut() {
+  if (!EATOUT_ORDER) return;
+  const EO_PATCH = grab('EO_PATCH');
+  let bad = 0;
+
+  /* (a) every venue that can produce an order must declare what it is */
+  Object.entries(EATOUT_ORDER).forEach(([key, v]) => {
+    if (!['meat', 'dairy', 'pareve'].includes(v.k)) {
+      bad++; fail('kashrut', key + " does not declare k:'meat'|'dairy'|'pareve', so nothing downstream " +
+        'can tell whether a dairy patch is allowed after it.');
+    }
+  });
+
+  /* (b) the meat patch must actually be pareve, and the render must choose it */
+  if (!EO_PATCH || !EO_PATCH.pMeat) {
+    bad++; fail('kashrut', 'EO_PATCH.pMeat is missing — there is no pareve protein to offer after a meat meal.');
+  } else if (DAIRY_TERM.test(EO_PATCH.pMeat.replace(NEGATED, ''))) {
+    bad++; fail('kashrut', 'EO_PATCH.pMeat names a dairy item: "' + EO_PATCH.pMeat + '"');
+  }
+  if (!/k===['"]meat['"]\s*\?\s*EO_PATCH\.pMeat/.test(src)) {
+    bad++; fail('kashrut', 'the card does not branch on the venue being meat before choosing the protein ' +
+      'patch — a meat meal would be offered the dairy shake again.');
+  }
+
+  /* (c) nothing a MEAT venue says may prescribe dairy */
+  Object.entries(EATOUT_ORDER).forEach(([key, v]) => {
+    if (v.k !== 'meat') return;
+    const lines = [].concat(v.swaps || [], v.more || [], v.free || [], v.never || [],
+      (v.base || []).map(x => x.n), v.anchor ? [v.anchor.n] : [], v.carb ? [v.carb.n] : []);
+    lines.forEach(line => String(line).split(/(?<=[.!?])\s+|\s+·\s+/).forEach(part => {
+      if (DAIRY_TERM.test(part) && !NEGATED.test(part)) {
+        bad++; fail('kashrut', key + ' is a MEAT venue but prescribes dairy:\n          "' + part.trim().slice(0, 120) + '"');
+      }
+    }));
+  });
+
+  if (!bad) pass('kashrut', 'every venue declares meat/dairy/pareve; no meat venue offers a dairy item');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');

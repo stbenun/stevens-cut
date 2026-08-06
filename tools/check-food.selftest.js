@@ -33,7 +33,7 @@ const CASES = [
     from: "cal:22,p:4.7,c:0,f:.3,min:6,max:16", to: "cal:31,p:4.7,c:0,f:.3,min:6,max:16" },
   /* --- the Aug 6 2026 bug: a venue whose plan cannot respond to the budget --- */
   { name: 'a real restaurant losing its budget-aware order entry', check: 'venue-source',
-    from: "\n southside:{\n  base:[{n:'Pickles", to: "\n southsideoff:{\n  base:[{n:'Pickles" },
+    from: "\n southside:{\n  k:'meat',", to: "\n southsideoff:{\n  k:'meat'," },
   { name: 'a frozen meal total creeping back into an advice-only list', check: 'prose-macros',
     from: "'You can weigh this one — plan numbers:'", to: "'You can weigh this one — lands ≈1,200 cal for the meal:'" },
   /* --- the Fruity Pebbles bowl: a scoop weight stamped over the row's real amount --- */
@@ -43,6 +43,12 @@ const CASES = [
     from: "if(PP_ISOTHER.test(s)) return null;", to: "if(false) return null;" },
   { name: 'a trailing "cereal" no longer rejecting the tub match', check: 'scoop-weights',
     from: "if(PP_NOTPOWDER.test(s.slice(i + e[0].length, i + e[0].length + 30))) continue;", to: "if(false) continue;" },
+  /* --- the whey shake prescribed after a BBQ dinner --- */
+  { name: 'the dairy shake offered again after a meat meal', check: 'kashrut',
+    from: "${ord.o.k==='meat'?EO_PATCH.pMeat:EO_PATCH.p}", to: "${EO_PATCH.p}" },
+  { name: 'a meat venue told to finish with something dairy', check: 'kashrut',
+    from: "'Smokey Tacos 2 pc $18 — lighter and cheaper than any plate here.'",
+    to:   "'Smokey Tacos 2 pc $18 — finish with a yogurt on the way home.'" },
 ];
 
 let bad = 0;

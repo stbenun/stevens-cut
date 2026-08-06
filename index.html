@@ -1387,6 +1387,7 @@ const FOOD_CONFUSABLE = [
 ];
 const EATOUT_ORDER = {
  sushi:{
+  k:'pareve',
   base:[{n:'Miso soup',cal:40,p:3,c:5,f:1,sp:'a miso soup'},
         {n:'Edamame, 1 side',cal:130,p:11,c:10,f:5,sp:'one edamame'}],
   anchor:{n:'Sashimi pieces — TUNA (these numbers are tuna; salmon is different, see swaps)',cal:22,p:4.7,c:0,f:.3,min:6,max:16,
@@ -1401,6 +1402,7 @@ const EATOUT_ORDER = {
   more:'Still hungry? +3 pieces of sashimi = 66 cal, 14 P. Never another roll — protein fills you, rice does not.'},
 
  pizza:{
+  k:'dairy',
   base:[{n:'Large house salad, dressing ON THE SIDE (use half)',cal:120,p:4,c:12,f:7,sp:'a large salad, dressing on the side'}],
   anchor:{n:'Plain slices, thin crust',cal:285,p:12,c:35,f:11,min:1,max:3,sp:'% plain slice#'},
   swaps:['Mushroom / onion / pepper slice — same numbers as plain, more volume.',
@@ -1411,6 +1413,7 @@ const EATOUT_ORDER = {
   more:'Pizza is the one venue that cannot hit your protein — the shake below is not optional, it is part of the order.'},
 
  bbq:{
+  k:'meat',
   base:[{n:'Pickles + vinegar slaw',cal:30,p:1,c:5,f:0,sp:'pickles and vinegar slaw'}],
   anchor:{n:'¼ lb smoked turkey breast or grilled chicken (sliced)',cal:140,p:29,c:0,f:2,min:1,max:4,
           sp:'% quarter-pound# of smoked turkey breast'},
@@ -1424,6 +1427,7 @@ const EATOUT_ORDER = {
   more:'Still hungry? Another ¼ lb of turkey breast = 140 cal, 29 P. Not more rice, not bread.'},
 
  restmeat:{
+  k:'meat',
   base:[{n:'House salad, dressing on the side',cal:110,p:3,c:8,f:7,sp:'a house salad, dressing on the side'}],
   anchor:{n:'Grilled chicken breast entrée (~8 oz)',cal:370,p:70,c:0,f:9,min:1,max:1,
           sp:'the grilled chicken breast'},
@@ -1437,6 +1441,7 @@ const EATOUT_ORDER = {
   more:'Still hungry? Order a second vegetable side (~80 cal), not a second starch.'},
 
  restdairy:{
+  k:'dairy',
   base:[{n:'Salad, dressing on the side',cal:120,p:4,c:10,f:7,sp:'a salad, dressing on the side'}],
   anchor:{n:'Grilled branzino or salmon entrée',cal:340,p:42,c:0,f:18,min:1,max:1,
           sp:'the grilled branzino'},
@@ -1455,6 +1460,7 @@ const EATOUT_ORDER = {
     instead (2 sides at the bigger bank, 1 at the smaller). Fat runs over budget here no matter what
     — that is the half chicken, and `more` names the lean swap rather than hiding it. */
  southside:{
+  k:'meat',
   base:[{n:'Pickles + cole slaw + sugar-free red cabbage slaw',cal:30,p:1,c:5,f:0,sp:'pickles and both slaws'}],
   anchor:{n:'Smoked Half Chicken $24 — pull the skin off the thigh and leg, keep the breast skin',
           cal:620,p:85,c:2,f:29,min:1,max:1,sp:'the smoked half chicken'},
@@ -1471,7 +1477,12 @@ const EATOUT_ORDER = {
 };
 /* protein / carb patches — used when the order lands short. Both are things he owns. */
 const EO_PATCH = {
+ /* DAIRY. Only ever offered after a dairy or pareve meal. */
  p:'Fairlife 0% 240 mL + 1 scoop Ryse ≈230 cal · 45 P',
+ /* PAREVE, for after a MEAT meal. The whey shake was being prescribed after BBQ on a card
+    that says "no dairy for 6 h" three lines further down -- he caught it Aug 6 2026. */
+ pMeat:'2 tuna packets ≈140 cal · 34 P — pareve, because you are 6 hours out from dairy',
+ /* pareve either way */
  c:'1 banana ≈105 cal · 27 C  (or 3 rice cakes ≈105 cal · 22 C)'};
 
 /* He reads the `say` line out loud at the counter, so counts are words, not digits. */
@@ -4056,8 +4067,8 @@ function viewToday(){
     <div class="sub" style="margin-top:2px;opacity:.65">Lands ${Math.round(ord.tot.c)} C · ${Math.round(ord.tot.f)} F against ${bud.c} C · ${bud.f} F. Restaurant portions vary — treat every number as ±15%.</div>
     <div class="note" style="margin-top:8px">🗣 <b>Say this:</b> “${ord.say}.” That’s the whole order — nothing else.</div>
     ${ord.over?`<div class="note" style="margin-top:8px;border-color:var(--warn)">⚠️ <b>Over by ${ord.over} cal.</b> That is already the smallest real order at ${v.name} — there is nothing smaller to buy. Bank another meal (tap Clear and re-pick) or choose a different venue.</div>`:''}
-    ${ord.shortP>=8?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortP} g protein short</b> — at home after: ${EO_PATCH.p}</div>`:''}
-    ${ord.shortC>=20?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortC} g carbs short</b> — at home: ${EO_PATCH.c}</div>`:''}
+    ${ord.shortP>=15?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortP} g protein short</b> — at home after: ${ord.o.k==='meat'?EO_PATCH.pMeat:EO_PATCH.p}</div>`:''}
+    ${ord.shortC>=25?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortC} g carbs short</b> — at home: ${EO_PATCH.c}</div>`:''}
     <div class="slotlbl" style="margin-top:12px">🚫 Do not order</div>
     <div class="sub" style="margin-top:2px">${ord.o.never}</div>
     <div class="slotlbl" style="margin-top:10px">✅ Free — eat as much as you want</div>
@@ -4072,7 +4083,6 @@ function viewToday(){
   <div class="card" style="border-color:color-mix(in srgb,var(--brass) 40%,transparent)">
     <div class="slotlbl" style="margin-top:0">🍽 Tonight’s plan: ${v.name}</div>
     <div class="budget"><span>Budget: <b>${bud.cal}</b> kcal · <b>${bud.p}</b> P <span class="daytag">(${bankNames})</span></span></div>
-    ${bud.cal>700?'<div class="note" style="margin-top:8px">Bridge shake ~3 hrs before: Fairlife 320 mL + 1 FULL scoop (45P) — never arrive starving.</div>':''}
     ${body}
     <div class="formrow" style="margin-top:10px"><button class="btn ghost" id="eoClear">Clear</button></div>
   </div>`;
@@ -5633,7 +5643,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786044732';
+const BUILD = 'b1786046657';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
