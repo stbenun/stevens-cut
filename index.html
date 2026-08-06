@@ -1371,6 +1371,7 @@ const FOOD_FACTS = {
   'brisket flat':   {unit:'oz cooked',    cal:70,   p:8.2, c:0,  f:4.0, src:'248 cal / 29 P per 100 g — his own Southside figure'},
   'turkey breast':  {unit:'oz cooked',    cal:38,   p:8.5, c:0,  f:0.3, src:'roast, 135 cal / 30 P per 100 g'},
   'chicken breast': {unit:'oz cooked',    cal:47,   p:8.8, c:0,  f:1.0, src:'grilled skinless, 165 cal / 31 P per 100 g'},
+  'smoked half chicken': {unit:'half bird', cal:620, p:85, c:2, f:29, src:'DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number.'},
 };
 /* Pairs he could plausibly read as interchangeable, expressed as plain substring lists.
    NO REGEX ON PURPOSE: the first version used \b word boundaries, they were written through a
@@ -1446,6 +1447,26 @@ const EATOUT_ORDER = {
   never:'🚨 ANAPHYLACTIC — peanut · hazelnut · pistachio · cashew and every other nut EXCEPT almond. ASK about: pesto (pine nuts), Nutella/hazelnut spreads, candied-nut salads, biscotti, baklava, mortadella (pistachio). Ask for separate serving spoons and about the shared fryer. Carry your EpiPen. — Then: fried starters · cheese-forward mains · cream sauces.',
   free:'Undressed salad · lemon · grilled vegetables · olives.',
   more:'Still hungry? Fish before flour — a second portion of fish beats any amount of pasta.'},
+
+ /* Southside · Lakewood. Added Aug 6 2026 because this venue had NO entry here, so the card fell
+    through to a hardcoded list and showed him the SAME plan for a 1115 and a 915 budget — he caught
+    it. The half chicken is min:max:1 on purpose: it IS his order, and the engine flexes the RICE
+    instead (2 sides at the bigger bank, 1 at the smaller). Fat runs over budget here no matter what
+    — that is the half chicken, and `more` names the lean swap rather than hiding it. */
+ southside:{
+  base:[{n:'Pickles + cole slaw + sugar-free red cabbage slaw',cal:30,p:1,c:5,f:0,sp:'pickles and both slaws'}],
+  anchor:{n:'Smoked Half Chicken $24 — pull the skin off the thigh and leg, keep the breast skin',
+          cal:620,p:85,c:2,f:29,min:1,max:1,sp:'the smoked half chicken'},
+  carb:{n:'Mexican Rice $7',cal:220,p:5,c:42,f:4,min:1,max:3,sp:'% side# of Mexican rice'},
+  swaps:['Smoked Turkey Breast on Rye $22 — the leanest main on this menu. Worth it on a day that is already fat-heavy, and the bread brings carbs the smoked meat does not.',
+   'Smoked wings, 6 pc $8 ≈330 cal · 30 P · 22 F — smoked, not fried, so they are allowed. They do NOT fit alongside the order above: drop a rice side first, or skip them. 12 pc $14 is never a fit.',
+   'Smokey Tacos 2 pc $18 — lighter and cheaper than any plate here.',
+   'Grilled Chicken Sandwich $20 — the menu calls it the healthy route and it is not wrong.',
+   'Carolina Gold $25, roast beef on a panini’d baguette — leaner than the brisket or pastrami sandwiches and it carries its own carbs, so order it INSTEAD of a rice side, never with two.',
+   'White Russian $23 — fine, but Russian dressing on the side, not on the sandwich.'],
+  never:'Burnt Ends (their best seller and the fattiest thing on the menu) · Lamb Riblets (the menu itself says “fatty”) · Dino Ribs · Short Bone Ribs · Prime Rib Plate $65 · Meat Lovers Platter $130 (serves 3–4, six fatty meats) · anything fried.',
+  free:'Pickles · cole slaw · sugar-free red cabbage slaw — eat as much of these as you want.',
+  more:'Still hungry? Ask for extra slaw, not another meat. And note the clock: this is a MEAT meal, so no dairy for 6 hours — the Creami moves to tomorrow. Decide that before you go, not after. Closed Fri + Sat, Sun opens 2 PM. 315 Cedar Bridge Ave, ~25 min from Deal.'},
 };
 /* protein / carb patches — used when the order lands short. Both are things he owns. */
 const EO_PATCH = {
@@ -1500,24 +1521,8 @@ function eatoutOrder(key, bud){
 }
 
 const EATOUT = {
- southside:{name:'Southside · Lakewood', rules:[
-  '🍗 Smoked Half Chicken — $24. Pull the skin off the thigh and leg, keep the breast skin. ~85 g protein.',
-  '🥖 Carolina Gold — $25. Roast beef on a panini\u2019d baguette. Leaner than the brisket or pastrami sandwiches, and it brings the carbs.',
-  '🍚 Mexican Rice — $7. Not optional. BBQ is zero-carb and you finish the day ~130 g short without it.',
-  '✅ Free, eat as much as you want: pickles, cole slaw, sugar-free red cabbage slaw.',
-  '🚫 Skip: Burnt Ends (their best seller and the fattiest thing there) · Lamb Riblets (the menu itself says "fatty") · Dino Ribs · Short Bone Ribs · Prime Rib Plate $65 · Meat Lovers Platter $130 (serves 3–4, six fatty meats) · anything fried.',
-  '🔄 Swaps that still work: Smoked Turkey Breast on Rye $22 (leanest on the menu) · Smokey Tacos 2pc $18 (lighter, cheaper) · Grilled Chicken Sandwich $20 (menu calls it the healthy route) · White Russian $23, Russian dressing on the side.',
-  '🧊 Smoked wings 6pc $8 / 12pc $14 — smoked, not fried. A fine add.',
-  '📊 Lands ≈1,100–1,300 cal · 125–160 P for the meal.',
-  '🧀 Meat meal → no dairy for 6 h. The Creami moves to tomorrow — decide that before you go, not after.',
-  '🕒 Closed Fri + Sat. Sun opens 2 PM. 315 Cedar Bridge Ave, ~25 min from Deal.']},
- bbq:{name:'BBQ', rules:[
-  'Protein anchor, two palms: grilled chicken, turkey, sirloin, lean brisket flat (skip ribs/wings — fat bombs)',
-  'One bun or laffa max — or none, double pickles + slaw instead',
-  'Fries/rings: a few off the top, never a basket',
-  'BBQ sauce = sugar: 1–2 Tbsp, on the side',
-  'Free-ish: pickles, vinegar slaw, grilled veg',
-  'Bridge shake is dairy → rinse well before the meat meal (dairy→meat needs no long wait)']},
+ southside:{name:'Southside · Lakewood'},
+ bbq:{name:'BBQ'},
  homedairy:{name:'Home Dairy', rules:[
   'You can weigh this one — plan numbers:',
   'Fish: salmon 6 oz raw OR branzino 8–9 oz raw (leaner, eat more)',
@@ -1532,32 +1537,10 @@ const EATOUT = {
   'Veggies 200 g+, spray only',
   'SF ketchup / tomato paste / mustard — basically free',
   'Per skipped meal: +2–3 oz protein and +30 g dry carbs']},
- restdairy:{name:'Restaurant Dairy', rules:[
-  'Fish beats pasta as your main — claim it FIRST when plates land',
-  'Pasta/pizza: teacup or 2-slice share, taste everything, own nothing',
-  'Cheese-forward dishes: a few bites',
-  'Salad early, dressing on the side',
-  '🚨 ANAPHYLACTIC — peanut · hazelnut · pistachio · cashew (+ all other nuts except almond). Ask about pesto (pine nuts), Nutella/hazelnut spreads, candied-nut salads, baklava, mortadella (pistachio). Separate serving spoons; watch shared fryers/facilities. Carry your EpiPen.',
-  'Dessert: 3 shared bites or skip']},
- restmeat:{name:'Restaurant Meat', rules:[
-  'Grilled protein anchor, two palms, first on your plate',
-  'Carb: one fist — bread OR rice OR a fries-taste, not all three',
-  'Fried starters: 2–3 pieces total',
-  'Sauces on the side',
-  'Salads dressed light or lemon',
-  '⚠ Nut check on salads/desserts — ask']},
- sushi:{name:'Sushi', rules:[
-  'START — order BOTH (not one or the other): 1 bowl miso soup (~40 cal) AND 1 side edamame (~130 cal, 11 g protein). Eat these first — they fill you up before the rolls so you eat fewer.',
-  'MAIN protein — eat this BEFORE any rolls: 8–10 pieces of plain <b>TUNA</b> sashimi. This is your real protein for the meal. Salmon is not a free swap: +20 cal a piece.',
-  'ROLLS — how many depends on your budget: if you skipped your snack today → up to 2 simple rolls (plain salmon, tuna, or salmon-avocado). If dinner budget only → 1 roll + bump sashimi to 10–12 pieces.',
-  'DO NOT order: anything tempura (deep-fried), anything labeled “spicy” (that means mayo), anything with a “crunch” topping (fried batter). These are the calorie traps.',
-  'FREE — as much as you want: wasabi, pickled ginger, miso, edamame pods. Soy sauce: DIP the piece, don’t pour it over the rice (salt spikes tomorrow’s scale).',
-  'STILL HUNGRY after all that? Order 2–3 more pieces of <b>tuna</b> sashimi (~45–65 cal). Never more rice/rolls — protein fills you, rice doesn’t.']},
- pizza:{name:'Pizza Night', rules:[
-  'Big salad FIRST — it decides how slice 3 feels',
-  '2 slices cap, thin crust beats thick',
-  'Skip garlic knots / fries sides',
-  'Protein patch afterward if the day is short: Oikos or a half-scoop shake']},
+ restdairy:{name:'Restaurant Dairy'},
+ restmeat:{name:'Restaurant Meat'},
+ sushi:{name:'Sushi'},
+ pizza:{name:'Pizza Night'},
  simcha:{name:'Simcha / Event', rules:[
   'ONE recon lap of the whole spread before touching anything',
   'One plate per course, built protein-first (grilled chicken, fish, carving station)',
@@ -4053,7 +4036,8 @@ function viewToday(){
     <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🔁 Swaps that still work (with the cost of each)</summary>
       <ul class="sched" style="margin-top:6px">${(ord.o.swaps||[]).map(x=>`<li><span class="t">→</span><span>${x}</span></li>`).join('')}</ul>
     </details>`
-      : `<ul class="sched" style="margin-top:8px">${(v.rules||[]).map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>`;
+      : `<div class="note" style="margin-top:8px">ℹ️ <b>Generic guidance — this one has no fixed menu, so the list below does NOT change with the budget above.</b> Use the budget as the ceiling and portion by eye.</div>
+    <ul class="sched" style="margin-top:8px">${(v.rules||[]).map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>`;
       eoBlock = `
   <div class="card" style="border-color:color-mix(in srgb,var(--brass) 40%,transparent)">
     <div class="slotlbl" style="margin-top:0">🍽 Tonight’s plan: ${v.name}</div>
@@ -5619,7 +5603,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786028221';
+const BUILD = 'b1786043278';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -185,6 +185,7 @@ const ALT = /\bor\b|\/|\beither\b/i;
   const checks = [
     ['sushi anchor (sashimi)', EATOUT_ORDER.sushi.anchor, 'tuna sashimi'],
     ['sushi carb (roll)', EATOUT_ORDER.sushi.carb, 'tuna roll'],
+    ['southside anchor (half chicken)', (EATOUT_ORDER.southside || {}).anchor, 'smoked half chicken'],
   ];
   let bad = 0;
   checks.forEach(([label, item, key]) => {
@@ -226,6 +227,73 @@ const ALT = /\bor\b|\/|\beither\b/i;
     });
   });
   if (!bad) pass('placeholders', found + ' time placeholder(s) across EVENTS, all resolvable');
+})();
+
+/* ============ 8. every eat-out venue has EXACTLY ONE source of truth ============
+   THE AUG 6 2026 BUG, encoded. eatoutOrder() returns null for any venue missing from
+   EATOUT_ORDER, and the card then falls back to EATOUT[venue].rules -- a hardcoded list --
+   while the header keeps recomputing the budget from the banked slots. Result: southside
+   showed the IDENTICAL 10-line plan for a 1115 kcal bank and a 915 kcal bank, and its frozen
+   "Lands ~1,100-1,300 cal" line contradicted both. He caught it, not me.
+
+   BOTH is the defect: two copies of one card means the wrong one can render and they drift.
+   NEITHER is also a defect: the card would have a budget and no content.
+   So: computed (EATOUT_ORDER) XOR advice-only (rules). A venue may only be advice-only if it
+   has no menu to order from -- listed here explicitly, with the reason, so adding a real
+   restaurant without an order entry FAILS instead of silently degrading. */
+const ADVICE_ONLY = {
+  homedairy: 'his own kitchen — he weighs it, there is nothing to order',
+  homemeat:  'his own kitchen — he weighs it, there is nothing to order',
+  simcha:    'a wedding/event buffet — no menu and no quantities to name in advance',
+};
+(function venueSource() {
+  if (!EATOUT || !EATOUT_ORDER) { fail('venue-source', 'EATOUT or EATOUT_ORDER missing'); return; }
+  let bad = 0;
+  Object.entries(EATOUT).forEach(([key, v]) => {
+    const computed = !!EATOUT_ORDER[key];
+    const staticRules = Array.isArray(v.rules) && v.rules.length > 0;
+    if (computed && staticRules) {
+      bad++; fail('venue-source', key + ' has BOTH an EATOUT_ORDER entry and a static rules[] — ' +
+        'two copies of the same card. Delete the rules[]; the computed order is authoritative.');
+    }
+    if (!computed && !staticRules) {
+      bad++; fail('venue-source', key + ' has NEITHER an EATOUT_ORDER entry nor rules[] — its card would render a budget with no plan.');
+    }
+    if (!computed && staticRules && !ADVICE_ONLY[key]) {
+      bad++; fail('venue-source', key + ' renders a STATIC list under a computed budget header, so the plan ' +
+        'will not change when he banks a different set of slots (the Aug 6 bug). Give it an EATOUT_ORDER ' +
+        'entry, or add it to ADVICE_ONLY in this file with the reason it has no menu.');
+    }
+  });
+  if (!bad) pass('venue-source', Object.keys(EATOUT).length + ' venues, each computed XOR advice-only (' +
+    Object.keys(ADVICE_ONLY).length + ' advice-only, by name)');
+})();
+
+/* ============ 9. an advice-only venue may not quote a meal-level macro ============
+   The static list cannot know the budget, so any portion/meal total inside it is a number that
+   will contradict the header sooner or later -- which is exactly how "Lands ~1,100-1,300 cal"
+   survived next to a 915 kcal budget. Per-gram constants ("alcohol is 7 cal/g") are fine: they
+   are physics, not portions. Threshold is 100, which is above any constant and below any meal. */
+(function noProseMacros() {
+  if (!EATOUT) return;
+  const CLAIM = /(\d[\d,]*)\s*(?:[-–—]\s*\d[\d,]*\s*)?(cal|kcal)\b|(\d[\d,]*)\s*(?:g\s*)?P\b/gi;
+  let bad = 0, scanned = 0;
+  Object.entries(EATOUT).forEach(([key, v]) => (v.rules || []).forEach((line, i) => {
+    scanned++;
+    const txt = String(line).replace(/<[^>]*>/g, '');
+    let m;
+    CLAIM.lastIndex = 0;
+    while ((m = CLAIM.exec(txt))) {
+      const n = parseFloat(String(m[1] || m[3]).replace(/,/g, ''));
+      if (n >= 100) {
+        bad++;
+        fail('prose-macros', key + '.rules[' + i + '] states a meal-level macro (' + m[0].trim() +
+          ') inside a static list that cannot see the budget:\n          "' + txt.slice(0, 120) + '"');
+        break;
+      }
+    }
+  }));
+  if (!bad) pass('prose-macros', scanned + ' advice-only line(s), none quoting a meal-level macro');
 })();
 
 console.log('');

@@ -16,9 +16,12 @@ const CASES = [
     from: '+20 cal and +2.6 g fat per piece', to: '+5 cal and +1 g fat per piece' },
   /* Anchor every case on PERMANENT app content, never on a dated EVENTS card. The first version of
      this case quoted the wedding card and broke the same day the card was reworded. */
+  /* Re-anchored Aug 6 2026: this case used to quote EATOUT.sushi.rules, which was DELETED that day
+     when every venue with a computed order gave up its duplicate static list. Same lesson as the
+     wedding-card version of this case — anchor on content that has a reason to exist forever. */
   { name: 'sashimi written as "tuna or salmon" again', check: 'conflation',
-    from: 'pieces of plain <b>TUNA</b> sashimi. This is your real protein for the meal. Salmon is not a free swap: +20 cal a piece.',
-    to:   'pieces of plain sashimi, tuna or salmon, whichever they have.' },
+    from: 'Still hungry? +3 pieces of sashimi = 66 cal, 14 P.',
+    to:   'Still hungry? A few more pieces of tuna or salmon sashimi.' },
   { name: 'sashimi and rolls offered as one option again', check: 'conflation',
     from: '\u{1F41F} 8\u201310 pieces sashimi \u2014 <b>TUNA</b> (salmon is +20 cal each)<br>',
     to:   '\u{1F41F} 8\u201310 pieces sashimi or a couple of rolls<br>' },
@@ -28,6 +31,11 @@ const CASES = [
     from: "['Broccoli (or asparagus / string beans)','150 g',[50,3,10,0]]", to: "['Cashew butter','10 g',[60,2,2,5]]" },
   { name: 'the sushi anchor drifting away from FOOD_FACTS', check: 'anchors',
     from: "cal:22,p:4.7,c:0,f:.3,min:6,max:16", to: "cal:31,p:4.7,c:0,f:.3,min:6,max:16" },
+  /* --- the Aug 6 2026 bug: a venue whose plan cannot respond to the budget --- */
+  { name: 'a real restaurant losing its budget-aware order entry', check: 'venue-source',
+    from: "\n southside:{\n  base:[{n:'Pickles", to: "\n southsideoff:{\n  base:[{n:'Pickles" },
+  { name: 'a frozen meal total creeping back into an advice-only list', check: 'prose-macros',
+    from: "'You can weigh this one — plan numbers:'", to: "'You can weigh this one — lands ≈1,200 cal for the meal:'" },
 ];
 
 let bad = 0;
