@@ -214,6 +214,30 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     `was a one-read notice it has served its purpose and should be pulled deliberately`);
 }
 
+/* ---------- 8b. his standing flavor rules ----------
+   "na not with plain cor" / "no not cookies n cream" — a pale base reads to him as a wasted slot,
+   and he wants the bowl to taste like something. That rule was recorded on Aug 6 and eleven combos
+   in the rotation still opened with Plain COR, which is 13% of his breakfasts. A rule that lives
+   only in a memory file is a rule that gets walked past. Salted Caramel stays by his explicit call
+   ("keep for now") even though one of its combos is rated down — so this reports it, not fails it. */
+{
+  const res = run(`
+    const out = { plain: [], ratedDown: [], unquantified: [] };
+    const ratings = store.get('qpcut.flavorRatings', {});
+    COR_SETS.forEach((set, si) => set.forEach((c, di) => {
+      if (/Plain COR/.test(c[1])) out.plain.push('set' + si + 'd' + di + ' ' + c[0]);
+      if (ratings['cor:' + c[0]] === 'down') out.ratedDown.push('set' + si + 'd' + di + ' ' + c[0]);
+    }));
+    return JSON.stringify(out);
+  `);
+  const r = JSON.parse(res);
+  if (r.plain.length) fail('flavor-rules', `Plain COR is back in ${r.plain.length} combo(s): ` +
+    r.plain.join(', ') + ' — he has rejected a pale base twice');
+  else ok('flavor-rules', 'no Plain COR in the rotation');
+  if (r.ratedDown.length) warn('rated-down', `still rostered after a 👎: ${r.ratedDown.join(', ')} ` +
+    `(Salted Caramel kept by his call, Aug 6)`);
+}
+
 /* ---------- 9. no real name reaches the public page ----------
    This repo is public because GitHub Pages on the free plan requires it. The Jul 31 sweep fixed
    four of the five places his first name appeared and missed the <h1> — the one actually rendered
