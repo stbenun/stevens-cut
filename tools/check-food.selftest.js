@@ -36,6 +36,13 @@ const CASES = [
     from: "\n southside:{\n  base:[{n:'Pickles", to: "\n southsideoff:{\n  base:[{n:'Pickles" },
   { name: 'a frozen meal total creeping back into an advice-only list', check: 'prose-macros',
     from: "'You can weigh this one — plan numbers:'", to: "'You can weigh this one — lands ≈1,200 cal for the meal:'" },
+  /* --- the Fruity Pebbles bowl: a scoop weight stamped over the row's real amount --- */
+  { name: 'an ingredient row losing the quantity it hands to ppTag', check: 'scoop-weights',
+    from: "${l}${ppTag(l,false,q)}</span><span class=\"q\">${q}</span>", to: "${l}${ppTag(l)}</span><span class=\"q\">${q}</span>" },
+  { name: 'cereal-first rows matching the protein tub again (the b4 case)', check: 'scoop-weights',
+    from: "if(PP_ISOTHER.test(s)) return null;", to: "if(false) return null;" },
+  { name: 'a trailing "cereal" no longer rejecting the tub match', check: 'scoop-weights',
+    from: "if(PP_NOTPOWDER.test(s.slice(i + e[0].length, i + e[0].length + 30))) continue;", to: "if(false) continue;" },
 ];
 
 let bad = 0;

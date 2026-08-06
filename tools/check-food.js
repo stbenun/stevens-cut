@@ -296,6 +296,70 @@ const ADVICE_ONLY = {
   if (!bad) pass('prose-macros', scanned + ' advice-only line(s), none quoting a meal-level macro');
 })();
 
+/* ============ 10. a scoop stamp may never contradict the row's own quantity ============
+   Aug 6 2026, found by HIM on the Fruity Pebbles bowl, two bugs on one card:
+     "Fruity Pebbles cereal, on top"  q=10 g          -> stamped "weigh 30 g" (the protein tub's scoop)
+     "Fruity Pebbles protein"         q="½ serving · 15 g" -> stamped the FULL 30 g beside the half
+   PP_G is a substring map, so any label containing a flavour name got the powder's weight whether or
+   not the row WAS the powder. Two numbers on one line, and the wrong one is bolded.
+
+   This check runs the SHIPPED ppFind/ppTag against every ingredient row rather than a copy of the
+   logic -- two copies is how check 5 exists in the first place. It also asserts the call sites still
+   hand the quantity in, because the fix is worthless if a future edit drops that argument. */
+(function scoopWeights() {
+  /* (a) call sites: an ingredient-row mapper must pass the row quantity.
+     `l` is only ever the ingredient label in those two mappers, so a bare ppTag(l) IS the bug.
+     (The first version of this used /[^]]*?/ to span the template — in JavaScript `[^]` matches ANY
+     character, so `[^]]` reads as "any char, then a literal ]" and the check silently matched nothing.
+     Same vacuous-pass shape as the \b-through-a-heredoc bug. Plain indexOf-style checks from now on.) */
+  const bare = (src.match(/ppTag\(l\)/g) || []).length;
+  if (bare) {
+    fail('scoop-weights', bare + ' ingredient-row render site(s) call ppTag(l) without the row ' +
+      'quantity — the stamp cannot tell whether the row is already exact (the Fruity Pebbles bug).');
+  }
+
+  /* (b) behaviour: pull the real functions out of the file and run every row through them */
+  const a = src.indexOf('const PP_NOTPOWDER');
+  const b = src.indexOf('\n\n', src.indexOf('function ppTag'));
+  if (a < 0 || b < 0 || b <= a) { fail('scoop-weights', 'could not locate ppFind/ppTag in the source'); return; }
+  const slice = src.slice(a, b);
+  if (slice.length < 200) { fail('scoop-weights', 'ppFind/ppTag slice came out empty — fix the anchors'); return; }
+  const PP_G = grab('PP_G');
+  if (!PP_G) return;
+  let ppTag;
+  try {
+    ppTag = eval('(function(){' + slice.replace('const PP_NOTPOWDER', 'var PP_NOTPOWDER') +
+                 '; return ppTag; })()');
+  } catch (e) { fail('scoop-weights', 'ppFind/ppTag would not evaluate: ' + e.message); return; }
+
+  const grams = s => { const m = String(s).match(/(\d+(?:\.\d+)?)\s*g\b/); return m ? parseFloat(m[1]) : null; };
+  const OTHER_PRODUCT = /cereal|wafers?|thins|crumbs?|on top|topping/i;
+  let n = 0, bad = 0;
+  SLOTS.forEach(sl => sl.opts.forEach(o => o.vars.forEach(v => v.ing.forEach(([label, qty]) => {
+    n++;
+    /* B1 — the REAL render path (quantity passed, exactly as the card calls it) may never put two
+       different gram figures on one line. This is the user-visible invariant. */
+    const shown = grams(String(ppTag(label, false, qty)).replace(/<[^>]+>/g, ''));
+    const own = grams(qty);
+    if (shown != null && own != null && Math.abs(own - shown) > 0.05) {
+      bad++;
+      fail('scoop-weights', o.id + ' "' + label + '" renders its own ' + own + ' g AND a stamped ' +
+        shown + ' g — two different weights on one line.');
+    }
+    /* B2 — the lookup itself. A row naming a DIFFERENT product must resolve to no scoop weight at all,
+       whatever the quantity column says. Without this, blanking PP_NOTPOWDER passes: the quantity
+       suppression is the outer defence and it hides a broken lookup. Note the partial-scoop rows
+       (s2 uses 23.4 g of a 36 g scoop) are legitimately a different NUMBER from the tub, which is why
+       B1 is the number check and B2 is a product check — conflating the two flagged s2 falsely. */
+    if (OTHER_PRODUCT.test(String(label)) && String(ppTag(label)) !== '') {
+      bad++;
+      fail('scoop-weights', o.id + ' "' + label + '" is not the protein tub, but a flavour name in it ' +
+        'still resolves to a scoop weight — PP_NOTPOWDER is not rejecting it.');
+    }
+  }))));
+  if (!bad && !bare) pass('scoop-weights', n + ' ingredient rows, no stamped weight contradicts the row itself');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
