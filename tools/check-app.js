@@ -240,6 +240,44 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     `(Salted Caramel kept by his call, Aug 6)`);
 }
 
+/* ---------- 8bb. the Fall 2026 gate opens on Aug 31 and not a day sooner ----------
+   "it doesnt start yet!" — the semester rebuild must be completely inert until the term begins.
+   A date gate that silently leaks is the worst kind, because the wrong day looks like a right one. */
+{
+  const res = run(`
+    const REAL = Date;
+    function rowsOn(iso){
+      const t = new REAL(iso + 'T09:00:00').getTime();
+      globalThis.Date = function(){ return arguments.length ? new REAL(...arguments) : new REAL(t); };
+      globalThis.Date.now = () => t; globalThis.Date.prototype = REAL.prototype;
+      globalThis.Date.parse = REAL.parse; globalThis.Date.UTC = REAL.UTC;
+      let r = [];
+      try { r = dayRows().map(function(x){ return x[1]; }).join(' | '); } catch(e){ r = 'THREW ' + e.message; }
+      globalThis.Date = REAL;
+      return r;
+    }
+    return JSON.stringify({
+      before:  rowsOn('2026-08-24'),   /* Mon, one week before */
+      firstMon:rowsOn('2026-08-31'),   /* Mon, day one */
+      wed:     rowsOn('2026-09-02'),
+      tue:     rowsOn('2026-09-01'),   /* untouched by the semester */
+      after:   rowsOn('2026-12-28'),   /* Mon, after the term ends */
+      start: SEMESTER[0], end: SEMESTER[1]
+    });
+  `);
+  const r = JSON.parse(res);
+  const bad = [];
+  const CAMPUS = /HNSC 2300|Boylan|Ingersoll/;
+  if (CAMPUS.test(r.before)) bad.push('campus rows LEAKED into Mon Aug 24, before the term');
+  if (!CAMPUS.test(r.firstMon)) bad.push('Mon Aug 31 has no campus rows — the gate did not open');
+  if (!CAMPUS.test(r.wed)) bad.push('Wed Sep 2 has no campus rows');
+  if (CAMPUS.test(r.tue)) bad.push('campus rows appeared on a Tuesday — Mon/Wed only');
+  if (CAMPUS.test(r.after)) bad.push('campus rows still present after the term ends');
+  if (/ENGL 1012/.test(r.firstMon) === false) bad.push('Mon Aug 31 is missing the 6:30 ENGL class');
+  if (bad.length) fail('semester-gate', bad.join(' · '));
+  else ok('semester-gate', `campus days live ${r.start} to ${r.end}, Mon+Wed only, nothing before or after`);
+}
+
 /* ---------- 8c. Friday-night bread is one rule, not a menu ----------
    His standing rule (Aug 6 2026): always a full pita, no challah at all, not even the Hamotzi piece.
    Before this, five of the seven dishes carried a conditional line — "half with the challah plan,

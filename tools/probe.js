@@ -238,9 +238,17 @@ function clickEverything(inst, tab) {
   const doc = win.document;
   const found = [];
   const sel = 'button, [data-rate], [data-tab], [data-acc] > summary, .btn, [id^="btn"]';
-  const nodes = [...doc.querySelectorAll('#view ' + sel)];
+  /* Most handlers end in render(), which rebuilds #view wholesale. Holding one NodeList and
+     clicking through it means every click after the first lands on a DETACHED node whose card no
+     longer exists — its listener still fires, then queries the live document and finds nothing.
+     That reported six "dead buttons" that were nothing of the kind. Re-query before each click and
+     only click what is still really on screen. */
+  const total = doc.querySelectorAll('#view ' + sel).length;
   drain();
-  for (const n of nodes) {
+  for (let i = 0; i < total; i++) {
+    const live = doc.querySelectorAll('#view ' + sel);
+    const n = live[i];
+    if (!n || !n.isConnected) continue;
     const label = (n.id || n.dataset.rate || n.textContent || '').trim().slice(0, 40)
       .replace(/\s+/g, ' ');
     try {
@@ -250,7 +258,7 @@ function clickEverything(inst, tab) {
     }
     drain().forEach(e => found.push(`click "${label}" -> ${e}`));
   }
-  return { count: nodes.length, found };
+  return { count: total, found };
 }
 
 function main() {
