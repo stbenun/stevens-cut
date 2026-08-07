@@ -186,6 +186,9 @@ const ALT = /\bor\b|\/|\beither\b/i;
     ['sushi anchor (sashimi)', EATOUT_ORDER.sushi.anchor, 'tuna sashimi'],
     ['sushi carb (roll)', EATOUT_ORDER.sushi.carb, 'tuna roll'],
     ['southside anchor (half chicken)', (EATOUT_ORDER.southside || {}).anchor, 'smoked half chicken'],
+    /* the base items were the gap: he questioned the miso number and it turned out to have no
+       source anywhere. Anything he can be told to order gets checked against FOOD_FACTS. */
+    ['sushi base (miso)', (EATOUT_ORDER.sushi.base || []).find(b => /miso/i.test(b.n)), 'miso soup'],
   ];
   let bad = 0;
   checks.forEach(([label, item, key]) => {
