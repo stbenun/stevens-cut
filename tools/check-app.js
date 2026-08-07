@@ -240,6 +240,36 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     `(Salted Caramel kept by his call, Aug 6)`);
 }
 
+/* ---------- 8c. Friday-night bread is one rule, not a menu ----------
+   His standing rule (Aug 6 2026): always a full pita, no challah at all, not even the Hamotzi piece.
+   Before this, five of the seven dishes carried a conditional line — "half with the challah plan,
+   full if you skip the half-slice" — and they did not agree with each other about what a pita costs.
+   That ambiguity is what made him ask "am I supposed to have a full or half pita tonight." */
+{
+  const res = run(`
+    const out = { missing: [], conditional: [], challah: [] };
+    SHABBAT_FEAST.forEach(function (f) {
+      const rows = f.ing.map(function (r) { return r[0] + ' ' + r[1]; }).join(' | ');
+      const pita = f.ing.filter(function (r) { return /pita/i.test(r[0]); });
+      if (!pita.length) { out.missing.push(f.n); return; }
+      pita.forEach(function (r) {
+        const line = r[0] + ' ' + r[1];
+        if (/½|half|if you skip|instead/i.test(line)) out.conditional.push(f.n);
+      });
+      if (/challah/i.test(rows + ' ' + f.mac + ' ' + (f.other || ''))) out.challah.push(f.n);
+      if (/½\\s*pita|half a? pita/i.test(f.mac)) out.conditional.push(f.n + ' (header)');
+    });
+    return JSON.stringify(out);
+  `);
+  const r = JSON.parse(res);
+  const bad = [];
+  if (r.missing.length) bad.push('no pita row: ' + r.missing.join(', '));
+  if (r.conditional.length) bad.push('conditional bread: ' + r.conditional.join(', '));
+  if (r.challah.length) bad.push('challah still named: ' + r.challah.join(', '));
+  if (bad.length) fail('friday-bread', bad.join(' · ') + ' — one full pita, no challah, every dish');
+  else ok('friday-bread', 'all 7 feast dishes: one full pita, unconditional, no challah');
+}
+
 /* ---------- 9. no real name reaches the public page ----------
    This repo is public because GitHub Pages on the free plan requires it. The Jul 31 sweep fixed
    four of the five places his first name appeared and missed the <h1> — the one actually rendered
