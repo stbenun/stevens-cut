@@ -412,6 +412,54 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   if (!bad) pass('kashrut', 'every venue declares meat/dairy/pareve; no meat venue offers a dairy item');
 })();
 
+/* ---- [topping-weights] every whip / chocolate-syrup mention states its grams ----
+   His instruction, Aug 10 2026: "when you put ff whipped cream or sf choc syrup,
+   you need to write how many g." Not pedantry — the Creami cups run on a 140-cal
+   topping budget, so an unweighted topping makes the cup's macro header
+   unverifiable, which is the exact class of failure this whole file exists for.
+   30 mentions across the batches carried no amount at all. Both foods now live in
+   FOOD_FACTS at a 15 g standard serving and this keeps them honest.
+   ⚠️ SHOPPING-LIST ROWS ARE EXEMPT ON PURPOSE: ['FF whipped cream','1 can'] is
+   right — he buys a can, not 15 g. The rule covers anything telling him what to
+   PUT ON the food, not what to buy. */
+(() => {
+  const NAMES = /(FF whip(?:ped cream)?|SF choc(?:olate)? (?:syrup|drizzle))/g;
+  const bad = [];
+  src.split('\n').forEach((line, ln) => {
+    if (/'(?:1 can|check stock)'/.test(line)) return;   /* a shopping row */
+    if (/unit:'g'/.test(line)) return;                  /* the FOOD_FACTS defs, cal-per-gram */
+    let m; NAMES.lastIndex = 0;
+    while ((m = NAMES.exec(line))) {
+      const rest = line.slice(m.index + m[0].length);
+      /* ⚠️ MY FIRST VERSION JUST LOOKED 26 CHARS AHEAD FOR "N g" AND THAT WAS WRONG IN BOTH
+         DIRECTIONS. It failed the grocery rows, which ARE weighted (just as separate array slots),
+         and — far worse — it PASSED b7's HOWTO, where "SF chocolate syrup drizzled" was followed by
+         an unrelated "9 g almond butter" close enough to satisfy the regex. A proximity match will
+         happily accept another ingredient's number. So this is structural now. */
+      /* ① an ingredient row: ['SF chocolate syrup, drizzled','15 g',[5,0,2,0]].
+            Skip to the end of the LABEL first — the label has its own comma ("...syrup, drizzled")
+            and my previous attempt tripped on it — then require the quantity slot to be followed by
+            the macro array `,[`. That `,[` is what makes this precise: an ingredient row always has
+            one, and HOWTO prose never does, so prose can't sneak through on a neighbouring quote. */
+      const q = rest.indexOf("'");
+      if (q >= 0) {
+        /* ...followed by the macro array `,[` (a SLOTS ingredient row), or by `]` (a DRAFT recipe
+           row, which is a bare [name, qty] pair with no macros). Both are legitimately weighted. */
+        const slot = /^'\s*,\s*'([^']{0,20})'\s*(?:,\s*\[|\])/.exec(rest.slice(q));
+        if (slot && /\d+(?:\.\d+)?\s*g\b/.test(slot[1])) continue;
+      }
+      /* ② a grocery row: ['Pantry','SF chocolate syrup',15,'g'] — amount and unit are separate */
+      if (/^['"]?\s*,\s*\d+(?:\.\d+)?\s*,\s*['"]g['"]/.test(rest)) continue;
+      /* ③ prose: the grams must be TIGHT after the name and before any comma, so a later
+            ingredient's weight cannot vouch for this one */
+      if (/\d+(?:\.\d+)?\s*g\b/.test(rest.slice(0, 14).split(',')[0])) continue;
+      bad.push('line ' + (ln + 1) + ' "' + m[0] + '" has no grams -> ' + line.trim().slice(0, 60));
+    }
+  });
+  if (bad.length) fail('topping-weights', bad.join(' | '));
+  else pass('topping-weights', 'every whip / chocolate-syrup mention states its grams (shopping rows exempt)');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
