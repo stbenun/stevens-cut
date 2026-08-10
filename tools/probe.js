@@ -161,10 +161,31 @@ function boot(whenISO, hhmm, loc) {
   /* Never let a probe run reach the network: no sync push, no update check. */
   win.fetch = () => new win.Promise(() => {});
 
+  /* Track timers so win_close can clear them. The app starts a clock interval on boot and jsdom's
+     window.close() does not clear pending timers, so this is correct hygiene.
+     ⚠️ IT IS NOT SUFFICIENT, AND DO NOT CLAIM OTHERWISE. Measured Aug 10 2026: with this in place
+     the full `--clicks` sweep STILL dies with "Ineffective mark-compacts near heap limit" at 4 GB
+     around instance ~40. jsdom retains far more per window than its timers. The working answer is
+     to CHUNK the sweep — one process per day via `--day`, so each gets a fresh heap:
+        for d in <the 7 dates>; do node tools/probe.js --clicks --day $d; done
+     Same coverage, bounded memory. Raising --max-old-space-size only moves the wall. */
+  const timers = [];
+  const realSI = win.setInterval, realST = win.setTimeout;
+  win.setInterval = (...a) => { const id = realSI.apply(win, a); timers.push(['i', id]); return id; };
+  win.setTimeout  = (...a) => { const id = realST.apply(win, a); timers.push(['t', id]); return id; };
+
   /* Two things the real phone has and jsdom does not. Stub them, or their absence
      masquerades as an app bug — progress photos live in IndexedDB, and every setTab
      calls scrollTo. Neither has ever been the thing that was broken. */
   win.scrollTo = () => {};
+  /* jsdom implements neither scrollTo NOR Element.scrollIntoView. Missing the second one cost a
+     real debugging detour on Aug 10 2026: the first completed --clicks sweep reported three
+     failures on Sat 2026-08-15 ("▶ Start session" and "💧 Take the Ryse stick") that were purely
+     `el.scrollIntoView is not a function`. Those buttons work fine on his phone. Worse than the
+     false positive: a throw there ABORTS the rest of that handler, so anything it would have
+     surfaced afterwards goes unseen. Stub it on the prototype — several handlers call it after a
+     render to pull the card he just acted on into view. */
+  win.Element.prototype.scrollIntoView = function(){};
   win.URL.createObjectURL = () => 'blob:probe';
   win.URL.revokeObjectURL = () => {};
   win.print = () => {};
@@ -201,10 +222,10 @@ function boot(whenISO, hhmm, loc) {
     win.eval(APP_JS + '\n;globalThis.__probe = function(__code){ return eval(__code); };');
   } catch (err) {
     problems.push('BOOT THREW: ' + (err && err.stack ? err.stack.split('\n')[0] : err));
-    return { win, problems, dead: true };
+    return { win, problems, timers, dead: true };
   }
   win.console.error = origErr;
-  return { win, problems, dead: false };
+  return { win, problems, timers, dead: false };
 }
 
 /* The app catches view throws and draws its own error card. That is a failure, not a pass —
@@ -349,7 +370,14 @@ function main() {
   process.exitCode = 1;
 }
 
-function win_close(inst) { try { inst.win.close(); } catch (e) {} }
+function win_close(inst) {
+  /* clear the app's timers FIRST — a live interval pins the window and close() won't drop it.
+     See the timer-tracking note in boot(); without this the --clicks sweep OOMs at 4 GB. */
+  try { (inst.timers || []).forEach(([kind, id]) => {
+    kind === 'i' ? inst.win.clearInterval(id) : inst.win.clearTimeout(id);
+  }); } catch (e) {}
+  try { inst.win.close(); } catch (e) {}
+}
 
 /* check-app.js drives the same booted engine — one boot implementation, so a guard can never
    pass against a different app than the one the probe renders. */

@@ -329,6 +329,11 @@
   .ratebtn.on.up{border-color:var(--ok);background:rgba(143,170,114,.2)}
   .ratebtn.on.mid{border-color:var(--muted);background:rgba(160,157,142,.16)}
   .ratebtn.on.down{border-color:var(--danger);background:rgba(196,103,79,.2)}
+  /* "next ›" flavor stepper on the Today COR + yogurt-bowl cards (his ask Aug 10 2026) */
+  .flavnext{display:inline-flex;align-items:center;gap:4px;margin-left:8px;vertical-align:middle}
+  .nxb{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:var(--r-ctl);padding:3px 8px;font-size:11px;line-height:1.4;cursor:pointer;white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
+  .nxb:hover{color:var(--ink);border-color:var(--brass)}
+  .nxb.rst{color:var(--brass)}
 
   .pbar{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:99px;
         margin-top:12px;overflow:hidden}
@@ -2440,9 +2445,12 @@ const THEMES = [
   ['Cucumbers','10-minute quick pickle: vinegar + dill + salt'],
   ['Creami','Cinnamon-raisin-bagel vibe: cinnamon + a few raisins from the mix-in budget']]},
 ];
-const COR_WILDCARDS = [
- ['Flavor-purity move','TL unflavored whey when the COR flavor is loud (cookie butter, carrot cake)'],
-];
+/* ⛔ COR_WILDCARDS is GONE (Aug 10 2026). It held the "TL unflavored whey when the COR flavor is
+   loud" tip, and the same card carried a "Base is always B1: COR 25 g + oats 25 g + ..." restatement.
+   He cut both: "dont need this in 'This week's flavors'." The base is already spelled out
+   ingredient-by-ingredient on the Today COR card, which is where he actually builds the bowl —
+   repeating it on the rotation card was noise, and the whey tip is a technique he already knows.
+   Don't reintroduce either as a "helpful reminder." */
 const FL_ANCHOR = new Date(2026,5,28); /* Sunday Jun 28 */
 function weekIdx(){
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay()); sun.setHours(12,0,0,0);
@@ -2475,8 +2483,71 @@ const COR_OVERRIDE = {
      The 15 g graham crunch trades the almond butter 32 g → 21.5 g, so this runs 546 · 38P · 63C · 18F
      instead of the crunch-free 545/39/54/22 — same calories, carb-up split. */
   '2026-08-06': ['Toasted S’more','Chocolate Cake COR + Jet-Puffed Marshmallow Ryse — strawberries + 15 g graham'],
+  /* Aug 10: rotation had Double Blueberry and he asked for chocolate — "could be with chocolate COR
+     or the 2 chocolate flavored proteins that i have."
+     ⚠️ MY FIRST PICK WAS Chocolate Cake COR + Cinnamon Toast, and he rejected it on sight:
+     "we did choc and cin once" — Aug 5's Chocolate Cinnamon Bun. I had enumerated COR_SETS and NOT
+     COR_OVERRIDE, so my "genuinely new" check was blind to the six combos he has most recently
+     actually eaten. THE OVERRIDES ARE HISTORY TOO. Always enumerate both.
+     Landing pick avoids cinnamon entirely: Jet-Puffed Birthday Cake carries its sprinkles IN the
+     powder, so chocolate + confetti needs no extra ingredient, and by his own note Jet-Puffed
+     "supports most flavors and gives them that sweet yummy flavor." Chocolate Cake has met 6
+     proteins and never this one. Crunch-free, so it holds the clean 545 · 39P · 54C · 22F. */
+  '2026-08-10': ['Confetti Fudge','Chocolate Cake COR + Jet-Puffed Birthday Cake Ryse — strawberries'],
 };
-const corFor = (iso, wd) => COR_OVERRIDE[iso] || weekPick(COR_SETS)[wd];
+
+/* ---- HIS OWN per-day flavor pick: the "next ›" buttons on the Today COR and yogurt-bowl cards.
+   His ask Aug 10 2026: "give me the option to press next in case i dont want that flavor that day."
+   Stored per DATE so it never leaks into tomorrow, and it beats both the dated COR_OVERRIDE and the
+   rotation — a tap by him outranks anything I scheduled for him.
+   The pool is every combo in the 12-week rotation (84), so "next" can reach any flavor he owns. */
+const CORPOOL = () => COR_SETS.flat();
+function corRotationFor(wd){ return weekPick(COR_SETS)[wd]; }
+function corFor(isoD, wd){
+  const pick = (store.get('qpcut.corpick',{}))[isoD];
+  const pool = CORPOOL();
+  if(pick!=null && pool[pick]) return pool[pick];
+  return COR_OVERRIDE[isoD] || corRotationFor(wd);
+}
+/* index in the pool of whatever is CURRENTLY on screen, so "next" steps from what he is looking at.
+   A COR_OVERRIDE combo is usually not in the pool at all (that is the point of an override), so fall
+   back to this weekday's rotation slot rather than silently starting from 0. */
+function corCurIdx(isoD, wd){
+  const m = store.get('qpcut.corpick',{});
+  if(m[isoD]!=null) return m[isoD];
+  const pool = CORPOOL(), shown = COR_OVERRIDE[isoD];
+  if(shown){ const i = pool.findIndex(p=>p[0]===shown[0]); if(i>=0) return i; }
+  const L = COR_SETS.length, w = ((weekIdx()%L)+L)%L;
+  return w*7 + wd;
+}
+function corStep(isoD, wd, dir){
+  const pool = CORPOOL();
+  const n = (((corCurIdx(isoD,wd) + dir) % pool.length) + pool.length) % pool.length;
+  const m = store.get('qpcut.corpick',{}); m[isoD] = n; store.set('qpcut.corpick', m);
+}
+function corResetPick(isoD){
+  const m = store.get('qpcut.corpick',{}); delete m[isoD]; store.set('qpcut.corpick', m);
+}
+const corIsPicked = isoD => (store.get('qpcut.corpick',{}))[isoD] != null;
+/* yogurt bowl — qpcut.bowlpick already existed as a per-date pin, so this just steps it */
+function bowlStep(isoD, dir){
+  const ids = bowlIdsAll(); if(!ids.length) return;
+  let i = ids.indexOf(bowlOfDay(isoD)); if(i<0) i = 0;
+  const n = (((i + dir) % ids.length) + ids.length) % ids.length;
+  const m = store.get('qpcut.bowlpick',{}); m[isoD] = ids[n]; store.set('qpcut.bowlpick', m);
+}
+function bowlResetPick(isoD){
+  const m = store.get('qpcut.bowlpick',{}); delete m[isoD]; store.set('qpcut.bowlpick', m);
+}
+const bowlIsPicked = isoD => (store.get('qpcut.bowlpick',{}))[isoD] != null;
+/* one shared control so the two cards can never drift apart */
+function nextBtns(kind, picked){
+  return `<span class="flavnext">`
+    + `<button type="button" class="nxb" data-flav="${kind}" data-dir="-1" aria-label="previous flavor">‹</button>`
+    + `<button type="button" class="nxb" data-flav="${kind}" data-dir="1" aria-label="next flavor">next ›</button>`
+    + (picked?`<button type="button" class="nxb rst" data-flav="${kind}" data-dir="0" aria-label="back to the scheduled flavor">↺</button>`:'')
+    + `</span>`;
+}
 const flavorTheme = () => weekPick(THEMES);
 
 /* ---------- helpers ---------- */
@@ -2871,7 +2942,9 @@ function exFoldSet(key, folded){
 }
 /* The day schedule's open/closed state PERSISTS across reloads (stored, so it survives page
    loads and syncs across devices). Default open only the very first time (no stored value). */
-function schedOpen(){ return store.get('qpcut.sched.open', true); }
+/* default CLOSED — his Aug 10 2026 rule that every roll-up starts collapsed. This one persists
+   across days rather than per-day, so opening it once makes it stay open. */
+function schedOpen(){ return store.get('qpcut.sched.open', false); }
 function setSchedOpen(v){ store.set('qpcut.sched.open', !!v); }
 /* storage persistence self-check: if the sentinel is missing, this browser context
    either is brand new OR wipes data between visits */
@@ -3803,10 +3876,19 @@ function applyMealFilter(){
   window.__filterOpening = false;
 }
 
-/* -- once-per-day time-aware open seeding (user closes stick all day) --
-   seededDay is stored (device-local) so a page RELOAD doesn't re-seed and re-open
-   what the user already closed. Seeding runs once per real calendar day, not per load.
-   Sections the user has explicitly toggled today (userToggled) are never re-seeded. */
+/* -- accordion open state: EVERYTHING STARTS CLOSED --
+   ⛔ Aug 10 2026, his instruction, and it is absolute: "make sure all rollups are closed on
+   default, cuz i dont want to have to close them everytime i open the page."
+   This function used to TIME-SEED sections open — hydration mid-day, dials/stack after 8 PM,
+   the lift card around gym time, the Friday cards after noon. The seed was guarded so it ran
+   only once per calendar day, but that only meant he re-closed them ONCE A DAY, every day,
+   forever. His storage on Aug 10 had `{"lift":false,"log-hydr":false}` — him closing the same
+   two cards again that morning. That is the whole complaint, in his own data.
+   ⚠️ DO NOT RE-ADD TIME-BASED SEEDING. If something needs to catch his eye at a given hour,
+   put it in the summary line as a statline/badge — the summary is always visible when the
+   body is collapsed, so it costs him nothing to dismiss. Opening a section on his behalf
+   spends his attention; a badge asks for it.
+   All that remains is restoring HIS OWN toggles from earlier today. */
 function seededDayGet(){ return localStorage.getItem('qpcut.seededday'); }
 function seededDaySet(t){ try{ localStorage.setItem('qpcut.seededday', t); }catch(e){} }
 function userToggledToday(){ try{ return JSON.parse(localStorage.getItem('qpcut.acctoggled.'+isoToday())) || {}; }catch(e){ return {}; } }
@@ -3820,19 +3902,9 @@ function seedOpenAcc(){
   /* meal slots (meals-*) are session-only — never restore them, so a filter force-open can't leave a slot
      stuck open across reloads and the Meals tab always starts with slots collapsed (clean). */
   Object.entries(tog).forEach(([id,open])=>{ if(id.startsWith('meals-')) return; if(open) openAcc.add(id); else openAcc.delete(id); });
-  if(seededDayGet()===t) return;                 // already auto-seeded today (survives reloads)
-  seededDaySet(t);
-  const m = nowMin(), wd = new Date().getDay();
-  const seed = id => { if(!(id in tog)) openAcc.add(id); }; // don't override an explicit close
-  if(m>=450 && m<1350) seed('log-hydr');
-  if(m>=1200){ seed('log-dials'); seed('log-stack'); }
-  if(m>=960) seed('tonight');
-  if(wd===5 && m>=720){ seed('friday'); seed('feast-today'); }
-  /* Thursday feast card opens itself after noon, same as Friday's — with the recipe already unfolded on a
-     cook night, since the whole point is that the instructions are sitting there when he opens the app. */
-  if(wd===4 && m>=720){ seed('thufeast'); if(feastCookDay()===4) seed('feast-thu'); }
-  const glM = gymLeaveMin(wd, isoToday());
-  if(glM!=null && wd!==6 && m>=glM-60 && m<=glM+180) seed('lift');
+  /* seededDay is still stamped so the key stays meaningful to anything that reads it, but there
+     is nothing left to seed — see the banner above before adding anything here. */
+  if(seededDayGet()!==t) seededDaySet(t);
 }
 
 /* -- time-aware zone order: the hour decides what sits under the NOW hero -- */
@@ -4005,8 +4077,10 @@ function viewToday(){
         const inMinyan = t => wd>=1 && wd<=5 && t>=420 && t<465;
         const meal = lift-45, caps = lift-25;
         /* roll-up: summary shows the leave time (still editable there); tap to see the pre-workout timeline.
-           Defaults OPEN in the pre-lift window (leave−60 .. lift), collapsed otherwise. */
-        const nm = nowMin(), openGym = openAcc.has('gymtiming') || (nm>=mins-60 && nm<=lift);
+           ⛔ Was `openAcc.has(...) || (nm>=mins-60 && nm<=lift)` — a time window that re-opened this card
+           on EVERY render inside the pre-lift hours, so closing it did nothing until the window passed.
+           Closed by default now, like everything else (his Aug 10 2026 rule; see seedOpenAcc). */
+        const openGym = openAcc.has('gymtiming');
         timingHTML = `
   <details class="card acc" data-acc="gymtiming" style="margin-bottom:10px"${openGym?' open':''}>
     <summary><span style="display:flex;align-items:center;gap:8px;width:100%">
@@ -4097,7 +4171,8 @@ function viewToday(){
   <div class="zhead"><span class="zt">🍽 Food</span><span class="zn">${weekPick(RECIPES).name.toLowerCase().replace(/\s*week$/,'')} week</span></div>
   <div class="card">
     <details class="opt acc" data-acc="cor-day"${openAcc.has('cor-day')?' open':''}>
-      <summary><b>🥣 ${corToday[0]}</b>${tchip('breakfast')} <span class="statline">${corB.mac[0]}·${corB.mac[1]}P</span>${rateBtns('cor:'+corToday[0])}</summary>
+      <summary><b>🥣 ${corToday[0]}</b>${tchip('breakfast')} <span class="statline">${corB.mac[0]}·${corB.mac[1]}P</span>${nextBtns('cor',corIsPicked(isoToday()))}${rateBtns('cor:'+corToday[0])}</summary>
+      ${corIsPicked(isoToday())?`<div class="ingmac" style="margin-top:2px">your pick for today — ↺ goes back to ${(COR_OVERRIDE[isoToday()]||corRotationFor(new Date().getDay()))[0]}</div>`:''}
       <div class="sub" style="margin-top:2px;font-family:var(--mono);color:var(--brass);font-weight:700">${corB.mac[0]} · ${corB.mac[1]}P · ${corB.mac[2]}C · ${corB.mac[3]}F</div>
       <ul class="ing" style="margin-top:6px">
         <li><span>Cream of Rice · ${corB.corFlavor}</span><span class="q">25 g</span></li>
@@ -4110,7 +4185,13 @@ function viewToday(){
         ${corB.spice?`<li><span>${corB.spice}</span><span class="q">to taste</span></li>`:''}
       </ul>
     </details>
-    <div class="opt">
+  </div>
+  ${/* ⭐ Creami gets its OWN card. It used to share one .card with the COR block above, which read as
+       a single joined tile — his ask Aug 10 2026: "dont connect the COR and Creami flavor on today,
+       put a space in between like you did between creami and yogurt." The gap between cards IS the
+       separator; don't merge these two again. */''}
+  <div class="card">
+    <div class="opt" style="border:0;padding:0;margin:0">
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
         : `<div class="head"><b>🍦 ${cupT[0].replace(/^\d+ · /,'')}</b>${tchip(creamiChip)}</div>
@@ -4122,8 +4203,8 @@ function viewToday(){
     const bowlNote = (store.get('qpcut.bowlnote',{}))[isoToday()]; // one-day recipe tweak, auto-clears tomorrow
     return `
   <details class="card acc" data-acc="bowl-day"${openAcc.has('bowl-day')?' open':''}>
-    <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span>${rateBtns('bowl:'+bowlToday.name.replace(/ —.*$/,''))}</summary>
-    <div class="sub" style="margin-top:6px">Yogurt bowl of the day — swap it in for breakfast or a snack. Rotates daily.</div>
+    <summary><h3 style="display:inline;font-size:15px">🍧 ${bowlToday.name.replace(/ —.*$/,'')}</h3> <span class="statline">${bowlToday.vars[0].t[0]}·${bowlToday.vars[0].t[1]}P</span>${nextBtns('bowl',bowlIsPicked(isoToday()))}${rateBtns('bowl:'+bowlToday.name.replace(/ —.*$/,''))}</summary>
+    <div class="sub" style="margin-top:6px">Yogurt bowl of the day — swap it in for breakfast or a snack. Rotates daily.${bowlIsPicked(isoToday())?' <b>Your pick for today</b> — ↺ goes back to the scheduled one.':''}</div>
     ${bowlNote?`<div class="note" style="margin-top:8px">📌 <b>Today’s swap:</b> ${bowlNote}</div>`:''}
     <ul class="ing" style="margin-top:8px">${bowlToday.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l,false,q)}</span><span class="q">${q}</span></li>`).join('')}</ul>
     ${HOWTO[bowlToday.id]?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${HOWTO[bowlToday.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
@@ -4797,8 +4878,6 @@ function viewPrep(){
         <div class="sub" style="margin-top:4px">${ds}${ppTag(ds)}</div>
         ${swap?`<div class="ingmac" style="margin-top:3px">rotation had ${n} — back to the normal cycle tomorrow</div>`:''}</div>`;
     }).join('')}
-    ${COR_WILDCARDS.map(([n,s])=>`<div class="opt"><div class="head"><b>${n}</b></div><div class="sub" style="margin-top:4px">${s}${ppTag(s)}</div></div>`).join('')}
-    <div class="sub" style="margin-top:10px">Base is always B1: COR 25 g + oats 25 g + <b>1 serving protein, WEIGHED</b> (ziplocks — the gram number is on each combo line, servings run 30–41 g by flavor) + berries 70 g + almond butter 32 g.</div>
   </details>
   </section>
   <div class="note">Allergy card: all nuts are off-limits <b>except almonds</b>. Everything in the plan is already screened.</div>`;
@@ -4928,17 +5007,66 @@ function viewTrack(){
   }).join('');
   const withW = entries.filter(e=>e.w!=null);
   const lastE = withW.length? withW[withW.length-1] : null;
-  const cutoff7 = (()=>{ const d=new Date(); d.setDate(d.getDate()-7); return iso(d); })();
-  const cutoff14 = (()=>{ const d=new Date(); d.setDate(d.getDate()-14); return iso(d); })();
-  const w7 = withW.filter(e=>e.d>cutoff7).map(e=>e.w);
-  const wPrev = withW.filter(e=>e.d>cutoff14 && e.d<=cutoff7).map(e=>e.w);
+  /* ⭐ THE HERO NUMBER IS *THIS WEEK'S* AVERAGE (Mon→Sun, partial weeks included) — not a
+     trailing 7 days. His call Aug 10 2026: "this is showing the past 7 days avg. i dont want
+     that. make it show this current weeks avg." The Δ compares it to the previous week's
+     average, so it is week-vs-week on the same basis the Sunday report uses.
+     ⚠️ A partial week can rest on ONE weigh-in, so the weigh-in COUNT rides along with the
+     number. An average of 1 rendered to look like an average of 7 is exactly the
+     confidently-wrong class of defect the guard suites exist to catch. */
   const avg = a => a.length? a.reduce((x,y)=>x+y,0)/a.length : null;
-  const a7 = avg(w7), aP = avg(wPrev);
-  const delta = (a7!=null && aP!=null)? a7-aP : null;
+  const wkW = n => entries.filter(e=>weekOf(e.d)===n && e.w!=null).map(e=>e.w);
+  const curVals = wkW(curWk), prevVals = wkW(curWk-1);
+  const aCur = avg(curVals), aPrev = avg(prevVals);
+  const delta = (aCur!=null && aPrev!=null)? aCur-aPrev : null;
   const firstW = withW.length? withW[0].w : null;
   const GOAL = 165;
-  const goalPct = (firstW!=null && a7!=null && firstW>GOAL)? Math.max(0,Math.min(100,(firstW-a7)/(firstW-GOAL)*100)) : 0;
+  const goalPct = (firstW!=null && aCur!=null && firstW>GOAL)? Math.max(0,Math.min(100,(firstW-aCur)/(firstW-GOAL)*100)) : 0;
   const isSun = new Date().getDay()===0;
+
+  /* ⭐ EVERY LOGGED DAY, rolled up month → week → day (his ask Aug 10 2026: "add a drop down
+     where i could see every single days logs, and within that roll up, have roll ups for months
+     and weeks"). Newest first at all three levels, because the recent past is what he actually
+     re-reads. All three levels are plain openAcc-gated <details>, so they start CLOSED.
+     ⚠️ A calendar week can straddle two months (Jul 27–Aug 2), so the same week number appears
+     under BOTH months with only that month's days in it. The data-acc key therefore carries the
+     month too — a bare `trk-w-<n>` would collide and opening one would silently open the other.
+     The printed day-span is computed from the rows actually present, so each half reads honestly. */
+  const monthBuckets = new Map();
+  entries.slice().reverse().forEach(e=>{
+    const k = e.d.slice(0,7);
+    if(!monthBuckets.has(k)) monthBuckets.set(k,[]);
+    monthBuckets.get(k).push(e);
+  });
+  const avgTag = es => { const v = es.filter(x=>x.w!=null).map(x=>x.w);
+    return v.length? avg(v).toFixed(1)+' avg' : 'no weigh-ins'; };
+  const mdy = d => d.slice(5).replace('-','/');
+  const archiveHTML = [...monthBuckets.entries()].map(([mk,mEs])=>{
+    const mName = new Date(mk+'-15T12:00:00').toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    const wkBuckets = new Map();
+    mEs.forEach(e=>{ const n=weekOf(e.d); if(!wkBuckets.has(n)) wkBuckets.set(n,[]); wkBuckets.get(n).push(e); });
+    const wkHTML = [...wkBuckets.entries()].sort((a,b)=>b[0]-a[0]).map(([n,wEs])=>{
+      const ds = wEs.map(e=>e.d).sort();
+      const span = ds.length>1? `${mdy(ds[0])}–${mdy(ds[ds.length-1])}` : mdy(ds[0]);
+      const dayRows = wEs.map(e=>{
+        const dn = new Date(e.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+        const nm = eaten[e.d]? Object.values(eaten[e.d]).filter(Boolean).length : 0;
+        return `<tr><td>${dn} ${mdy(e.d)}</td><td>${e.w!=null?e.w.toFixed(1):'—'}</td>
+          <td>${e.s!=null?e.s.toFixed(1)+'k':'—'}</td><td>${e.sl!=null?sleepFmt(e.sl):'—'}</td>
+          <td>${nm?nm+'/5':'—'}</td></tr>`;
+      }).join('');
+      const key = `trk-w-${mk}-${n}`;
+      return `<details class="acc innerrow" data-acc="${key}"${openAcc.has(key)?' open':''}>
+        <summary><span>Wk ${n} · ${span}</span><span class="statline">${avgTag(wEs)}</span></summary>
+        <table class="wk"><tr><th>Day</th><th>lbs</th><th>steps</th><th>sleep</th><th>meals</th></tr>${dayRows}</table>
+      </details>`;
+    }).join('');
+    return `<details class="acc innerrow" data-acc="trk-m-${mk}"${openAcc.has('trk-m-'+mk)?' open':''}>
+      <summary><span>${mName}</span><span class="statline">${mEs.length} d · ${avgTag(mEs)}</span></summary>
+      ${wkHTML}
+    </details>`;
+  }).join('');
+
   return `
   <h2 class="sec" style="margin-top:16px">Log · daily, after bathroom, before food</h2>
   <div class="card">
@@ -4962,15 +5090,15 @@ function viewTrack(){
   <div class="card">
     <div class="trkhero">
       <div>
-        <div class="thn">${a7!=null? a7.toFixed(1) : '—'}</div>
-        <div class="thd">7-day average · lbs</div>
+        <div class="thn">${aCur!=null? aCur.toFixed(1) : '—'}</div>
+        <div class="thd">this week · ${curVals.length} weigh-in${curVals.length===1?'':'s'} · lbs</div>
         ${delta!=null?`<span class="dchip ${delta<=0?'dn':'up'}" style="margin-top:6px">${delta<=0?'▼':'▲'} ${Math.abs(delta).toFixed(1)} vs last week</span>`:''}
       </div>
       ${sparkHTML(withW.slice(-14).map(e=>e.w), 110, 44)}
     </div>
-    ${firstW!=null && a7!=null?`
+    ${firstW!=null && aCur!=null?`
     <div class="goalbar"><i style="width:${goalPct}%"></i></div>
-    <div class="sub" style="margin-top:5px">${(firstW-a7).toFixed(1)} lb down since day one · ${(a7-GOAL).toFixed(1)} to go</div>`:''}
+    <div class="sub" style="margin-top:5px">${(firstW-aCur).toFixed(1)} lb down since day one · ${(aCur-GOAL).toFixed(1)} to go</div>`:''}
     <canvas id="wchart" aria-label="Weight and steps trend chart" style="margin-top:12px"></canvas>
     <div class="legend">
       <span><span class="sw" style="background:var(--brass)"></span>weight (7-day trend)</span>
@@ -4987,6 +5115,10 @@ function viewTrack(){
       <summary><span>Weekly averages + goal ETA</span><span class="statline">${delta!=null?`Δ ${delta<=0?'−':'+'}${Math.abs(delta).toFixed(1)}`:''}</span></summary>
       <table class="wk" id="wkTable"></table>
       <div id="etaCard"></div>
+    </details>
+    <details class="acc innerrow" data-acc="trk-all"${openAcc.has('trk-all')?' open':''}>
+      <summary><span>Every day logged</span><span class="statline">${entries.length} days</span></summary>
+      ${archiveHTML||'<div class="sub">Nothing logged yet.</div>'}
     </details>
     <div class="formrow"><button class="btn" id="wkCopy"${isSun?' style="box-shadow:0 0 0 2px color-mix(in srgb,var(--brass) 45%,transparent)"':''}>📋 Copy week report for Claude${isSun?' · it’s Sunday':''}</button></div>
   </div>
@@ -5564,6 +5696,16 @@ function wireToday(){
     const m = store.get('qpcut.tonight',{});
     m[isoToday()] = m[isoToday()]===b.dataset.tn? null : b.dataset.tn;
     store.set('qpcut.tonight',m); render();
+  }));
+  /* flavor stepper — ‹ / next › / ↺ on the Today COR + yogurt-bowl cards. Same preventDefault +
+     stopPropagation as the rating buttons, because these also live inside a <summary> and would
+     otherwise toggle the <details> open/closed on every tap. */
+  document.querySelectorAll('[data-flav]').forEach(b=>b.addEventListener('click',e=>{
+    e.preventDefault(); e.stopPropagation();
+    const kind = b.dataset.flav, dir = +b.dataset.dir, d = isoToday();
+    if(kind==='cor'){ dir===0? corResetPick(d) : corStep(d, new Date().getDay(), dir); }
+    else { dir===0? bowlResetPick(d) : bowlStep(d, dir); }
+    render();
   }));
   document.querySelectorAll('[data-rate]').forEach(b=>b.addEventListener('click',e=>{
     e.preventDefault(); e.stopPropagation();   // don't toggle the bowl <details> when rating it
