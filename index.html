@@ -3991,109 +3991,186 @@ function sparkHTML(vals, w, h, color){
    ⚠️ EVERY ANCHOR NUMBER BELOW IS COPIED FROM AN EXISTING SLOTS ROW, not re-derived, so the salvage
    plate can never disagree with the same food eaten on plan. check-app's [final-meal] guard re-checks
    the solve against a grid of holes and kashrut states. */
-const FINAL_VEG = ['Broccoli, asparagus or string beans', '150 g', [50,3,10,0]];
-const FINAL_PROTEIN = [
-  /* pareve — always legal, no defrost, no cook. The dependable backbone of a late plate. */
-  {id:'tuna',    lane:'pareve', label:'Tuna packets',                 unit:'packet', per:[70,17,0,0],
-   lo:1, hi:5, step:1, prep:'Drain the packets, fork them apart.'},
-  /* pareve — he quick-defrosts salmon. Raw weight, per oz, from d3/d17. */
-  {id:'salmon',  lane:'pareve', label:'Salmon fillet (raw weight)',   unit:'oz',     per:[41.7,6.17,0,1.67],
-   lo:4, hi:10, step:0.5, prep:'Air fryer 400°F, 9–11 min. Salt, pepper, paprika, garlic.'},
-  /* meat — 93/7 ground beef, per oz from d1/d15. Quick-defrost is fine per him. */
-  {id:'beef',    lane:'meat',   label:'93/7 ground beef (raw weight)', unit:'oz',    per:[42.5,5.83,0,2.0],
-   lo:4, hi:9, step:0.5, prep:'Smash thin in a hot dry pan, 2 min a side. Onion-garlic-pepper + deli mustard.'},
-  /* meat — LEFTOVER ONLY. Chicken does not quick-defrost, his own constraint. */
-  {id:'chicken', lane:'meat',   label:'Cooked chicken, LEFTOVER only', unit:'oz',    per:[35,6.29,0,1.0],
-   lo:3, hi:9, step:0.5, leftoverOnly:true, prep:'Already cooked — slice cold or 45 s in the microwave.'},
-  /* dairy — the jiben components as one scalable block: 2 eggs + 100 g whites + 113 g cottage + 28 g mozz */
-  {id:'jiben',   lane:'dairy',  label:'Jiben block: 2 eggs · 100 g whites · 113 g cottage · 28 g mozzarella',
-   unit:'× block', per:[370,42,7,17], lo:0.5, hi:1.5, step:0.25,
-   prep:'Whisk, pour into a hot non-stick pan, fold when it sets. ~5 min.'},
-  /* dairy — zero cook, highest protein per calorie he owns */
-  {id:'yogurt',  lane:'dairy',  label:'FAGE 2% Greek yogurt',          unit:'g',     per:[0.705,0.10,0.03,0.02],
-   lo:150, hi:500, step:10, prep:'Stir a scoop of protein into it first with a splash of Fairlife, then the rest.'},
-];
-const FINAL_CARB = [
-  {id:'rice',   lane:'any', label:'White rice (dry weight)',   unit:'g', per:[3.45,0.073,0.836,0], lo:0,  hi:90,  step:5,
-   prep:'Rice cooker or 10 min boil.'},
-  {id:'potato', lane:'any', label:'Potatoes, ¾" cubes',        unit:'g', per:[0.727,0.018,0.164,0], lo:0, hi:400, step:10,
-   prep:'Air fryer 400°F, 18 min, shake once.'},
-  {id:'ezek',   lane:'any', label:'Ezekiel bread, toasted',    unit:'slice', per:[80,5,15,0.5],     lo:0, hi:4,   step:1,
-   prep:'Toaster.'},
-  {id:'cakes',  lane:'any', label:'Rice cakes',                unit:'cake',  per:[35,0.33,7,0],     lo:0, hi:6,   step:1,
-   prep:'No cook.'},
-];
-const FINAL_FAT = [
-  {id:'guac', lane:'any', label:'Mini guac cup',        unit:'cup', per:[100,1,6,8],                  lo:0, hi:2,  step:1,
-   prep:'Open it.'},
-  {id:'ab',   lane:'any', label:'Almond butter',        unit:'g',   per:[5.94,0.219,0.219,0.531],     lo:0, hi:40, step:2,
-   prep:'His one safe nut. Thin with warm water if it seizes.'},
-  {id:'oil',  lane:'any', label:'Avocado oil, to cook', unit:'tsp', per:[40,0,0,4.5],                 lo:0, hi:3,  step:0.5,
-   prep:'In the pan.'},
-];
-/* TOP-UP ROWS. The 3x3 solve alone cannot close a big hole: every anchor has a physically sane cap
-   (nobody eats 8 tuna packets), so a 1,475 cal / 132 P remainder pinned all three anchors at their
-   ceiling and still landed ~250 cal and ~37 P short. He chose "hit the full number", so a real plate
-   needs MORE COMPONENTS, not bigger ones — that is how anyone actually builds a 1,400 cal dinner.
-   These get added a step at a time, cheapest-error-first, after the exact solve.
+/* ── THE DISHES ────────────────────────────────────────────────────────────────────────────────────
+   ⛔ REWRITTEN Aug 10 2026 after he read the first version: "this isnt what i wanted. i wanted you to
+   put together a recipe for me to cook. what you did was just write a bunch of ingredients."
+   He was right. v1 solved macros against three loose anchors and printed the grams. A gram list is
+   not a recipe. So the DISH is the unit now: a real named plate with a method, and only its SIDES
+   flex to close the macros.
 
-   ⚠️ `lanes` IS A KASHRUT FIELD, NOT A PREFERENCE. Pareve goes with anything.
-   ⭐ FISH IS ALLOWED ON THE MEAT LANE — I first excluded it, on the reasoning that not eating fish and
-   meat at one meal is a standard custom and he keeps the strict 6-hour meat→dairy wait, so leniency
-   was not mine to assume. I flagged it rather than guessing, and ASKED HIM. His answer, Aug 10 2026:
-   "i do." So tuna rides every lane. Two consequences: the meat lane is far easier to solve (tuna is
-   0.243 P per calorie against egg whites' 0.20, so the solver reaches for it first and the plate stops
-   needing 300 g of whites alongside a burger), and the [final-meal] guard's fish-on-meat assertion was
-   deleted — it was enforcing my guess, not his practice. THE LESSON: flag a kashrut assumption and ask;
-   do not encode a stringency he does not keep, and do not encode a leniency either. */
-const FINAL_FILLERS = [
-  /* `dupe` names the anchor this filler IS. If that anchor was already chosen, the filler is skipped —
-     otherwise the card printed "Mini guac cup 2 cups" AND "Mini guac cup, extra 2 cups" and told him
-     to eat four guacs. One food, one row. */
-  {id:'tuna+',  dupe:'tuna',    lanes:['pareve','dairy','meat'], label:'Tuna packet, extra',    unit:'packet', per:[70,17,0,0],    hi:5, step:1},
-  {id:'whites', lanes:['pareve','dairy','meat'],   label:'Egg whites',            unit:'g',      per:[0.5,0.10,0,0], hi:300, step:25}  /* 300 g = ~1.25 cups = 30 P. I first capped this at 200 for "realism" and the [final-meal]
-     guard immediately failed the meat lane by 9 P: beef caps at 14 oz and egg whites are the ONLY
-     protein that may join meat, so 200 g leaves the lane unable to close. For someone eating 187 P
-     a day, 300 g of whites is an ordinary scramble. Don't trim this again without re-running the guard. */,
-  {id:'beef+',  dupe:'beef',    lanes:['meat'],    label:'93/7 ground beef, extra (raw)', unit:'oz', per:[42.5,5.83,0,2.0], hi:5, step:1},
-  {id:'yog+',   dupe:'yogurt',  lanes:['dairy'],   label:'FAGE 2% Greek yogurt, extra', unit:'g', per:[0.705,0.10,0.03,0.02], hi:300, step:50},
-  {id:'ezek+',  dupe:'ezek',    lanes:['pareve','dairy','meat'], label:'Ezekiel bread, toasted',unit:'slice',  per:[80,5,15,0.5],  hi:4, step:1},
-  {id:'pot+',   dupe:'potato',  lanes:['pareve','dairy','meat'], label:'Potatoes, extra',       unit:'g',      per:[0.727,0.018,0.164,0], hi:350, step:25},
-  {id:'cake+',  dupe:'cakes',   lanes:['pareve','dairy','meat'], label:'Rice cakes',            unit:'cake',   per:[35,0.33,7,0],  hi:5, step:1},
-  {id:'rice+',  dupe:'rice',    lanes:['pareve','dairy','meat'], label:'White rice, extra (dry)', unit:'g',    per:[3.45,0.073,0.836,0], hi:60, step:5},
-  {id:'ab+',    dupe:'ab',      lanes:['pareve','dairy','meat'], label:'Almond butter, extra',  unit:'g',      per:[5.94,0.219,0.219,0.531], hi:40, step:4},
-  {id:'guac+',  dupe:'guac',    lanes:['pareve','dairy','meat'], label:'Mini guac cup, extra',  unit:'cup',    per:[100,1,6,8],    hi:2, step:1},
-  /* Hellmann's Real, weighed — the fat that actually belongs on a tuna plate, and it is distinct from
-     both guac and almond butter so it can top up fat when those are already anchors at their cap. */
-  {id:'mayo+',  lanes:['pareve','dairy','meat'],   label:'Hellmann’s Real mayo, weighed', unit:'g', per:[7.5,0,0.125,0.75], hi:24, step:4},
+   THREE RULES THIS DATA EXISTS TO ENFORCE:
+   ① PROTEIN COMES IN WHOLE FROZEN UNITS. His words: "i freeze the meat in 6oz pattys and salmon in
+      ziplocks with 6oz each ... so for example i wont have to defrost 1.5 burgers." So beef and salmon
+      scale 1 → 2 → 3 WHOLE units, never fractionally. Tuna is per packet. Only already-cooked chicken
+      and scoopable yogurt may take arbitrary amounts.
+   ② EVERY QUANTITY IN A STEP IS INTERPOLATED, NEVER TYPED. {pro} {carb} {fat} render the same numbers
+      the ingredient rows show. His complaint: "You also tend to write things that contradict eachother
+      when giving me recipes so make sure its flawless." Care does not scale; structure does. A step
+      CANNOT disagree with the list if it does not hold its own copy of the number.
+      ⚠️ check-app's [final-recipe] guard FAILS the build on any step containing a hand-typed weight
+      (g / oz / mL / tsp / tbsp / packet / slice / cup). Times and temperatures are fine.
+   ③ Steps stay short — "not too wordy but enough to help me cook with ease." 4–6 lines, one action each.
+   Every macro triple is lifted from an existing SLOTS row, so a salvage plate can never disagree with
+   the same food eaten on plan. */
+const FINAL_VEG = ['Broccoli, asparagus or string beans', '150 g', [50,3,10,0]];
+const PRO_BEEF   = {id:'beef',   label:'Beef patties, frozen 6 oz each', unit:'patty',  per:[255,35,0,12], lo:1, hi:3, frozen:true};
+const PRO_SALMON = {id:'salmon', label:'Salmon, frozen 6 oz bags',       unit:'bag',    per:[250,37,0,10], lo:1, hi:3, frozen:true};
+const PRO_TUNA   = {id:'tuna',   label:'Tuna packets',                   unit:'packet', per:[70,17,0,0],   lo:2, hi:5};
+const PRO_CHICK  = {id:'chicken',label:'Cooked chicken, LEFTOVER only',  unit:'oz',     per:[35,6.29,0,1.0], lo:4, hi:10, step:1, leftoverOnly:true};
+const PRO_JIBEN  = {id:'jiben',  label:'Eggs ×2 · egg whites 100 g · cottage cheese 113 g · mozzarella 28 g',
+                    unit:'× block', per:[370,42,7,17], lo:1, hi:2};
+const PRO_YOG    = {id:'yogurt', label:'FAGE 2% Greek yogurt',           unit:'g',      per:[0.705,0.10,0.03,0.02], lo:150, hi:500, step:10};
+const C_RICE  = {id:'rice',   label:'White rice, dry',      unit:'g',     per:[3.45,0.073,0.836,0],  lo:25, hi:115, step:5};
+const C_POT   = {id:'potato', label:'Potatoes, ¾" cubes',   unit:'g',     per:[0.727,0.018,0.164,0], lo:80, hi:420, step:10};
+const C_EZEK  = {id:'ezek',   label:'Ezekiel bread',        unit:'slice', per:[80,5,15,0.5],         lo:1,  hi:4,   step:1};
+const F_SES   = {id:'ses',    label:'Toasted sesame oil',   unit:'tsp',   per:[40,0,0,4.5],          lo:0.5, hi:3,  step:0.5};
+const F_GUAC  = {id:'guac',   label:'Mini guac cups',       unit:'cup',   per:[100,1,6,8],           lo:1,  hi:3,   step:1};
+const F_AB    = {id:'ab',     label:'Almond butter',        unit:'g',     per:[5.94,0.219,0.219,0.531], lo:6, hi:40, step:2};
+const F_MAYO  = {id:'mayo',   label:'Hellmann’s Real mayo, weighed', unit:'g', per:[7.5,0,0.125,0.75], lo:6, hi:28, step:2};
+
+const FINAL_DISHES = [
+ /* ── PAREVE ───────────────────────────────────────────────────────────────────────── */
+ {id:'sesalmon', lane:'pareve', name:'Sesame Salmon over Garlic Rice',
+  note:'Glaze goes on at the END — Lakanto burns black and bitter if it goes in early. He hit that once.',
+  pro:PRO_SALMON, carb:C_RICE, fat:F_SES,
+  extras:[FINAL_VEG,
+          ['Glaze: soy sauce 20 mL · rice vinegar 5 mL · Lakanto Golden 8 g · garlic ¼ tsp · grated ginger ¼ tsp','mix in a cup',[15,1,3,0]],
+          ['Sesame seeds','1 tsp',[18,1,1,1.5]]],
+  steps:['Run {pro} under cold water to defrost, then pat it completely dry — wet fish steams instead of searing.',
+         'Rice on: {carb} with double the water, lid on, 10 min. Fork the garlic through it off the heat.',
+         'Air fryer 400°F, salmon skin-side down, 9–11 min.',
+         'Brush the glaze on for the LAST 3 MINUTES only, not before.',
+         'Sesame oil ({fat}) over the rice, seeds on the fish, veg alongside.']},
+
+ {id:'tunacake', lane:'pareve', name:'Crispy Tuna Cakes + Sriracha Mayo',
+  note:'No defrosting at all — the fastest real dinner on the list.',
+  pro:PRO_TUNA, carb:C_POT, fat:F_MAYO,
+  extras:[FINAL_VEG,
+          ['Egg white, to bind','30 mL',[15,3,0,0]],
+          ['Scallion · everything-bagel seasoning · garlic powder · squeeze of lemon','—',[10,0,2,0]],
+          ['Sriracha, stirred into the mayo','5 g',[5,0,1,0]]],
+  steps:['Potatoes first: {carb}, tossed dry, air fryer 400°F, 18 min, shake once halfway.',
+         'Drain {pro} hard — squeeze the water out or the cakes fall apart.',
+         'Mix the tuna with the egg white, scallion and seasoning. Press into 3 firm patties.',
+         'Hot non-stick pan, 3 min a side, no oil. Do not move them early or the crust tears.',
+         'Stir the sriracha into the mayo ({fat}) and spoon it over. Veg on the side.']},
+
+ {id:'chilisalmon', lane:'pareve', name:'Sweet-Chili Salmon Bowl',
+  note:'His own d17 flavour — the first custom plate he called delicious — rebuilt so it scales.',
+  pro:PRO_SALMON, carb:C_POT, fat:F_AB,
+  extras:[FINAL_VEG,
+          ['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto Golden 8 g · sriracha ½ tsp · garlic powder ¼ tsp','mix in a cup',[15,1,3,0]],
+          ['Warm water, to loosen the drizzle','4–5 tsp',[0,0,0,0]]],
+  steps:['Cold-water defrost {pro} and pat dry. Potatoes: {carb}, air fryer 400°F, 18 min.',
+         'Salmon joins the potatoes in the fryer for the last 10 min.',
+         'Glaze on the fish for the LAST 3 MINUTES only.',
+         'Drizzle: almond butter ({fat}) plus a spoon of the glaze. It SEIZES stiff on the first splash of water — keep adding warm water until it ribbons off the spoon.',
+         'Fish over the potatoes, drizzle across, veg alongside.']},
+
+ /* ── MEAT ─────────────────────────────────────────────────────────────────────────── */
+ {id:'smash', lane:'meat', name:'Smash Burger Bowl',
+  note:'Whole patties only — nothing here asks him to split a frozen one.',
+  pro:PRO_BEEF, carb:C_POT, fat:F_GUAC,
+  extras:[FINAL_VEG,
+          ['Pickles + sliced raw onion','free',[5,0,1,0]],
+          ['Sugar-free ketchup + deli mustard','32 g',[20,0,2,0]],
+          ['Onion powder · garlic powder · black pepper · salt','—',[0,0,0,0]]],
+  steps:['Potatoes: {carb}, air fryer 400°F, 20 min, shake once.',
+         'Season {pro} on both sides. Pan screaming hot and DRY — the fat in the beef is all it needs.',
+         'Press each patty thin with a spatula: 2 min, flip, 90 seconds. That press is the whole crust.',
+         'Build it: potatoes down, patties on top, guac ({fat}), pickles and onion over.',
+         'Ketchup and mustard to finish, veg alongside.']},
+
+ {id:'teriyaki', lane:'meat', name:'Teriyaki Beef & Rice',
+  note:'Crumbled rather than pattied — it stretches one patty across a whole bowl.',
+  pro:PRO_BEEF, carb:C_RICE, fat:F_SES,
+  extras:[FINAL_VEG,
+          ['Sauce: soy 25 mL · rice vinegar 5 mL · Lakanto Golden 10 g · garlic ½ tsp · ginger ¼ tsp','mix in a cup',[20,1,4,0]],
+          ['Scallion + sesame seeds','—',[18,1,1,1.5]]],
+  steps:['Rice on: {carb} with double the water, lid on, 10 min.',
+         'Break {pro} into crumbles in a hot dry pan, 5 min, until the edges catch.',
+         'Veg into the same pan, 2 min, still on high.',
+         'Sauce in, reduce 60–90 seconds until it clings to the beef. Off the heat.',
+         'Over the rice, sesame oil ({fat}), scallion and seeds on top.']},
+
+ {id:'chickbowl', lane:'meat', name:'Warm Chicken & Potato Bowl',
+  note:'Leftover chicken only — he told me chicken does not quick-defrost.',
+  pro:PRO_CHICK, carb:C_POT, fat:F_GUAC,
+  extras:[FINAL_VEG,
+          ['Paprika · cumin · garlic powder · salt · lemon','—',[0,0,0,0]],
+          ['Sugar-free ketchup or hot sauce','32 g',[20,0,2,0]]],
+  steps:['Potatoes: {carb}, air fryer 400°F, 20 min with the spices tossed through.',
+         'Slice {pro} and drop it in for the last 4 min just to warm through — longer and it dries out.',
+         'Bowl it up, guac ({fat}) on top, lemon squeezed over.',
+         'Veg alongside, hot sauce to finish.']},
+
+ /* ── DAIRY ────────────────────────────────────────────────────────────────────────── */
+ {id:'jibenmelt', lane:'dairy', name:'Broccoli Jiben Melt',
+  note:'The jiben he already eats, built as a set skillet melt instead of a scramble.',
+  pro:PRO_JIBEN, carb:C_EZEK, fat:F_AB,
+  extras:[['Broccoli, chopped small','150 g',[50,3,10,0]],
+          ['Marinara, no sugar added','60 g',[30,1,6,0]],
+          ['Garlic powder · oregano · black pepper','—',[0,0,0,0]]],
+  steps:['Whisk {pro} together with the seasoning until it is properly uniform.',
+         'Broccoli into a hot non-stick pan for 2 min, then pour the egg mix over it.',
+         'Lid on, low heat, 5 min — it sets like a frittata. Do not stir it.',
+         'Toast {carb}. Warm the marinara and spoon it over the top.',
+         'Almond butter ({fat}) on the toast, the jiben slid on beside it.']},
+
+ {id:'yogbowl', lane:'dairy', name:'Whipped Protein Bowl — no cook',
+  note:'Zero cooking, about 3 minutes. The one for when he is completely done for the day.',
+  pro:PRO_YOG, carb:C_EZEK, fat:F_AB,
+  extras:[['Ryse protein — his pick of flavour','1 scoop',[140,25,4,2.5]],
+          ['Fairlife 0% milk, to loosen the powder','60 mL',[20,3,2,0]],
+          ['Berries','100 g',[50,1,12,0]],
+          ['Cinnamon + Lakanto Golden','—',[0,0,0,0]]],
+  steps:['Shake the protein into the Fairlife FIRST — powder straight into yogurt clumps every time.',
+         'Whip that into {pro} hard for 30 seconds; it should go thick and glossy, not runny.',
+         'Toast {carb} and cut it into soldiers for dipping.',
+         'Berries and almond butter ({fat}) over the top, cinnamon and Lakanto to finish.']},
 ];
-/* weighted miss: protein counts double because it is the macro he cannot backfill tomorrow, and a
-   gram of it is the whole point of the plate. Calories ride along via Atwater so they are not scored. */
-const fmErr = g => 2*Math.abs(g[1]) + Math.abs(g[2]) + Math.abs(g[3]);
-/* Cramer's rule on a 3x3. Returns null on a singular matrix rather than NaNs that render as "NaN g". */
-function solve3(M, v){
-  const d =
-    M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1]) -
-    M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0]) +
-    M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
-  if(!isFinite(d) || Math.abs(d) < 1e-9) return null;
-  const col = (M, j, v) => M.map((row,i)=> row.map((x,k)=> k===j? v[i] : x));
-  const det = A =>
-    A[0][0]*(A[1][1]*A[2][2]-A[1][2]*A[2][1]) -
-    A[0][1]*(A[1][0]*A[2][2]-A[1][2]*A[2][0]) +
-    A[0][2]*(A[1][0]*A[2][1]-A[1][1]*A[2][0]);
-  return [0,1,2].map(j => det(col(M,j,v)) / d);
+/* Sides that close a residual the dish itself cannot reach. Rendered under a SEPARATE "on the side"
+   heading and never folded into the method — a side smuggled into a recipe's steps is exactly how a
+   recipe starts contradicting itself. */
+const FINAL_SIDES = [
+  {id:'cakes',  lanes:['pareve','dairy','meat'], label:'Rice cakes',             unit:'cake',   per:[35,0.33,7,0],  hi:5,   step:1},
+  {id:'ezek',   lanes:['pareve','dairy','meat'], label:'Ezekiel bread, toasted', unit:'slice',  per:[80,5,15,0.5],  hi:3,   step:1},
+  {id:'tuna',   lanes:['pareve','dairy','meat'], label:'Tuna packet',            unit:'packet', per:[70,17,0,0],    hi:3,   step:1},
+  {id:'whites', lanes:['pareve','dairy','meat'], label:'Egg whites, scrambled',  unit:'g',      per:[0.5,0.10,0,0], hi:300, step:50},
+  {id:'guac',   lanes:['pareve','dairy','meat'], label:'Mini guac cup',          unit:'cup',    per:[100,1,6,8],    hi:2,   step:1},
+  {id:'ab',     lanes:['pareve','dairy','meat'], label:'Almond butter',          unit:'g',      per:[5.94,0.219,0.219,0.531], hi:32, step:4},
+];
+/* ⭐ PROTEIN IS SCORED ASYMMETRICALLY, and that is a nutrition call not a fudge. `gap` is target minus
+   actual, so gap[1] > 0 means SHORT. On a cut, landing OVER on protein is harmless — arguably good —
+   while landing under is the one miss that matters, because he cannot backfill it tomorrow. Scoring
+   |deficit| and |surplus| equally made the solver refuse a dairy plate that overshot 45 P by 15 and
+   pick a worse-fitting one instead. The dairy dishes have high protein floors by nature: one jiben
+   block is 42 P before anything else joins it. So: deficit costs 2.5x, surplus 0.6x. */
+const fmErr   = g => (g[1] > 0 ? 2.5*g[1] : 0.6*(-g[1])) + Math.abs(g[2]) + Math.abs(g[3]);
+/* Calories are ALSO asymmetric, and in the opposite direction to protein: he is cutting, so overshooting
+   the day's remaining calories is a worse miss than landing under it. Without this, loosening the protein
+   surplus penalty above let the solver reach for a third frozen unit and sail 112 cal past the target.
+   gap[0] > 0 = under = cheap; gap[0] < 0 = over = expensive. */
+const fmScore = g => fmErr(g) + (g[0] >= 0 ? g[0]/4 : (-g[0])/1.4);
+/* 2x2 solve for the two flexible sides, once protein is pinned to whole units */
+function solve2(a, b, tC, tF){
+  const det = a[0]*b[1] - a[1]*b[0];
+  if(!isFinite(det) || Math.abs(det) < 1e-9) return null;
+  return [(tC*b[1] - tF*b[0])/det, (a[0]*tF - a[1]*tC)/det];
 }
-const fmSnap = (x, a) => { const s = Math.round(x/a.step)*a.step;
-  return Math.max(a.lo, Math.min(a.hi, s)); };
+const fmSnap = (x, a) => { const st = a.step || 1;
+  return Math.max(a.lo, Math.min(a.hi, Math.round(x/st)*st)); };
 const fmMac = (a, n) => a.per.map(v => v*n);
+const fmPlural = (n,u) => n===1 ? `${n} ${u}`
+  : `${n} ${u==='patty' ? 'patties' : /^(packet|slice|cup|cake|bag)$/.test(u) ? u+'s' : u}`;
+/* frozen units also print the total oz, because that is the number he thinks in */
+const fmQty = (a, n) => a.frozen ? `${fmPlural(n, a.unit)} (${n*6} oz)` : fmPlural(n, a.unit);
+
 /* which kashrut lanes are legal right now, and when a blocked one opens */
 function finalLanes(ld, nowM){
   const eaten = (store.get('qpcut.eaten',{}))[ld] || {};
   const dw = dairyWindow(ld, {asOf: nowM});
-  const dairyFrom = dw.from;
-  const dairyOK = !dw.blocked && (dairyFrom == null || nowM >= dairyFrom);
-  /* meat after dairy is only a 30-minute wait */
+  const dairyOK = !dw.blocked && (dw.from == null || nowM >= dw.from);
   const times = eatTimes(ld);
   const toM = s => { if(!s) return null; const [h,m]=String(s).split(':').map(Number); return h*60+m; };
   let meatFrom = null;
@@ -4102,122 +4179,106 @@ function finalLanes(ld, nowM){
     const t = toM(times[k]); if(t==null || t>=nowM) return;
     const e = t + WAIT_DAIRY_MEAT; if(meatFrom==null || e>meatFrom) meatFrom = e;
   });
-  const meatOK = meatFrom == null || nowM >= meatFrom;
   return {
-    pareve: {ok:true},
-    meat:   {ok:meatOK, from:meatFrom},
-    dairy:  {ok:dairyOK, from:dairyFrom, blocked:!!dw.blocked, why:dw.why},
+    pareve:{ok:true},
+    meat:  {ok: meatFrom==null || nowM>=meatFrom, from:meatFrom},
+    dairy: {ok:dairyOK, from:dw.from, blocked:!!dw.blocked, why:dw.why},
   };
 }
-/* THE ENGINE. Returns null when there is nothing meaningful left to eat. */
+
 function finalMeal(ld, opts){
   opts = opts || {};
   const nowM   = opts.nowM != null ? opts.nowM : nowMin();
   const target = planTarget(ld).t;
   const had    = eatenMacros(ld);
   const left   = target.map((v,i)=> v - had[i]);
-  if(left[0] < 220) return null;                 // under a snack — nothing to salvage
+  if(left[0] < 220) return null;
 
   const lanes = finalLanes(ld, nowM);
   const want  = opts.lane && lanes[opts.lane] ? opts.lane
               : (lanes.pareve.ok ? 'pareve' : lanes.dairy.ok ? 'dairy' : 'meat');
 
-  /* DESSERT: a Creami IS the snack slot (s1 = 317/32/30/7), not a bonus on top — so its macros come
-     OUT of the remainder before the plate is solved. Only offered on a genuinely big hole, and only
-     when dairy is legal now or unlocks soon enough to be worth waiting for. */
+  /* DESSERT — a Creami IS the snack slot (s1), not a bonus, so its macros come OUT of the remainder
+     before the dish is solved. Only on a genuinely big hole, and only if dairy is legal or unlocks soon. */
   const creami = OPTBYID['s1'] ? OPTBYID['s1'].vars[0].t : null;
-  const dOpen  = lanes.dairy.from;
-  const soon   = !lanes.dairy.blocked && dOpen != null && dOpen - nowM > 0 && dOpen - nowM <= 45;
-  let dessert = null;
-  if(creami && left[0] >= 750 && (lanes.dairy.ok || soon)){
-    dessert = {macros:creami, waitUntil: lanes.dairy.ok ? null : dOpen};
-  }
-  const plateT = dessert ? left.map((v,i)=> v - dessert.macros[i]) : left.slice();
+  const soon = !lanes.dairy.blocked && lanes.dairy.from != null &&
+               lanes.dairy.from - nowM > 0 && lanes.dairy.from - nowM <= 45;
+  const dessert = (creami && left[0] >= 750 && (lanes.dairy.ok || soon))
+    ? {macros:creami, waitUntil: lanes.dairy.ok ? null : lanes.dairy.from} : null;
+  const dishT = dessert ? left.map((v,i)=> v - dessert.macros[i]) : left.slice();
 
-  /* fixed rows first — the free veg is real food with real carbs, so it comes off the target */
-  const savory = want !== 'dairy' || true;       // veg goes with every lane; jiben likes it too
-  const fixed  = savory ? [FINAL_VEG] : [];
-  const fixedM = fixed.reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
-  const solveT = plateT.map((v,i)=> v - fixedM[i]);
+  /* pick the dish + the whole-unit protein count that fits best. Chicken is leftover-only, so its dish
+     is never auto-selected — he has to choose it, because he may not have any. */
+  const pool  = FINAL_DISHES.filter(d=> d.lane === want);
+  const cands = pool.filter(d=> !d.pro.leftoverOnly || opts.dish === d.id);
+  let best = null;
+  (cands.length ? cands : pool).forEach(d=>{
+    const pStep = d.pro.step || 1;
+    const fixed = d.extras.reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
+    for(let n = d.pro.lo; n <= d.pro.hi; n += pStep){
+      const afterP = dishT.map((v,i)=> v - fixed[i] - d.pro.per[i]*n);
+      const sol = solve2([d.carb.per[2], d.carb.per[3]], [d.fat.per[2], d.fat.per[3]], afterP[2], afterP[3]);
+      const cQ  = fmSnap(sol ? sol[0] : d.carb.lo, d.carb);
+      const fQ  = fmSnap(sol ? sol[1] : d.fat.lo,  d.fat);
+      const tot = [0,1,2,3].map(i=> fixed[i] + d.pro.per[i]*n + d.carb.per[i]*cQ + d.fat.per[i]*fQ);
+      const gap = dishT.map((v,i)=> v - tot[i]);
+      const sc  = fmScore(gap) + (opts.dish === d.id ? -1000 : 0);   /* his explicit pick always wins */
+      if(best == null || sc < best.sc) best = {sc, d, n, cQ, fQ, tot};
+    }
+  });
+  if(!best) return null;
+  const {d, n, cQ, fQ} = best;
 
-  /* pick anchors: protein by lane (leftover-only items need his confirmation, so they are offered
-     but never auto-chosen), carb + fat by what suits the hole */
-  const pool = FINAL_PROTEIN.filter(a=> a.lane === want);
-  const pa = pool.find(a=> a.id === opts.protein) || pool.find(a=> !a.leftoverOnly) || pool[0];
-  if(!pa) return null;
-  const ca = FINAL_CARB.find(a=> a.id === opts.carb) ||
-             (solveT[2] > 55 ? FINAL_CARB[0] : FINAL_CARB[1]);   // big carb hole → rice, else potato
-  const fa = FINAL_FAT.find(a=> a.id === opts.fat) ||
-             (pa.id === 'yogurt' ? FINAL_FAT[1] : FINAL_FAT[0]); // yogurt plate → almond butter
-
-  const M = [
-    [pa.per[1], ca.per[1], fa.per[1]],
-    [pa.per[2], ca.per[2], fa.per[2]],
-    [pa.per[3], ca.per[3], fa.per[3]],
-  ];
-  const raw = solve3(M, [solveT[1], solveT[2], solveT[3]]);
-  /* fall back to a protein-led greedy fit if the matrix is singular or the answer is nonsense —
-     better a slightly-off plate than a card full of NaN */
-  let n = raw && raw.every(x=>isFinite(x)) ? raw : [solveT[1]/(pa.per[1]||1), 0, 0];
-  const qty = [fmSnap(n[0], pa), fmSnap(n[1], ca), fmSnap(n[2], fa)];
-
-  const plural = (n,u) => `${n} ${u}${n===1?'':(/^(packet|slice|cup|cake)$/.test(u)?'s':'')}`;
-  const rows = [
-    [pa.label, plural(qty[0], pa.unit), fmMac(pa,qty[0]), pa.prep],
-    ...(qty[1] > 0 ? [[ca.label, plural(qty[1], ca.unit), fmMac(ca,qty[1]), ca.prep]] : []),
-    ...(qty[2] > 0 ? [[fa.label, plural(qty[2], fa.unit), fmMac(fa,qty[2]), fa.prep]] : []),
-    [FINAL_VEG[0], FINAL_VEG[1], FINAL_VEG[2], 'Air fryer alongside, or raw.'],
-  ];
-
-  /* TOP-UP: add fillers one step at a time, each time taking the step that most reduces the weighted
-     miss. Stops when nothing helps or the plate is close enough. Bounded iterations so a pathological
-     remainder can never spin. Rows are merged, so "3 extra tuna packets" is one line, not three. */
-  const used = {};
-  const cur = () => rows.reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
-  for(let it=0; it<24; it++){
-    const now = cur();
-    const gapNow = solveT.map((v,i)=> v - (now[i] - fixedM[i]));
-    if(fmErr(gapNow) < 6 && Math.abs(gapNow[0]) < 55) break;
-    let best = null;
-    FINAL_FILLERS.forEach(f=>{
-      if(!f.lanes.includes(want)) return;
-      /* skip a filler that duplicates a chosen anchor — one food gets exactly one row */
-      if(f.dupe && (f.dupe===pa.id || f.dupe===ca.id || f.dupe===fa.id)) return;
-      const have = used[f.id] || 0;
-      if(have + f.step > f.hi) return;
-      const after = gapNow.map((v,i)=> v - f.per[i]*f.step);
-      /* reject a step that overshoots calories badly — better short than stuffed */
+  /* ON THE SIDE — close whatever the dish physically cannot, one step at a time, cheapest error first */
+  const sides = {};
+  for(let it=0; it<20; it++){
+    const cur = [0,1,2,3].map(i=> best.tot[i] + Object.entries(sides)
+      .reduce((a,[id,q])=> a + FINAL_SIDES.find(s=>s.id===id).per[i]*q, 0));
+    const gap = dishT.map((v,i)=> v - cur[i]);
+    if(fmScore(gap) < 12 && Math.abs(gap[0]) < 55) break;
+    let pick = null;
+    FINAL_SIDES.forEach(s=>{
+      if(!s.lanes.includes(want)) return;
+      /* never a side that duplicates something already in the dish — one food, one row */
+      if(s.id === d.carb.id || s.id === d.fat.id || s.id === d.pro.id) return;
+      const have = sides[s.id] || 0; if(have + s.step > s.hi) return;
+      const after = gap.map((v,i)=> v - s.per[i]*s.step);
       if(after[0] < -70) return;
-      const score = fmErr(after);
-      if(best == null || score < best.score) best = {f, score};
+      const sc = fmScore(after);
+      if(pick == null || sc < pick.sc) pick = {s, sc};
     });
-    if(!best || best.score >= fmErr(gapNow)) break;
-    const f = best.f;
-    used[f.id] = (used[f.id] || 0) + f.step;
-    const ex = rows.find(r=> r.fid === f.id);
-    if(ex){ ex[1] = plural(used[f.id], f.unit); ex[2] = f.per.map(v=> v*used[f.id]); }
-    else { const r = [f.label, plural(used[f.id], f.unit), f.per.map(v=> v*used[f.id]), '']; r.fid = f.id; rows.push(r); }
+    if(!pick || pick.sc >= fmScore(gap)) break;
+    sides[pick.s.id] = (sides[pick.s.id] || 0) + pick.s.step;
   }
-  const plateM = rows.reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
+
+  const rows = [
+    [d.pro.label,  fmQty(d.pro, n),               fmMac(d.pro, n)],
+    [d.carb.label, fmPlural(cQ, d.carb.unit),     fmMac(d.carb, cQ)],
+    [d.fat.label, fmPlural(fQ, d.fat.unit), fmMac(d.fat, fQ)],   /* fat floors are >0, so this row always exists — see F_* lo values */
+    ...d.extras.map(r=> [r[0], r[1], r[2]]),
+  ];
+  const sideRows = Object.entries(sides).map(([id,q])=>{
+    const s = FINAL_SIDES.find(x=>x.id===id);
+    return [s.label, fmPlural(q, s.unit), fmMac(s, q)];
+  });
+  /* ⭐ THE ANTI-CONTRADICTION MECHANISM: quantities are SUBSTITUTED IN, never authored. The step and the
+     ingredient row read the same variable, so they cannot disagree no matter how the solve lands. */
+  const steps = d.steps.map(t => t
+    .replace(/\{pro\}/g,  '<b>' + fmQty(d.pro, n) + '</b>')
+    .replace(/\{carb\}/g, '<b>' + fmPlural(cQ, d.carb.unit) + '</b>')
+    .replace(/\{fat\}/g,  '<b>' + fmPlural(fQ, d.fat.unit) + '</b>'));
+
+  const plateM = rows.concat(sideRows).reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
   const totalM = dessert ? plateM.map((v,i)=> v + dessert.macros[i]) : plateM;
   const gap    = left.map((v,i)=> Math.round((v - totalM[i])*10)/10);
+  /* asymmetric, matching fmErr and the [final-meal] guard: being OVER on protein is not a miss on a
+     cut, so it must not raise the warning banner. Only a deficit, or an absurd surplus, counts. */
+  const short  = Math.abs(gap[0]) > 60 || gap[1] > 8 || gap[1] < -30;
 
-  /* ⚠️ HONESTY VALVE. He chose "hit the full number" — but he chose it against a 1,400 cal hole. If he
-     has eaten only a pre-lift, the remainder is ~2,020 cal / 171 P, which is not a meal, it is a day.
-     No plate closes that, and pretending otherwise by stacking absurd quantities would be the
-     confidently-wrong failure this whole app is built to avoid. So past a point the tool says what it
-     cannot do and hands him the number it left on the table. [final-meal] allows a miss ONLY when this
-     flag is set, so the valve can never quietly become an excuse for a sloppy solve on a normal hole. */
-  const short = Math.abs(gap[0]) > 60 || Math.abs(gap[1]) > 8;
   return {
-    left, lanes, lane:want, rows, dessert, short,
-    oneSitting: left[0] <= 1700,
-    plate: plateM.map(v=>Math.round(v)),
-    total: totalM.map(v=>Math.round(v)),
-    gap,
-    anchors:{protein:pa, carb:ca, fat:fa},
-    pool,
-    /* which slots this meal is standing in for — everything unlogged, in slot order */
+    left, lanes, lane:want, dish:d, dishes:pool, steps, rows, sideRows, dessert,
+    plate: plateM.map(v=>Math.round(v)), total: totalM.map(v=>Math.round(v)),
+    gap, short, oneSitting: left[0] <= 1700,
     covers: SLOT_SEQ.filter(k=> !((store.get('qpcut.eaten',{}))[ld]||{})[k]),
   };
 }
@@ -4491,51 +4552,64 @@ function viewToday(){
     ${HOWTO[bowlToday.id]?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${HOWTO[bowlToday.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
   </details>`;})():''}
   ${(()=>{
-    /* 🛟 FINAL MEAL — only appears when there is a real hole left. It is deliberately NOT time-gated:
-       if he is 900 cal down at 4 PM the same card is the right answer, and gating it to "late" would
-       hide the tool exactly on the days he opens the app early to plan the catch-up. */
+    /* 🛟 FINAL MEAL — appears only when there is a real hole left, and deliberately NOT time-gated: if
+       he is 900 down at 4 PM this is still the right card, and gating it to "late" would hide the tool
+       exactly on the days he opens the app early to plan the catch-up.
+       ⭐ IT RENDERS A RECIPE, NOT AN INGREDIENT LIST. His words on v1: "this isnt what i wanted ... what
+       you did was just write a bunch of ingredients." So: dish name first, then the method, and the
+       macro table sits UNDER the cooking, not over it. */
     const fm = finalMeal(isoToday(), (store.get('qpcut.fmpick',{}))[isoToday()]);
     if(!fm) return '';
     const laneBtn = (k,lbl)=>{
       const st = fm.lanes[k];
-      const cls = fm.lane===k? 'mealpick on' : 'mealpick';
-      const tag = st.ok? '' : (st.blocked? ' 🚫' : ` · ${fmtMin(st.from)}`);
-      return `<button class="${cls}${st.ok?'':' nomeat'}" data-fmlane="${k}">${lbl}${tag}</button>`;
+      const tag = st.ok? '' : (st.blocked? ' 🚫' : ' · ' + fmtMin(st.from));
+      return `<button class="mealpick${fm.lane===k?' on':''}${st.ok?'':' nomeat'}" data-fmlane="${k}">${lbl}${tag}</button>`;
     };
-    const macLine = m => `${Math.round(m[0])} · ${Math.round(m[1])}P · ${Math.round(m[2])}C · ${Math.round(m[3])}F`;
-    const off = fm.gap.map(Math.abs);
+    const mac = m => `${Math.round(m[0])} · ${Math.round(m[1])}P · ${Math.round(m[2])}C · ${Math.round(m[3])}F`;
+    const off = fm.gap.map(v=>Math.abs(v));
     const tight = off[0] <= 40 && off[1] <= 6;
     return `
   <details class="card acc" data-acc="finalmeal"${openAcc.has('finalmeal')?' open':''} id="fmCard">
     <summary><h3 style="display:inline;font-size:16px">🛟 Final meal</h3>
       <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>
     <div class="sub" style="margin-top:6px">${fm.covers.length>1
-      ? `You're short <b>${fm.covers.map(k=>SLOTS.find(s=>s.key===k).slot.toLowerCase()).join(', ')}</b>. One plate closes it.`
-      : `One plate closes the day.`}</div>
-    <div class="slotlbl" style="margin-top:10px">Which lane?</div>
+      ? `Short <b>${fm.covers.map(k=>SLOTS.find(s=>s.key===k).slot.toLowerCase()).join(', ')}</b>. One cook closes it.`
+      : `One cook closes the day.`}</div>
+
+    <div class="slotlbl" style="margin-top:10px">Lane</div>
     <div class="pickrow">${laneBtn('pareve','Pareve')}${laneBtn('meat','Meat')}${laneBtn('dairy','Dairy')}</div>
     ${!fm.lanes.dairy.ok && fm.lanes.dairy.why? `<div class="ingmac" style="margin-top:4px">${fm.lanes.dairy.why}</div>`:''}
-    ${fm.pool.length>1? `<div class="slotlbl" style="margin-top:10px">Protein</div>
-    <div class="pickrow">${fm.pool.map(a=>`<button class="mealpick${fm.anchors.protein.id===a.id?' on':''}" data-fmpro="${a.id}">${a.id==='jiben'?'Jiben':a.id==='yogurt'?'Yogurt':cap(a.id)}${a.leftoverOnly?' *':''}</button>`).join('')}</div>
-    ${fm.pool.some(a=>a.leftoverOnly)? `<div class="ingmac" style="margin-top:4px">* leftover only — chicken doesn’t quick-defrost</div>`:''}`:''}
-    <div class="budget" style="margin-top:10px"><span><b>THE PLATE</b> ${macLine(fm.plate)}</span></div>
-    <ul class="ing" style="margin-top:6px">
-      ${fm.rows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}
-    </ul>
-    <ul class="sched" style="margin-top:6px">
-      ${fm.rows.filter(r=>r[3]).map((r,i)=>`<li><span class="t">${i+1}</span><span>${r[3]}</span></li>`).join('')}
-    </ul>
+    ${fm.dishes.length>1? `<div class="slotlbl" style="margin-top:10px">Dish</div>
+    <div class="pickrow">${fm.dishes.map(x=>`<button class="mealpick${fm.dish.id===x.id?' on':''}" data-fmdish="${x.id}">${x.name.replace(/ —.*$/,'').replace(/^(\S+\s\S+).*$/,(m,a)=>x.name.length>22?a+'…':x.name)}${x.pro.leftoverOnly?' *':''}</button>`).join('')}</div>
+    ${fm.dishes.some(x=>x.pro.leftoverOnly)? `<div class="ingmac" style="margin-top:4px">* leftovers only — chicken doesn’t quick-defrost</div>`:''}`:''}
+
+    <h3 style="margin:14px 0 0;font-size:17px">${fm.dish.name}</h3>
+    <div class="sub" style="margin-top:2px;font-family:var(--mono);color:var(--brass);font-weight:700">${mac(fm.plate)}</div>
+
+    <div class="slotlbl" style="margin-top:10px">You need</div>
+    <ul class="ing">${fm.rows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
+
+    <div class="slotlbl" style="margin-top:10px">👨‍🍳 Cook it</div>
+    <ul class="sched" style="margin-top:4px">${fm.steps.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+    ${fm.dish.note? `<div class="note" style="margin-top:8px">${fm.dish.note}</div>`:''}
+
+    ${fm.sideRows.length? `
+    <div class="slotlbl" style="margin-top:12px">On the side</div>
+    <div class="ingmac">Not part of the recipe — this is what closes the last of the numbers.</div>
+    <ul class="ing" style="margin-top:4px">${fm.sideRows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>`:''}
+
     ${fm.dessert? `
-    <div class="budget" style="margin-top:10px"><span><b>DESSERT</b> ${macLine(fm.dessert.macros)}</span></div>
-    <div class="sub" style="margin-top:4px">🍦 ${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Topping: ${cupT[4]}
-      ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that's when dairy opens.`:''}</div>
+    <div class="slotlbl" style="margin-top:12px">🍦 Dessert · ${mac(fm.dessert.macros)}</div>
+    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping: ${cupT[4]}
+      ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that’s when dairy opens.`:''}</div>
     <div class="ingmac" style="margin-top:4px">This is your snack slot, not an extra — its ${Math.round(fm.dessert.macros[0])} cal were already in the day.</div>`:''}
-    <div class="budget" style="margin-top:10px"><span><b>TOTAL</b> ${macLine(fm.total)}</span><span>vs ${macLine(fm.left)} left</span></div>
+
+    <div class="budget" style="margin-top:12px"><span><b>TOTAL</b> ${mac(fm.total)}</span><span>vs ${mac(fm.left)} left</span></div>
     <div class="ingmac" style="margin-top:4px">${tight
       ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`
       : !fm.oneSitting
-        ? `⚠️ <b>This is bigger than one sitting.</b> ${fm.left[0]} cal and ${fm.left[1]}P is most of a day, not a meal — the closest honest plate leaves ${off[0]} cal and ${off[1]}P on the table. Eat this, go to bed under, and don't chase the rest. One short day costs you nothing.`
-        : `⚠️ Closest fit is ${fm.gap[0]>0?`${off[0]} cal short`:`${off[0]} cal over`}, ${fm.gap[1]>0?`${off[1]}P short`:`${off[1]}P over`}. Change the protein or the lane to get closer.`}</div>
+        ? `⚠️ <b>This is bigger than one sitting.</b> ${fm.left[0]} cal and ${fm.left[1]}P is most of a day, not a meal — the closest honest plate leaves ${off[0]} cal and ${off[1]}P on the table. Eat this, go to bed under, and don’t chase the rest. One short day costs you nothing.`
+        : `⚠️ Closest fit is ${fm.gap[0]>0?`${off[0]} cal short`:`${off[0]} cal over`}, ${fm.gap[1]>0?`${off[1]}P short`:`${off[1]}P over`}. Try another dish or lane.`}</div>
     <div class="formrow"><button class="btn" id="fmLog">Log it${fm.covers.length>1?` · closes ${fm.covers.length} slots`:''}</button></div>
   </details>`;
   })()}
@@ -6031,15 +6105,16 @@ function wireToday(){
     m[isoToday()] = m[isoToday()]===b.dataset.tn? null : b.dataset.tn;
     store.set('qpcut.tonight',m); render();
   }));
-  /* 🛟 Final meal — lane + protein pickers, and the log button. */
+  /* 🛟 Final meal — lane + dish pickers, and the log button. */
   document.querySelectorAll('[data-fmlane]').forEach(b=>b.addEventListener('click',()=>{
     const m = store.get('qpcut.fmpick',{}); const d = isoToday();
-    /* changing the lane invalidates the protein choice — a beef pick makes no sense on the dairy lane */
+    /* changing the lane CLEARS the dish — a Smash Burger pick means nothing on the dairy lane, and
+       carrying it over would make the solver silently ignore an id it cannot find. */
     m[d] = {lane:b.dataset.fmlane}; store.set('qpcut.fmpick',m); render();
   }));
-  document.querySelectorAll('[data-fmpro]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-fmdish]').forEach(b=>b.addEventListener('click',()=>{
     const m = store.get('qpcut.fmpick',{}); const d = isoToday();
-    m[d] = {...(m[d]||{}), protein:b.dataset.fmpro}; store.set('qpcut.fmpick',m); render();
+    m[d] = {...(m[d]||{}), dish:b.dataset.fmdish}; store.set('qpcut.fmpick',m); render();
   }));
   const fmb = $('#fmLog');
   if(fmb) fmb.addEventListener('click',()=>{
@@ -6055,7 +6130,10 @@ function wireToday(){
     fm.covers.forEach(k=>{ if(!eat[d][k]) eat[d][k] = 'final'; });
     store.set('qpcut.eaten', eat);
     const ops = store.get('qpcut.offplan',{}); ops[d] = ops[d] || [];
-    ops[d].push({text:`Final meal — ${fm.rows.map(r=>`${r[0].split(':')[0]} ${r[1]}`).join(', ')}` +
+    /* name the DISH in the log, not a list of parts — the week report reads better and it is what he
+       will actually recognise a month later */
+    ops[d].push({text:`Final meal — ${fm.dish.name}` +
+                       (fm.sideRows.length? ` + ${fm.sideRows.map(r=>r[1]).join(', ')}` : '') +
                        (fm.dessert? ' + Creami' : ''),
                  cal:fm.total[0], p:fm.total[1], c:fm.total[2], f:fm.total[3], fixes:[], src:'final'});
     store.set('qpcut.offplan', ops);

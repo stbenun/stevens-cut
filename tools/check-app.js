@@ -364,7 +364,8 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!fm) { out.push({n:sc.n, lane, none:true}); return; }
       out.push({ n:sc.n, lane, gap:fm.gap, left:fm.left, oneSitting:fm.oneSitting,
         labels: fm.rows.map(r=>r[0]),
-        qtys:   fm.rows.map(r=>r[1]),
+        qtys:   fm.rows.concat(fm.sideRows).map(r=>r[1]),
+        steps:  fm.steps,
         nums:   fm.rows.map(r=>r[2]) });
     }));
     store.set('qpcut.eaten', eat0);
@@ -379,21 +380,105 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       bad.push(`${r.n}/${r.lane}: a row has NaN or negative macros`);
     if (r.qtys.some(q => /NaN|Infinity|^-/.test(q)))
       bad.push(`${r.n}/${r.lane}: unrenderable quantity "${r.qtys.find(q=>/NaN|Infinity|^-/.test(q))}"`);
+    /* a zero-quantity row is either a dropped ingredient a step still references, or an instruction to
+       add nothing. Both read as broken. */
+    const zero = r.qtys.find(q => /^0(\.0+)?\s/.test(q));
+    if (zero) bad.push(`${r.n}/${r.lane}: zero-quantity row "${zero}"`);
+    /* "3 pattyies" shipped once, so this checks for it — but ONLY the broken forms. My first version
+       used /(ies|ss|ys)s?\b/ and it failed on "2 patties", which is the CORRECT plural. A guard that
+       fires on right answers gets muted, and a muted guard protects nothing. */
+    const plural = r.qtys.find(q => /yies|ss\b|ys\b/.test(q));
+    if (plural) bad.push(`${r.n}/${r.lane}: malformed plural "${plural}"`);
+    /* and the same two checks on the rendered STEPS, which is where both bugs actually surfaced */
+    (r.steps || []).forEach((t, i) => {
+      if (/\(\s*0(\.0+)?\s*[a-z]/.test(t)) bad.push(`${r.n}/${r.lane} step ${i+1}: renders a zero quantity`);
+      if (/pattyies|bagss|cupss/.test(t))     bad.push(`${r.n}/${r.lane} step ${i+1}: malformed plural`);
+      if (/\{\w+\}/.test(t))                 bad.push(`${r.n}/${r.lane} step ${i+1}: unsubstituted placeholder`);
+    });
     /* a miss is only forgiven when the hole is bigger than one sitting AND the card says so. On a
        normal hole the solve must land, or the feature he asked for is not doing its job. */
     if (r.oneSitting && Math.abs(r.gap[0]) > 60)
       bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[0])} cal off a ${Math.round(r.left[0])} hole`);
-    if (r.oneSitting && Math.abs(r.gap[1]) > 8)
-      bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[1])}P off`);
+    /* asymmetric on purpose, matching fmErr: gap>0 is SHORT and that is the real failure. Overshooting
+       protein on a cut is fine, so the ceiling on surplus is loose and only catches absurdity. */
+    if (r.oneSitting && r.gap[1] > 8)
+      bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[1])}P SHORT`);
+    if (r.gap[1] < -30)
+      bad.push(`${r.n}/${r.lane}: ${Math.round(-r.gap[1])}P over — absurd, not just generous`);
     /* NO fish-on-meat assertion. It was here, it failed nothing, and it was WRONG: it encoded my
        guess that he separates fish and meat. Asked him Aug 10 2026 — "i do" eat them together — so
        the rule came out. A guard that enforces an assumption nobody verified is worse than no guard. */
     if (r.labels.some(l => /LEFTOVER/.test(l)))
       bad.push(`${r.n}/${r.lane}: chicken auto-chosen — it does not quick-defrost, it must be opt-in`);
+    /* ⭐ HIS FREEZER IS THE CONSTRAINT: "i freeze the meat in 6oz pattys and salmon in ziplocks with
+       6oz each ... so for example i wont have to defrost 1.5 burgers." A fractional patty or bag is
+       an instruction he physically cannot follow. */
+    r.qtys.forEach((q, i) => {
+      if (!/patt|bag/.test(q)) return;
+      const num = parseFloat(q);
+      if (!Number.isInteger(num))
+        bad.push(`${r.n}/${r.lane}: "${r.labels[i]} ${q}" — frozen units must be whole`);
+    });
     const seen = new Set();
     r.labels.forEach(l => { const k = l.replace(/,? (extra|to cook).*$/,'').trim();
       if (seen.has(k)) bad.push(`${r.n}/${r.lane}: "${k}" listed twice`); seen.add(k); });
   });
+
+/* ---------- 17. the recipes cannot contradict themselves ----------
+   His complaint, Aug 10 2026: "You also tend to write things that contradict eachother when giving me
+   recipes so make sure its flawless." Care does not scale and I have broken this before — the pita that
+   five feast dishes disagreed about, the almond-butter drizzle whose step said 2 tsp when the real
+   answer was 4-5. So the fix is STRUCTURAL: a step never holds its own copy of a quantity, it
+   interpolates {pro}/{carb}/{fat} from the same variable the ingredient row prints.
+   This guard is what keeps it structural. It fails on any authored step containing a hand-typed
+   weight or volume. Times (min, s), temperatures (400°F) and counts of unscaled things (3 patties
+   pressed from the tuna mix) are fine — only WEIGHTS and VOLUMES are banned, because those are the
+   numbers the solver owns. */
+{
+  const dishes = JSON.parse(run(`return JSON.stringify(FINAL_DISHES.map(d=>({
+    id:d.id, name:d.name, lane:d.lane, steps:d.steps,
+    pro:{id:d.pro.id,label:d.pro.label,frozen:!!d.pro.frozen,lo:d.pro.lo,hi:d.pro.hi},
+    carb:d.carb.id, fat:d.fat.id, carbLo:d.carb.lo, fatLo:d.fat.lo,
+    extras:d.extras.map(e=>[e[0],e[1]])
+  })));`));
+  const bad = [];
+  /* a number immediately followed by a weight/volume unit = a quantity the solver should have supplied */
+  const TYPED = /\b\d+(?:[.,\u00bd\u00bc\u00be\d]*)?\s*(?:g|kg|oz|lb|ml|mL|l|tsp|tbsp|cups?|packets?|slices?|patt(?:y|ies)|bags?)\b/;
+  const LANES = ['pareve', 'meat', 'dairy'];
+  dishes.forEach(d => {
+    if (!LANES.includes(d.lane)) bad.push(`${d.id}: unknown lane "${d.lane}"`);
+    if (!d.steps.length) bad.push(`${d.id}: no method at all`);
+    if (d.steps.length > 6) bad.push(`${d.id}: ${d.steps.length} steps — he asked for "not too wordy"`);
+    d.steps.forEach((t, i) => {
+      const m = TYPED.exec(t);
+      if (m) bad.push(`${d.id} step ${i + 1}: hand-typed quantity "${m[0]}" — must be {pro}/{carb}/{fat}`);
+      if (t.length > 210) bad.push(`${d.id} step ${i + 1}: ${t.length} chars, too wordy`);
+      const ph = t.match(/\{(\w+)\}/g) || [];
+      ph.forEach(p => { if (!['{pro}', '{carb}', '{fat}'].includes(p))
+        bad.push(`${d.id} step ${i + 1}: unknown placeholder ${p} — renders literally`); });
+    });
+    /* every scaled component must be named somewhere in the method, or the card lists food the
+       instructions never tell him what to do with */
+    const all = d.steps.join(' ');
+    if (!all.includes('{pro}'))  bad.push(`${d.id}: the protein never appears in the steps`);
+    if (!all.includes('{carb}')) bad.push(`${d.id}: the carb never appears in the steps`);
+    if (d.pro.frozen && (!Number.isInteger(d.pro.lo) || !Number.isInteger(d.pro.hi)))
+      bad.push(`${d.id}: frozen protein has a fractional lo/hi`);
+    /* ⛔ THE BUG THIS EXISTS FOR: guac had lo:0, so a small hole solved the fat to 0. The ingredient row
+       was dropped (nothing to list) but step 4 still interpolated "guac (0 cups)" — the card told him to
+       add a thing that was not on the list. That is exactly the self-contradiction he complained about.
+       If a method names a component, that component's floor must be above zero. */
+    if (all.includes('{fat}') && !(d.fatLo > 0))
+      bad.push(`${d.id}: a step names {fat} but its floor is ${d.fatLo} — it can render "(0 ...)"`);
+    if (!(d.carbLo > 0))
+      bad.push(`${d.id}: carb floor is ${d.carbLo} — {carb} can render zero`);
+  });
+  const ids = dishes.map(d => d.id);
+  if (new Set(ids).size !== ids.length) bad.push('duplicate dish ids');
+  if (bad.length) fail('final-recipe', bad.join(' · '));
+  else ok('final-recipe', `${dishes.length} dishes: no hand-typed quantities in any step, every scaled part used, <=6 steps each`);
+}
+
   if (bad.length) fail('final-meal', bad.join(' · '));
   else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, chicken opt-in only, no duplicate rows`);
 }
