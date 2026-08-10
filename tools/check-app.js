@@ -336,5 +336,68 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('name-leak', 'no real name on any file this repo publishes (URL excepted — irreducible)');
 }
 
+/* ---------- 16. the Final Meal solver actually closes the day ----------
+   He chose "hit the full number, plate + dessert" over "protein first, accept being under", so a
+   solver that lands 250 cal short is not a rough edge — it is the feature failing. It DID land 250
+   short on the first build, because every anchor has a sane cap and three anchors cannot span a
+   1,475 cal hole; the filler pass exists to fix that and this guard is what keeps it fixed.
+   Also enforces the two rules that are correctness, not taste:
+     - FISH NEVER ON THE MEAT LANE (fish-with-meat is a real separation, and he keeps the strict
+       6-hour meat->dairy wait, so leniency here is not mine to assume)
+     - CHICKEN IS NEVER AUTO-CHOSEN. He said beef and salmon quick-defrost and chicken does not, so
+       chicken may only ever appear when he explicitly picks it as a leftover. */
+{
+  const scen = JSON.stringify([
+    {n:'only breakfast',      eaten:{pre:'p5',bf:'b1'},                     at:{bf:'11:40'}},
+    {n:'missed dinner',       eaten:{pre:'p5',bf:'b1',lu:'l2',sn:'s1'},     at:{lu:'15:00',sn:'19:30'}},
+    {n:'missed snack+dinner', eaten:{pre:'p5',bf:'b1',lu:'l1'},             at:{lu:'15:41'}},
+    {n:'only pre-lift',       eaten:{pre:'p5'},                             at:{pre:'08:00'}},
+  ]);
+  const res = run(`
+    const S = ${scen}, LANES = ['pareve','meat','dairy'], out = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{});
+    S.forEach(sc => LANES.forEach(lane => {
+      store.set('qpcut.eaten', Object.assign({}, eat0, {[D]: sc.eaten}));
+      store.set('qpcut.eatenAt.'+dkey(D), sc.at);
+      store.set('qpcut.offplan', {});
+      let fm; try { fm = finalMeal(D, {nowM: 22*60, lane}); }
+      catch(e){ out.push({n:sc.n, lane, err:String(e.message||e)}); return; }
+      if(!fm) { out.push({n:sc.n, lane, none:true}); return; }
+      out.push({ n:sc.n, lane, gap:fm.gap, left:fm.left, oneSitting:fm.oneSitting,
+        labels: fm.rows.map(r=>r[0]),
+        qtys:   fm.rows.map(r=>r[1]),
+        nums:   fm.rows.map(r=>r[2]) });
+    }));
+    store.set('qpcut.eaten', eat0);
+    return JSON.stringify(out);
+  `);
+  const rows = JSON.parse(res);
+  const bad = [];
+  rows.forEach(r => {
+    if (r.err)  { bad.push(`${r.n}/${r.lane}: THREW ${r.err}`); return; }
+    if (r.none) { bad.push(`${r.n}/${r.lane}: returned nothing but the hole is real`); return; }
+    if (r.nums.some(m => m.some(v => !isFinite(v) || v < 0)))
+      bad.push(`${r.n}/${r.lane}: a row has NaN or negative macros`);
+    if (r.qtys.some(q => /NaN|Infinity|^-/.test(q)))
+      bad.push(`${r.n}/${r.lane}: unrenderable quantity "${r.qtys.find(q=>/NaN|Infinity|^-/.test(q))}"`);
+    /* a miss is only forgiven when the hole is bigger than one sitting AND the card says so. On a
+       normal hole the solve must land, or the feature he asked for is not doing its job. */
+    if (r.oneSitting && Math.abs(r.gap[0]) > 60)
+      bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[0])} cal off a ${Math.round(r.left[0])} hole`);
+    if (r.oneSitting && Math.abs(r.gap[1]) > 8)
+      bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[1])}P off`);
+    if (r.lane === 'meat' && r.labels.some(l => /tuna|salmon/i.test(l)))
+      bad.push(`${r.n}/meat: fish on the meat lane — ${r.labels.find(l=>/tuna|salmon/i.test(l))}`);
+    if (r.labels.some(l => /LEFTOVER/.test(l)))
+      bad.push(`${r.n}/${r.lane}: chicken auto-chosen — it does not quick-defrost, it must be opt-in`);
+    const seen = new Set();
+    r.labels.forEach(l => { const k = l.replace(/,? (extra|to cook).*$/,'').trim();
+      if (seen.has(k)) bad.push(`${r.n}/${r.lane}: "${k}" listed twice`); seen.add(k); });
+  });
+  if (bad.length) fail('final-meal', bad.join(' · '));
+  else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, no fish on meat, chicken opt-in only`);
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
