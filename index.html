@@ -2327,11 +2327,21 @@ const COR_SETS = [
   ['Carrot Cake Bowl','Carrot Cake COR + Vanilla Ice Cream Ryse — 15 g raisins'],
  ],
  [
-  ['Chocolate Caramel Cake','Chocolate Cake COR + Vanilla Ice Cream Ryse + caramel extract — strawberries'],
+  /* Confetti Fudge gets a REAL slot rather than dying as the Aug 10 override he never ate (I was too
+     slow; he built his own breakfast first). It displaces 'Chocolate Caramel Cake' = Chocolate Cake COR
+     + Vanilla Ice Cream + caramel extract, which carried BOTH of his negative signals at once — vanilla
+     filler and caramel, his only 👎 (Salted Caramel Cheesecake). Keeps the Chocolate Cake base, and
+     finally puts Jet-Puffed Birthday Cake to work; its sprinkles are in the powder. */
+  ['Confetti Fudge','Chocolate Cake COR + Jet-Puffed Birthday Cake Ryse — strawberries'],
   ['Banana Cream Pie','Coconut Cream Pie COR + Vanilla Ice Cream Ryse + banana extract — berries + 3 Nilla wafers'],
   ['Snickerdoodle','Cinnamon Roll COR + Cinnamon Toast Ryse — berries + 3 Nilla wafers + extra cinnamon'],
   ['Fruity Cereal Milk','Fruity Cereal COR + Vanilla Ice Cream Ryse — strawberries'],
-  ['Panettone','Panettone COR + Vanilla Ice Cream Ryse + orange extract — 15 g raisins'],
+  /* ⭐ HIS OWN COMBO, and he rated it 👍 unprompted (Aug 10 2026: "i did panettone and chocolate cookie
+     blast cuz you took too long. i like this flavor.").
+     This REPLACES the combo that used to sit here — 'Panettone' = Panettone COR + Vanilla Ice Cream +
+     orange extract — which he had rated 😐. Same COR base, different protein, opposite verdict: that is
+     a clean same-base A/B saying the 😐 was the VANILLA, not the Panettone. Vanilla filler 18 → 16. */
+  ['Chocolate Chip Panettone','Panettone COR + Chocolate Cookie Blast — berries'],
   ['Salted Caramel Cheesecake','Salted Caramel COR + Vanilla Ice Cream Ryse — strawberries + 3 Nilla wafers'],
   ['Peaches n Cream','Georgia Peach COR + Vanilla Ice Cream Ryse — berries'],
  ],
@@ -2492,7 +2502,14 @@ const COR_OVERRIDE = {
      powder, so chocolate + confetti needs no extra ingredient, and by his own note Jet-Puffed
      "supports most flavors and gives them that sweet yummy flavor." Chocolate Cake has met 6
      proteins and never this one. Crunch-free, so it holds the clean 545 · 39P · 54C · 22F. */
-  '2026-08-10': ['Confetti Fudge','Chocolate Cake COR + Jet-Puffed Birthday Cake Ryse — strawberries'],
+  /* ⚠️ CORRECTED to what he ACTUALLY ate. My Confetti Fudge pick landed after he had already made
+     breakfast — "cuz you took too long" — so he built Panettone COR + Chocolate Cookie Blast himself and
+     liked it. Today's card now records the real bowl instead of the one I proposed; Confetti Fudge moved
+     to a permanent COR_SETS slot (set 4, day 0) so it is not lost.
+     LESSON, and it is the important one: a same-day flavor swap is worthless if it arrives after
+     breakfast. HE EATS BREAKFAST AROUND 11:40 ON WEEKDAYS. Past that, don't ship a dated override at
+     all — tell him to press `next ›`, which is exactly why that button now exists. */
+  '2026-08-10': ['Chocolate Chip Panettone','Panettone COR + Chocolate Cookie Blast — berries'],
 };
 
 /* ---- HIS OWN per-day flavor pick: the "next ›" buttons on the Today COR and yogurt-bowl cards.
