@@ -460,6 +460,36 @@
        margin-top:12px;padding-top:12px}
   details.innerrow summary{font-weight:650;font-size:14.5px}
 
+  /* ---- Track archive hierarchy: month > week > days ----
+     His note Aug 10 2026: "this is a little hard to read." The cause was not the font — all three
+     depths used details.innerrow, and `details.innerrow summary` is a DESCENDANT selector, so every
+     level rendered at the same 14.5px/650 at the same indent. Nothing on screen said that a week sits
+     inside a month. Each depth now gets its own weight, colour and indent, and the day table tightens
+     so a full week fits without scrolling. */
+  details.arc-m{margin-top:14px;padding-top:12px;
+       border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+  details.arc-m>summary{font-family:var(--disp);font-size:14px;font-weight:800;letter-spacing:.1em;
+       text-transform:uppercase;color:var(--brass);border-left:3px solid var(--brass);padding-left:9px}
+  details.arc-m>summary .statline{letter-spacing:0;text-transform:none;font-weight:600}
+  /* the week is visibly INSIDE the month: indented, hung off a vertical rule, quieter until opened */
+  details.arc-w{margin:0 0 0 10px;padding:8px 0 2px 12px;border-top:none;
+       border-left:1px solid color-mix(in srgb,var(--line) 80%,transparent)}
+  details.arc-w>summary{font-size:12.5px;font-weight:650;color:var(--muted)}
+  details.arc-w[open]>summary{color:var(--ink)}
+  details.arc-w table.wk{font-size:12.5px;margin-top:5px}
+  details.arc-w table.wk td,details.arc-w table.wk th{padding:3.5px 3px}
+  /* a missing reading should read as absent, not as data */
+  table.wk td.arc-none{opacity:.3}
+  /* today, and the week containing it, are the two rows he is actually looking for */
+  table.wk tr.arc-today td{color:var(--brass);font-weight:700}
+  details.arc-w.arc-now>summary{color:var(--ink)}
+  /* ⛔ THE "now" BADGE IS A REAL ELEMENT, NOT ::after. `details.acc summary::after` is already the ▾
+     chevron (line ~435) — styling ::after here would have silently deleted the dropdown arrow on the
+     current week. Caught before shipping; do not "simplify" this back into a pseudo-element. */
+  .arc-now-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+       color:var(--brass);margin-left:7px;border-radius:4px;padding:1px 5px;
+       border:1px solid color-mix(in srgb,var(--brass) 45%,transparent)}
+
   /* ---- admin settings rows ---- */
   details.adm{margin-bottom:9px}
   details.adm summary .tt-i{font-size:17px}
@@ -5476,17 +5506,23 @@ function viewTrack(){
       const dayRows = wEs.map(e=>{
         const dn = new Date(e.d+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
         const nm = eaten[e.d]? Object.values(eaten[e.d]).filter(Boolean).length : 0;
-        return `<tr><td>${dn} ${mdy(e.d)}</td><td>${e.w!=null?e.w.toFixed(1):'—'}</td>
-          <td>${e.s!=null?e.s.toFixed(1)+'k':'—'}</td><td>${e.sl!=null?sleepFmt(e.sl):'—'}</td>
-          <td>${nm?nm+'/5':'—'}</td></tr>`;
+        /* a blank cell gets .arc-none so it reads as ABSENT rather than as a value — five em-dashes
+           at full contrast were a big part of why this table felt noisy */
+        const cell = (v, has) => `<td${has?'':' class="arc-none"'}>${has? v : '—'}</td>`;
+        return `<tr${e.d===isoToday()?' class="arc-today"':''}><td>${dn} ${mdy(e.d)}</td>
+          ${cell(e.w!=null?e.w.toFixed(1):'', e.w!=null)}
+          ${cell(e.s!=null?e.s.toFixed(1)+'k':'', e.s!=null)}
+          ${cell(e.sl!=null?sleepFmt(e.sl):'', e.sl!=null)}
+          ${cell(nm+'/5', !!nm)}</tr>`;
       }).join('');
       const key = `trk-w-${mk}-${n}`;
-      return `<details class="acc innerrow" data-acc="${key}"${openAcc.has(key)?' open':''}>
-        <summary><span>Wk ${n} · ${span}</span><span class="statline">${avgTag(wEs)}</span></summary>
+      const isNow = n === weekOf(isoToday());
+      return `<details class="acc arc-w${isNow?' arc-now':''}" data-acc="${key}"${openAcc.has(key)?' open':''}>
+        <summary><span>Wk ${n} · ${span}${isNow?'<span class="arc-now-tag">now</span>':''}</span><span class="statline">${avgTag(wEs)}</span></summary>
         <table class="wk"><tr><th>Day</th><th>lbs</th><th>steps</th><th>sleep</th><th>meals</th></tr>${dayRows}</table>
       </details>`;
     }).join('');
-    return `<details class="acc innerrow" data-acc="trk-m-${mk}"${openAcc.has('trk-m-'+mk)?' open':''}>
+    return `<details class="acc arc-m" data-acc="trk-m-${mk}"${openAcc.has('trk-m-'+mk)?' open':''}>
       <summary><span>${mName}</span><span class="statline">${mEs.length} d · ${avgTag(mEs)}</span></summary>
       ${wkHTML}
     </details>`;
