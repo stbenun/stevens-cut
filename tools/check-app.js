@@ -342,8 +342,6 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
    short on the first build, because every anchor has a sane cap and three anchors cannot span a
    1,475 cal hole; the filler pass exists to fix that and this guard is what keeps it fixed.
    Also enforces the two rules that are correctness, not taste:
-     - FISH NEVER ON THE MEAT LANE (fish-with-meat is a real separation, and he keeps the strict
-       6-hour meat->dairy wait, so leniency here is not mine to assume)
      - CHICKEN IS NEVER AUTO-CHOSEN. He said beef and salmon quick-defrost and chicken does not, so
        chicken may only ever appear when he explicitly picks it as a leftover. */
 {
@@ -387,8 +385,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[0])} cal off a ${Math.round(r.left[0])} hole`);
     if (r.oneSitting && Math.abs(r.gap[1]) > 8)
       bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[1])}P off`);
-    if (r.lane === 'meat' && r.labels.some(l => /tuna|salmon/i.test(l)))
-      bad.push(`${r.n}/meat: fish on the meat lane — ${r.labels.find(l=>/tuna|salmon/i.test(l))}`);
+    /* NO fish-on-meat assertion. It was here, it failed nothing, and it was WRONG: it encoded my
+       guess that he separates fish and meat. Asked him Aug 10 2026 — "i do" eat them together — so
+       the rule came out. A guard that enforces an assumption nobody verified is worse than no guard. */
     if (r.labels.some(l => /LEFTOVER/.test(l)))
       bad.push(`${r.n}/${r.lane}: chicken auto-chosen — it does not quick-defrost, it must be opt-in`);
     const seen = new Set();
@@ -396,7 +395,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if (seen.has(k)) bad.push(`${r.n}/${r.lane}: "${k}" listed twice`); seen.add(k); });
   });
   if (bad.length) fail('final-meal', bad.join(' · '));
-  else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, no fish on meat, chicken opt-in only`);
+  else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, chicken opt-in only, no duplicate rows`);
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');

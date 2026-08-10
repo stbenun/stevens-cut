@@ -4038,16 +4038,20 @@ const FINAL_FAT = [
    needs MORE COMPONENTS, not bigger ones — that is how anyone actually builds a 1,400 cal dinner.
    These get added a step at a time, cheapest-error-first, after the exact solve.
 
-   ⚠️ `lanes` IS A KASHRUT FIELD, NOT A PREFERENCE. Pareve goes with anything, with one exception I am
-   treating as real: FISH IS EXCLUDED FROM THE MEAT LANE. Not eating fish and meat at the same meal is
-   a standard custom, and he keeps a 6-hour meat→dairy wait, so assuming he is lenient here would be
-   the wrong way to guess. Fish therefore rides pareve + dairy only (lox and cream cheese is fine).
-   Eggs ARE pareve and do go with meat, which is what saves the meat lane's protein ceiling. */
+   ⚠️ `lanes` IS A KASHRUT FIELD, NOT A PREFERENCE. Pareve goes with anything.
+   ⭐ FISH IS ALLOWED ON THE MEAT LANE — I first excluded it, on the reasoning that not eating fish and
+   meat at one meal is a standard custom and he keeps the strict 6-hour meat→dairy wait, so leniency
+   was not mine to assume. I flagged it rather than guessing, and ASKED HIM. His answer, Aug 10 2026:
+   "i do." So tuna rides every lane. Two consequences: the meat lane is far easier to solve (tuna is
+   0.243 P per calorie against egg whites' 0.20, so the solver reaches for it first and the plate stops
+   needing 300 g of whites alongside a burger), and the [final-meal] guard's fish-on-meat assertion was
+   deleted — it was enforcing my guess, not his practice. THE LESSON: flag a kashrut assumption and ask;
+   do not encode a stringency he does not keep, and do not encode a leniency either. */
 const FINAL_FILLERS = [
   /* `dupe` names the anchor this filler IS. If that anchor was already chosen, the filler is skipped —
      otherwise the card printed "Mini guac cup 2 cups" AND "Mini guac cup, extra 2 cups" and told him
      to eat four guacs. One food, one row. */
-  {id:'tuna+',  dupe:'tuna',    lanes:['pareve','dairy'],        label:'Tuna packet, extra',    unit:'packet', per:[70,17,0,0],    hi:5, step:1},
+  {id:'tuna+',  dupe:'tuna',    lanes:['pareve','dairy','meat'], label:'Tuna packet, extra',    unit:'packet', per:[70,17,0,0],    hi:5, step:1},
   {id:'whites', lanes:['pareve','dairy','meat'],   label:'Egg whites',            unit:'g',      per:[0.5,0.10,0,0], hi:300, step:25}  /* 300 g = ~1.25 cups = 30 P. I first capped this at 200 for "realism" and the [final-meal]
      guard immediately failed the meat lane by 9 P: beef caps at 14 oz and egg whites are the ONLY
      protein that may join meat, so 200 g leaves the lane unable to close. For someone eating 187 P
