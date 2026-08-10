@@ -5010,7 +5010,10 @@ function viewMeals(){
    <summary>
      <span style="display:flex;align-items:baseline;gap:8px;width:100%">
        <b style="flex:1;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${slotTimeLabel(s.key, isoToday())}${s.key==='sn'?' · skip Friday':''}</span></b>
-       <span class="r" style="flex-shrink:0;color:var(--muted)">${s.opts.length} · ${s.b[0]}·${s.b[1]}P</span>
+       ${/* his ask Aug 10 2026: "id like the numbers on the right to be cals, protein, carbs, fats" —
+            this is the slot BUDGET, all four macros, not just cal+protein. The option count stays but
+            drops to a chip on the left of it, because the four numbers are what he came to read. */''}
+       <span class="r" style="flex-shrink:0;color:var(--muted)"><span style="opacity:.55">${s.opts.length}</span> · <span style="font-family:var(--mono)">${s.b[0]} · ${s.b[1]}P · ${s.b[2]}C · ${s.b[3]}F</span></span>
      </span>
    </summary>
    ${s.opts.map(m=>{
@@ -5022,7 +5025,9 @@ function viewMeals(){
          <span style="display:flex;align-items:center;gap:8px;width:100%">
            <b style="flex:1;min-width:0">${m.name}</b>
            ${m.k.map(c=>chip(c[0],c[1])).join(' ')}
-           <span class="r" style="flex-shrink:0">${t[0]} · ${t[1]}P</span>
+           ${/* same change as the slot header above, one level down: all four macros, not cal+P. These
+                are the numbers he picks a meal ON, so they matter more here than on the header. */''}
+           <span class="r" style="flex-shrink:0;font-family:var(--mono)">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span>
          </span>
        </summary>
        ${m.vars.map(v=>`
