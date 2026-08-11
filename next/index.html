@@ -3294,6 +3294,105 @@ function planTarget(ld){
   const on = adj.some(x=>+x);
   return { t, base: PLAN_T.slice(), adj, on, why: on ? (ov.mwhy||'adjusted for today') : '' };
 }
+/* ---- 📌 OFFICIAL DAY PLAN ---------------------------------------------------
+   A pinned, DATED prescription for one whole day, rendered at the very top of
+   Today. Built Aug 11 2026 (Bruce engagement, 6 PM): he isn't eating at the
+   party and wants hard liquor, so the day has to be solved whole instead of
+   slot by slot — 5 shots is 485 cal carrying ZERO macros, and that is what
+   forces the starches out of dinner. Slot-by-slot budgeting cannot see this.
+
+   ⚠️ EVERY macro row is COPIED from the cookbook, never re-derived here:
+     jiben   = l2 total [580,55,47,18] MINUS its own Ezekiel row [160,10,30,1]
+     pre-lift= p5 with the banana swapped for 40 g raisins (his Sun-Maid label)
+     tuna / asparagus / SF ketchup / COR / Creami = the same rows p2, d1, b1, s1 print.
+   A plan card that disagrees with the meal it names is exactly the failure he
+   caught on the sushi card, which showed a static 915/88 while Final meal read
+   a live 883/79. Totals here are summed from the rows, so they cannot drift.
+
+   Row shape: [qty, name, cal, P, C, F, alreadyEaten?]. Compared against
+   planTarget(ld) — the SAME target the header strip and the bars use, not the
+   five slot budgets, which sum to 2240 and would over-feed him by 20.        */
+const DAY_PLAN = {
+ '2026-08-11': {
+  title:'Bruce engagement, 6 PM',
+  badge:'5 shots · fits +7',
+  sub:'Not eating there. Everything below happens before you leave.',
+  rows:[
+    ['✓','Breakfast — COR',                        545,39,54,22,true],
+    ['✓','Pre-lift — Oikos + 40 g raisins',        210,16,37, 0,true],
+    ['1','Lunch — Broccoli Jiben, <b>no Ezekiel</b>',420,45,17,17],
+    ['3','Dinner — tuna packets',                   210,51, 0, 0],
+    ['1','Asparagus 100 g',                          20, 2, 4, 0],
+    ['1','SF ketchup 32 g',                          20, 0, 2, 0],
+    ['1','Snack — Ninja Creami',                    317,32,30, 7],
+    ['5','Shots — 80 proof, 1.5 oz pours',          485, 0, 0, 0],
+  ],
+  order:[
+    'Jiben → tuna dinner → Creami. <b>All three before 6.</b>',
+    'Nothing tonight is meat, so there is no 6-hour wait to plan around — tuna is pareve, so the Creami can sit either side of dinner.',
+    'Last bite before you leave. Every one of your low mornings last week followed a night you stopped eating in the afternoon.',
+    'Eat before the first shot. Protein in your stomach slows how fast five of them land.',
+    'A glass of water between every shot.',
+  ],
+  never:'Potatoes · keto bun · the egg · Ezekiel bread · the 3 oz patty (fridge it — it keeps 1–2 days, cook it tomorrow) · anything at the party · arak or anything over 80 proof · flavored liquor, liqueur, tonic, juice mixers',
+  free:'Asparagus · any plain vegetable · water · seltzer · black coffee · gum',
+  swaps:[
+    '<b>A 6th shot</b> — +97 cal, lands you +104 over instead of +7. If you take it, do <i>not</i> cut dinner protein to pay for it.',
+    '<b>2 shots back = your 220 g of potatoes.</b> That is the entire trade, priced in food.',
+    '<b>Beef instead of a tuna packet</b> — 3 oz patty is 143 cal for 17 P, a packet is 70 cal for the same 17 P. Identical protein, double the calories. Tuna wins tonight.',
+  ],
+  after:[
+    '💧 <b>Past 160 oz today.</b> Full LMNT stick (1,000 mg sodium), lift day, simcha +16, and liquor is a diuretic. Log the manual bump.',
+    '🏋 <b>Tomorrow — Pull: 2 sets per exercise, nothing to failure, no PRs.</b> Glycogen-empty on a short night.',
+    '⚖️ <b>Wednesday’s weigh-in is meaningless.</b> Alcohol plus the LMNT sodium. If it reads 174–175, ignore it — and go back to half sticks from your next one.',
+  ],
+ },
+};
+function dayPlanCard(ld){
+  const p = DAY_PLAN[ld]; if(!p) return '';
+  const T = planTarget(ld).t;                 /* [cal,P,C,F] */
+  const t = p.rows.reduce((a,r)=>({cal:a.cal+r[2], p:a.p+r[3], c:a.c+r[4], f:a.f+r[5]}),{cal:0,p:0,c:0,f:0});
+  const d = (a,b)=>{const n=Math.round(a-b); return (n>0?'+':'')+n;};
+  /* Badge shows what's still AHEAD of him, not a row count — asparagus and ketchup are
+     components of dinner, so "6 left to eat" read as six more meals. Calories can't lie. */
+  const leftCal = p.rows.filter(r=>!r[6]).reduce((a,r)=>a+r[2],0);
+  return `
+  <details class="card acc" data-acc="dayplan"${openAcc.has('dayplan')?' open':''}
+           style="border-color:color-mix(in srgb,var(--brass) 55%,transparent)">
+    <summary><h3 style="display:inline;font-size:16px">📌 Official plan</h3>
+      <span class="statline"><b>${Math.round(leftCal)}</b> cal still to go · ${p.badge}</span></summary>
+    <div class="slotlbl" style="margin-top:10px">📌 ${p.title}</div>
+    <div class="budget"><span>Target: <b>${T[0]}</b> kcal · <b>${T[1]}</b> P <span class="daytag">(whole day)</span></span></div>
+    <div class="sub" style="margin-top:2px">${p.sub}</div>
+    <div class="slotlbl" style="margin-top:12px">Eat exactly this</div>
+    <table style="width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13.5px">
+      ${p.rows.map(r=>`<tr${r[6]?' style="opacity:.5"':''}>
+        <td style="text-align:right;padding:3px 8px 3px 0;width:2.2em;font-weight:700;color:var(--brass)">${r[0]}</td>
+        <td style="padding:3px 0">${r[1]}</td>
+        <td style="text-align:right;padding:3px 0 3px 8px;white-space:nowrap">${r[2]}</td>
+        <td style="text-align:right;padding:3px 0 3px 8px;white-space:nowrap;opacity:.75">${r[3]} P</td></tr>`).join('')}
+      <tr style="border-top:1px solid color-mix(in srgb,var(--brass) 35%,transparent);font-weight:700">
+        <td></td><td style="padding:5px 0">TOTAL</td>
+        <td style="text-align:right;padding:5px 0 5px 8px">${Math.round(t.cal)}</td>
+        <td style="text-align:right;padding:5px 0 5px 8px">${Math.round(t.p)} P</td></tr>
+      <tr style="opacity:.7"><td></td><td style="padding:0 0 4px">vs target</td>
+        <td style="text-align:right;padding:0 0 4px 8px">${d(t.cal,T[0])}</td>
+        <td style="text-align:right;padding:0 0 4px 8px">${d(t.p,T[1])} P</td></tr>
+    </table>
+    <div class="sub" style="margin-top:2px;opacity:.65">Lands ${Math.round(t.c)} C · ${Math.round(t.f)} F against ${T[2]} C · ${T[3]} F. The ${Math.abs(Math.round(t.c-T[2]))} g of carbs you are short IS the liquor — ${Math.abs(Math.round(t.c-T[2]))} g is ${Math.abs(Math.round((t.c-T[2])*4))} cal you do not have. Not fixable, and the reason tomorrow is a 2-set day.</div>
+    <div class="slotlbl" style="margin-top:12px">Order &amp; timing</div>
+    <ul class="sched" style="margin-top:6px">${p.order.map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>
+    <div class="slotlbl" style="margin-top:12px">🚫 Do not eat or drink</div>
+    <div class="sub" style="margin-top:2px">${p.never}</div>
+    <div class="slotlbl" style="margin-top:10px">✅ Free — as much as you want</div>
+    <div class="sub" style="margin-top:2px">${p.free}</div>
+    ${p.after.map(x=>`<div class="note" style="margin-top:8px">${x}</div>`).join('')}
+    <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🔁 Swaps, and what each one costs</summary>
+      <ul class="sched" style="margin-top:6px">${p.swaps.map(x=>`<li><span class="t">→</span><span>${x}</span></li>`).join('')}</ul>
+    </details>
+    <div class="note" style="margin-top:8px">📋 <b>This is the prescription, not the record.</b> Log what you actually eat and drink as you go — tell me tomorrow and I'll reconcile it against this.</div>
+  </details>`;
+}
 function fmtMin(t){ t=((t%1440)+1440)%1440; let h=Math.floor(t/60), mm=t%60; const ap=h>=12?'PM':'AM'; h=h%12||12; return `${h}:${String(mm).padStart(2,'0')} ${ap}`; }
 function parseClock(s){ const m=/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(s).trim()); if(!m) return null; let h=(+m[1])%12; if(/pm/i.test(m[3])) h+=12; return h*60+(+m[2]); }
 /* loose parser for OVERRIDES schedule time labels: "1:30", "~2:30", "7:00", "11:00", "AM", "After", "—".
@@ -5024,6 +5123,11 @@ function viewToday(){
   <div class="today-sub"><span>${(d.sub && !dateStr.startsWith(d.sub)) ? d.sub+' · ' : ''}${dateStr}</span>
     ${(RUNNING_ON&&daysToRace>0)?tchip(`🏁 race in ${daysToRace}d`):''}</div>
   <div class="today-date">${dTitle}</div>
+  ${/* 📌 The official plan sits ABOVE the NOW glance — his ask Aug 11 2026, "put the official
+        plan for today at the top of today." Only renders on a date that HAS one, so it costs
+        nothing on an ordinary day. Starts CLOSED with the numbers in its badge, per the
+        every-section-starts-closed rule. */''}
+  ${dayPlanCard(ld)}
   ${nowZone}
   ${order.map(k=>Z[k]).join('\n')}`;
 }
