@@ -1444,6 +1444,12 @@ const FOOD_FACTS = {
      ASK HIM TO PHOTOGRAPH THE CAN and replace this, same as the pita. */
   'ff whip':        {unit:'g',             cal:1.0,  p:0,   c:0.2, f:0,   src:'Reddi-wip Fat Free label: 2 tbsp (5 g) = 5 cal / 0 P / 1 C / 0 F -> 1 cal per g. STANDARD SERVING 15 g = 15 cal / 3 C. HIS CAN NOT YET CONFIRMED.'},
   'sf choc syrup':  {unit:'g',             cal:0.33, p:0,   c:0.13, f:0,  src:'matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls'},
+  /* HIS BRAND, confirmed by him Aug 11 2026 — the first Creami topping to get real provenance.
+     Bare Baked Crunchy Toasted Coconut Chips: 28 g = 170 cal / 2 P / 14 C / 12 F (5 g fiber,
+     9 g sugar, 11 g SATURATED). Used at 8 g in Batch 5 cup 1 (Almond Joy) and Batch 1 cup 5
+     (Pina Colada). ⚠️ Note the saturated share — 11 of its 12 g of fat — which is why 8 g is
+     a garnish and not a handful. Sat fat is still an open data ask against ApoB 104. */
+  'bare coconut chips': {unit:'g',         cal:6.07, p:0.07, c:0.5, f:0.43, src:'Bare Baked Crunchy Toasted Coconut Chips label, his brand confirmed Aug 11 2026: 28 g = 170 cal / 2 P / 14 C / 12 F -> per gram. Sat fat 11 g per 28 g.'},
   'tuna sashimi':   {unit:'piece (20 g)', cal:22,   p:4.9, c:0,  f:0.1, src:'yellowfin, 109 cal / 24.4 P per 100 g raw'},
   'salmon sashimi': {unit:'piece (20 g)', cal:42,   p:4.1, c:0,  f:2.7, src:'Atlantic farmed, 208 cal / 20.4 P per 100 g raw'},
   'tuna roll':      {unit:'6-pc roll',    cal:190,  p:11,  c:32, f:1.5, src:'EATOUT_ORDER sushi carb anchor'},
@@ -3314,9 +3320,9 @@ function planTarget(ld){
 const DAY_PLAN = {
  '2026-08-11': {
   title:'Bruce engagement, 6 PM',
-  badge:'5 shots · fits −17',
+  badge:'5 shots · fits −21',
   sub:'Not eating there. Everything below happens before you leave.',
-  caveat:'<b>The Creami row is tonight’s actual cup, not the generic 317.</b> Almond Joy’s topping is coconut chips + sliced almonds, which is fat where the generic row assumes carbs. <b>Sliced almonds and toasted coconut chips are not in FOOD_FACTS</b> — those two numbers are standard label values, not your packages. Send me photos of both and I will source them properly.',
+  caveat:'<b>The Creami row is tonight’s actual cup, not the generic 317.</b> Almond Joy’s topping is coconut chips + sliced almonds, which is fat where the generic row assumes carbs. Coconut chips are now sourced to <b>your Bare label</b> (28 g = 170 cal). <b>Sliced almonds are still not in FOOD_FACTS</b> — that one number is a standard label value, not your bag. Send me that photo and this row is fully sourced.',
   rows:[
     ['✓','Breakfast — COR',                        545,39,54,22,true],
     ['✓','Pre-lift — Oikos + 40 g raisins',        210,16,37, 0,true],
@@ -3324,7 +3330,7 @@ const DAY_PLAN = {
     ['3','Dinner — tuna packets',                   210,51, 0, 0],
     ['1','Asparagus 100 g',                          20, 2, 4, 0],
     ['1','SF ketchup 32 g',                          20, 0, 2, 0],
-    ['1','Snack — Creami: <b>Almond Joy</b> (Batch 5, cup 1)',293,33,17,10],
+    ['1','Snack — Creami: <b>Almond Joy</b> (Batch 5, cup 1)',289,33,18, 9],
     ['5','Shots — 80 proof, 1.5 oz pours',          485, 0, 0, 0],
   ],
   order:[
@@ -6678,7 +6684,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786473944';
+const BUILD = 'b1786474285';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
