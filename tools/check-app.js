@@ -397,7 +397,11 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     });
     /* a miss is only forgiven when the hole is bigger than one sitting AND the card says so. On a
        normal hole the solve must land, or the feature he asked for is not doing its job. */
-    if (r.oneSitting && Math.abs(r.gap[0]) > 60)
+    /* RATCHET, tightened 2026-08-12 from 60 to 25. His instruction: "we shouldnt be overfeeding or
+       underfeeding. we should be on target always." Once the solver stopped blindly trusting solve2's
+       exact carb/fat answer and searched around it, the worst one-sitting miss fell from 72 cal to 15.
+       25 locks that in with a little headroom. Only ever tighten this, never loosen it. */
+    if (r.oneSitting && Math.abs(r.gap[0]) > 25)
       bad.push(`${r.n}/${r.lane}: ${Math.round(r.gap[0])} cal off a ${Math.round(r.left[0])} hole`);
     /* asymmetric on purpose, matching fmErr: gap>0 is SHORT and that is the real failure. Overshooting
        protein on a cut is fine, so the ceiling on surplus is loose and only catches absurdity. */
@@ -491,7 +495,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
 }
 
   if (bad.length) fail('final-meal', bad.join(' · '));
-  else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, chicken opt-in only, no duplicate rows`);
+  else ok('final-meal', `${rows.length} hole x lane combos all close within 25 cal / 8P, chicken opt-in only, no duplicate rows`);
 }
 
 /* ---------- [time-picker] a time input must not re-render on 'change' ----------

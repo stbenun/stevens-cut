@@ -4458,12 +4458,27 @@ function finalMeal(ld, opts){
     for(let n = d.pro.lo; n <= d.pro.hi; n += pStep){
       const afterP = dishT.map((v,i)=> v - fixed[i] - d.pro.per[i]*n);
       const sol = solve2([d.carb.per[2], d.carb.per[3]], [d.fat.per[2], d.fat.per[3]], afterP[2], afterP[3]);
-      const cQ  = fmSnap(sol ? sol[0] : d.carb.lo, d.carb);
-      const fQ  = fmSnap(sol ? sol[1] : d.fat.lo,  d.fat);
-      const tot = [0,1,2,3].map(i=> fixed[i] + d.pro.per[i]*n + d.carb.per[i]*cQ + d.fat.per[i]*fQ);
-      const gap = dishT.map((v,i)=> v - tot[i]);
-      const sc  = fmScore(gap) + (opts.dish === d.id ? -1000 : 0);   /* his explicit pick always wins */
-      if(best == null || sc < best.sc) best = {sc, d, n, cQ, fQ, tot};
+      const c0  = fmSnap(sol ? sol[0] : d.carb.lo, d.carb);
+      const f0  = fmSnap(sol ? sol[1] : d.fat.lo,  d.fat);
+      /* ⛔ DO NOT TRUST solve2's answer as final. It hits CARBS and FAT exactly and lets calories be
+         whatever falls out — and after snapping to real quantities, calories can land far off with
+         nothing left to correct them. Measured 2026-08-12 on a 555-cal dairy hole: all 38 candidates
+         overshot by 69+ cal, because hitting 66 C forced 3 slices of Ezekiel. Two slices lands within
+         ~8 cal. The exact solution was never the best plate; it was just the one the algebra found.
+         So: treat solve2 as a STARTING POINT and search a couple of steps either side of it, scoring
+         each. His instruction, and the reason this matters: "we shouldnt be overfeeding or underfeeding.
+         we should be on target always." Bounded at 5x3 = 15 extra evaluations per protein step. */
+      const cStep = d.carb.step || 1, fStep = d.fat.step || 1;
+      for(let dc = -2; dc <= 2; dc++){
+        const cQ = fmSnap(c0 + dc*cStep, d.carb);
+        for(let df = -1; df <= 1; df++){
+          const fQ = fmSnap(f0 + df*fStep, d.fat);
+          const tot = [0,1,2,3].map(i=> fixed[i] + d.pro.per[i]*n + d.carb.per[i]*cQ + d.fat.per[i]*fQ);
+          const gap = dishT.map((v,i)=> v - tot[i]);
+          const sc  = fmScore(gap) + (opts.dish === d.id ? -1000 : 0);   /* his explicit pick always wins */
+          if(best == null || sc < best.sc) best = {sc, d, n, cQ, fQ, tot};
+        }
+      }
     }
   });
   if(!best) return null;
@@ -6799,7 +6814,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786558798';
+const BUILD = 'b1786559356';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
