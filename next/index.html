@@ -574,7 +574,7 @@ const SLOTS = [
    {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',[95,5.0,16,2]],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',[190,7,7,17]]], t:[545,39,54,22]}]},
    {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',[140,15,36,5]],['Philadelphia ⅓-less-fat cream cheese','45 g',[98,3,3,8]],['Acme Nova lox','130 g',[161,29,0,5]],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[539,48,73,18]}]},
    {id:'b3', name:'Kodiak Breakfast', k:[['dairy']], vars:[
-     {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',[440,20,50,18]],['Fage 2% plain Greek yogurt','1 cup (150 g)',[106,15,4,3]],['Lakanto sugar-free maple syrup','60 g',[20,0,1,0]]], t:[566,35,55,21]},
+     {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',[440,20,50,18]],['Fage 2% plain Greek yogurt','1 cup (150 g)',[106,15,4,3]],['Lakanto sugar-free maple syrup','60 g',[15,0,9,0]]], t:[561,35,63,21]},
      {label:'Flapjacks', ing:[['Kodiak buttermilk Power Flapjacks (frozen)','4',[255,19,40,3]],['Justin’s Classic almond butter','1 pack (32 g)',[220,6,6,19]],['Fage Total 0% plain Greek yogurt','125 g',[70,13,4,0]],['Lakanto sugar-free maple syrup','15 g',[5,0,4,0]]], t:[550,38,54,22]}]},
    {id:'b5', name:'Banana Cream Protein Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk (shake the powder into this FIRST)','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ½ tsp banana extract','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen berries','50 g',[25,0.5,6,0]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Biscoff cookies','2',[63,1,12,1]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[550,60,49,14]}]},
    {id:'b6', name:'Strawberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ¼ tsp lemon extract (the cheesecake tang)','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[53,1,14,0]],['Graham cracker sheet, crushed (the crust)','1',[65,1,12,1.5]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[527,60,43,15]}]},
@@ -1551,6 +1551,27 @@ const FOOD_FACTS = {
   'philadelphia cream cheese': {unit:'g',   cal:2.19, p:0.063, c:0.063, f:0.188, src:'Philadelphia 1/3-less-fat (Neufchatel) label, verified Jul 24 2026: 32 g = 70 cal / 2 P / 2 C / 6 F -> per gram. His 45 g row = 98/3/3/8, corrected then from an overstated 120/3/3/10.5.'},
   'sola everything bagel': {unit:'each',    cal:140,  p:15,    c:36,    f:5,     src:'Sola everything bagel label, verified Jul 24 2026: 140 cal / 15 P / 36 C (24 g fibre) / 5 F. I had doubted these numbers as too high in protein and fibre and was WRONG — Sola genuinely is a high-protein high-fibre bagel. Flagging beat correcting.'},
   'kodiak waffle':     {unit:'each',        cal:220,  p:10,    c:25,    f:9,     src:'Kodiak Thick & Fluffy Buttermilk & Vanilla FROZEN waffles, verified Jul 24 2026: 220 cal EACH (they are thick, 1 per serving). His 2-waffle row = 440/20/50/18. Confirmed correct, not the mix.'},
+  /* ===== Aug 12 2026, final commodity + brand sweep. ===== */
+  /* ONE fact for the whole protein-powder family. Macros per SCOOP are near-constant across every
+     flavour he owns (25 P, 130-140 cal, 3-4 C, 2.5-3 F); only the scoop WEIGHT moves, 30-41 g, and
+     PP_G already holds that per flavour with label dates in its comments. So the honest fact is
+     per-serving, and PP_G is the gram lookup. Half-serving rows at 65-75 cal / 12.5 P are consistent. */
+  'protein':           {unit:'scoop',       cal:137,  p:25,    c:4,     f:2.7,   src:'Ryse Loaded / RAW, per 1 scoop. Label-verified flavours in PP_G comments: Milk Chocolate 37 g = 140/25/4/3 (Aug 4), Jet-Puffed Marshmallow 35 g = 130/25/3/2.5 (Aug 6), Jet-Puffed Birthday Cake 34.8 g = 130/25/4/2.5 (Aug 6), Blueberry Muffin 34.9 g = 140/25/4/2.5 (Jul 27). Macros per scoop barely vary; the GRAM WEIGHT does (30-41 g) and PP_G is the source for that. Always weigh from the ziplock.'},
+  /* ⚠️⚠️ THE BIGGEST OPEN NUMBER IN THE APP. His rows price 6 oz (170 g) at 250 cal / 37 P / 10 F,
+     i.e. 1.47 cal/g and 0.059 F/g — that is WILD salmon almost exactly (USDA wild Atlantic raw:
+     1.42 cal/g, 0.065 F/g). Farmed Atlantic raw is 2.08 cal/g and 0.134 F/g, so the SAME 6 oz would
+     be 354 cal and 23 g fat. A 104-cal, 13-g-fat swing across SIX recipes (d2 poke, d3, d16, d17,
+     l6, l8). Most supermarket salmon is farmed. NOT CHANGED — asked him which he buys. */
+  'salmon wild':       {unit:'g',           cal:1.42, p:0.198, c:0,     f:0.065, src:'USDA salmon, Atlantic, WILD, raw: 100 g = 142 cal / 19.8 P / 6.3 F -> per gram. This is what his rows are currently priced at (1.47 cal/g).'},
+  'salmon farmed':     {unit:'g',           cal:2.08, p:0.204, c:0,     f:0.134, src:'USDA salmon, Atlantic, FARMED, raw: 100 g = 208 cal / 20.4 P / 13.4 F -> per gram. If this is what he buys, every 6 oz portion is 354 cal not 250 — 104 cal and 13 g fat per serving, six recipes. AWAITING his answer; nothing changed yet.'},
+  'lakanto sugar-free maple syrup': {unit:'g', cal:0.256, p:0, c:0.154, f:0, src:'Lakanto Maple Flavored Syrup (monk fruit + erythritol) label: 2 tbsp / 30 mL = 10 cal / 6 C, syrup density ~1.3 g/mL so ~39 g -> per gram. ⚠️ Caught an internal contradiction: his 15 g row said 4 C while the 60 g row said 1 C — four times the syrup for a quarter of the carbs. 60 g corrected to 15 cal / 9 C.'},
+  'smucker sf jelly':  {unit:'g',           cal:0.59, p:0,     c:0.294, f:0,     src:"Smucker's Sugar Free jam label: 1 tbsp (17 g) = 10 cal / 5 C total (3 net) -> per gram. His 32 g row reads 20/0/10/0; this gives 18.8/9.4. Already right, not changed."},
+  'cucumber':          {unit:'g',           cal:0.15, p:0.007, c:0.036, f:0.001, src:'USDA cucumber, with peel, raw: 100 g = 15 cal / 0.65 P / 3.63 C / 0.11 F -> per gram. His 75 g row reads 15 cal; USDA gives 11. Four calories, left alone.'},
+  'apple':             {unit:'g',           cal:0.52, p:0.003, c:0.138, f:0.002, src:'USDA apples, raw, WITH SKIN: 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram. A medium apple is ~182 g = 95 cal, which is exactly what his row says. Confirmed correct.'},
+  'sweet potato':      {unit:'g',           cal:0.86, p:0.016, c:0.20,  f:0.001, src:'USDA sweet potato, raw: 100 g = 86 cal / 1.6 P / 20.1 C / 0.05 F -> per gram. His 225 g row reads 190; USDA gives 194. Within 2%, confirmed correct — and this is the row I wrongly told him would move with the white-potato answer. It does not.'},
+  'hummus':            {unit:'g',           cal:1.83, p:0.04,  c:0.13,  f:0.10,  src:'Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub.'},
+  'soy sauce':         {unit:'mL',          cal:0.33, p:0.03,  c:0.05,  f:0,     src:'Category figure for regular soy sauce (~0.5 cal/mL for Kikkoman; low-sodium similar). His rows use 0.33 (15 mL = 5 cal), slightly light but under 3 cal on any row he uses. NOT brand-verified.'},
+  'kodiak flapjack':   {unit:'each',        cal:63,   p:4.7,   c:9,     f:1.3,   src:'Kodiak Buttermilk Power Flapjacks, FROZEN: 3 flapjacks = 190 cal / 14 P -> ~63 cal / 4.7 P each. ⚠️ Kodiak lists 14-16 P per serving across formulations, so this is the low end; re-check against his box.'},
   'bare coconut chips': {unit:'g',         cal:6.07, p:0.07, c:0.5, f:0.43, src:'Bare Baked Crunchy Toasted Coconut Chips label, his brand confirmed Aug 11 2026: 28 g = 170 cal / 2 P / 14 C / 12 F -> per gram. Sat fat 11 g per 28 g.'},
   'tuna sashimi':   {unit:'piece (20 g)', cal:22,   p:4.9, c:0,  f:0.1, src:'yellowfin, 109 cal / 24.4 P per 100 g raw'},
   'salmon sashimi': {unit:'piece (20 g)', cal:42,   p:4.1, c:0,  f:2.7, src:'Atlantic farmed, 208 cal / 20.4 P per 100 g raw'},
@@ -1582,7 +1603,7 @@ const EATOUT_ORDER = {
           sp:'% pieces of tuna sashimi'},
   carb:{n:'Tuna roll (6 pc)',cal:190,p:11,c:32,f:1.5,min:1,max:3,sp:'% tuna roll#'},
   swaps:['Salmon instead of tuna sashimi: <b>+20 cal and +2.6 g fat per piece, and slightly LESS protein</b> (20 g slice: salmon 42 cal / 4.1 P, tuna 22 cal / 4.9 P). Fine to order — the fat is omega-3 — but 12 pieces of salmon is <b>240 cal over</b> 12 of tuna, so count it, do not treat them as the same thing.',
-   'Naruto roll (cucumber-wrapped, NO rice) ≈145 cal · 21 P — swap it for a tuna roll to trade 30 g carbs for 10 g protein.',
+   'Naruto roll (cucumber-wrapped, NO rice) ≈145 cal · 21 P — swap it for a tuna roll (+45 cal) to trade 30 g carbs for 10 g protein.',
    'Salmon-avocado roll ≈245 cal · 11 P · 8 F — costs 55 cal and 6 g fat over the tuna roll.',
    'Seaweed salad ≈70 cal · 4 F. Sunomono (cucumber salad) ≈35 cal — the cheaper add.'],
   never:'Tempura (deep-fried) · anything labelled “spicy” (that means mayo) · anything with “crunch” (fried batter) · rainbow and dragon rolls. These are the traps — each one is 150–250 cal over its plain version.',
@@ -6958,7 +6979,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786570932';
+const BUILD = 'b1786571412';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

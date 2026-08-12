@@ -167,13 +167,23 @@ const ALT = /\bor\b|\/|\beither\b/i;
 (function swapMath() {
   if (!EATOUT_ORDER) return;
   let checked = 0, bad = 0;
-  const names = Object.keys(FOOD_FACTS);
+  /* 'protein' is a MACRO WORD, not a dish. It earns its place in FOOD_FACTS because it is the only
+     token shared by every protein-powder ingredient row, but scanning prose for it matches the
+     English word — a BBQ swap line mentioning "protein" and brisket read as two foods offered
+     interchangeably. The prose checks are about confusable FOODS, so skip it there. */
+  const PROSE_SKIP = new Set(['protein']);
+  const names = Object.keys(FOOD_FACTS).filter(n => !PROSE_SKIP.has(n));
   Object.entries(EATOUT_ORDER).forEach(([venue, v]) => (v.swaps || []).forEach(line => {
     const hit = names.filter(n => {
       const words = n.split(' ');
       return words.every(w => new RegExp('\\b' + w.replace(/[%]/g, '') + '\\b', 'i').test(line));
     });
     if (hit.length !== 2) return;
+    /* Only compare foods measured the SAME way. Cucumber is per-gram and a tuna roll is per-roll,
+       so their 'difference' was reported as +190 per g — arithmetic on incompatible units. This
+       surfaced when 'cucumber' became a fact and matched the word inside "cucumber-wrapped",
+       which is describing the Naruto roll's wrapper, not offering cucumber as the alternative. */
+    if (FOOD_FACTS[hit[0]].unit !== FOOD_FACTS[hit[1]].unit) return;
     const m = line.match(/\+\s?(\d+(?:\.\d+)?)\s?cal/i);
     if (!m) {
       bad++; fail('swap-math', venue + ' swap names ' + hit.join(' and ') + ' but states no calorie delta:\n          "' + line.replace(/<[^>]+>/g, '').slice(0, 110) + '"');
@@ -525,7 +535,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * as coverage climbs; never lower it.
  */
 (function macroProvenance() {
-  const FLOOR = 43;                       /* ratchet — only ever goes up */
+  const FLOOR = 62;                       /* ratchet — only ever goes up */
   const need = new Map();
   const slotsBlock = (() => {
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
