@@ -525,7 +525,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * as coverage climbs; never lower it.
  */
 (function macroProvenance() {
-  const FLOOR = 29;                       /* ratchet — only ever goes up */
+  const FLOOR = 36;                       /* ratchet — only ever goes up */
   const need = new Map();
   const slotsBlock = (() => {
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
@@ -538,7 +538,24 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     need.set(key, (need.get(key) || 0) + 1);
   }
   const names = Object.keys(FOOD_FACTS || {});
-  const covered = k => names.some(n => n.split(' ').filter(t => t.length > 3).every(t => k.includes(t)));
+  /* Does a FOOD_FACTS entry cover this ingredient? Third attempt, and the first two failures are
+     both worth keeping in mind:
+       v1 filtered tokens to length>3, so a fact named "egg" produced an EMPTY token list and
+          [].every() is true — one three-letter name marked all 119 foods covered and the ratchet
+          printed COMPLETE. A guard that passes vacuously is worse than no guard at all.
+       v2 required every raw token with word boundaries, which was too strict the other way:
+          "white rice dry" missed the food "white rice" (the key drops the parenthetical), and
+          "rice cake" missed "rice cakes" on the plural alone. Five new facts registered as zero.
+     v3: stem the plurals, drop preparation words that are not part of the food's identity, and
+     require the fact's tokens to be a SUBSET of the food's. */
+  const STOP = new Set(['dry','raw','whole','fresh','frozen','each','the','and','with','only','plain']);
+  const stem = w => w.replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
+  const toks = str => String(str).toLowerCase().split(/[^a-z0-9%]+/)
+    .filter(t => t.length > 2 && !STOP.has(t)).map(stem);
+  const NAMETOKS = names.map(n => toks(n)).filter(a => a.length);
+  const COVER = k => { const b = new Set(toks(k)); return NAMETOKS.some(a => a.every(t => b.has(t))); };
+  const covered = COVER;
+
   const total = need.size, done = [...need.keys()].filter(covered).length;
   const pct = total ? Math.round(100 * done / total) : 0;
   if (pct < FLOOR) {

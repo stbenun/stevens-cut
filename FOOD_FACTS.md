@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 35 / 119 foods in the meal plan (**29%**)
+## Coverage: 43 / 119 foods in the meal plan (**36%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 44 rows: **18** label · **13** derived · **11** USDA · **2** UNVERIFIED
+Provenance of the 49 rows: **19** label · **15** USDA · **13** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -23,6 +23,7 @@ Provenance of the 44 rows: **18** label · **13** derived · **11** USDA · **2*
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
 | `cottage cheese 4%` | g | 0.909 | 0.127 | 0.018 | 0.041 | label | Good Culture Organic 4% official panel: 1/2 cup (110 g) = 100 cal / 14 P / 2 C / 4.5 F -> per gram. BRAND RANGE: Daisy 4% is 113 g = 110 / 13 P / 5 C / 5 F, so 103-110 cal per 113 g. He uses either. The app had 113 g at 80 cal — 23 cal and 3.6 g fat LOW on his jiben lunch — corrected in l2 and l3. |
 | `edamame` | g | 1.21 | 0.119 | 0.089 | 0.052 | USDA | USDA edamame, frozen, PREPARED: 100 g = 121 cal / 11.9 P / 8.9 C total (5.2 g fibre, so 3.7 net — an earlier search handed me the NET figure as if it were total) / 5.2 F -> per gram. He confirmed Aug 12 2026 it is just regular frozen edamame, so USDA is the right basis. ⚠️ The app rows ran ~17% high (85 g priced at 120 cal, real 103) and are corrected. |
+| `egg whites` | g | 0.52 | 0.109 | 0.007 | 0.002 | USDA | USDA egg white, raw: 100 g = 52 cal / 10.9 P / 0.73 C / 0.17 F -> per gram. The app prices 100 g at 50 / 10 / 0 / 0 — within 4%, so the rows were already right and were NOT changed. |
 | `eye of round` | oz cooked | 40.5 | 7.7 | 0 | 1 | derived | lean roast beef, 143 cal / 27 P per 100 g |
 | `ezekiel bread` | slice | 80 | 4 | 15 | 0.5 | label | Food For Life Ezekiel 4:9 Sprouted Whole Grain label: 1 slice = 80 cal / 4 P / 15 C total (3 g fiber) / 0.5 F. ⚠️ The app rows use 5 P per slice, so every Ezekiel row overstates protein by 1 g per slice. |
 | `fage 2% greek yogurt` | g | 0.697 | 0.0995 | 0.0299 | 0.0199 | label | FAGE Total 2% panel: 7.1 oz container (201 g) = 140 cal / 20 P / 6 C / 4 F -> per gram. Cross-checked against the app: his 400 g row says 282/40/12/8 and this gives 279/39.8/11.9/8.0 — the row was already right. |
@@ -38,13 +39,15 @@ Provenance of the 44 rows: **18** label · **13** derived · **11** USDA · **2*
 | `miso soup` | cup (240 g) | 40 | 3 | 5 | 1 | USDA | USDA-style restaurant miso: 240 g cup ~50 cal / 3 P / 5 C / 1 F; 40 is the Atwater-consistent value for that split. Tofu-heavy bowls run 6 P / ~80 cal. ~700 mg sodium. |
 | `natures own keto bread` | slice | 35 | 6 | 10 | 0.5 | label | Nature\'s Own Keto Soft White Bread label, his brand confirmed Aug 12 2026: 1 slice = 35 cal / 6 P / 10 C total (9 g fibre, 1 g net) / 0.5 F. He has the LOAF, not the buns. OPEN: how many slices he uses as a burger bun — the app row says 50 cal, which matches neither 1 slice nor 2. |
 | `nilla wafer` | g | 4.67 | 0.033 | 0.7 | 0.2 | label | Nabisco Nilla Wafers label: 8 wafers (30 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 3.75 g per wafer, which matches his own "9 crushed Nilla wafers (34 g)" row to within 0.03 g. 11 cups use these. |
+| `oats` | g | 3.79 | 0.135 | 0.674 | 0.069 | USDA | USDA oats, rolled, dry: 100 g = 379 cal / 13.5 P / 67.4 C / 6.9 F -> per gram. The app prices 25 g at 95 cal, i.e. 3.8 cal/g — already exact. No change. |
 | `oikos triple zero` | cup (150 g) | 80 | 15 | 6 | 0 | derived | FLAVOUR-VARIABLE — his call Aug 12 2026 when shown the 80-vs-90 conflict: "depends on flavor." oikos.com official for VANILLA: 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F. Retailers list 90 for other flavours. So treat as 80-90 per cup and do NOT pin one number; the app row of 90 is the top of the range and stands. Same handling as almond butter. |
 | `oreo mini` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Mini Bite Size label: 9 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram, 3.22 g per cookie. Identical per-gram to oreo thin, which is expected — same cookie, smaller format. He eats these WHOLE, not de-creamed. |
 | `oreo thin` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Thins label: 4 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 7.25 g per WHOLE cookie. ⚠️ 6 cups specify DE-CREAMED and the filling conversion is UNKNOWN — do not apply this to a de-creamed cup until he says whether he weighs before or after. |
 | `oreo thin wafer` | g | 4.78 | 0.044 | 0.752 | 0.168 | UNVERIFIED | DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM. |
 | `pineapple` | g | 0.5 | 0.005 | 0.131 | 0.001 | USDA | USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g. |
-| `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ BRAND IS SHORE PITA (he said so Aug 11 2026) AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
+| `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ HIS INSTRUCTION Aug 12 2026: "for now just assume 190" — he will confirm off the package later, so 190 STANDS and is not a guess of mine. BRAND IS SHORE PITA AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
 | `potato skin-on` | g | 0.76 | 0.0205 | 0.1745 | 0.001 | USDA | Midpoint of USDA russet flesh-and-skin raw (79 cal/100 g) and Yukon Gold flesh-and-skin raw (73), because he alternates and always eats the skin. RANGE 0.73-0.79 cal/g. All his weights are raw. Corrected 5 rows that were priced at the gold end. |
+| `rice cake` | each | 35 | 0.33 | 7 | 0 | label | HIS figure, stated repeatedly and baked into the row label "Rice cakes (35 cal each)". Plain brown-rice cakes run 35 cal / 7 C, so his number checks out against the category. He always eats 3. |
 | `russet potato` | g | 0.79 | 0.021 | 0.175 | 0.001 | USDA | USDA russet potato, flesh and skin, RAW: 100 g = 79 cal / 2.1 P / 17.5 C / 0.1 F -> per gram. ⚠️ The app prices 220 g at 160 cal; USDA gives 174. All his weights are raw, so raw is the right basis. |
 | `salmon sashimi` | piece (20 g) | 42 | 4.1 | 0 | 2.7 | derived | Atlantic farmed, 208 cal / 20.4 P per 100 g raw |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
@@ -55,8 +58,10 @@ Provenance of the 44 rows: **18** label · **13** derived · **11** USDA · **2*
 | `tuna roll` | 6-pc roll | 190 | 11 | 32 | 1.5 | derived | EATOUT_ORDER sushi carb anchor |
 | `tuna sashimi` | piece (20 g) | 22 | 4.9 | 0 | 0.1 | derived | yellowfin, 109 cal / 24.4 P per 100 g raw |
 | `turkey breast` | oz cooked | 38 | 8.5 | 0 | 0.3 | derived | roast, 135 cal / 30 P per 100 g |
+| `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
+| `whole egg` | each | 80 | 7 | 0 | 5 | USDA | SIZE-DEPENDENT and the app matches EXTRA-LARGE. USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
 
-## Still to source — 84 foods, most-used first
+## Still to source — 76 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -64,28 +69,23 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 |---|---:|
 | berries | 4 |
 | potatoes | 4 |
-| rice cakes | 3 |
-| oats | 3 |
-| egg whites | 3 |
 | tuna packets | 3 |
 | rice | 3 |
 | cucumber | 3 |
-| keto bun | 3 |
+| keto bread | 3 |
 | asparagus | 3 |
 | tuna packet | 2 |
 | lakanto sugar-free maple syrup | 2 |
 | frozen berries | 2 |
+| sf chocolate syrup, drizzled | 2 |
 | chocolate cookie blast protein | 2 |
 | cinnamon roll cor | 2 |
 | cinnamon toast protein | 2 |
 | cinnamon + lakanto | 2 |
 | string beans | 2 |
-| white rice | 2 |
-| eggs | 2 |
 | broccoli | 2 |
 | salmon | 2 |
 | soy sauce | 2 |
-| egg | 2 |
 | smucker’s sf jelly | 1 |
 | elev8 cor | 1 |
 | ryse/raw protein | 1 |
@@ -106,8 +106,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | cinnamon toast protein + ½ tsp cinnamon | 1 |
 | vanilla ice cream protein | 1 |
 | frozen mixed berries | 1 |
-| ld strawberry shortcake protein | 1 |
-| raw grandma’s apple pie protein + ¾ tsp cinnamon | 1 |
 | cereal | 1 |
 | sweet potato | 1 |
 | spinach | 1 |
@@ -116,7 +114,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | hummus | 1 |
 | shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt | 1 |
 | mayo: hellmann’s real 8 g | 1 |
-| rice cake, crushed on top | 1 |
 | salmon, pulsed to patties | 1 |
 | hummus + sriracha | 1 |
 | pickles | 1 |
@@ -125,15 +122,15 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | cucumber, quick-pickled | 1 |
 | scallion | 1 |
 | everything-bagel seasoning | 1 |
-| brownie wet: egg whites 60 ml · pumpkin purée 40 g · oikos vanilla 40 g · ¼ tsp vanilla | 1 |
 | brownie dry: all-purpose flour 18 g · lakanto 28 g · ryse choc cookie blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt | 1 |
 | cookie dough | 1 |
 | ryse protein | 1 |
 | topping / mix-in | 1 |
 | ryse loaded protein, cinnamon toast | 1 |
-| kodiak classic protein rolled oats | 1 |
 | baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt | 1 |
+| 93/7 ground beef | 1 |
 | sugar-free ketchup | 1 |
+| 93/7 ground beef, simmered in paste | 1 |
 | tomato paste | 1 |
 | salmon, sushi-grade | 1 |
 | seaweed packet | 1 |
