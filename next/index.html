@@ -3637,6 +3637,39 @@ function healthyGap(slotKey){
   if(cal<=360) return 195;            // snack → ~3.25 h
   return 225;                         // full meal (bf/lu/di ~545-585) → 3.75 h
 }
+/* The FLOOR, not the ideal. healthyGap above is what a relaxed day looks like; this is the shortest
+   gap that is still fine, used when a late meal would otherwise shove the whole day back. Roughly
+   gastric-emptying time for the size of meal, which is the only hard constraint in play — meal
+   spacing has little independent effect on body composition next to total intake and protein. */
+function minGap(slotKey){
+  const s = SLOTS.find(x=>x.key===slotKey); const cal = s? s.b[0] : 400;
+  if(cal<=250) return 75;             // pre-lift / small
+  if(cal<=360) return 90;             // snack
+  return 120;                         // full meal
+}
+/* Blocks of the day he cannot eat through, read off the schedule he actually has. A busy row occupies
+   from its own time until the next row, so a meal never gets suggested in the middle of class. */
+function busyBlocks(){
+  /* Anchored at the START of the row on purpose: a commitment is the row's SUBJECT, not a word buried
+     in it. Unanchored, "Yogurt + banana right out of minyan" (his PRE-LIFT MEAL) read as a two-hour
+     minyan block, and "Dinner BEFORE Arbit — classes run late" read as class. Both would have blocked
+     the very meals being scheduled. */
+  /* NOT "work" — he eats breakfast and lunch at the office, so work is not a block that stops him
+     eating. Only things he physically cannot eat through belong here. */
+  const BUSY = /^\s*(?:class\b|minyan\b|arbit\b|shul\b|gym\b|lift\b|leave (?:to|for)\b|rabbi\b)/i;
+  const rows = dayRows().slice().sort((a,b)=> a[0]-b[0]);
+  const out = [];
+  rows.forEach((r,i)=>{
+    /* ⛔ A MEAL ROW IS NEVER A BUSY BLOCK. First run caught "Yogurt + banana right out of minyan" and
+       "Dinner BEFORE Arbit — classes run late" as commitments (the second on the word "class"), which
+       would have blocked the very meals being scheduled. Exclude anything that maps to a slot. */
+    if(mealSlotOfLabel(r[1])) return;
+    if(!BUSY.test(String(r[1]))) return;
+    const end = i+1 < rows.length ? rows[i+1][0] : r[0]+60;
+    out.push([r[0], Math.min(end, r[0]+150), String(r[1]).replace(/<[^>]*>/g,'')]);
+  });
+  return out;
+}
 /* given the last logged meal + time, suggest when to eat NEXT.
    Accounts for: base gap by meal size, a SKIPPED next slot (stretch toward the meal after it),
    and a bedtime cap (nothing past ~30 min before bed). Returns {mins, label, why} or null. */
@@ -3673,10 +3706,25 @@ function nextEatSuggestion(ld){
   let skipAhead = false;
   { const ti = SLOT_SEQ.indexOf(target);
     for(let j=ti+1;j<SLOT_SEQ.length;j++){ const k=SLOT_SEQ[j]; if(eaten[k]) continue; if(skipped(k)){ skipAhead=true; } else break; } }
-  /* base next-eat = last time + gap for the last meal's size.
-     +45 if we stretched PAST an already-skipped slot to reach the target;
-     +30 if a skip sits AHEAD of the target (balance the coming long gap). */
+  /* ⛔ ANCHOR TO THE DAY'S PLAN, NOT TO THE LAST MEAL. His instruction Aug 12 2026: "i want the timing
+     of my meals to really be smarter. everything should be taken into consideration. for example my
+     schedule for the day, or if i had breakfast pretty late i dont want my lunch to be pushed off to
+     5:00."
+     The old line was `lastMin + healthyGap(last)`, i.e. pure chaining — so ONE late meal slid every
+     meal after it, and by dinner he was against the bedtime cap. The planned time was already sitting
+     right there in plannedMealMins() and the engine only ever used it as an upper bound.
+     Now: start at the PLANNED time, and push later only as far as digestion actually requires
+     (minGap, a floor — not healthyGap, which is the ideal). On an on-schedule day the planned time
+     wins and nothing changes. On a late day the meal moves the minimum, and the rest of the day keeps
+     its shape instead of cascading. */
   let mins = lastMin + healthyGap(last) + (stretched? 45 : 0) + (skipAhead? 30 : 0);
+  const plannedT = planned[target];
+  let lateRecovery = false;
+  if(plannedT != null){
+    const floor = lastMin + minGap(last) + (stretched? 30 : 0);
+    const anchored = Math.max(plannedT, floor);
+    if(anchored < mins){ lateRecovery = anchored > plannedT; mins = anchored; }
+  }
   /* bedtime cap ~ 11:00 PM (1380) minus 30 */
   const cap = 1380-30;
   const tName = SLOTS.find(s=>s.key===target).slot.toLowerCase();
@@ -3707,7 +3755,46 @@ function nextEatSuggestion(ld){
   if(basis==='kashrut' || basis==='crowded' || blocked){ /* a hard constraint set the time; keep its reason */ }
   else if(stretched){ basis='skip-adjusted'; why = `a slot before this is skipped today, so it’s pushed later so you’re not starving before ${tName}`; }
   else if(skipAhead){ basis='skip-adjusted'; why = `you’re skipping the snack after ${tName}, so eat ${tName} a bit later — it shortens the long gap to your next meal so you don’t get too hungry`; }
+  else if(lateRecovery){ basis='catching up'; why = `your last meal ran late, so this is as early as it can be — held to the ${Math.round(minGap(last)/60*10)/10} h minimum instead of sliding your whole day back`; }
+  else if(plannedT != null && mins === plannedT){ basis='on schedule'; why = `your normal ${tName} time — you're on schedule`; }
   else { basis='meal spacing'; why = `just standard spacing — ~${Math.round(healthyGap(last)/60*10)/10} h after your last meal for steady energy + digestion (nothing skipped factored in)`; }
+  /* ⛔ DON'T SUGGEST A MEAL IN THE MIDDLE OF CLASS. Read off his real schedule via busyBlocks().
+     Kashrut wins over this — if the 6-hour wait set the time, leave it, because a preference must
+     never move a halachic constraint. Otherwise: eat BEFORE the block if there is room above the
+     digestive floor, else straight after it. */
+  if(basis !== 'kashrut' && !blocked && isToday){
+    for(const [bs, be, blabel] of busyBlocks()){
+      if(mins > bs && mins < be){
+        const floor = lastMin + minGap(last);
+        if(bs - 15 >= floor){ mins = bs - 15; why = `moved just before ${blabel.trim().toLowerCase()} — you can't eat through it`; }
+        else { mins = be; why = `pushed to after ${blabel.trim().toLowerCase()} — it runs right through the window`; }
+        basis = 'schedule';
+        break;
+      }
+    }
+  }
+  /* ⛔ COMPRESS, DON'T CASCADE. Even anchored to the plan, a late start can leave too little day for
+     the meals still to come. Count what is left and the minimum each needs; if the tail would overrun
+     the cap, pull THIS meal earlier by the overflow rather than shoving the last meal past bedtime.
+     This is the other half of his "i dont want my lunch pushed off to 5:00". */
+  if(!blocked && basis !== 'kashrut'){
+    const rest = [];
+    { const ti = SEQ.indexOf(target);
+      for(let j=ti+1;j<SEQ.length;j++){ const k=SEQ[j]; if(eaten[k]||skipped(k)) continue; rest.push(k); } }
+    if(rest.length){
+      let need = minGap(target);
+      for(let j=0;j<rest.length-1;j++) need += minGap(rest[j]);
+      const over = (mins + need) - (1380-30);
+      if(over > 0){
+        const floor = lastMin + minGap(last);
+        const pulled = Math.max(floor, mins - over);
+        if(pulled < mins){
+          mins = pulled; basis = 'compressed';
+          why = `${rest.length} more meal${rest.length>1?'s':''} to fit before bed, so this one comes earlier — the day compresses instead of your last meal sliding past your cutoff`;
+        }
+      }
+    }
+  }
   /* The bedtime cap is a preference and must never pull a dairy slot back inside the wait —
      that would quietly re-introduce the exact bug this clamp exists to kill. When the two
      genuinely conflict, keep the kosher time and say the honest thing. */
@@ -6814,7 +6901,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786559356';
+const BUILD = 'b1786566966';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -498,6 +498,58 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('final-meal', `${rows.length} hole x lane combos all close within 25 cal / 8P, chicken opt-in only, no duplicate rows`);
 }
 
+/* ---------- [meal-timing] a late meal must not cascade, and nothing lands inside a commitment ------
+ * His instruction Aug 12 2026: "if i had breakfast pretty late i dont want my lunch to be pushed off
+ * to 5:00. Take everything into account when deciding timing."
+ * The old engine was `lastMeal + healthyGap`, pure chaining, so one late meal slid the whole day.
+ * Three properties, all of which failed before the rewrite:
+ *   1. on an on-schedule day the suggestion IS the planned time (no drift)
+ *   2. a late meal moves the next one by the MINIMUM gap, not the ideal one
+ *   3. no suggestion ever lands inside a class / minyan / arbit block
+ */
+{
+  const res = run(`
+    const D = isoToday(), out = [];
+    const eat0 = store.get('qpcut.eaten',{}), at0 = store.get('qpcut.eatenAt.'+dkey(D),{});
+    ['10:30','12:30','13:30','14:30'].forEach(t => {
+      store.set('qpcut.eaten', Object.assign({}, eat0, {[D]:{pre:'p5', bf:'b1'}}));
+      store.set('qpcut.eatenAt.'+dkey(D), {pre:'07:45', bf:t});
+      const s = nextEatSuggestion(D);
+      const [h,m] = t.split(':').map(Number);
+      out.push({ bf:h*60+m, mins: s? s.mins : null, target: s&&s.target, basis: s&&s.basis });
+    });
+    store.set('qpcut.eaten', eat0); store.set('qpcut.eatenAt.'+dkey(D), at0);
+    return JSON.stringify({ rows: out, planned: plannedMealMins(), busy: busyBlocks() });
+  `);
+  const { rows, planned, busy } = JSON.parse(res);
+  const bad = [];
+  rows.forEach(r => {
+    if (r.mins == null) { bad.push(`breakfast at ${r.bf}: no suggestion at all`); return; }
+    const p = planned[r.target];
+    /* 1 + 2: never further out than the planned time or the digestive floor, whichever is later */
+    if (p != null) {
+      const allow = Math.max(p, r.bf + 120) + 5;          /* 120 = minGap for a full meal */
+      if (r.mins > allow)
+        bad.push(`breakfast ${Math.floor(r.bf/60)}:${String(r.bf%60).padStart(2,'0')} pushed ${r.target} to ` +
+                 `${Math.floor(r.mins/60)}:${String(r.mins%60).padStart(2,'0')} — ${r.mins-allow} min past the ` +
+                 `planned time AND the minimum gap, i.e. it is cascading`);
+    }
+    /* 3: not inside a commitment */
+    busy.forEach(([bs, be, label]) => {
+      if (r.mins > bs && r.mins < be)
+        bad.push(`a suggestion lands at ${Math.floor(r.mins/60)}:${String(r.mins%60).padStart(2,'0')}, ` +
+                 `inside "${String(label).replace(/<[^>]*>/g,'').trim().slice(0,28)}"`);
+    });
+  });
+  /* a meal row must never be treated as a commitment — it would block the meal being scheduled */
+  busy.forEach(([, , label]) => {
+    if (/breakfast|lunch|snack|dinner|yogurt|banana|creami/i.test(String(label)))
+      bad.push(`busy block is actually a MEAL row: "${String(label).replace(/<[^>]*>/g,'').trim().slice(0,34)}"`);
+  });
+  if (bad.length) fail('meal-timing', bad.join(' · '));
+  else ok('meal-timing', `late-meal recovery holds (${rows.length} start times), ${busy.length} commitment blocks, none of them meals`);
+}
+
 /* ---------- [time-picker] a time input must not re-render on 'change' ----------
  * His report Aug 12 2026: picking the HOUR on his phone closed the whole picker, so he could never
  * reach the minutes in one pass. iOS fires `change` the instant you lift off the hour wheel, and
