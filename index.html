@@ -4765,12 +4765,15 @@ function viewToday(){
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
         : `<div class="head"><b>🍦 ${cupT[0].replace(/^\d+ · /,'')}</b>${tchip(creamiChip)}</div>
-           ${(()=>{ const ct = creamiTop(cupT); const d = ct.total ? Math.round(ct.total.cal - ct.bud[0]) : 0;
-             return `<div class="sub" style="margin-top:4px">${ct.mac
-               ? `Topping <b>${ct.mac[0]} cal</b> · ${ct.mac[1]} P · ${ct.mac[2]} C · ${ct.mac[3]} F: ${cupT[4]}`
-               : `Topping: ${cupT[4]} <span style="opacity:.7">— not computable, this cup leaves an amount open</span>`}</div>`
-             + (ct.total ? `<div class="sub" style="margin-top:3px;opacity:.75">Whole cup ≈ <b>${Math.round(ct.total.cal)} cal</b> · ${Math.round(ct.total.p)} P · ${Math.round(ct.total.c)} C · ${Math.round(ct.total.f)} F${
-                 Math.abs(d) >= 25 ? ` — <b>${d>0?'+':''}${d} vs the ${ct.bud[0]} the snack slot books.</b> Logging still records ${ct.bud[0]}.` : ''}</div>` : ''); })()}
+           ${/* ⛔ TOPPING TEXT ONLY. His instruction Aug 12 2026, verbatim: "dont need all of this. just
+                 write the toppings." I had this card printing "Topping 145 cal · 4 P · 36 C · 6 F" plus a
+                 "Whole cup ≈ 322 cal…" line — a RECEIPT for the 140-cal fix he had asked for. He wanted the
+                 toppings to BE right, not to be shown that they are.
+                 ⭐ THE SHARPENED RULE: a number he does not ACT on is noise too. "Instruction + number" was
+                 always shorthand for "must drive an action" — a macro readout drives nothing, he already
+                 trusts the total. The grams stay because he needs them to build the cup. The macros are
+                 still computed and still guarded by [creami-topping]; they just are not his to read. */''}
+           <div class="sub" style="margin-top:4px">${cupT[4]}</div>
            ${rateBtns('creami:'+cupT[0].replace(/^\d+ · /,''))}`}
     </div>
   </div>
@@ -4833,7 +4836,7 @@ function viewToday(){
 
     ${fm.dessert? `
     <div class="slotlbl" style="margin-top:12px">🍦 Dessert · ${mac(fm.dessert.macros)}</div>
-    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping${(()=>{const ct=creamiTop(cupT); return ct.mac?` (${ct.mac[0]} cal)`:'';})()}: ${cupT[4]}
+    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping: ${cupT[4]}
       ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that’s when dairy opens.`:''}</div>
     <div class="ingmac" style="margin-top:4px">This is your snack slot, not an extra — its ${Math.round(fm.dessert.macros[0])} cal were already in the day.</div>`:''}
 
@@ -6769,7 +6772,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786551848';
+const BUILD = 'b1786554200';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
