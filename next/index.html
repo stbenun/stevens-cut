@@ -330,7 +330,13 @@
   .ratebtn.on.mid{border-color:var(--muted);background:rgba(160,157,142,.16)}
   .ratebtn.on.down{border-color:var(--danger);background:rgba(196,103,79,.2)}
   /* "next ›" flavor stepper on the Today COR + yogurt-bowl cards (his ask Aug 10 2026) */
-  .flavnext{display:inline-flex;align-items:center;gap:4px;margin-left:8px;vertical-align:middle}
+  /* His report Aug 12 2026: "the next button on the flavor cards keeps moving depending on the length
+     of the title. make it not move." The buttons sat inline right after the flavour name, so a long name
+     pushed them along. These summaries are already display:flex, so margin-left:auto pins the cluster to
+     the right edge and the name can no longer move it. The name truncates instead of shoving the row. */
+  .flavnext{display:inline-flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;vertical-align:middle}
+  details[data-acc="cor-day"]>summary>b, details[data-acc="bowl-day"]>summary>h3{
+       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .nxb{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:var(--r-ctl);padding:3px 8px;font-size:11px;line-height:1.4;cursor:pointer;white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
   .nxb:hover{color:var(--ink);border-color:var(--brass)}
   .nxb.rst{color:var(--brass)}
@@ -571,7 +577,7 @@ const SLOTS = [
      {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',[440,20,50,18]],['Fage 2% plain Greek yogurt','1 cup (150 g)',[106,15,4,3]],['Lakanto sugar-free maple syrup','60 g',[20,0,1,0]]], t:[566,35,55,21]},
      {label:'Flapjacks', ing:[['Kodiak buttermilk Power Flapjacks (frozen)','4',[255,19,40,3]],['Justin’s Classic almond butter','1 pack (32 g)',[220,6,6,19]],['Fage Total 0% plain Greek yogurt','125 g',[70,13,4,0]],['Lakanto sugar-free maple syrup','15 g',[5,0,4,0]]], t:[550,38,54,22]}]},
    {id:'b5', name:'Banana Cream Protein Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk (shake the powder into this FIRST)','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ½ tsp banana extract','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen berries','50 g',[25,0.5,6,0]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Biscoff cookies','2',[63,1,12,1]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[550,60,49,14]}]},
-   {id:'b6', name:'Strawberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ¼ tsp lemon extract (the cheesecake tang)','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[75,1,18,0]],['Graham cracker sheet, crushed (the crust)','1',[65,1,12,1.5]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[549,60,47,15]}]},
+   {id:'b6', name:'Strawberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ¼ tsp lemon extract (the cheesecake tang)','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[53,1,14,0]],['Graham cracker sheet, crushed (the crust)','1',[65,1,12,1.5]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[527,60,43,15]}]},
    {id:'b7', name:'Cookies & Cream Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + 1 tsp vanilla bean paste','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['De-creamed Oreo Thins, crushed','5',[125,0,20,5]],['SF chocolate syrup, drizzled','15 g',[5,0,2,0]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[550,58,39,19]}]},
    {id:'b8', name:'Piña Colada Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['RAW Piña Colada protein + ½ tsp coconut extract','½ serving · 15.5 g',[55,12.5,1,0.5]],['Pineapple (fresh or frozen)','150 g',[75,1,18,0]],['Toasted coconut chips','8 g',[45,0,3,4]],['Almond butter (for breakfast size)','12 g',[71,3,3,6]]], t:[548,60,39,19]}]},
    {id:'b9', name:'Butterscotch Apple Pie Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Cinnamon Toast protein + ½ tsp caramel extract + Golden Lakanto (this is the butterscotch now)','½ serving · 18 g',[70,12.5,2,1.25]],['Warm cinnamon apples','100 g',[60,0,15,0]],['De-creamed Biscoff cookies, crumbled','2',[63,1,12,1]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[548,59,45,15]}]},
@@ -581,7 +587,7 @@ const SLOTS = [
    {id:'b13', name:'Mint Chip Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Mint Chip Ice Cream protein','½ serving · 18.5 g',[70,12.5,2.5,1.5]],['Frozen berries','100 g',[50,1,12,0]],['SF chocolate chips / cacao nibs','8 g',[45,1,4,3]],['Almond butter (for breakfast size)','14 g',[83,3,3,7]]], t:[550,61,35,20]}]},
    {id:'b14', name:'Cinnamon Toast Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Cinnamon Toast protein + ½ tsp cinnamon','½ serving · 18 g',[70,12.5,2,1.25]],['Banana','½ med',[53,0.5,14,0]],['Cinnamon Toast Crunch, on top','10 g',[40,0.5,8,1]],['Almond butter (for breakfast size)','14 g',[83,3,3,7]]], t:[548,60,41,17]}]},
    {id:'b15', name:'Vanilla Berry Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen mixed berries','150 g',[75,1,18,0]],['Nilla wafers, crushed','3',[42,0,8,1.5]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[549,59,43,17]}]},
-   {id:'b16', name:'Strawberry Shortcake Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['LD Strawberry Shortcake protein','½ serving · 17.1 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[75,1,18,0]],['Nilla wafers, crushed','3',[42,0,8,1.5]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[549,59,43,17]}]},
+   {id:'b16', name:'Strawberry Shortcake Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['LD Strawberry Shortcake protein','½ serving · 17.1 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[53,1,14,0]],['Nilla wafers, crushed','3',[42,0,8,1.5]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[527,59,39,17]}]},
    {id:'b17', name:'Apple Pie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['RAW Grandma’s Apple Pie protein + ¾ tsp cinnamon','½ serving · 17 g',[65,12.5,1,1.25]],['Warm cinnamon apples','100 g',[60,0,15,0]],['Cinnamon Fiber One bar, crumbled','1',[70,1,17,2]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[550,59,49,16]}]},
    {id:'b18', name:'Chocolate Cookie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Oreo Thins, crushed','2',[50,0,8,2]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[545,58,41,18]}]},
    {id:'b4', name:'Oikos Power Parfait — no scale / no cook', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','2 cups',[180,30,12,0]],['Banana','1 med',[110,1,27,0]],['Cereal (Fruity Pebbles etc.)','~1 cup',[120,1,26,1]],['Justin’s almond butter','½ packet (~16 g)',[100,3,3,8]],['Berries','handful (optional)',[15,0,3,0]]], t:[525,35,71,9]}]},
@@ -598,8 +604,8 @@ const SLOTS = [
  {key:'lu', slot:'Lunch', time:'1:30 PM', b:[575,50,59,15], opts:[
    {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['Sweet potato','225 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,52,63,15]}]},
    {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['White rice (dry)','55 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,52,63,15]}]},
-   {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[580,55,47,18]}]},
-   {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[80,12,5,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[565,56,43,19]}]},
+   {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[103,14,2,5]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[603,57,44,22]}]},
+   {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[160,14,0,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[103,14,2,5]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,10,30,1]]], t:[588,58,40,23]}]},
    {id:'l4', name:'Tuna Melt Stack', k:[['dairy']], vars:[{ing:[['Tuna packets','2',[140,34,0,0]],['Ezekiel bread, toasted','2 slices',[160,10,30,1]],['Low-moisture mozzarella','28 g',[80,6,2,6]],['Mini guac cup','1',[100,1,6,8]],['Apple','1 med',[95,0,25,0]]], t:[575,51,63,15]}]},
    {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','45 g',[153,2,35,0]],['Edamame','85 g',[120,10,9,5]],['Israeli salad — pile it (tomato 150 g · cucumber 150 g · lemon · sumac)','big bowl',[36,1,8,0]],['Hummus — optional 15 g smear (or skip, lean on lemon + sumac)','15 g',[27,1,2,1.5]],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',[0,0,0,0]]], t:[586,51,54,17]}]},
    {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Rice (dry)','40 g',[136,3,32,0]],['Mayo: Hellmann’s Real 8 g (weighed) OR light 20 g · + sriracha 5 g','—',[60,0,1,6]],['Edamame','85 g',[120,10,9,5]],['Cucumber','75 g',[15,0,3,0]],['Soy sauce','15 mL',[5,0,1,0]],['Rice cake, crushed on top','1',[35,0,7,0]]], t:[581,64,53,11]}]},
@@ -4247,7 +4253,12 @@ const PRO_SALMON = {id:'salmon', label:'Salmon, frozen 6 oz bags',       unit:'b
 const PRO_TUNA   = {id:'tuna',   label:'Tuna packets',                   unit:'packet', per:[70,17,0,0],   lo:2, hi:5};
 const PRO_CHICK  = {id:'chicken',label:'Cooked chicken, LEFTOVER only',  unit:'oz',     per:[35,6.29,0,1.0], lo:4, hi:10, step:1, leftoverOnly:true};
 const PRO_JIBEN  = {id:'jiben',  label:'Eggs ×2 · egg whites 100 g · cottage cheese 113 g · mozzarella 28 g',
-                    unit:'× block', per:[370,42,7,17], lo:1, hi:2};
+                    unit:'× block', per:[393,44,4,21], lo:1, hi:2};
+/* ⚠️ PRO_JIBEN.per is a HAND-COPIED sum of four SLOTS rows: eggs x2 + egg whites 100 g +
+   4% cottage cheese 113 g + mozzarella 28 g. It was exactly right until the cottage-cheese label
+   was corrected on 2026-08-12 (80 -> 103 cal), and then it was silently stale — [final-meal] caught
+   it as a 72-cal miss on the dairy lane. [jiben-anchor] in check-food.js now asserts this equals
+   the sum of those four rows, so the copy cannot drift from its source again. */
 const PRO_YOG    = {id:'yogurt', label:'FAGE 2% Greek yogurt',           unit:'g',      per:[0.705,0.10,0.03,0.02], lo:150, hi:500, step:10};
 const C_RICE  = {id:'rice',   label:'White rice, dry',      unit:'g',     per:[3.45,0.073,0.836,0],  lo:25, hi:115, step:5};
 const C_POT   = {id:'potato', label:'Potatoes, ¾" cubes',   unit:'g',     per:[0.727,0.018,0.164,0], lo:80, hi:420, step:10};
@@ -6788,7 +6799,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786554873';
+const BUILD = 'b1786558798';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

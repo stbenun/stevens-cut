@@ -552,6 +552,31 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   }
 })();
 
+/* ============ [jiben-anchor] a hand-copied macro sum cannot drift from its source ============
+ * PRO_JIBEN.per is the sum of four SLOTS ingredient rows. It was correct for weeks, then the cottage
+ * cheese label was corrected and the copy went stale in silence — [final-meal] surfaced it only as a
+ * 72-cal miss on the dairy lane, which is a symptom, not a cause. This asserts the identity directly.
+ */
+(function jibenAnchor() {
+  const NEED = ['Eggs', 'Egg whites', '4% cottage cheese', 'Low-moisture mozzarella'];
+  const l2 = (SLOTS.find(s => s.key === 'lu') || {opts: []}).opts.find(o => o.id === 'l2');
+  const anchor = (() => { const m = /const PRO_JIBEN\s*=\s*\{[\s\S]*?per:\[([\d.,]+)\]/.exec(src);
+                          return m ? m[1].split(',').map(Number) : null; })();
+  if (!l2 || !anchor) { fail('jiben-anchor', 'could not read l2 or PRO_JIBEN'); return; }
+  const sum = [0, 0, 0, 0];
+  const found = [];
+  l2.vars[0].ing.forEach(([name, , mac]) => {
+    if (NEED.some(n => name.startsWith(n))) { found.push(name); mac.forEach((v, i) => sum[i] += v); }
+  });
+  const miss = NEED.filter(n => !found.some(f => f.startsWith(n)));
+  if (miss.length) { fail('jiben-anchor', 'l2 no longer contains: ' + miss.join(', ')); return; }
+  const off = sum.map((v, i) => Math.round(v - anchor[i]));
+  if (off.some(d => Math.abs(d) > 1))
+    fail('jiben-anchor', 'PRO_JIBEN.per is [' + anchor + '] but its four l2 rows sum to [' +
+         sum.map(Math.round) + '] — off by [' + off + ']');
+  else pass('jiben-anchor', 'PRO_JIBEN.per matches its four l2 ingredient rows');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
