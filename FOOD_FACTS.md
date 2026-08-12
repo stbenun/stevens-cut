@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 17 / 125 foods in the meal plan (**14%**)
+## Coverage: 21 / 125 foods in the meal plan (**17%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 30 rows: **11** label · **11** derived · **6** USDA · **2** UNVERIFIED
+Provenance of the 33 rows: **13** label · **11** derived · **7** USDA · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -20,6 +20,7 @@ Provenance of the 30 rows: **11** label · **11** derived · **6** USDA · **2**
 | `cinnamon apples` | g | 0.52 | 0.003 | 0.138 | 0.002 | USDA | USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g. |
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
 | `eye of round` | oz cooked | 40.5 | 7.7 | 0 | 1 | derived | lean roast beef, 143 cal / 27 P per 100 g |
+| `ezekiel bread` | slice | 80 | 4 | 15 | 0.5 | label | Food For Life Ezekiel 4:9 Sprouted Whole Grain label: 1 slice = 80 cal / 4 P / 15 C total (3 g fiber) / 0.5 F. ⚠️ The app rows use 5 P per slice, so every Ezekiel row overstates protein by 1 g per slice. |
 | `fd strawberries` | g | 3.5 | 0.1 | 0.8 | 0.01 | label | Freeze-dried strawberries published panel: 10 g = 35 cal / 1 P / 8 C (2 g fiber, 5 g sugar) -> per gram. Brand-to-brand variation is small. Batch 5 cup 8 uses 10 g. |
 | `ff whip` | g | 1 | 0 | 0.2 | 0 | label | Reddi-wip Fat Free label: 2 tbsp (5 g) = 5 cal / 0 P / 1 C / 0 F -> 1 cal per g. STANDARD SERVING 15 g = 15 cal / 3 C. ✅ BRAND CONFIRMED BY HIM Aug 11 2026 — it is Reddi-wip Fat Free, and the published label matches this row exactly, so the derived figure was right. |
 | `fiber one bar` | bar | 70 | 2 | 17 | 3 | label | Fiber One 70 Calorie Soft-Baked Bar label, HIS version confirmed Aug 11 2026: 1 bar (~25 g) = 70 cal / 2 P / 17 C total / 3 F, 7 g fiber, 2 g sugar. Cinnamon Coffee Cake and Chocolate Fudge Brownie are identical panels. The 90-cal product is a DIFFERENT bar — do not mix them up. |
@@ -27,11 +28,13 @@ Provenance of the 30 rows: **11** label · **11** derived · **6** USDA · **2**
 | `graham cracker` | g | 4.19 | 0.065 | 0.774 | 0.097 | label | Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g. |
 | `miso soup` | cup (240 g) | 40 | 3 | 5 | 1 | USDA | USDA-style restaurant miso: 240 g cup ~50 cal / 3 P / 5 C / 1 F; 40 is the Atwater-consistent value for that split. Tofu-heavy bowls run 6 P / ~80 cal. ~700 mg sodium. |
 | `nilla wafer` | g | 4.67 | 0.033 | 0.7 | 0.2 | label | Nabisco Nilla Wafers label: 8 wafers (30 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 3.75 g per wafer, which matches his own "9 crushed Nilla wafers (34 g)" row to within 0.03 g. 11 cups use these. |
+| `oikos triple zero` | cup (150 g) | 80 | 15 | 6 | 0 | label | oikos.com official panel for Vanilla Triple Zero: 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F. ⚠️ CONFLICT: retailer listings (Walmart, Albertsons, Giant) all say 90 cal — possibly older packaging. Manufacturer wins, but the app row says 90, so it is 10 cal high either way. |
 | `oreo mini` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Mini Bite Size label: 9 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram, 3.22 g per cookie. Identical per-gram to oreo thin, which is expected — same cookie, smaller format. He eats these WHOLE, not de-creamed. |
 | `oreo thin` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Thins label: 4 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 7.25 g per WHOLE cookie. ⚠️ 6 cups specify DE-CREAMED and the filling conversion is UNKNOWN — do not apply this to a de-creamed cup until he says whether he weighs before or after. |
 | `oreo thin wafer` | g | 4.78 | 0.044 | 0.752 | 0.168 | UNVERIFIED | DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM. |
 | `pineapple` | g | 0.5 | 0.005 | 0.131 | 0.001 | USDA | USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g. |
 | `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ BRAND IS SHORE PITA (he said so Aug 11 2026) AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
+| `russet potato` | g | 0.79 | 0.021 | 0.175 | 0.001 | USDA | USDA russet potato, flesh and skin, RAW: 100 g = 79 cal / 2.1 P / 17.5 C / 0.1 F -> per gram. ⚠️ The app prices 220 g at 160 cal; USDA gives 174. All his weights are raw, so raw is the right basis. |
 | `salmon sashimi` | piece (20 g) | 42 | 4.1 | 0 | 2.7 | derived | Atlantic farmed, 208 cal / 20.4 P per 100 g raw |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
@@ -42,7 +45,7 @@ Provenance of the 30 rows: **11** label · **11** derived · **6** USDA · **2**
 | `tuna sashimi` | piece (20 g) | 22 | 4.9 | 0 | 0.1 | derived | yellowfin, 109 cal / 24.4 P per 100 g raw |
 | `turkey breast` | oz cooked | 38 | 8.5 | 0 | 0.3 | derived | roast, 135 cal / 30 P per 100 g |
 
-## Still to source — 108 foods, most-used first
+## Still to source — 104 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -56,8 +59,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | mini guac cup | 4 |
 | potatoes | 4 |
 | rice cakes | 3 |
-| oikos triple zero | 3 |
-| ezekiel bread | 3 |
 | egg whites | 3 |
 | low-moisture mozzarella | 3 |
 | tuna packets | 3 |
@@ -118,7 +119,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | 🥶 banana | 1 |
 | sweet potato | 1 |
 | spinach | 1 |
-| ezekiel bread, toasted | 1 |
 | apple | 1 |
 | israeli salad | 1 |
 | hummus | 1 |
@@ -140,7 +140,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | topping / mix-in | 1 |
 | ryse loaded protein, cinnamon toast | 1 |
 | kodiak classic protein rolled oats | 1 |
-| oikos triple zero vanilla | 1 |
 | baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt | 1 |
 | sugar-free ketchup | 1 |
 | tomato paste | 1 |

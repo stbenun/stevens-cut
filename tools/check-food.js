@@ -512,7 +512,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * as coverage climbs; never lower it.
  */
 (function macroProvenance() {
-  const FLOOR = 14;                       /* ratchet — only ever goes up */
+  const FLOOR = 17;                       /* ratchet — only ever goes up */
   const need = new Map();
   const slotsBlock = (() => {
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
