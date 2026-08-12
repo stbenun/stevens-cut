@@ -468,25 +468,38 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * so this makes it loud: every cup must have a key, and every key must belong to a cup.
  */
 (function creamiTopping() {
+  const TARGET = 140, TOL = 8;
   const BATCHES = grab('CREAMI_BATCHES');
-  const TOPMAC  = grab('CREAMI_TOPMAC');
-  if (!BATCHES || !TOPMAC) { fail('creami-topping', 'could not read CREAMI_BATCHES or CREAMI_TOPMAC'); return; }
-  const cups = BATCHES.flatMap(b => (b.cups || []).map(c => ({ name: c[0], prose: c[4] })));
-  const bad = [], seen = new Set();
+  if (!BATCHES || !FOOD_FACTS) { fail('creami-topping', 'could not read CREAMI_BATCHES / FOOD_FACTS'); return; }
+  const cups = BATCHES.flatMap(b => (b.cups || []).map(c => ({ name: c[0], prose: c[4], comps: c[5] })));
+  const bad = [];
   for (const c of cups) {
-    if (!(c.prose in TOPMAC)) { bad.push(c.name + ' has no CREAMI_TOPMAC entry — its topping text changed'); continue; }
-    seen.add(c.prose);
-    const v = TOPMAC[c.prose];
-    if (v === null) continue;                       /* deliberately uncomputable, card says so */
-    if (!Array.isArray(v) || v.length !== 4) { bad.push(c.name + ' entry is not [cal,p,c,f]'); continue; }
-    if (v.some(x => typeof x !== 'number' || !isFinite(x) || x < 0)) { bad.push(c.name + ' has a non-sane macro'); continue; }
-    /* a topping is a garnish, not a meal: anything outside this band is a units mistake */
-    if (v[0] < 20 || v[0] > 260) bad.push(c.name + ' topping is ' + v[0] + ' cal — outside 20-260, check the units');
+    if (!Array.isArray(c.comps) || !c.comps.length) { bad.push(c.name + ' has no component list (cup[5])'); continue; }
+    let cal = 0, ok = true;
+    for (const pair of c.comps) {
+      const [k, q] = pair || [];
+      const f = FOOD_FACTS[k];
+      if (!f) { bad.push(c.name + ': "' + k + '" is not in FOOD_FACTS'); ok = false; break; }
+      if (!(typeof q === 'number' && isFinite(q) && q > 0)) { bad.push(c.name + ': bad quantity for ' + k); ok = false; break; }
+      cal += f.cal * q;
+      /* every component named in the sentence must be a real row, and vice versa — the sentence is
+         generated from this list, so a mismatch means someone hand-edited the prose. */
+      const label = k.replace(/^(bare|fd|sf) /, '').split(' ')[0];
+      if (label.length > 3 && !c.prose.toLowerCase().includes(label.toLowerCase()))
+        bad.push(c.name + ': component "' + k + '" is not mentioned in the topping text');
+    }
+    if (!ok) continue;
+    /* THE SPEC: s1 budgets 140 cal of topping so the cup fills the 330-cal snack slot. */
+    if (Math.abs(cal - TARGET) > TOL)
+      bad.push(c.name + ' topping is ' + Math.round(cal) + ' cal — off the ' + TARGET + ' spec by ' +
+               Math.round(cal - TARGET) + ', rebalance it');
+    /* whip is a garnish; if it ever creeps up it is being used as a calorie lever (see creamiTopMac) */
+    const w = (c.comps.find(p => p && p[0] === 'ff whip') || [])[1] || 0;
+    if (w > 30) bad.push(c.name + ' has ' + w + ' g of whip — that is a calorie lever, add cookie not air');
   }
-  for (const k of Object.keys(TOPMAC)) if (!seen.has(k)) bad.push('orphan CREAMI_TOPMAC key no cup uses: "' + k.slice(0, 45) + '"');
-  const n = cups.length, nulls = cups.filter(c => TOPMAC[c.prose] === null).length;
   if (bad.length) fail('creami-topping', bad.join(' | '));
-  else pass('creami-topping', n + ' cups all resolve (' + (n - nulls) + ' computed, ' + nulls + ' deliberately open), no orphans');
+  else pass('creami-topping', cups.length + ' cups: every topping within ' + TOL + ' cal of the ' +
+            TARGET + ' spec, every component sourced and named in its text');
 })();
 
 /* ============ [macro-provenance] the coverage RATCHET ============
