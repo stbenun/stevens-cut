@@ -1479,6 +1479,14 @@ const FOOD_FACTS = {
      ⏳ ONE WEIGHING CALIBRATES THIS: if he scrapes 5 Thins and tells me the gram weight, the real
      cream fraction falls straight out and this stops being an estimate. Until then it is flagged. */
   'oreo thin wafer':{unit:'g',             cal:4.78, p:0.044, c:0.752, f:0.168, src:'DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM.'},
+  /* Fresh fruit + freeze-dried, from USDA / published panels. He never has to photograph produce —
+     these are commodities and his grams are already specified in the cups. Added Aug 11 2026 so that
+     every Creami topping can be COMPUTED; the cups that use fruit were the last uncovered ones. */
+  'blueberries':    {unit:'g',             cal:0.57, p:0.007, c:0.145, f:0.003, src:'USDA raw blueberries, 100 g = 57 cal / 0.7 P / 14.5 C / 0.33 F -> per gram. Cups use 70 g.'},
+  'strawberries':   {unit:'g',             cal:0.32, p:0.007, c:0.077, f:0.003, src:'USDA raw strawberries, 100 g = 32 cal / 0.67 P / 7.7 C / 0.3 F -> per gram. Cups use 70 g.'},
+  'pineapple':      {unit:'g',             cal:0.50, p:0.005, c:0.131, f:0.001, src:'USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g.'},
+  'cinnamon apples':{unit:'g',             cal:0.52, p:0.003, c:0.138, f:0.002, src:'USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g.'},
+  'fd strawberries':{unit:'g',             cal:3.50, p:0.10,  c:0.80,  f:0.01,  src:'Freeze-dried strawberries published panel: 10 g = 35 cal / 1 P / 8 C (2 g fiber, 5 g sugar) -> per gram. Brand-to-brand variation is small. Batch 5 cup 8 uses 10 g.'},
   'bare coconut chips': {unit:'g',         cal:6.07, p:0.07, c:0.5, f:0.43, src:'Bare Baked Crunchy Toasted Coconut Chips label, his brand confirmed Aug 11 2026: 28 g = 170 cal / 2 P / 14 C / 12 F -> per gram. Sat fat 11 g per 28 g.'},
   'tuna sashimi':   {unit:'piece (20 g)', cal:22,   p:4.9, c:0,  f:0.1, src:'yellowfin, 109 cal / 24.4 P per 100 g raw'},
   'salmon sashimi': {unit:'piece (20 g)', cal:42,   p:4.1, c:0,  f:2.7, src:'Atlantic farmed, 208 cal / 20.4 P per 100 g raw'},
@@ -3109,6 +3117,66 @@ async function delPhoto(key){ const db=await pdb(); return new Promise(res=>{
    The rule this violated is already written down from the hydration-stick bug: a required action's
    trigger may be ADJUSTED by a conditional event, never SUPPLIED by one. A tap is a conditional
    event. Finishing the batch is the real trigger, so finishing the batch is what advances it. */
+/* ---- CREAMI TOPPING MACROS, computed not asserted ------------------------------
+   Aug 12 2026. He caught the bug: the card printed "Topping (140 cal)" on EVERY cup,
+   because s1's third ingredient is a placeholder - 'Topping / mix-in (140-cal budget)'
+   [140,2,20,6]. His cup 2 (Double Chocolate Brownie) is a CHOCOLATE Fiber One bar plus
+   15 g of SF syrup: 75 cal. The card was overstating it by 65.
+
+   Every value below was COMPUTED from FOOD_FACTS by summing the cup's own topping
+   string, then frozen here. Range across the 36 cups is 42-173, mean 127 - so the flat
+   140 was wrong nearly everywhere, in BOTH directions.
+
+   TWO INDEPENDENT CHECKS THAT THE MATH IS RIGHT, both worth keeping:
+     - cup 2 computes to 75; HE independently reported ~77 from his own reading.
+     - Batch 5 cup 6 computes to 42, and that cup's own prose has said "the light one,
+       ~45 cal" since it was written, by a different route. Agreement within 3 cal.
+
+   KEYED ON THE EXACT TOPPING PROSE, deliberately. If a cup's text is ever edited the
+   lookup MISSES and the card shows no calorie figure at all - fail-safe, never a stale
+   wrong number. [creami-topping] in check-food.js fails the build on any orphan.
+   null = genuinely uncomputable, and the card says so instead of inventing a figure. */
+const CREAMI_TOPMAC = {
+  "9 crushed Nilla wafers (34 g) + FF whip 15 g": [173, 1.1, 26.6, 6.8],
+  "33 g Cinnamon Toast Crunch": [137, 1.6, 26.6, 3.2],
+  "5 de-creamed Oreo Thins (or 9 whole mini Oreos, +5 cal) + SF choc drizzle 15 g": [140, 1.2, 23.2, 4.7],
+  "1 cinnamon Fiber One bar + 100 g warm cinnamon apples + FF whip 15 g": [137, 2.3, 33.8, 3.2],
+  "150 g fresh pineapple + FF whip 15 g (+ 8 g toasted coconut chips)": [124, 1.3, 23.7, 3.6],
+  "5 de-creamed Oreo Thins (or 9 whole mini Oreos, +5 cal) + FF whip 15 g": [150, 1.2, 24.2, 4.7],
+  "30 g Fruity Pebbles + FF whip 15 g": [132, 0.8, 28.8, 1.7],
+  "6 Nilla (23 g) + 70 g blueberries + FF whip 15 g": [160, 1.2, 28.9, 4.7],
+  "9 Nilla wafers + FF whip 15 g": [173, 1.1, 26.6, 6.8],
+  "9 Nilla wafers + FF whip 15 g — it’s the real thing": [173, 1.1, 26.6, 6.8],
+  "6 Nilla + 70 g blueberries + FF whip 15 g": [160, 1.2, 28.9, 4.7],
+  "3 crushed Biscoff + FF whip 15 g": [128, 1.5, 20.3, 4.5],
+  "½ cinnamon Fiber One + 20 g Cinnamon Toast Crunch + FF whip 15 g": [133, 2.0, 27.6, 3.5],
+  "5 de-creamed Oreo Thins (or 9 whole mini Oreos, +5 cal)": [135, 1.2, 21.2, 4.7],
+  "6 Nilla + 70 g strawberries + FF whip 15 g": [142, 1.2, 24.1, 4.7],
+  "½ cinnamon Fiber One + 100 g warm cinnamon apples": [87, 1.3, 22.3, 1.7],
+  "150 g fresh pineapple + FF whip 15 g": [90, 0.8, 22.7, 0.1],
+  "70 g strawberries + 6 Nilla + FF whip 15 g": [142, 1.2, 24.1, 4.7],
+  "33 g cereal of choice + FF whip 15 g": null,
+  "Nilla + FF whip 15 g (or SF sprinkles)": null,
+  "8 g toasted coconut chips + 10 g sliced almonds + SF choc drizzle 15 g": [111, 2.7, 8.1, 8.4],
+  "1 CHOCOLATE Fiber One bar, crumbled + SF choc drizzle 15 g": [75, 2.0, 18.9, 3.0],
+  "25 g crushed graham + FF whip 15 g": [120, 1.6, 22.4, 2.4],
+  "70 g blueberries + ½ cinnamon Fiber One bar": [75, 1.5, 18.6, 1.7],
+  "70 g strawberries + SF choc drizzle 15 g + FF whip 15 g — the light one, ~45 cal, so there is room left in the day": [42, 0.5, 10.3, 0.2],
+  "10 g freeze-dried strawberries + 20 g Fruity Pebbles": [113, 1.6, 25.2, 1.2],
+};
+/* Base = s1's first TWO ingredient rows (Fairlife + Ryse), read from the cookbook so it
+   cannot drift from the meal it describes. bud = s1's total, i.e. what the snack slot
+   still books when he logs it. */
+function creamiTop(cup){
+  const mac  = CREAMI_TOPMAC[cup && cup[4]] || null;
+  const o    = OPTBYID['s1'];
+  const ing  = (o && o.vars[0].ing) || [];
+  const base = ing.slice(0,2).reduce((a,r)=>({cal:a.cal+r[2][0], p:a.p+r[2][1], c:a.c+r[2][2], f:a.f+r[2][3]}),
+                                     {cal:0,p:0,c:0,f:0});
+  const bud  = (o && o.vars[0].t) || [317,32,30,7];
+  if(!mac) return {mac:null, base, bud};
+  return {mac, base, bud, total:{cal:base.cal+mac[0], p:base.p+mac[1], c:base.c+mac[2], f:base.f+mac[3]}};
+}
 function creamiState(){
   const cb = store.get('qpcut.creamibatch',{idx:0,started:null});
   const at = i => CREAMI_BATCHES[((i % CREAMI_BATCHES.length) + CREAMI_BATCHES.length) % CREAMI_BATCHES.length];
@@ -4715,7 +4783,12 @@ function viewToday(){
       ${isFri
         ? `<div class="head"><b>🍦 Snack skipped tonight</b>${tchip('Shabbat dinner instead')}</div>`
         : `<div class="head"><b>🍦 ${cupT[0].replace(/^\d+ · /,'')}</b>${tchip(creamiChip)}</div>
-           <div class="sub" style="margin-top:4px">Topping (140 cal): ${cupT[4]}</div>
+           ${(()=>{ const ct = creamiTop(cupT); const d = ct.total ? Math.round(ct.total.cal - ct.bud[0]) : 0;
+             return `<div class="sub" style="margin-top:4px">${ct.mac
+               ? `Topping <b>${ct.mac[0]} cal</b> · ${ct.mac[1]} P · ${ct.mac[2]} C · ${ct.mac[3]} F: ${cupT[4]}`
+               : `Topping: ${cupT[4]} <span style="opacity:.7">— not computable, this cup leaves an amount open</span>`}</div>`
+             + (ct.total ? `<div class="sub" style="margin-top:3px;opacity:.75">Whole cup ≈ <b>${Math.round(ct.total.cal)} cal</b> · ${Math.round(ct.total.p)} P · ${Math.round(ct.total.c)} C · ${Math.round(ct.total.f)} F${
+                 Math.abs(d) >= 25 ? ` — <b>${d>0?'+':''}${d} vs the ${ct.bud[0]} the snack slot books.</b> Logging still records ${ct.bud[0]}.` : ''}</div>` : ''); })()}
            ${rateBtns('creami:'+cupT[0].replace(/^\d+ · /,''))}`}
     </div>
   </div>
@@ -4778,7 +4851,7 @@ function viewToday(){
 
     ${fm.dessert? `
     <div class="slotlbl" style="margin-top:12px">🍦 Dessert · ${mac(fm.dessert.macros)}</div>
-    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping: ${cupT[4]}
+    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping${(()=>{const ct=creamiTop(cupT); return ct.mac?` (${ct.mac[0]} cal)`:'';})()}: ${cupT[4]}
       ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that’s when dairy opens.`:''}</div>
     <div class="ingmac" style="margin-top:4px">This is your snack slot, not an extra — its ${Math.round(fm.dessert.macros[0])} cal were already in the day.</div>`:''}
 
@@ -6714,7 +6787,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786481180';
+const BUILD = 'b1786544510';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

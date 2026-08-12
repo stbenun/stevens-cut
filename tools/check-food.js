@@ -460,6 +460,35 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   else pass('topping-weights', 'every whip / chocolate-syrup mention states its grams (shopping rows exempt)');
 })();
 
+/* ============ [creami-topping] every cup's topping resolves to real macros ============
+ * Exists because the Creami card printed "Topping (140 cal)" on all 36 cups for months —
+ * s1's third ingredient is a placeholder budget, not a food, and nothing checked it. HE found
+ * it, on cup 2, which is actually 75. CREAMI_TOPMAC is keyed on the exact topping prose so an
+ * edited cup fails SAFE (no number shown), but silently showing nothing is still a regression,
+ * so this makes it loud: every cup must have a key, and every key must belong to a cup.
+ */
+(function creamiTopping() {
+  const BATCHES = grab('CREAMI_BATCHES');
+  const TOPMAC  = grab('CREAMI_TOPMAC');
+  if (!BATCHES || !TOPMAC) { fail('creami-topping', 'could not read CREAMI_BATCHES or CREAMI_TOPMAC'); return; }
+  const cups = BATCHES.flatMap(b => (b.cups || []).map(c => ({ name: c[0], prose: c[4] })));
+  const bad = [], seen = new Set();
+  for (const c of cups) {
+    if (!(c.prose in TOPMAC)) { bad.push(c.name + ' has no CREAMI_TOPMAC entry — its topping text changed'); continue; }
+    seen.add(c.prose);
+    const v = TOPMAC[c.prose];
+    if (v === null) continue;                       /* deliberately uncomputable, card says so */
+    if (!Array.isArray(v) || v.length !== 4) { bad.push(c.name + ' entry is not [cal,p,c,f]'); continue; }
+    if (v.some(x => typeof x !== 'number' || !isFinite(x) || x < 0)) { bad.push(c.name + ' has a non-sane macro'); continue; }
+    /* a topping is a garnish, not a meal: anything outside this band is a units mistake */
+    if (v[0] < 20 || v[0] > 260) bad.push(c.name + ' topping is ' + v[0] + ' cal — outside 20-260, check the units');
+  }
+  for (const k of Object.keys(TOPMAC)) if (!seen.has(k)) bad.push('orphan CREAMI_TOPMAC key no cup uses: "' + k.slice(0, 45) + '"');
+  const n = cups.length, nulls = cups.filter(c => TOPMAC[c.prose] === null).length;
+  if (bad.length) fail('creami-topping', bad.join(' | '));
+  else pass('creami-topping', n + ' cups all resolve (' + (n - nulls) + ' computed, ' + nulls + ' deliberately open), no orphans');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
