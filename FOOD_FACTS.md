@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 34 rows: **12** label · **12** derived · **8** USDA · **2** UNVERIFIED
+Provenance of the 35 rows: **12** label · **12** derived · **9** USDA · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -35,6 +35,7 @@ Provenance of the 34 rows: **12** label · **12** derived · **8** USDA · **2**
 | `oreo thin wafer` | g | 4.78 | 0.044 | 0.752 | 0.168 | UNVERIFIED | DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM. |
 | `pineapple` | g | 0.5 | 0.005 | 0.131 | 0.001 | USDA | USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g. |
 | `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ BRAND IS SHORE PITA (he said so Aug 11 2026) AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
+| `potato skin-on` | g | 0.76 | 0.0205 | 0.1745 | 0.001 | USDA | Midpoint of USDA russet flesh-and-skin raw (79 cal/100 g) and Yukon Gold flesh-and-skin raw (73), because he alternates and always eats the skin. RANGE 0.73-0.79 cal/g. All his weights are raw. Corrected 5 rows that were priced at the gold end. |
 | `russet potato` | g | 0.79 | 0.021 | 0.175 | 0.001 | USDA | USDA russet potato, flesh and skin, RAW: 100 g = 79 cal / 2.1 P / 17.5 C / 0.1 F -> per gram. ⚠️ The app prices 220 g at 160 cal; USDA gives 174. All his weights are raw, so raw is the right basis. |
 | `salmon sashimi` | piece (20 g) | 42 | 4.1 | 0 | 2.7 | derived | Atlantic farmed, 208 cal / 20.4 P per 100 g raw |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
