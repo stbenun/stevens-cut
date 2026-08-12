@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 21 / 125 foods in the meal plan (**17%**)
+## Coverage: 22 / 125 foods in the meal plan (**18%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 33 rows: **13** label · **11** derived · **7** USDA · **2** UNVERIFIED
+Provenance of the 34 rows: **12** label · **12** derived · **8** USDA · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -19,6 +19,7 @@ Provenance of the 33 rows: **13** label · **11** derived · **7** USDA · **2**
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |
 | `cinnamon apples` | g | 0.52 | 0.003 | 0.138 | 0.002 | USDA | USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g. |
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
+| `edamame` | g | 1.21 | 0.119 | 0.089 | 0.052 | USDA | USDA edamame, frozen, PREPARED: 100 g = 121 cal / 11.9 P / 8.9 C total (5.2 g fibre, so 3.7 net — an earlier search handed me the NET figure as if it were total) / 5.2 F -> per gram. He confirmed Aug 12 2026 it is just regular frozen edamame, so USDA is the right basis. ⚠️ The app rows ran ~17% high (85 g priced at 120 cal, real 103) and are corrected. |
 | `eye of round` | oz cooked | 40.5 | 7.7 | 0 | 1 | derived | lean roast beef, 143 cal / 27 P per 100 g |
 | `ezekiel bread` | slice | 80 | 4 | 15 | 0.5 | label | Food For Life Ezekiel 4:9 Sprouted Whole Grain label: 1 slice = 80 cal / 4 P / 15 C total (3 g fiber) / 0.5 F. ⚠️ The app rows use 5 P per slice, so every Ezekiel row overstates protein by 1 g per slice. |
 | `fd strawberries` | g | 3.5 | 0.1 | 0.8 | 0.01 | label | Freeze-dried strawberries published panel: 10 g = 35 cal / 1 P / 8 C (2 g fiber, 5 g sugar) -> per gram. Brand-to-brand variation is small. Batch 5 cup 8 uses 10 g. |
@@ -28,7 +29,7 @@ Provenance of the 33 rows: **13** label · **11** derived · **7** USDA · **2**
 | `graham cracker` | g | 4.19 | 0.065 | 0.774 | 0.097 | label | Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g. |
 | `miso soup` | cup (240 g) | 40 | 3 | 5 | 1 | USDA | USDA-style restaurant miso: 240 g cup ~50 cal / 3 P / 5 C / 1 F; 40 is the Atwater-consistent value for that split. Tofu-heavy bowls run 6 P / ~80 cal. ~700 mg sodium. |
 | `nilla wafer` | g | 4.67 | 0.033 | 0.7 | 0.2 | label | Nabisco Nilla Wafers label: 8 wafers (30 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 3.75 g per wafer, which matches his own "9 crushed Nilla wafers (34 g)" row to within 0.03 g. 11 cups use these. |
-| `oikos triple zero` | cup (150 g) | 80 | 15 | 6 | 0 | label | oikos.com official panel for Vanilla Triple Zero: 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F. ⚠️ CONFLICT: retailer listings (Walmart, Albertsons, Giant) all say 90 cal — possibly older packaging. Manufacturer wins, but the app row says 90, so it is 10 cal high either way. |
+| `oikos triple zero` | cup (150 g) | 80 | 15 | 6 | 0 | derived | FLAVOUR-VARIABLE — his call Aug 12 2026 when shown the 80-vs-90 conflict: "depends on flavor." oikos.com official for VANILLA: 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F. Retailers list 90 for other flavours. So treat as 80-90 per cup and do NOT pin one number; the app row of 90 is the top of the range and stands. Same handling as almond butter. |
 | `oreo mini` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Mini Bite Size label: 9 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram, 3.22 g per cookie. Identical per-gram to oreo thin, which is expected — same cookie, smaller format. He eats these WHOLE, not de-creamed. |
 | `oreo thin` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Thins label: 4 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 7.25 g per WHOLE cookie. ⚠️ 6 cups specify DE-CREAMED and the filling conversion is UNKNOWN — do not apply this to a de-creamed cup until he says whether he weighs before or after. |
 | `oreo thin wafer` | g | 4.78 | 0.044 | 0.752 | 0.168 | UNVERIFIED | DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM. |
@@ -45,7 +46,7 @@ Provenance of the 33 rows: **13** label · **11** derived · **7** USDA · **2**
 | `tuna sashimi` | piece (20 g) | 22 | 4.9 | 0 | 0.1 | derived | yellowfin, 109 cal / 24.4 P per 100 g raw |
 | `turkey breast` | oz cooked | 38 | 8.5 | 0 | 0.3 | derived | roast, 135 cal / 30 P per 100 g |
 
-## Still to source — 104 foods, most-used first
+## Still to source — 103 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -55,7 +56,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | fairlife 0% milk | 15 |
 | fage 2% greek yogurt | 14 |
 | banana | 8 |
-| edamame | 5 |
 | mini guac cup | 4 |
 | potatoes | 4 |
 | rice cakes | 3 |
