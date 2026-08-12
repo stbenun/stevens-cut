@@ -3,21 +3,24 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 43 / 119 foods in the meal plan (**36%**)
+## Coverage: 51 / 119 foods in the meal plan (**43%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 49 rows: **19** label · **15** USDA · **13** derived · **2** UNVERIFIED
+Provenance of the 57 rows: **22** label · **19** USDA · **14** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
+| `acme nova lox` | g | 1.24 | 0.229 | 0 | 0.044 | label | Acme Nova smoked salmon label, verified Jul 24 2026: 2 oz (57 g) = 70 cal / 13 P / 0 C / 2.5 F -> per gram. His 75 g row = 93/17/0/3. It had been overstated at 145/16/0/9 under the wrong brand name and was corrected then. |
 | `almond butter` | g | 5.94 | 0.19 | 0.19 | 0.53 | label | BRAND-VARIABLE, his call: 190-220 cal per 32 g depending on brand, and he does not standardise. Basis is the low end (190/32 = 5.94 cal/g), which is what the app rows already use. Justin\'s Classic official panel for reference: 32 g = 220 / 6 P / 5 C / 19 F. Do NOT pin a single brand. |
 | `arak 40%` | mL | 2.21 | 0 | 0 | 0 | derived | 0.40 ABV x 0.789 g/mL x 7 kcal/g — pure distillate, no sugar. 1.5 oz = 44.4 mL = 98 cal |
+| `asparagus` | g | 0.2 | 0.022 | 0.039 | 0.001 | USDA | USDA asparagus, raw: 100 g = 20 cal / 2.2 P / 3.88 C TOTAL (2.1 g fibre, so 1.78 net) / 0.12 F -> per gram. App prices 100 g at 20/2/4/0 — exact. Not changed. |
 | `banana` | g | 0.89 | 0.0109 | 0.228 | 0.0033 | USDA | USDA bananas raw: 100 g = 89 cal / 1.09 P / 22.8 C / 0.33 F -> per gram. A medium banana is 118 g = 105 cal. NOTE the app carries BOTH 105 and 110 for "1 med"; 105 is the USDA figure. |
 | `bare coconut chips` | g | 6.07 | 0.07 | 0.5 | 0.43 | label | Bare Baked Crunchy Toasted Coconut Chips label, his brand confirmed Aug 11 2026: 28 g = 170 cal / 2 P / 14 C / 12 F -> per gram. Sat fat 11 g per 28 g. |
 | `biscoff` | g | 4.84 | 0.065 | 0.742 | 0.194 | label | lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups. |
 | `blueberries` | g | 0.57 | 0.007 | 0.145 | 0.003 | USDA | USDA raw blueberries, 100 g = 57 cal / 0.7 P / 14.5 C / 0.33 F -> per gram. Cups use 70 g. |
 | `brisket flat` | oz cooked | 70 | 8.2 | 0 | 4 | derived | 248 cal / 29 P per 100 g — his own Southside figure |
+| `broccoli` | g | 0.34 | 0.028 | 0.066 | 0.004 | USDA | USDA broccoli, raw: 100 g = 34 cal / 2.82 P / 6.64 C / 0.37 F -> per gram. App prices 150 g at 50 cal; USDA gives 51. Already right, not changed. |
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |
 | `cinnamon apples` | g | 0.52 | 0.003 | 0.138 | 0.002 | USDA | USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g. |
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
@@ -34,6 +37,7 @@ Provenance of the 49 rows: **19** label · **15** USDA · **13** derived · **2*
 | `frozen strawberries` | g | 0.35 | 0.004 | 0.091 | 0.001 | USDA | USDA strawberries, frozen, UNSWEETENED — he confirmed unsweetened Aug 12: 100 g = 35 cal / 0.43 P / 9.13 C / 0.11 F -> per gram. The app had 150 g at 75 cal; real is 53. Corrected in b6 and b16. |
 | `fruity pebbles` | g | 3.89 | 0.028 | 0.861 | 0.056 | label | Post Fruity Pebbles label: 1 cup (36 g) = 140 cal / 1 P / 31 C / 2 F -> per gram. 3 cups. |
 | `graham cracker` | g | 4.19 | 0.065 | 0.774 | 0.097 | label | Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g. |
+| `kodiak waffle` | each | 220 | 10 | 25 | 9 | derived | Kodiak Thick & Fluffy Buttermilk & Vanilla FROZEN waffles, verified Jul 24 2026: 220 cal EACH (they are thick, 1 per serving). His 2-waffle row = 440/20/50/18. Confirmed correct, not the mix. |
 | `low-moisture mozzarella` | g | 2.857 | 0.25 | 0.0714 | 0.214 | label | Les Petites Fermieres Shredded Mozzarella, low-moisture part-skim — HIS BAG, label photographed Aug 12 2026: 1/4 cup (28 g) = 80 cal / 7 P / 2 C / 6 F (3 g sat), 8 servings per 227 g bag. The app row had 6 P at 28 g; calories, carbs and fat were already exact. Protein corrected to 7. |
 | `mini guac cup` | cup | 105 | 1 | 5 | 9 | derived | Wholly Guacamole Classic Minis: 2 oz (57 g) = 110 cal, ~9.5 F / 5 C / 1 P. He uses Wegmans cups OR Wholly (confirmed Aug 12), so this is a midpoint of the two; the app row (100/1/6/8) sits inside the brand spread and was left alone. |
 | `miso soup` | cup (240 g) | 40 | 3 | 5 | 1 | USDA | USDA-style restaurant miso: 240 g cup ~50 cal / 3 P / 5 C / 1 F; 40 is the Atwater-consistent value for that split. Tofu-heavy bowls run 6 P / ~80 cal. ~700 mg sodium. |
@@ -44,6 +48,7 @@ Provenance of the 49 rows: **19** label · **15** USDA · **13** derived · **2*
 | `oreo mini` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Mini Bite Size label: 9 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram, 3.22 g per cookie. Identical per-gram to oreo thin, which is expected — same cookie, smaller format. He eats these WHOLE, not de-creamed. |
 | `oreo thin` | g | 4.83 | 0.034 | 0.724 | 0.207 | label | Oreo Thins label: 4 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 7.25 g per WHOLE cookie. ⚠️ 6 cups specify DE-CREAMED and the filling conversion is UNKNOWN — do not apply this to a de-creamed cup until he says whether he weighs before or after. |
 | `oreo thin wafer` | g | 4.78 | 0.044 | 0.752 | 0.168 | UNVERIFIED | DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM. |
+| `philadelphia cream cheese` | g | 2.19 | 0.063 | 0.063 | 0.188 | label | Philadelphia 1/3-less-fat (Neufchatel) label, verified Jul 24 2026: 32 g = 70 cal / 2 P / 2 C / 6 F -> per gram. His 45 g row = 98/3/3/8, corrected then from an overstated 120/3/3/10.5. |
 | `pineapple` | g | 0.5 | 0.005 | 0.131 | 0.001 | USDA | USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g. |
 | `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ HIS INSTRUCTION Aug 12 2026: "for now just assume 190" — he will confirm off the package later, so 190 STANDS and is not a guess of mine. BRAND IS SHORE PITA AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
 | `potato skin-on` | g | 0.76 | 0.0205 | 0.1745 | 0.001 | USDA | Midpoint of USDA russet flesh-and-skin raw (79 cal/100 g) and Yukon Gold flesh-and-skin raw (73), because he alternates and always eats the skin. RANGE 0.73-0.79 cal/g. All his weights are raw. Corrected 5 rows that were priced at the gold end. |
@@ -54,14 +59,17 @@ Provenance of the 49 rows: **19** label · **15** USDA · **13** derived · **2*
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
 | `sliced almonds` | g | 5.79 | 0.212 | 0.216 | 0.499 | USDA | USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1. |
 | `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | derived | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
+| `sola everything bagel` | each | 140 | 15 | 36 | 5 | label | Sola everything bagel label, verified Jul 24 2026: 140 cal / 15 P / 36 C (24 g fibre) / 5 F. I had doubted these numbers as too high in protein and fibre and was WRONG — Sola genuinely is a high-protein high-fibre bagel. Flagging beat correcting. |
+| `spinach` | g | 0.23 | 0.029 | 0.037 | 0.004 | USDA | USDA spinach, raw: 100 g = 23 cal / 2.9 P / 3.7 C / 0.4 F -> per gram. App prices 150 g at 35 cal; USDA gives 34.5. Already right, not changed. |
 | `strawberries` | g | 0.32 | 0.007 | 0.077 | 0.003 | USDA | USDA raw strawberries, 100 g = 32 cal / 0.67 P / 7.7 C / 0.3 F -> per gram. Cups use 70 g. |
+| `string beans` | g | 0.31 | 0.018 | 0.07 | 0.002 | USDA | USDA beans, snap, green, raw: 100 g = 31 cal / 1.83 P / 6.97 C / 0.22 F -> per gram. |
 | `tuna roll` | 6-pc roll | 190 | 11 | 32 | 1.5 | derived | EATOUT_ORDER sushi carb anchor |
 | `tuna sashimi` | piece (20 g) | 22 | 4.9 | 0 | 0.1 | derived | yellowfin, 109 cal / 24.4 P per 100 g raw |
 | `turkey breast` | oz cooked | 38 | 8.5 | 0 | 0.3 | derived | roast, 135 cal / 30 P per 100 g |
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
-| `whole egg` | each | 80 | 7 | 0 | 5 | USDA | SIZE-DEPENDENT and the app matches EXTRA-LARGE. USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
+| `whole egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | HE BUYS LARGE — confirmed Aug 12 2026. USDA large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. The app rows were priced at 80/7/0/5, i.e. EXTRA-LARGE, so every egg was 8 cal high; corrected. Old note: USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
 
-## Still to source — 76 foods, most-used first
+## Still to source — 68 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -73,7 +81,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | rice | 3 |
 | cucumber | 3 |
 | keto bread | 3 |
-| asparagus | 3 |
 | tuna packet | 2 |
 | lakanto sugar-free maple syrup | 2 |
 | frozen berries | 2 |
@@ -82,18 +89,12 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | cinnamon roll cor | 2 |
 | cinnamon toast protein | 2 |
 | cinnamon + lakanto | 2 |
-| string beans | 2 |
-| broccoli | 2 |
 | salmon | 2 |
 | soy sauce | 2 |
 | smucker’s sf jelly | 1 |
 | elev8 cor | 1 |
 | ryse/raw protein | 1 |
-| sola everything bagel | 1 |
-| philadelphia ⅓-less-fat cream cheese | 1 |
-| acme nova lox | 1 |
 | balsamic drizzle | 1 |
-| kodiak thick &amp; fluffy b&amp;v power waffles | 1 |
 | kodiak buttermilk power flapjacks | 1 |
 | vanilla ice cream protein + ¼ tsp lemon extract | 1 |
 | vanilla ice cream protein + 1 tsp vanilla bean paste | 1 |
@@ -108,7 +109,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | frozen mixed berries | 1 |
 | cereal | 1 |
 | sweet potato | 1 |
-| spinach | 1 |
 | apple | 1 |
 | israeli salad | 1 |
 | hummus | 1 |
