@@ -19,6 +19,19 @@
    scratchpad get lost with the session; this one is committed and survives.
    ============================================================================ */
 'use strict';
+/* ONE FOOD, ONE KEY. The raw ingredient names carry decoration that made the same food count
+   several times and inflated the denominator: "oats" appears both plain and with a heat emoji,
+   almond butter both plain and with a snowflake, "Ezekiel bread, toasted" separately from
+   "Ezekiel bread", FAGE under four spellings. Strip emoji and leading symbols, the trailing
+   parenthetical, the em-dash aside, and a trailing preparation state — what is left is the food. */
+const foodKey = raw => String(raw)
+  .replace(/<[^>]*>/g, '')
+  .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu, '')
+  .split('(')[0].split('\u2014')[0]
+  .replace(/,\s*(?:toasted|raw|dry|cooked|crushed|chopped|sliced|for\s[^,]*)\s*$/i, '')
+  .replace(/[,.]+$/, '')
+  .trim().toLowerCase();
+
 const fs = require('fs');
 const path = require('path');
 
@@ -512,7 +525,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * as coverage climbs; never lower it.
  */
 (function macroProvenance() {
-  const FLOOR = 18;                       /* ratchet — only ever goes up */
+  const FLOOR = 29;                       /* ratchet — only ever goes up */
   const need = new Map();
   const slotsBlock = (() => {
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
@@ -521,7 +534,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   const rx = /\['([^']+)','([^']*)',\[[\d.]+,[\d.]+,[\d.]+,[\d.]+\]\]/g;
   let m;
   while ((m = rx.exec(slotsBlock))) {
-    const key = m[1].replace(/<[^>]*>/g, '').split('(')[0].split('—')[0].trim().replace(/,$/, '').toLowerCase();
+    const key = foodKey(m[1]);
     need.set(key, (need.get(key) || 0) + 1);
   }
   const names = Object.keys(FOOD_FACTS || {});
