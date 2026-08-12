@@ -494,5 +494,33 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('final-meal', `${rows.length} hole x lane combos all close within 60 cal / 8P, chicken opt-in only, no duplicate rows`);
 }
 
+/* ---------- [time-picker] a time input must not re-render on 'change' ----------
+ * His report Aug 12 2026: picking the HOUR on his phone closed the whole picker, so he could never
+ * reach the minutes in one pass. iOS fires `change` the instant you lift off the hour wheel, and
+ * render() rebuilds the DOM out from under the native picker, which then has nothing to sit on.
+ * Save on change, render on blur. This reads SOURCE, not behaviour — jsdom has no native picker.
+ */
+{
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const ids = [...src.matchAll(/<input[^>]*type="time"[^>]*id="(\w+)"/g)].map(m => m[1]);
+  const bad = [];
+  if (!ids.length) bad.push('no type="time" inputs found — did the markup change?');
+  ids.forEach(id => {
+    const at = src.indexOf(`$('#${id}')`);
+    if (at < 0) { bad.push(`${id}: no $('#${id}') handler found`); return; }
+    /* Bound the slice at the NEXT element's handler. A fixed 900-char window swallowed the
+       neighbouring #viewDate handler — which legitimately renders on change — and reported a
+       false FAIL on correct code. A guard that fires on the right answer gets muted. */
+    const nxt = src.indexOf("$('#", at + 4);
+    const slice = src.slice(at, nxt > at ? nxt : at + 900);
+    if (/addEventListener\('change'\s*,\s*(?:\([^)]*\)|\w+)\s*=>\s*\{[\s\S]{0,400}?render\(\)/.test(slice))
+      bad.push(`${id}: its 'change' handler calls render() — that destroys the open picker`);
+    if (!/addEventListener\('blur'/.test(slice))
+      bad.push(`${id}: no 'blur' listener, so the value never commits when the picker closes`);
+  });
+  if (bad.length) fail('time-picker', bad.join(' · '));
+  else ok('time-picker', `${ids.length} time input(s): save on change, render on blur`);
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
