@@ -10,13 +10,16 @@ instead of retrieving them**. Every rule below exists because of a specific fail
 
 ---
 
-## ⛔ RULE 0 — THIS REPO IS PUBLIC
+## RULE 0 — THIS REPO IS PUBLIC, AND HE HAS SAID THAT IS FINE
 
-`github.com/stbenun/stevens-cut`, visibility PUBLIC. Every file here is world-readable, including this
-one. **Personal facts do not belong in the repo** — no health conditions, allergies, religious practice,
-body metrics, addresses, schedules, or other people's names. Those live in the assistant's private notes
-outside the repo. Write the RULE and let the guard hold the fact: `[nuts]`, `[kashrut]`, `[name-leak]`.
-I violated this on 2026-08-12 by writing an allergy and an observance into this file and pushing it.
+`github.com/stbenun/stevens-cut`, visibility PUBLIC — every file here is world-readable. **His call,
+2026-08-12, verbatim: "i dont care whats public. its fine." and "you can speak about me."** So write
+about him plainly; do not sanitise his own details or spend his time on privacy hedging. That decision
+is his to make and he has made it — stop re-raising it.
+
+**What is still NOT his to waive: other people.** No real names of his coach, family, friends, rabbis,
+or anyone else. `[name-leak]` in check-app.js guards this. Note the gap: that check looks for NAMES
+only, so it has nothing to say about anything else.
 
 ## ⛔ RULE 1 — Never state a number I did not just retrieve
 
@@ -127,12 +130,52 @@ findable online. Anything unsourceable gets marked UNVERIFIED **in the app**, vi
   editing, and again before committing. Never force-push.
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks
   anchor matching in the checks.
-- **A missing Saturday is not a missed workout** — one day a week is logged off-device by design, so its
-  data arrives late or not at all. Ask before reading a gap as a skip.
+- **A missing Saturday is not a missed workout** — Shabbat means no phone, so nothing gets logged.
+  Five weeks of reps show Mon/Tue/Wed/Fri only. Never read a blank Saturday as a skip; ask.
 - The section-collapse rule: **every app section starts CLOSED**, with a summary badge carrying the
   numbers. Never time-seed one open.
-- **Dietary restrictions are enforced by `[nuts]` and `[kashrut]` in the checks, not by memory.** Read the
-  guards for the actual rules; do not restate them here. Never relax one to make a recipe work.
-- Meal-timing/eligibility tags (`k:` on every option) are **data the engine must actually use**, not
-  decoration. **Flag any assumption about them and ASK — never encode a stricter rule than the owner
-  keeps, and never a looser one either.**
+- **He is allergic to all nuts EXCEPT almonds.** Almonds and almond butter are in his plan daily;
+  every other nut is out, including in a topping or a step. `[nuts]` in check-food.js enforces it.
+  Coconut is not treated as a nut here and he eats it.
+- Kashrut is **data the engine must use**, not decoration — every option carries a `k:` tag, and the
+  meat→dairy wait drives WHEN he eats, not just what. **Flag any kashrut assumption and ASK: never
+  encode a stringency he does not keep, and never a leniency either.** He eats fish with meat.
+
+---
+
+## HOW HE LIKES THINGS BUILT — from his own corrections
+
+**Viewing**
+- **Every section starts CLOSED**, with a summary badge carrying the numbers. Never time-seed one open.
+- A meal row's right-hand numbers are **all four macros — cal · P · C · F**, not cal + protein.
+- The card shape he reads, in this order: header → budget line → qty/item/cal/P table → TOTAL →
+  vs budget → "Lands C · F" → order & timing → 🚫 do-not → ✅ free → 🔁 **swaps priced with what each costs.**
+
+**Recipes**
+- A recipe is a **method**, not a list of grams. His words on a version that missed: *"this isnt what i
+  wanted. i wanted you to put together a recipe for me to cook. what you did was just write a bunch of
+  ingredients."*
+- ⛔ **NO CAP ON STEP COUNT.** His correction, verbatim: *"how ever many steps needed, but dont be wordy
+  and dont say extra things."* Brevity is per step — say the action, cut the padding. A count cap forces
+  two instructions into one run-on step and makes the recipe worse. `[final-recipe]` checks for filler
+  phrases, not step count. **Character caps are a bad proxy too** — a long step that is all substance
+  (a technique explanation) is fine; a short step with padding is not.
+- **A step never holds its own copy of a quantity** — interpolate `{pro}` `{carb}` `{fat}` from the
+  ingredient row, so a step is structurally incapable of contradicting the list. This is why his
+  recipes used to contradict themselves.
+- Leftover/residual sides render under a separate **"On the side"** heading, never folded into the method.
+- All weights are **RAW / dry**. Never quote a cooked weight.
+- Frozen protein scales in **WHOLE units** — he freezes beef and salmon in 6 oz portions, so print
+  "1 bag (6 oz)", never 1.5 patties.
+
+**Content**
+- **Exact products, exact weights, macro-fit every meal.** No "some almonds", no "a handful".
+- Rows are **name + dose only**. His instruction: *"just write the supplement and the dose if its
+  something we changed."* Reasoning goes in a code comment, never on the row.
+- **Anything settled in conversation must become app behaviour.** He will not scroll back through chat
+  to find it, so a chat agreement that never lands in the app is worth nothing.
+- **Brand-variable foods get a RANGE, not false precision.** His call on almond butter: brands run
+  190–220 per 32 g and he does not buy one brand, so pinning a single sourced number would be a
+  fake fix. Record the spread and which end the plan uses.
+- One goal-true verdict on a "should I". Lead with no when it is no. Never bless both sides.
+- Never moralise about the things he has told me not to. They stay out of the app entirely.

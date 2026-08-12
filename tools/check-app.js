@@ -448,11 +448,22 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   dishes.forEach(d => {
     if (!LANES.includes(d.lane)) bad.push(`${d.id}: unknown lane "${d.lane}"`);
     if (!d.steps.length) bad.push(`${d.id}: no method at all`);
-    if (d.steps.length > 6) bad.push(`${d.id}: ${d.steps.length} steps — he asked for "not too wordy"`);
+    /* ⛔ THERE IS NO CAP ON STEP COUNT. Corrected by him 2026-08-12, verbatim: "≤6 steps — not true.
+       how ever many steps needed, but dont be wordy and dont say extra things."
+       I had read his earlier "not too wordy" as a limit on how MANY steps, and it is a limit on how
+       much each step SAYS. Those are different constraints and capping the count was the wrong one —
+       it would reject a correct 7-step method and push a real instruction into a run-on step, making
+       the recipe worse in exactly the dimension he was complaining about. Brevity is enforced per
+       step below (length + no filler), never by truncating the method. Do not re-add a count cap. */
     d.steps.forEach((t, i) => {
       const m = TYPED.exec(t);
       if (m) bad.push(`${d.id} step ${i + 1}: hand-typed quantity "${m[0]}" — must be {pro}/{carb}/{fat}`);
       if (t.length > 210) bad.push(`${d.id} step ${i + 1}: ${t.length} chars, too wordy`);
+      /* "dont say extra things" — filler that adds no instruction. Each of these is a phrase that can
+         be deleted without losing a single action, temperature, or cue. */
+      const FILLER = /\b(?:basically|essentially|of course|as you know|feel free to|if you want to|you might want to|it'?s worth noting|keep in mind|don'?t worry|pro tip|simply put|at the end of the day)\b/i;
+      const fm = FILLER.exec(t.replace(/\s+/g, ' '));
+      if (fm) bad.push(`${d.id} step ${i + 1}: filler phrase "${fm[0].trim()}" — say the action, drop the padding`);
       const ph = t.match(/\{(\w+)\}/g) || [];
       ph.forEach(p => { if (!['{pro}', '{carb}', '{fat}'].includes(p))
         bad.push(`${d.id} step ${i + 1}: unknown placeholder ${p} — renders literally`); });
@@ -476,7 +487,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const ids = dishes.map(d => d.id);
   if (new Set(ids).size !== ids.length) bad.push('duplicate dish ids');
   if (bad.length) fail('final-recipe', bad.join(' · '));
-  else ok('final-recipe', `${dishes.length} dishes: no hand-typed quantities in any step, every scaled part used, <=6 steps each`);
+  else ok('final-recipe', `${dishes.length} dishes: no hand-typed quantities in any step, every scaled part used, no step-count cap`);
 }
 
   if (bad.length) fail('final-meal', bad.join(' · '));
