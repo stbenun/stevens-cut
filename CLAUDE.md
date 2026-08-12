@@ -1,7 +1,7 @@
 # CLAUDE.md — how to work on this repo
 
-His app: a phone web app that runs his cut — meals, macros, lifts, hydration, supplements, kashrut
-timing. **The entire app is ONE file, `index.html` (~540 KB).** There is no framework, no build for the
+The app: a personal nutrition and training tracker — meals, macros, lifts, hydration, supplements, and
+the meal-timing rules its owner keeps. **The entire app is ONE file, `index.html` (~540 KB).** There is no framework, no build for the
 main file, and no other source. `next/index.html` is generated.
 
 He built this to be a nutritionist and coach that is *precise*. He has said, in his words, that what he
@@ -9,6 +9,14 @@ values most is **precision and accuracy**, and the way I have failed him is by *
 instead of retrieving them**. Every rule below exists because of a specific failure, not as theory.
 
 ---
+
+## ⛔ RULE 0 — THIS REPO IS PUBLIC
+
+`github.com/stbenun/stevens-cut`, visibility PUBLIC. Every file here is world-readable, including this
+one. **Personal facts do not belong in the repo** — no health conditions, allergies, religious practice,
+body metrics, addresses, schedules, or other people's names. Those live in the assistant's private notes
+outside the repo. Write the RULE and let the guard hold the fact: `[nuts]`, `[kashrut]`, `[name-leak]`.
+I violated this on 2026-08-12 by writing an allergy and an observance into this file and pushing it.
 
 ## ⛔ RULE 1 — Never state a number I did not just retrieve
 
@@ -119,9 +127,12 @@ findable online. Anything unsourceable gets marked UNVERIFIED **in the app**, vi
   editing, and again before committing. Never force-push.
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks
   anchor matching in the checks.
-- **A missing Saturday is not a missed workout** — Shabbat means no phone, so nothing gets logged. Ask.
+- **A missing Saturday is not a missed workout** — one day a week is logged off-device by design, so its
+  data arrives late or not at all. Ask before reading a gap as a skip.
 - The section-collapse rule: **every app section starts CLOSED**, with a summary badge carrying the
   numbers. Never time-seed one open.
-- His allergy: **all nuts EXCEPT almonds.** `[nuts]` in check-food.js guards ingredients and steps.
-- Kashrut is **data, not decoration** — every option carries a `k:` tag. **Flag an assumption and ASK;
-  never encode a stringency he does not keep, and never a leniency either.**
+- **Dietary restrictions are enforced by `[nuts]` and `[kashrut]` in the checks, not by memory.** Read the
+  guards for the actual rules; do not restate them here. Never relax one to make a recipe work.
+- Meal-timing/eligibility tags (`k:` on every option) are **data the engine must actually use**, not
+  decoration. **Flag any assumption about them and ASK — never encode a stricter rule than the owner
+  keeps, and never a looser one either.**
