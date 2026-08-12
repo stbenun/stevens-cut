@@ -489,6 +489,56 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   else pass('creami-topping', n + ' cups all resolve (' + (n - nulls) + ' computed, ' + nulls + ' deliberately open), no orphans');
 })();
 
+/* ============ [macro-provenance] the coverage RATCHET ============
+ * The core problem, measured: most ingredient rows in SLOTS are hand-typed numbers with no source
+ * anywhere in the repo, and the recipe-total guard passes anyway because it only checks that a sum
+ * of guesses equals the stated sum of those guesses.
+ *
+ * This prints coverage on every run so progress toward 100% is visible instead of promised, and it
+ * FAILS IF COVERAGE EVER DROPS — so a new unsourced ingredient cannot be added quietly. Raise FLOOR
+ * as coverage climbs; never lower it.
+ */
+(function macroProvenance() {
+  const FLOOR = 14;                       /* ratchet — only ever goes up */
+  const need = new Map();
+  const slotsBlock = (() => {
+    const i = src.indexOf('const SLOTS'); if (i < 0) return '';
+    const j = src.indexOf('\n];', i); return j < 0 ? '' : src.slice(i, j);
+  })();
+  const rx = /\['([^']+)','([^']*)',\[[\d.]+,[\d.]+,[\d.]+,[\d.]+\]\]/g;
+  let m;
+  while ((m = rx.exec(slotsBlock))) {
+    const key = m[1].replace(/<[^>]*>/g, '').split('(')[0].split('—')[0].trim().replace(/,$/, '').toLowerCase();
+    need.set(key, (need.get(key) || 0) + 1);
+  }
+  const names = Object.keys(FOOD_FACTS || {});
+  const covered = k => names.some(n => n.split(' ').filter(t => t.length > 3).every(t => k.includes(t)));
+  const total = need.size, done = [...need.keys()].filter(covered).length;
+  const pct = total ? Math.round(100 * done / total) : 0;
+  if (pct < FLOOR) {
+    fail('macro-provenance', 'coverage FELL to ' + pct + '% (' + done + '/' + total + ') — floor is ' +
+      FLOOR + '%. An ingredient was added with no FOOD_FACTS source behind it.');
+  } else {
+    pass('macro-provenance', done + '/' + total + ' plan foods sourced (' + pct + '%, floor ' + FLOOR +
+      '%)' + (pct < 100 ? ' — ' + (total - done) + ' still hand-typed, see FOOD_FACTS.md' : ' — COMPLETE'));
+  }
+})();
+
+/* ============ [food-doc] the readable copy is not stale ============
+ * FOOD_FACTS.md exists because he could not open the numbers in Explorer — the whole app is one
+ * index.html. A generated view is only safe if it cannot drift from its source, so this fails the
+ * build when it does. Two copies of one truth is the bug class this whole effort is about.
+ */
+(function foodDoc() {
+  const { execFileSync } = require('child_process');
+  try {
+    execFileSync(process.execPath, [path.join(__dirname, 'food-doc.js'), '--check'], { stdio: 'pipe' });
+    pass('food-doc', 'FOOD_FACTS.md matches FOOD_FACTS in index.html');
+  } catch (e) {
+    fail('food-doc', 'FOOD_FACTS.md is stale — run: node tools/food-doc.js');
+  }
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
