@@ -663,9 +663,14 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const titleRule = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{([^}]*)\}/);
   if (!titleRule) bad.push('no title rule for the flavor summaries');
   else {
-    if (!/flex:\s*1 1 0(?!\d)/.test(titleRule[1]))
-      bad.push('the flavor title is not flex:1 1 0 — with an auto basis a long name forces a wrap ' +
-               'before the ellipsis can apply, because flex breaks lines on UNSHRUNK sizes');
+    /* ⚠️ NOT `flex:1 1 0`, which is what this asserted at first. A zero basis does stop the name from
+       forcing a wrap — and it also loses every fight for space, so at 320px the card rendered
+       "🥣 Death …" and he could not tell which flavour it was. A ch-based basis is the middle ground:
+       big enough that the macros wrap away instead of the name vanishing, fixed enough that it never
+       depends on the name's own length. Measured by tools/measure.js: 117px → 173px at 320. */
+    if (!/flex:\s*1 1 \d+ch/.test(titleRule[1]))
+      bad.push('the flavor title has no ch-based flex-basis — with basis 0 it collapses to an ellipsis, ' +
+               'with basis auto a long name forces a wrap (flex breaks lines on UNSHRUNK sizes)');
     if (!/text-overflow:ellipsis/.test(titleRule[1])) bad.push('the flavor title does not truncate');
     if (!/min-width:0/.test(titleRule[1])) bad.push('the flavor title lacks min-width:0, so it cannot shrink');
   }
@@ -682,7 +687,43 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
 
   if (bad.length) fail('flavor-btn', bad.join(' · '));
   else ok('flavor-btn', `next › is position-stable: ${counts.on} buttons either way, stepper on its own ` +
-          `row via .flavbreak, chip/statline pinned, title truncates from a zero basis`);
+          `row via .flavbreak, chip/statline pinned, title on a ${(titleRule[1].match(/1 1 (\d+)ch/)||[,'?'])[1]}ch basis`);
+}
+
+/* ---------- meal-row-wrap — a name must never be squeezed while the numbers hog the line ----------
+ * His screenshot Aug 13 2026: every Meals row broke into three lines — "Cream / of / Rice" with the
+ * DAIRY chip floating beside the middle word. Nothing overlapped; the name was WRAPPING, because the
+ * four-macro block is flex-shrink:0 and the name was `flex:1`, whose basis is 0. A zero basis is
+ * invisible to flex line-breaking, so the numbers never wrap to a second line however narrow the
+ * screen — the name eats the entire shortfall.
+ * ⚠️ The basis MUST be on the inline style: these two <b>s carry style="flex:...", and an inline style
+ * beats any stylesheet rule. My first attempt put it in the <style> block and did nothing at all.
+ * Real geometry lives in tools/measure.js (Edge via puppeteer-core); this only pins the source facts.
+ */
+{
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const bad = [];
+  const basis = /<b style="flex:1 1 (\d+)ch;min-width:0">/g;
+  const found = [...src.matchAll(basis)].map(m => +m[1]);
+  if (found.length < 2)
+    bad.push(`expected 2 inline flex-basis names in viewMeals, found ${found.length} — a zero basis ` +
+             `means the macros never wrap and the name gets squeezed to nothing`);
+  /* ⚠️ Scoped to the two viewMeals names by their interpolation. A bare search for flex:1 also matched
+     the gym-timing row, where a zero basis is CORRECT — that row holds a name and a time input, with no
+     macro block to wrap away. The first version of this check failed on healthy code. */
+  if (/<b style="flex:1;min-width:0">\$\{m\.name\}/.test(src))
+    bad.push('the meal name is back to flex:1 (basis 0) — that is the squeeze his screenshot showed');
+  if (/<b style="flex:1;min-width:0">\$\{s\.slot\}/.test(src))
+    bad.push('the slot header name is back to flex:1 (basis 0)');
+  if (!/@media \(max-width:400px\)\{[\s\S]{0,260}?details\.slotsec \.mealcard\{padding-left/.test(src))
+    bad.push('the narrow-screen padding trim is gone — nested cards take 118px of a 320px screen, ' +
+             'leaving 202px for name + kosher + four macros');
+  const titleBasis = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{\s*flex:1 1 (\d+)ch/);
+  if (!titleBasis) bad.push('the flavour title has no ch-based flex-basis — at 320px it renders as "Death …"');
+
+  if (bad.length) fail('meal-row-wrap', bad.join(' · '));
+  else ok('meal-row-wrap', `names carry a real flex-basis (${found.join('/')}ch), flavour title ` +
+          `${titleBasis[1]}ch, narrow-screen padding trimmed`);
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');

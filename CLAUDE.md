@@ -126,6 +126,16 @@ findable online. Anything unsourceable gets marked UNVERIFIED **in the app**, vi
   `json.dumps` so escaping is never hand-rolled.
 - **Watch every new guard fail before trusting it.** Plant the real defect. A first plant that changes
   nothing (e.g. targeting a double quote where the file uses single) looks like a pass.
+- **⛔ NEVER ship a layout change on reasoning alone — there is no layout engine here.** jsdom computes
+  no geometry, so `probe.js` renders 210 clean views of a visually broken card and every guard passes.
+  I "fixed" a moving button with `flex-wrap:nowrap` and shipped a card whose title read `...` with the
+  chip stacked one letter per line, because on his ~400 px phone the row's fixed content is already
+  wider than the screen. **Two rules fall out of it:** prefer a DETERMINISTIC break (a full-width
+  zero-height spacer) over forcing content onto one line; and pin everything that must not deform with
+  `flex-shrink:0`, because flex will shrink whatever it can reach before it gives up. To check a layout,
+  run `scratchpad/mkpreview.js` — it pulls the real markup out of the booted app, inlines the real
+  `<style>`, renders at 320/400 px and measures the element positions in a real browser. **Send him the
+  preview instead of asserting it works.**
 - **Two sessions can share this clone.** `git fetch && git log --oneline HEAD..origin/main` before
   editing, and again before committing. Never force-push.
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks

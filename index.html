@@ -365,8 +365,12 @@
      ⚠️ chip and statline MUST keep flex-shrink:0 or they deform instead of the title. That is the exact
      defect in his screenshot. */
   .flavbreak{flex-basis:100%;height:0;margin:0}
+  /* ⚠️ basis 16ch, not 0. A zero basis made the flavour name lose every fight for space: at 320 px it
+     rendered as "🥣 Death …" and he could not tell which flavour the card was showing. With a real basis,
+     line-breaking knows the name needs room, so the macro chip wraps to its own line and the name keeps
+     the width. The ellipsis stays as the last resort, not the normal case. */
   details[data-acc="cor-day"]>summary>b, details[data-acc="bowl-day"]>summary>h3{
-       flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+       flex:1 1 16ch;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   details[data-acc="cor-day"]>summary>.chip, details[data-acc="bowl-day"]>summary>.chip,
   details[data-acc="cor-day"]>summary>.statline, details[data-acc="bowl-day"]>summary>.statline{
        margin-left:0;flex-shrink:0}
@@ -493,6 +497,40 @@
   details.slotsec{background:var(--panel);border-color:var(--line2)}
   details.slotsec>summary{min-height:34px}
   details.slotsec>summary b{font-size:16px}
+  /* ⛔ HIS SCREENSHOT Aug 13 2026: on the Meals tab every row broke into three lines — "Cream / of /
+     Rice" with the DAIRY chip floating beside the middle word, and "Breakfast" sitting next to the
+     macros with "· 10:30 AM" dumped onto the next line. Nothing was overlapping: the NAME WAS WRAPPING.
+     WHY: the four-macro block is flex-shrink:0 + nowrap (correctly — he asked for all four numbers),
+     the kosher chip is fixed, and the name is `flex:1` whose basis is 0. A basis of 0 contributes
+     nothing to flex line-breaking, so the numbers never move to a second line no matter how narrow the
+     screen; the name absorbs the entire shortfall instead and, having no ellipsis, wraps to 3 lines.
+     FIX, and it needs NO breakpoint guess: give the name a real flex-basis. Now line-breaking accounts
+     for the space a name actually needs, so when name + chip + macros genuinely do not fit, the MACROS
+     wrap to their own line and the name keeps the full width. Wide screens are unchanged — everything
+     still fits on one line, so nothing wraps.
+     ⚠️ Do NOT "fix" this with a max-width media query. I do not know his CSS pixel width (the app is a
+     black-translucent standalone PWA, so a screenshot's pixel size is not his viewport), and a guessed
+     breakpoint either misses his phone or restyles everyone else's. Basis-driven wrapping adapts to
+     whatever width he actually has.
+     ⚠️ min-width:0 must STAY: it lets the name shrink below its basis on the line it does get. */
+  details.slotsec>summary>span, details.mealcard>summary>span{flex-wrap:wrap}
+  details.slotsec>summary>span>.r, details.mealcard>summary>span>.r{margin-left:auto}
+  /* ⭐ AND THE BIGGER HALF OF THE SAME BUG: the row had almost no width to begin with. Measured with
+     tools/measure.js at 320 px, a meal row's usable width was 202 px —
+       320 − 28 (.app) − 34 (slot card) − 34 (meal card) − 22 (the ▾ marker) = 202
+     so 118 px of a small phone was nested chrome. Cards nest three deep on this tab and each level paid
+     full 16 px side padding. Trimming the two card levels and .app on small screens hands ~32 px back to
+     the content, which is the difference between a name over 2 lines and a name over 3.
+     This IS a media query, unlike the basis fix above, and that is deliberate: padding cannot adapt to
+     its own content the way a flex basis can. 400 px is not a guess at his device — it is "small phone",
+     and tools/measure.js verifies 320 / 360 / 390 / 430 every run. */
+  @media (max-width:400px){
+    .app{padding-left:10px;padding-right:10px}
+    details.slotsec{padding-left:10px;padding-right:10px}
+    details.slotsec .mealcard{padding-left:10px;padding-right:10px}
+  }
+  /* the flex-basis itself lives on the element's INLINE style in viewMeals — an inline style beats a
+     stylesheet rule, and these two <b>s carry one. Guarded by [meal-row-wrap] in check-app.js. */
   details.slotsec[open]{padding-bottom:6px}
   details.slotsec .mealcard{background:var(--panel2);margin-top:8px}
   details.slotsec .mealcard:first-of-type{margin-top:10px}
@@ -5549,7 +5587,10 @@ function viewMeals(){
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
      <span style="display:flex;align-items:baseline;gap:8px;width:100%">
-       <b style="flex:1;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${slotTimeLabel(s.key, isoToday())}${s.key==='sn'?' · skip Friday':''}</span></b>
+       ${/* flex-basis 14ch, NOT flex:1 (basis 0) — a zero basis is invisible to flex line-breaking, so
+             the four macros never wrapped and this name absorbed the whole shortfall, wrapping to 3
+             lines on his phone. Inline because an inline style beats the stylesheet rule. */''}
+       <b style="flex:1 1 14ch;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${slotTimeLabel(s.key, isoToday())}${s.key==='sn'?' · skip Friday':''}</span></b>
        ${/* his ask Aug 10 2026: "id like the numbers on the right to be cals, protein, carbs, fats" —
             this is the slot BUDGET, all four macros, not just cal+protein. The option count stays but
             drops to a chip on the left of it, because the four numbers are what he came to read. */''}
@@ -5563,7 +5604,10 @@ function viewMeals(){
      <details class="card acc mealcard" data-acc="opt-${m.id}"${openAcc.has('opt-'+m.id)?' open':''} data-search="${esc(hay)}" data-kosher="${m.k.map(c=>c[0]).join(' ')}">
        <summary>
          <span style="display:flex;align-items:center;gap:8px;width:100%">
-           <b style="flex:1;min-width:0">${m.name}</b>
+           ${/* basis 12ch, NOT flex:1 — see the [meal-row-wrap] note. Tuned by measurement: 12ch and
+                16ch are identical, 20ch is WORSE (it wraps the kosher chip onto its own line and adds
+                a line to four rows). */''}
+           <b style="flex:1 1 12ch;min-width:0">${m.name}</b>
            ${m.k.map(c=>chip(c[0],c[1])).join(' ')}
            ${/* same change as the slot header above, one level down: all four macros, not cal+P. These
                 are the numbers he picks a meal ON, so they matter more here than on the header. */''}
@@ -7112,7 +7156,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786633972';
+const BUILD = 'b1786635347';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
