@@ -726,5 +726,31 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           `${titleBasis[1]}ch, narrow-screen padding trimmed`);
 }
 
+/* ---------- zone-placement — the two tools live in Tools, not Food ----------
+ * His ask Aug 13 2026, verbatim: "final meal and tonights dinner tools are in Food, move it to Tools."
+ * Checked against the RENDERED DOM, not source order: the zones are concatenated in a different order
+ * than they are declared, so "appears later in the file" proves nothing about which section a card is in.
+ * Moving them also took them out of the foodZone closure — probe.js caught that as "o is not defined" on
+ * all 18 Today renders — so this also confirms the cards still render at all, not just where.
+ */
+{
+  const r = run(`
+    const dom = document.querySelector('#view');
+    const zoneOf = acc => { const el = dom.querySelector('[data-acc="'+acc+'"]');
+      if(!el) return null; const z = el.closest('section.zone'); return z? z.id : '(no zone)'; };
+    return { finalmeal: zoneOf('finalmeal'), tonight: zoneOf('tonight'),
+             food: [...dom.querySelectorAll('#z-food [data-acc]')].map(e=>e.dataset.acc),
+             tools: [...dom.querySelectorAll('#z-tools [data-acc]')].map(e=>e.dataset.acc) };
+  `);
+  const bad = [];
+  for (const acc of ['finalmeal', 'tonight']) {
+    if (r[acc] === null) bad.push(`the ${acc} card does not render at all — check the foodZone hoist`);
+    else if (r[acc] !== 'z-tools') bad.push(`${acc} renders in ${r[acc]}, he asked for Tools`);
+  }
+  if (bad.length) fail('zone-placement', bad.join(' · '));
+  else ok('zone-placement', `Final meal + Tonight's dinner in 🧰 Tools (${r.tools.length} cards); ` +
+          `Food keeps ${r.food.join(', ')}`);
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

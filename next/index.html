@@ -5055,6 +5055,27 @@ function viewToday(){
   })();
 
   /* ---- FOOD zone ---- */
+  /* ⬆️ HOISTED OUT OF THE foodZone IIFE. The Final Meal and Tonight's-dinner cards moved to the Tools
+     zone (his ask Aug 13 2026) and Tools sits outside that closure, so these went out of scope —
+     probe.js caught it as "o is not defined" on all 18 Today renders. Recomputing them beside the
+     moved cards would have created a SECOND answer to "which Creami cup is current", so they live one
+     level up instead and both zones read the same values. */
+  /* count Creamis logged since the batch started — TODAY counts only once its own s1 is logged, so the
+     card shows TODAY'S cup until you mark it eaten, then advances. creamiState() rolls over to the
+     next batch on its own the moment the last cup is logged. */
+  const cs = creamiState();
+  const cbT = cs, batchT = cs.batch;
+  const creamiHist = store.get('qpcut.eaten',{});
+  const eatenNT = cs.used;
+  const cupT = batchT.cups[Math.min(eatenNT, batchT.cups.length-1)];
+  const creamiTotal = batchT.cups.length;
+  const creamiHadToday = ((creamiHist[isoToday()]||{}).sn === 's1');
+  const creamiDone = false;   /* a finished batch no longer exists — it has already rolled over */
+  const creamiNo = Math.min(eatenNT, creamiTotal-1) + 1;
+  const creamiChip = !cbT.started ? 'batch not started' : creamiDone ? 'batch done · start a new one' : creamiHadToday ? `next · cup ${creamiNo}/${creamiTotal} (today ✓)` : `today · cup ${creamiNo}/${creamiTotal}`;
+  const tonight = (store.get('qpcut.tonight',{}))[isoToday()] || todayEaten.di || null;
+  const dOpts = SLOTS.find(s=>s.key==='di').opts;
+  const o = tonight? OPTBYID[tonight] : null;
   const foodZone = (()=>{
     const corToday = corFor(ld, wd);   /* wd, not now.getDay(): previewing a future date should show THAT day's combo */
     const corB = corBuild(corToday[1]);
@@ -5062,22 +5083,6 @@ function viewToday(){
        specific bowl is pinned for this date in qpcut.bowlpick.<date> (a manual "make today X" override). */
     const bowlId = bowlOfDay(isoToday());
     const bowlToday = bowlId? OPTBYID[bowlId] : null;
-    /* count Creamis logged since the batch started — TODAY counts only once its own s1 is logged, so the
-       card shows TODAY'S cup until you mark it eaten, then advances. creamiState() rolls over to the
-       next batch on its own the moment the last cup is logged. */
-    const cs = creamiState();
-    const cbT = cs, batchT = cs.batch;
-    const creamiHist = store.get('qpcut.eaten',{});
-    const eatenNT = cs.used;
-    const cupT = batchT.cups[Math.min(eatenNT, batchT.cups.length-1)];
-    const creamiTotal = batchT.cups.length;
-    const creamiHadToday = ((creamiHist[isoToday()]||{}).sn === 's1');
-    const creamiDone = false;   /* a finished batch no longer exists — it has already rolled over */
-    const creamiNo = Math.min(eatenNT, creamiTotal-1) + 1;
-    const creamiChip = !cbT.started ? 'batch not started' : creamiDone ? 'batch done · start a new one' : creamiHadToday ? `next · cup ${creamiNo}/${creamiTotal} (today ✓)` : `today · cup ${creamiNo}/${creamiTotal}`;
-    const tonight = (store.get('qpcut.tonight',{}))[isoToday()] || todayEaten.di || null;
-    const dOpts = SLOTS.find(s=>s.key==='di').opts;
-    const o = tonight? OPTBYID[tonight] : null;
     return `
   <section class="zone" id="z-food">
   <div class="zhead"><span class="zt">🍽 Food</span><span class="zn">${weekPick(RECIPES).name.toLowerCase().replace(/\s*week$/,'')} week</span></div>
@@ -5137,81 +5142,6 @@ function viewToday(){
     <ul class="ing" style="margin-top:8px">${bowlToday.vars[0].ing.map(([l,q])=>`<li><span>${l}${ppTag(l,false,q)}</span><span class="q">${q}</span></li>`).join('')}</ul>
     ${HOWTO[bowlToday.id]?`<div class="slotlbl" style="margin-top:8px">👨‍🍳 How to make it</div><ul class="sched" style="margin-top:4px">${HOWTO[bowlToday.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
   </details>`;})():''}
-  ${(()=>{
-    /* 🛟 FINAL MEAL — appears only when there is a real hole left, and deliberately NOT time-gated: if
-       he is 900 down at 4 PM this is still the right card, and gating it to "late" would hide the tool
-       exactly on the days he opens the app early to plan the catch-up.
-       ⭐ IT RENDERS A RECIPE, NOT AN INGREDIENT LIST. His words on v1: "this isnt what i wanted ... what
-       you did was just write a bunch of ingredients." So: dish name first, then the method, and the
-       macro table sits UNDER the cooking, not over it. */
-    const fm = finalMeal(isoToday(), (store.get('qpcut.fmpick',{}))[isoToday()]);
-    if(!fm) return '';
-    const laneBtn = (k,lbl)=>{
-      const st = fm.lanes[k];
-      const tag = st.ok? '' : (st.blocked? ' 🚫' : ' · ' + fmtMin(st.from));
-      return `<button class="mealpick${fm.lane===k?' on':''}${st.ok?'':' nomeat'}" data-fmlane="${k}">${lbl}${tag}</button>`;
-    };
-    const mac = m => `${Math.round(m[0])} · ${Math.round(m[1])}P · ${Math.round(m[2])}C · ${Math.round(m[3])}F`;
-    const off = fm.gap.map(v=>Math.abs(v));
-    const tight = off[0] <= 40 && off[1] <= 6;
-    return `
-  <details class="card acc" data-acc="finalmeal"${openAcc.has('finalmeal')?' open':''} id="fmCard">
-    <summary><h3 style="display:inline;font-size:16px">🛟 Final meal</h3>
-      <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>
-    <div class="sub" style="margin-top:6px">${fm.covers.length>1
-      ? `Short <b>${fm.covers.map(k=>SLOTS.find(s=>s.key===k).slot.toLowerCase()).join(', ')}</b>. One cook closes it.`
-      : `One cook closes the day.`}</div>
-
-    <div class="slotlbl" style="margin-top:10px">Lane</div>
-    <div class="pickrow">${laneBtn('pareve','Pareve')}${laneBtn('meat','Meat')}${laneBtn('dairy','Dairy')}</div>
-    ${!fm.lanes.dairy.ok && fm.lanes.dairy.why? `<div class="ingmac" style="margin-top:4px">${fm.lanes.dairy.why}</div>`:''}
-    ${fm.dishes.length>1? `<div class="slotlbl" style="margin-top:10px">Dish</div>
-    <div class="pickrow">${fm.dishes.map(x=>`<button class="mealpick${fm.dish.id===x.id?' on':''}" data-fmdish="${x.id}">${x.name.replace(/ —.*$/,'').replace(/^(\S+\s\S+).*$/,(m,a)=>x.name.length>22?a+'…':x.name)}${x.pro.leftoverOnly?' *':''}</button>`).join('')}</div>
-    ${fm.dishes.some(x=>x.pro.leftoverOnly)? `<div class="ingmac" style="margin-top:4px">* leftovers only — chicken doesn’t quick-defrost</div>`:''}`:''}
-
-    <h3 style="margin:14px 0 0;font-size:17px">${fm.dish.name}</h3>
-    <div class="sub" style="margin-top:2px;font-family:var(--mono);color:var(--brass);font-weight:700">${mac(fm.plate)}</div>
-
-    <div class="slotlbl" style="margin-top:10px">You need</div>
-    <ul class="ing">${fm.rows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
-
-    <div class="slotlbl" style="margin-top:10px">👨‍🍳 Cook it</div>
-    <ul class="sched" style="margin-top:4px">${fm.steps.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
-    ${fm.dish.note? `<div class="note" style="margin-top:8px">${fm.dish.note}</div>`:''}
-
-    ${fm.sideRows.length? `
-    <div class="slotlbl" style="margin-top:12px">On the side</div>
-    <div class="ingmac">Not part of the recipe — this is what closes the last of the numbers.</div>
-    <ul class="ing" style="margin-top:4px">${fm.sideRows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>`:''}
-
-    ${fm.dessert? `
-    <div class="slotlbl" style="margin-top:12px">🍦 Dessert · ${mac(fm.dessert.macros)}</div>
-    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping: ${cupT[4]}
-      ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that’s when dairy opens.`:''}</div>
-    <div class="ingmac" style="margin-top:4px">This is your snack slot, not an extra — its ${Math.round(fm.dessert.macros[0])} cal were already in the day.</div>`:''}
-
-    <div class="budget" style="margin-top:12px"><span><b>TOTAL</b> ${mac(fm.total)}</span><span>vs ${mac(fm.left)} left</span></div>
-    <div class="ingmac" style="margin-top:4px">${tight
-      ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`
-      : !fm.oneSitting
-        ? `⚠️ <b>This is bigger than one sitting.</b> ${fm.left[0]} cal and ${fm.left[1]}P is most of a day, not a meal — the closest honest plate leaves ${off[0]} cal and ${off[1]}P on the table. Eat this, go to bed under, and don’t chase the rest. One short day costs you nothing.`
-        : `⚠️ Closest fit is ${fm.gap[0]>0?`${off[0]} cal short`:`${off[0]} cal over`}, ${fm.gap[1]>0?`${off[1]}P short`:`${off[1]}P over`}. Try another dish or lane.`}</div>
-    <div class="formrow"><button class="btn" id="fmLog">Log it${fm.covers.length>1?` · closes ${fm.covers.length} slots`:''}</button></div>
-  </details>`;
-  })()}
-  <details class="card acc" data-acc="tonight"${openAcc.has('tonight')?' open':''}>
-    <summary><h3 style="display:inline;font-size:16px">🌙 Tonight’s dinner</h3><span class="statline">${o?`<b>${o.name}</b>`:'pick it'}</span></summary>
-    <div class="pickrow" style="margin-top:10px">${dOpts.map(x=>{
-      const rem = Math.max(0,(counts[x.id]||0) - eatenCountThisWeek(x.id,'di'));
-      return `<button class="mealpick${tonight===x.id?' on':''}" data-tn="${x.id}">${x.name}${counts[x.id]?`<span class="rem">${rem} left</span>`:''}</button>`;
-    }).join('')}</div>
-    ${o?`
-    <div class="slotlbl" style="margin-top:10px">${o.name} · ${o.vars[0].t[0]} cal · ${o.vars[0].t[1]}P</div>
-    <ul class="ing">${o.vars[0].ing.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
-    ${HOWTO[o.id]?`<ul class="sched" style="margin-top:6px">${HOWTO[o.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
-    ${sideDishesHTML(o.id)}
-    `:`<div class="sub" style="margin-top:8px">Tap tonight’s pick — ingredients and the method appear right here.</div>`}
-  </details>
   ${wd===4?(()=>{ const f=feastNow(), cookTonight=feastCookDay(f)===4; return `
   <details class="card acc" data-acc="thufeast"${openAcc.has('thufeast')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">${cookTonight?'🍳 Feast cook night':'🕯 Shabbat feast — cooks tomorrow'}</h3><span class="statline"><b>${f.n}</b></span></summary>
@@ -5454,6 +5384,88 @@ function viewToday(){
     return `
   <section class="zone" id="z-tools">
   <div class="zhead"><span class="zt">🧰 Tools</span></div>
+  ${/* ⬇️ MOVED HERE FROM THE FOOD ZONE — his ask Aug 13 2026, verbatim: "final meal and tonights
+       dinner tools are in Food, move it to Tools." They are TOOLS, not food he is reading: Final Meal
+       solves whatever is left of the day, and Tonight's dinner is a picker. Food stays what he eats.
+       Order between the two is unchanged on purpose — he asked for a move, not a reshuffle.
+       Nothing here is scoped to the Food zone: every variable these two use (fm, o, dOpts, counts,
+       cupT, creamiNo/Total) is declared in viewToday, and their handlers bind by selector after render.
+       Pinned by [zone-placement] in check-app.js. */''}
+  ${(()=>{
+    /* 🛟 FINAL MEAL — appears only when there is a real hole left, and deliberately NOT time-gated: if
+       he is 900 down at 4 PM this is still the right card, and gating it to "late" would hide the tool
+       exactly on the days he opens the app early to plan the catch-up.
+       ⭐ IT RENDERS A RECIPE, NOT AN INGREDIENT LIST. His words on v1: "this isnt what i wanted ... what
+       you did was just write a bunch of ingredients." So: dish name first, then the method, and the
+       macro table sits UNDER the cooking, not over it. */
+    const fm = finalMeal(isoToday(), (store.get('qpcut.fmpick',{}))[isoToday()]);
+    if(!fm) return '';
+    const laneBtn = (k,lbl)=>{
+      const st = fm.lanes[k];
+      const tag = st.ok? '' : (st.blocked? ' 🚫' : ' · ' + fmtMin(st.from));
+      return `<button class="mealpick${fm.lane===k?' on':''}${st.ok?'':' nomeat'}" data-fmlane="${k}">${lbl}${tag}</button>`;
+    };
+    const mac = m => `${Math.round(m[0])} · ${Math.round(m[1])}P · ${Math.round(m[2])}C · ${Math.round(m[3])}F`;
+    const off = fm.gap.map(v=>Math.abs(v));
+    const tight = off[0] <= 40 && off[1] <= 6;
+    return `
+  <details class="card acc" data-acc="finalmeal"${openAcc.has('finalmeal')?' open':''} id="fmCard">
+    <summary><h3 style="display:inline;font-size:16px">🛟 Final meal</h3>
+      <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>
+    <div class="sub" style="margin-top:6px">${fm.covers.length>1
+      ? `Short <b>${fm.covers.map(k=>SLOTS.find(s=>s.key===k).slot.toLowerCase()).join(', ')}</b>. One cook closes it.`
+      : `One cook closes the day.`}</div>
+
+    <div class="slotlbl" style="margin-top:10px">Lane</div>
+    <div class="pickrow">${laneBtn('pareve','Pareve')}${laneBtn('meat','Meat')}${laneBtn('dairy','Dairy')}</div>
+    ${!fm.lanes.dairy.ok && fm.lanes.dairy.why? `<div class="ingmac" style="margin-top:4px">${fm.lanes.dairy.why}</div>`:''}
+    ${fm.dishes.length>1? `<div class="slotlbl" style="margin-top:10px">Dish</div>
+    <div class="pickrow">${fm.dishes.map(x=>`<button class="mealpick${fm.dish.id===x.id?' on':''}" data-fmdish="${x.id}">${x.name.replace(/ —.*$/,'').replace(/^(\S+\s\S+).*$/,(m,a)=>x.name.length>22?a+'…':x.name)}${x.pro.leftoverOnly?' *':''}</button>`).join('')}</div>
+    ${fm.dishes.some(x=>x.pro.leftoverOnly)? `<div class="ingmac" style="margin-top:4px">* leftovers only — chicken doesn’t quick-defrost</div>`:''}`:''}
+
+    <h3 style="margin:14px 0 0;font-size:17px">${fm.dish.name}</h3>
+    <div class="sub" style="margin-top:2px;font-family:var(--mono);color:var(--brass);font-weight:700">${mac(fm.plate)}</div>
+
+    <div class="slotlbl" style="margin-top:10px">You need</div>
+    <ul class="ing">${fm.rows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
+
+    <div class="slotlbl" style="margin-top:10px">👨‍🍳 Cook it</div>
+    <ul class="sched" style="margin-top:4px">${fm.steps.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
+    ${fm.dish.note? `<div class="note" style="margin-top:8px">${fm.dish.note}</div>`:''}
+
+    ${fm.sideRows.length? `
+    <div class="slotlbl" style="margin-top:12px">On the side</div>
+    <div class="ingmac">Not part of the recipe — this is what closes the last of the numbers.</div>
+    <ul class="ing" style="margin-top:4px">${fm.sideRows.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>`:''}
+
+    ${fm.dessert? `
+    <div class="slotlbl" style="margin-top:12px">🍦 Dessert · ${mac(fm.dessert.macros)}</div>
+    <div class="sub" style="margin-top:2px">${cupT[0].replace(/^\d+ · /,'')} — cup ${creamiNo}/${creamiTotal}. Re-spin it, then the topping: ${cupT[4]}
+      ${fm.dessert.waitUntil!=null? `<br><b>Start it at ${fmtMin(fm.dessert.waitUntil)}</b> — that’s when dairy opens.`:''}</div>
+    <div class="ingmac" style="margin-top:4px">This is your snack slot, not an extra — its ${Math.round(fm.dessert.macros[0])} cal were already in the day.</div>`:''}
+
+    <div class="budget" style="margin-top:12px"><span><b>TOTAL</b> ${mac(fm.total)}</span><span>vs ${mac(fm.left)} left</span></div>
+    <div class="ingmac" style="margin-top:4px">${tight
+      ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`
+      : !fm.oneSitting
+        ? `⚠️ <b>This is bigger than one sitting.</b> ${fm.left[0]} cal and ${fm.left[1]}P is most of a day, not a meal — the closest honest plate leaves ${off[0]} cal and ${off[1]}P on the table. Eat this, go to bed under, and don’t chase the rest. One short day costs you nothing.`
+        : `⚠️ Closest fit is ${fm.gap[0]>0?`${off[0]} cal short`:`${off[0]} cal over`}, ${fm.gap[1]>0?`${off[1]}P short`:`${off[1]}P over`}. Try another dish or lane.`}</div>
+    <div class="formrow"><button class="btn" id="fmLog">Log it${fm.covers.length>1?` · closes ${fm.covers.length} slots`:''}</button></div>
+  </details>`;
+  })()}
+  <details class="card acc" data-acc="tonight"${openAcc.has('tonight')?' open':''}>
+    <summary><h3 style="display:inline;font-size:16px">🌙 Tonight’s dinner</h3><span class="statline">${o?`<b>${o.name}</b>`:'pick it'}</span></summary>
+    <div class="pickrow" style="margin-top:10px">${dOpts.map(x=>{
+      const rem = Math.max(0,(counts[x.id]||0) - eatenCountThisWeek(x.id,'di'));
+      return `<button class="mealpick${tonight===x.id?' on':''}" data-tn="${x.id}">${x.name}${counts[x.id]?`<span class="rem">${rem} left</span>`:''}</button>`;
+    }).join('')}</div>
+    ${o?`
+    <div class="slotlbl" style="margin-top:10px">${o.name} · ${o.vars[0].t[0]} cal · ${o.vars[0].t[1]}P</div>
+    <ul class="ing">${o.vars[0].ing.map(([l,q])=>`<li><span>${l}</span><span class="q">${q}</span></li>`).join('')}</ul>
+    ${HOWTO[o.id]?`<ul class="sched" style="margin-top:6px">${HOWTO[o.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>`:''}
+    ${sideDishesHTML(o.id)}
+    `:`<div class="sub" style="margin-top:8px">Tap tonight’s pick — ingredients and the method appear right here.</div>`}
+  </details>
   ${eoBlock}
   ${eo?'':`
   <details class="card acc" data-acc="eatout"${openAcc.has('eatout')?' open':''} id="eoCard">
@@ -7157,7 +7169,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786635347';
+const BUILD = 'b1786640706';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
