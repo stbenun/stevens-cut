@@ -578,5 +578,46 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('time-picker', `${ids.length} time input(s): save on change, render on blur`);
 }
 
+/* ---------- cor-repeat — the `next ›` stepper must not serve a combo he just ate ----------
+ * Aug 13 2026: he pressed `next ›` and got Banana Pudding, which he had eaten two days before.
+ * `corStep` walked the pool by index and never looked at qpcut.eaten, so the manual override bypassed
+ * the 84-combo rotation — the only thing preventing repeats.
+ * Underneath that sat a second defect this check also pins: weekIdx() read the WALL CLOCK, so
+ * corFor(pastDate) returned this week's answer for that weekday. History was unreconstructable, and a
+ * skip-list built on it would have banned flavors he never tasted. Both halves are checked here,
+ * because the skip is only as good as the history it reads.
+ */
+{
+  const r = run(`
+    const D = '2026-08-13', wd = new Date(D+'T12:00:00').getDay();
+    const pool = CORPOOL(), bad = [];
+
+    /* (a) date-purity: same date twice must agree, and the same weekday in two different rotation
+           weeks must NOT collapse to one combo (that was the wall-clock bug's signature). */
+    if(corFor('2026-08-03',1)[0] !== corFor('2026-08-03',1)[0]) bad.push('corFor is not stable for one date');
+    const mondays = ['2026-06-29','2026-07-27','2026-08-03','2026-08-10'].map(d=>corFor(d,1)[0]);
+    if(new Set(mondays).size < 3) bad.push('4 Mondays across different weeks gave '+new Set(mondays).size+' distinct combos — weekIdx is ignoring the date');
+
+    /* (b) the skip itself: step forward from the scheduled combo and land on nothing recent. */
+    const recent = corRecent(D);
+    if(!recent.size) bad.push('corRecent found no eaten COR breakfasts in 14 days — check is running vacuous');
+    for(const dir of [1,-1]){
+      const t = corStepTarget(D, wd, dir);
+      const nm = pool[t.idx][0];
+      if(recent.has(nm)) bad.push('step '+dir+' lands on '+nm+', eaten '+recent.get(nm)+'d ago');
+    }
+    /* (c) walking the whole pool must never serve a recent one, and must not stall on one index. */
+    const seen = [];
+    for(let i=0;i<12;i++){ corStep(D, wd, 1); seen.push(corFor(D, wd)[0]); }
+    corResetPick(D);
+    const rep = seen.filter(n=>recent.has(n));
+    if(rep.length) bad.push('12 forward steps served recent combos: '+[...new Set(rep)].join(', '));
+    if(new Set(seen).size < 12) bad.push('12 forward steps produced only '+new Set(seen).size+' distinct combos');
+    return {bad, recentCount:recent.size, distinct:new Set(seen).size};
+  `);
+  if (r.bad.length) fail('cor-repeat', r.bad.join(' · '));
+  else ok('cor-repeat', `stepper skips the ${r.recentCount} combos eaten in 14 days; 12 steps gave ${r.distinct} distinct, rotation is date-pure`);
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

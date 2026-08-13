@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 73 / 119 foods in the meal plan (**61%**)
+## Coverage: 74 / 119 foods in the meal plan (**62%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 67 rows: **24** USDA · **24** label · **17** derived · **2** UNVERIFIED
+Provenance of the 68 rows: **25** label · **24** USDA · **17** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -67,6 +67,7 @@ Provenance of the 67 rows: **24** USDA · **24** label · **17** derived · **2*
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
 | `sliced almonds` | g | 5.79 | 0.212 | 0.216 | 0.499 | USDA | USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1. |
 | `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | derived | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
+| `smucker sf jelly` | g | 0.59 | 0 | 0.294 | 0 | label | Smucker's Sugar Free jam label: 1 tbsp (17 g) = 10 cal / 5 C total (3 net) -> per gram. His 32 g row reads 20/0/10/0; this gives 18.8/9.4. Already right, not changed. |
 | `sola everything bagel` | each | 140 | 15 | 36 | 5 | label | Sola everything bagel label, verified Jul 24 2026: 140 cal / 15 P / 36 C (24 g fibre) / 5 F. I had doubted these numbers as too high in protein and fibre and was WRONG — Sola genuinely is a high-protein high-fibre bagel. Flagging beat correcting. |
 | `soy sauce` | mL | 0.33 | 0.03 | 0.05 | 0 | derived | Category figure for regular soy sauce (~0.5 cal/mL for Kikkoman; low-sodium similar). His rows use 0.33 (15 mL = 5 cal), slightly light but under 3 cal on any row he uses. NOT brand-verified. |
 | `spinach` | g | 0.23 | 0.029 | 0.037 | 0.004 | USDA | USDA spinach, raw: 100 g = 23 cal / 2.9 P / 3.7 C / 0.4 F -> per gram. App prices 150 g at 35 cal; USDA gives 34.5. Already right, not changed. |
@@ -79,7 +80,7 @@ Provenance of the 67 rows: **24** USDA · **24** label · **17** derived · **2*
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 | `whole egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | HE BUYS LARGE — confirmed Aug 12 2026. USDA large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. The app rows were priced at 80/7/0/5, i.e. EXTRA-LARGE, so every egg was 8 cal high; corrected. Old note: USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
 
-## Still to source — 46 foods, most-used first
+## Still to source — 45 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -96,7 +97,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | cinnamon roll cor | 2 |
 | cinnamon + lakanto | 2 |
 | salmon | 2 |
-| smucker’s sf jelly | 1 |
 | elev8 cor | 1 |
 | balsamic drizzle | 1 |
 | toasted coconut chips | 1 |

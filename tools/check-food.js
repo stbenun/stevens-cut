@@ -584,6 +584,28 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  */
 (function foodDoc() {
   const { execFileSync } = require('child_process');
+  /* ⭐ FIRST: does food-doc's parser SEE every fact? It reads FOOD_FACTS with a regex, and a regex can
+     miss an entry — the Smucker's jam row was invisible for a while because its src note is
+     double-quoted (it contains an apostrophe). The staleness check below could never catch that: it
+     compares food-doc's output to food-doc's output, so a fact neither side sees looks like agreement.
+     This compares its count against the REAL object, which is the only non-circular check available. */
+  const live = Object.keys(FOOD_FACTS).length;
+  let parsed = null;
+  try {
+    /* --count, not --check: --check exits nonzero when the doc is stale and prints no number, which
+       made a missing fact masquerade as "output changed". */
+    const out = execFileSync(process.execPath, [path.join(__dirname, 'food-doc.js'), '--count'],
+                             { stdio: ['pipe', 'pipe', 'pipe'] }).toString();
+    const m = out.match(/(\d+)\s+facts/);
+    parsed = m ? +m[1] : null;
+  } catch (e) { parsed = null; }
+  if (parsed !== null && parsed !== live)
+    fail('food-doc-parse', `food-doc sees ${parsed} of the ${live} FOOD_FACTS entries — ` +
+         `${live - parsed} invisible to its regex, so they are missing from FOOD_FACTS.md`);
+  else if (parsed === null)
+    fail('food-doc-parse', 'could not read a fact count out of food-doc.js — has its output changed?');
+  else pass('food-doc-parse', `food-doc's parser sees all ${live} FOOD_FACTS entries`);
+
   try {
     execFileSync(process.execPath, [path.join(__dirname, 'food-doc.js'), '--check'], { stdio: 'pipe' });
     pass('food-doc', 'FOOD_FACTS.md matches FOOD_FACTS in index.html');

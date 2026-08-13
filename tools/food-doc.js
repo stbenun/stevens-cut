@@ -49,10 +49,17 @@ function build() {
   const ffBlock = slice(src, 'const FOOD_FACTS', '\n};');
   if (!ffBlock) throw new Error('could not find FOOD_FACTS');
   const facts = [];
-  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:'((?:[^'\\]|\\.)*)'/g;
+  /* src may be DOUBLE-quoted — it has to be whenever the note contains an apostrophe, e.g. the
+     Smucker's jam entry. The single-quote-only version of this regex silently skipped that one fact,
+     so it never reached FOOD_FACTS.md and the coverage line under-reported by one (61% vs the real
+     62%). It went unnoticed because [food-doc] compares this parser's output against this parser's
+     output — a fact it cannot see is missing from both sides and the check still passes.
+     check-food.js now cross-checks this count against the live Object.keys(FOOD_FACTS). */
+  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
   let m;
   while ((m = rx.exec(ffBlock))) {
-    facts.push({ name: m[1], unit: m[2], cal: +m[3], p: +m[4], c: +m[5], f: +m[6], src: m[7] });
+    facts.push({ name: m[1], unit: m[2], cal: +m[3], p: +m[4], c: +m[5], f: +m[6],
+                 src: m[7] !== undefined ? m[7] : m[8] });
   }
 
   /* what the meal plan actually needs */
@@ -131,6 +138,12 @@ function build() {
 }
 
 const r = build();
+/* --count reports how many FOOD_FACTS entries this file's PARSER can see, and exits 0 whether or not
+   FOOD_FACTS.md is stale. check-food.js compares it against the live Object.keys(FOOD_FACTS).
+   It is deliberately separate from --check: when both a stale doc and an unparseable entry were folded
+   into one exit code, the staleness swallowed the count and the guard reported "has its output
+   changed?" for what was actually a missing fact. One check, one failure mode. */
+if (process.argv.includes('--count')) { console.log(`${r.facts} facts`); process.exit(0); }
 if (process.argv.includes('--check')) {
   const cur = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
   if (cur !== r.text) { console.error('FOOD_FACTS.md is STALE — run: node tools/food-doc.js'); process.exit(1); }
