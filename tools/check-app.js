@@ -649,26 +649,40 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   if (!/\.nxb\.ghost\{[^}]*visibility:hidden/.test(src))
     bad.push('.nxb.ghost does not hide with visibility:hidden — display:none would collapse the slot');
 
-  /* ② no wrapping on these two summaries */
-  if (!/details\[data-acc="cor-day"\]>summary,\s*details\[data-acc="bowl-day"\]>summary\{[^}]*flex-wrap:nowrap/.test(src))
-    bad.push('the flavor summaries do not set flex-wrap:nowrap — a long name will wrap the cluster to row 2');
+  /* ② the break is DETERMINISTIC: the stepper starts its own row, so its x cannot depend on the title.
+        nowrap is the wrong cure and is checked for explicitly — it crushed the card on his phone. */
+  if (!/<span class="flavbreak"><\/span><span class="flavnext">/.test(src))
+    bad.push('nextBtns does not emit the .flavbreak spacer before the cluster — the stepper shares row 1 again');
+  if (!/\.flavbreak\{[^}]*flex-basis:100%/.test(src))
+    bad.push('.flavbreak does not span the row, so it cannot force the break');
+  if (/data-acc="cor-day"\]>summary,[^{]*\{[^}]*flex-wrap:nowrap/.test(src))
+    bad.push('the flavor summaries force flex-wrap:nowrap — that crushed the title to "..." and stacked ' +
+             'the chip vertically on his phone, because the row is wider than the screen');
 
-  /* ① exactly one thing absorbs the slack: the title grows, statline's auto margin is switched off */
+  /* ① the title is the ONLY thing that gives, and it gives from a zero basis so it can never wrap */
   const titleRule = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{([^}]*)\}/);
   if (!titleRule) bad.push('no title rule for the flavor summaries');
   else {
-    if (!/flex:\s*1 1 auto/.test(titleRule[1])) bad.push('the flavor title does not flex-grow, so free space goes to auto margins instead');
+    if (!/flex:\s*1 1 0(?!\d)/.test(titleRule[1]))
+      bad.push('the flavor title is not flex:1 1 0 — with an auto basis a long name forces a wrap ' +
+               'before the ellipsis can apply, because flex breaks lines on UNSHRUNK sizes');
     if (!/text-overflow:ellipsis/.test(titleRule[1])) bad.push('the flavor title does not truncate');
     if (!/min-width:0/.test(titleRule[1])) bad.push('the flavor title lacks min-width:0, so it cannot shrink');
   }
-  if (!/details\[data-acc="cor-day"\]>summary>\.statline,[^{]*\{[^}]*margin-left:0/.test(src))
-    bad.push('.statline keeps margin-left:auto inside the flavor summaries — two auto margins split the slack');
+  /* ⚠️ the defect his screenshot actually showed: the chip deforming instead of the title */
+  const fixedRule = src.match(/details\[data-acc="cor-day"\]>summary>\.chip,[\s\S]{0,200}?\{([^}]*)\}/);
+  if (!fixedRule) bad.push('no rule pinning .chip and .statline in the flavor summaries');
+  else if (!/flex-shrink:0/.test(fixedRule[1]))
+    bad.push('the BREAKFAST chip / statline can shrink — they deform (one letter per line) instead of ' +
+             'letting the title truncate');
   const flav = src.match(/\n\s*\.flavnext\{([^}]*)\}/);
   if (flav && /margin-left:auto/.test(flav[1]))
-    bad.push('.flavnext still carries margin-left:auto, which competes with .statline for the slack');
+    bad.push('.flavnext carries margin-left:auto — on its own row that would push the stepper right, ' +
+             'making its x depend on the rate cluster');
 
   if (bad.length) fail('flavor-btn', bad.join(' · '));
-  else ok('flavor-btn', `next › is position-stable: ${counts.on} buttons either way, no wrap, title takes the slack`);
+  else ok('flavor-btn', `next › is position-stable: ${counts.on} buttons either way, stepper on its own ` +
+          `row via .flavbreak, chip/statline pinned, title truncates from a zero basis`);
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');

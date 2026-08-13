@@ -349,13 +349,29 @@
           step of the day widened the cluster and shoved both buttons left. Its slot is now always
           reserved (see .nxb.ghost); nextBtns emits the same three buttons either way.
      Guarded by [flavor-btn] in check-app.js, which fails if any of the three comes back. */
-  details[data-acc="cor-day"]>summary, details[data-acc="bowl-day"]>summary{flex-wrap:nowrap}
+  /* ⛔ THIRD ATTEMPT, and the second one BROKE THE CARD — his screenshot showed the flavour name
+     truncated to "..." and the BREAKFAST chip crushed into one vertical letter per line.
+     WHY: I set flex-wrap:nowrap to stop the cluster jumping to row 2, but on his phone (~400 CSS px)
+     the fixed content — chip + statline + 3 buttons + the RATE cluster + the 22px marker — is already
+     wider than the row. Forcing one line left the title NEGATIVE space, so flex shrank the title to
+     nothing and then started on the chip, which had no flex-shrink:0. The row never fit; wrapping had
+     been hiding that fact, and removing the wrap exposed it as a crushed card.
+     THE FIX IS TO MAKE THE BREAK DETERMINISTIC INSTEAD OF FIGHTING IT. A zero-height full-width
+     .flavbreak spacer puts the stepper at the START of its own row, so "next ›" sits at a constant x
+     that cannot depend on the title's length, the macros, or whether ↺ is showing. Row 1 is
+     name + chip + statline; row 2 is stepper (left) and rate (right).
+     ⚠️ The title uses flex:1 1 0, NOT 1 1 auto: flex line-breaking uses an item's UNSHRUNK size, so a
+     basis of auto lets a long name force a wrap before the ellipsis can apply. A basis of 0 never can.
+     ⚠️ chip and statline MUST keep flex-shrink:0 or they deform instead of the title. That is the exact
+     defect in his screenshot. */
+  .flavbreak{flex-basis:100%;height:0;margin:0}
   details[data-acc="cor-day"]>summary>b, details[data-acc="bowl-day"]>summary>h3{
-       flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+       flex:1 1 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  details[data-acc="cor-day"]>summary>.chip, details[data-acc="bowl-day"]>summary>.chip,
   details[data-acc="cor-day"]>summary>.statline, details[data-acc="bowl-day"]>summary>.statline{
-       margin-left:0}
+       margin-left:0;flex-shrink:0}
   details[data-acc="cor-day"]>summary>.rate, details[data-acc="bowl-day"]>summary>.rate{
-       margin-top:0;flex-shrink:0;flex-wrap:nowrap}
+       margin-top:0;margin-left:auto;flex-shrink:0;flex-wrap:nowrap}
   .nxb.ghost{visibility:hidden;pointer-events:none}
   .nxb{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:var(--r-ctl);padding:3px 8px;font-size:11px;line-height:1.4;cursor:pointer;white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
   .nxb:hover{color:var(--ink);border-color:var(--brass)}
@@ -2830,7 +2846,9 @@ const bowlIsPicked = isoD => (store.get('qpcut.bowlpick',{}))[isoD] != null;
    it conditionally changed the cluster's width the instant he stepped a flavor, which shoved "next ›"
    sideways mid-use. A reserved slot costs one hidden button; a moving target costs him a mis-tap. */
 function nextBtns(kind, picked){
-  return `<span class="flavnext">`
+  /* the .flavbreak spacer forces the stepper onto its own row — see the CSS note. Without it the
+     cluster's x depends on the title, and with nowrap instead the card crushes on a phone. */
+  return `<span class="flavbreak"></span><span class="flavnext">`
     + `<button type="button" class="nxb" data-flav="${kind}" data-dir="-1" aria-label="previous flavor">‹</button>`
     + `<button type="button" class="nxb" data-flav="${kind}" data-dir="1" aria-label="next flavor">next ›</button>`
     + `<button type="button" class="nxb rst${picked?'':' ghost'}" data-flav="${kind}" data-dir="0"`
@@ -7095,7 +7113,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786632974';
+const BUILD = 'b1786633972';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
