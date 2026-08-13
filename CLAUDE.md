@@ -130,6 +130,14 @@ findable online. Anything unsourceable gets marked UNVERIFIED **in the app**, vi
   editing, and again before committing. Never force-push.
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks
   anchor matching in the checks.
+- **⛔ Never write `index.html` from Python's text mode.** `io.open(p,'w')` on Windows rewrites every
+  `\n` as `\r\n`, so a one-line `const BUILD` bump silently converted the whole file to CRLF — and it
+  cost nothing visible: the app rendered, all 210 probe renders passed, the deploy verified byte-identical
+  against the live copy. What broke was the CHECKS: anchors like `indexOf('\n\n')` stopped matching and
+  `[scoop-weights]` reported "could not locate ppFind/ppTag", which reads like a refactor. Use
+  `newline=''`, binary mode, or `fs.writeFileSync`. `[line-endings]` in check-food.js now runs first and
+  says so plainly. **Also: Git Bash `grep -c $'\r'` reports 0 on a CRLF file — it is not a reliable test.
+  Read the bytes (`fs.readFileSync(f,'binary')`).**
 - **A missing Saturday is not a missed workout** — Shabbat means no phone, so nothing gets logged.
   Five weeks of reps show Mon/Tue/Wed/Fri only. Never read a blank Saturday as a skip; ask.
 - The section-collapse rule: **every app section starts CLOSED**, with a summary badge carrying the

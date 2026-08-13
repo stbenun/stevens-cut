@@ -619,5 +619,57 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('cor-repeat', `stepper skips the ${r.recentCount} combos eaten in 14 days; 12 steps gave ${r.distinct} distinct, rotation is date-pure`);
 }
 
+/* ---------- flavor-btn — the "next ›" button must not move when the flavor changes ----------
+ * He reported this TWICE. The first fix pinned the cluster right and truncated the name, and it was
+ * not enough, because three independent things moved that button:
+ *   ① two items in the row carried margin-left:auto (.statline and .flavnext), so flexbox split the
+ *      free space between them and the button's position became a function of the title's width;
+ *   ② details.acc summary sets flex-wrap:wrap, and flex line-breaking uses each item's UNSHRUNK size,
+ *      so a long name wrapped the whole cluster to a second row before the ellipsis could apply;
+ *   ③ ↺ was rendered only when a pick existed, and it sits AFTER "next ›" — so his first step of the
+ *      day widened the cluster and pushed both buttons left.
+ * A layout bug cannot be measured in jsdom (no layout engine), so this checks the three structural
+ * facts that caused it. Cheap, and it fails the moment one is undone.
+ */
+{
+  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const bad = [];
+
+  /* ③ behavioural: same button count either way, so the cluster's width cannot change */
+  const counts = run(`
+    const a = nextBtns('cor', true), b = nextBtns('cor', false);
+    return {on:(a.match(/<button/g)||[]).length, off:(b.match(/<button/g)||[]).length,
+            offHasRst:/nxb rst/.test(b), offGhost:/ghost/.test(b)};
+  `);
+  if (counts.on !== counts.off)
+    bad.push(`nextBtns emits ${counts.on} buttons when picked but ${counts.off} when not — ` +
+             `the cluster changes width the moment he steps a flavor`);
+  if (!counts.offHasRst || !counts.offGhost)
+    bad.push('the unpicked ↺ is not rendered as a reserved ghost slot');
+  if (!/\.nxb\.ghost\{[^}]*visibility:hidden/.test(src))
+    bad.push('.nxb.ghost does not hide with visibility:hidden — display:none would collapse the slot');
+
+  /* ② no wrapping on these two summaries */
+  if (!/details\[data-acc="cor-day"\]>summary,\s*details\[data-acc="bowl-day"\]>summary\{[^}]*flex-wrap:nowrap/.test(src))
+    bad.push('the flavor summaries do not set flex-wrap:nowrap — a long name will wrap the cluster to row 2');
+
+  /* ① exactly one thing absorbs the slack: the title grows, statline's auto margin is switched off */
+  const titleRule = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{([^}]*)\}/);
+  if (!titleRule) bad.push('no title rule for the flavor summaries');
+  else {
+    if (!/flex:\s*1 1 auto/.test(titleRule[1])) bad.push('the flavor title does not flex-grow, so free space goes to auto margins instead');
+    if (!/text-overflow:ellipsis/.test(titleRule[1])) bad.push('the flavor title does not truncate');
+    if (!/min-width:0/.test(titleRule[1])) bad.push('the flavor title lacks min-width:0, so it cannot shrink');
+  }
+  if (!/details\[data-acc="cor-day"\]>summary>\.statline,[^{]*\{[^}]*margin-left:0/.test(src))
+    bad.push('.statline keeps margin-left:auto inside the flavor summaries — two auto margins split the slack');
+  const flav = src.match(/\n\s*\.flavnext\{([^}]*)\}/);
+  if (flav && /margin-left:auto/.test(flav[1]))
+    bad.push('.flavnext still carries margin-left:auto, which competes with .statline for the slack');
+
+  if (bad.length) fail('flavor-btn', bad.join(' · '));
+  else ok('flavor-btn', `next › is position-stable: ${counts.on} buttons either way, no wrap, title takes the slack`);
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

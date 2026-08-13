@@ -334,9 +334,29 @@
      of the title. make it not move." The buttons sat inline right after the flavour name, so a long name
      pushed them along. These summaries are already display:flex, so margin-left:auto pins the cluster to
      the right edge and the name can no longer move it. The name truncates instead of shoving the row. */
-  .flavnext{display:inline-flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;vertical-align:middle}
+  .flavnext{display:inline-flex;align-items:center;gap:4px;flex-shrink:0;vertical-align:middle}
+  /* ⛔ SECOND REPORT, Aug 13 2026: "it moves evrytime i change the flavor." The Aug 12 fix above was
+     not enough — it only addressed the name pushing the row. THREE separate things moved that button,
+     and any one of them is enough to see it move:
+       ① `.statline` ALSO carries margin-left:auto. Two auto-margin items split the free space between
+          them, so the gap before the buttons is a FUNCTION of the title width — change the name and
+          the button slides. Here the title takes the slack with flex-grow and statline's auto margin
+          is switched off, so nothing depends on the name any more.
+       ② `details.acc summary` sets flex-wrap:wrap, and flexbox breaks lines on each item's UNSHRUNK
+          size — so a long name wrapped the whole cluster onto a second row before the ellipsis could
+          ever apply. That is a vertical jump, and it is why truncation alone did not fix this.
+       ③ The ↺ button only existed once a pick existed, and it renders AFTER "next ›" — so the first
+          step of the day widened the cluster and shoved both buttons left. Its slot is now always
+          reserved (see .nxb.ghost); nextBtns emits the same three buttons either way.
+     Guarded by [flavor-btn] in check-app.js, which fails if any of the three comes back. */
+  details[data-acc="cor-day"]>summary, details[data-acc="bowl-day"]>summary{flex-wrap:nowrap}
   details[data-acc="cor-day"]>summary>b, details[data-acc="bowl-day"]>summary>h3{
-       min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+       flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  details[data-acc="cor-day"]>summary>.statline, details[data-acc="bowl-day"]>summary>.statline{
+       margin-left:0}
+  details[data-acc="cor-day"]>summary>.rate, details[data-acc="bowl-day"]>summary>.rate{
+       margin-top:0;flex-shrink:0;flex-wrap:nowrap}
+  .nxb.ghost{visibility:hidden;pointer-events:none}
   .nxb{border:1px solid var(--line);background:var(--panel2);color:var(--muted);border-radius:var(--r-ctl);padding:3px 8px;font-size:11px;line-height:1.4;cursor:pointer;white-space:nowrap;font-family:var(--mono);letter-spacing:.04em}
   .nxb:hover{color:var(--ink);border-color:var(--brass)}
   .nxb.rst{color:var(--brass)}
@@ -2805,11 +2825,15 @@ function bowlResetPick(isoD){
 }
 const bowlIsPicked = isoD => (store.get('qpcut.bowlpick',{}))[isoD] != null;
 /* one shared control so the two cards can never drift apart */
+/* ⚠️ ALWAYS emits all three buttons — the ↺ is merely hidden when there is nothing to reset. Rendering
+   it conditionally changed the cluster's width the instant he stepped a flavor, which shoved "next ›"
+   sideways mid-use. A reserved slot costs one hidden button; a moving target costs him a mis-tap. */
 function nextBtns(kind, picked){
   return `<span class="flavnext">`
     + `<button type="button" class="nxb" data-flav="${kind}" data-dir="-1" aria-label="previous flavor">‹</button>`
     + `<button type="button" class="nxb" data-flav="${kind}" data-dir="1" aria-label="next flavor">next ›</button>`
-    + (picked?`<button type="button" class="nxb rst" data-flav="${kind}" data-dir="0" aria-label="back to the scheduled flavor">↺</button>`:'')
+    + `<button type="button" class="nxb rst${picked?'':' ghost'}" data-flav="${kind}" data-dir="0"`
+    + `${picked?'':' tabindex="-1" aria-hidden="true"'} aria-label="back to the scheduled flavor">↺</button>`
     + `</span>`;
 }
 const flavorTheme = () => weekPick(THEMES);
@@ -6692,6 +6716,7 @@ function wireToday(){
      otherwise toggle the <details> open/closed on every tap. */
   document.querySelectorAll('[data-flav]').forEach(b=>b.addEventListener('click',e=>{
     e.preventDefault(); e.stopPropagation();
+    if(b.classList.contains('ghost')) return;   /* reserved-slot ↺ with nothing to reset */
     const kind = b.dataset.flav, dir = +b.dataset.dir, d = isoToday();
     if(kind==='cor'){ dir===0? corResetPick(d) : corStep(d, new Date().getDay(), dir); }
     else { dir===0? bowlResetPick(d) : bowlStep(d, dir); }
@@ -7069,7 +7094,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786632226';
+const BUILD = 'b1786632974';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -42,6 +42,23 @@ let fails = 0;
 const fail = (check, msg) => { fails++; console.log('  FAIL  [' + check + '] ' + msg); };
 const pass = (check, msg) => console.log('  ok    [' + check + '] ' + msg);
 
+/* ============ 0. line endings — FIRST, because CRLF makes later checks lie ============
+   Aug 13 2026: I bumped `const BUILD` with a Python one-liner using io.open(p,'w'), and Python's TEXT
+   mode on Windows rewrites every \n as \r\n. index.html went from LF to CRLF in a single commit.
+   The app still rendered and all 210 probe renders passed, so nothing looked wrong — but half the
+   checks in this file locate code with anchors like indexOf('\n\n'), and those silently stopped
+   matching. [scoop-weights] reported "could not locate ppFind/ppTag in the source", which reads like
+   a refactor broke it rather than a line-ending change.
+   ⛔ When writing this file from Python use newline='' (or binary mode). Node's fs.writeFileSync is
+   safe. CLAUDE.md warned about CRLF from core.autocrlf and nothing enforced it — now something does.
+   The tools/*.js files are CRLF already and always have been; this guards index.html only. */
+{
+  const crlf = (fs.readFileSync(FILE, 'binary').match(/\r\n/g) || []).length;
+  if (crlf) fail('line-endings', `${path.basename(FILE)} has ${crlf} CRLF line endings — anchor-based ` +
+                 `checks below will fail or, worse, pass vacuously. Normalise to LF before trusting any result.`);
+  else pass('line-endings', 'LF throughout — anchor matching is sound');
+}
+
 /* ---- pull a top-level `const NAME = {...}` / `[...]` out of the file ----
    const declared inside eval() is scoped to the eval, so rewrite to a global
    assignment. (Learned the hard way trying to set logDate from outside.) */
