@@ -752,5 +752,60 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           `Food keeps ${r.food.join(', ')}`);
 }
 
+/* ---------- grocery-flat — one list, checked items at the BOTTOM OF THE WHOLE LIST ----------
+ * His words, Aug 16 2026: "The grocery list is very messy. There's a bunch of tabs on the list with
+ * multiple items in it, Don't do that. I want anything that was checked off to be sent to the bottom
+ * of the whole list."
+ * The old card had FIVE `daytag` sections and each sorted its own checked items to its own bottom, so
+ * a checked item sank a few rows and stopped, five separate times. This pins the fix: no section
+ * headers inside the grocery card, exactly one divider, every checked row below it.
+ * Checked against the RENDERED DOM after clicking real items — source order proves nothing here.
+ */
+{
+  const r = run(`
+    /* the grocery card lives on the PREP tab; check-app boots on Today */
+    if(typeof setTab === 'function') setTab('prep');
+    const card = document.querySelector('details[data-acc="grocery"]');
+    if(!card) return {err:'no grocery card even after setTab(prep)'};
+    card.open = true;
+    /* he has real checked items in the synced data, so click only UNCHECKED rows, spread across the
+       list, and assert the INVARIANT rather than an absolute count. An earlier version asserted
+       "3 checked" and failed on healthy code because 33 were already checked from his gist. */
+    const un = [...card.querySelectorAll('.buyitem:not(.done)')];
+    const before = card.querySelectorAll('.buyitem.done').length;
+    const picks = [...new Set([0, Math.floor(un.length/2), un.length-1])].filter(i => i >= 0 && un[i]);
+    picks.forEach(i => un[i] && un[i].click());
+    const c2 = document.querySelector('details[data-acc="grocery"]');
+    c2.open = true;
+    const seq = [...c2.querySelectorAll('.buyitem, .doneline')];
+    const divAt = seq.findIndex(e => e.classList.contains('doneline'));
+    const checkedAbove = seq.slice(0, divAt < 0 ? seq.length : divAt)
+                            .filter(e => e.classList.contains('done')).length;
+    const uncheckedBelow = divAt < 0 ? 0
+      : seq.slice(divAt).filter(e => e.classList.contains('buyitem') && !e.classList.contains('done')).length;
+    return {
+      headers: c2.querySelectorAll('.daytag').length,
+      dividers: c2.querySelectorAll('.doneline').length,
+      total: c2.querySelectorAll('.buyitem').length,
+      checked: c2.querySelectorAll('.buyitem.done').length,
+      checkedAbove: checkedAbove, uncheckedBelow: uncheckedBelow,
+      before: before, clicked: picks.length
+    };
+  `);
+  const bad = [];
+  if (r.err) bad.push(r.err);
+  else {
+    if (r.headers)        bad.push(r.headers + ' section header(s) inside the grocery card — he asked for no tabs');
+    if (r.dividers !== 1) bad.push(r.dividers + ' done-dividers, expected exactly 1');
+    if (r.checkedAbove)   bad.push(r.checkedAbove + ' checked item(s) ABOVE the divider — they must sink to the bottom of the WHOLE list');
+    if (r.uncheckedBelow) bad.push(r.uncheckedBelow + ' unchecked item(s) below the divider');
+    if (r.checked !== r.before + r.clicked)
+      bad.push('checked ' + r.clicked + ' more items but the count went ' + r.before + ' -> ' + r.checked);
+  }
+  if (bad.length) fail('grocery-flat', bad.join(' \u00b7 '));
+  else ok('grocery-flat', 'one flat list: ' + r.total + ' rows, 0 headers, all ' + r.checked +
+          ' checked below a single divider (clicked ' + r.clicked + ' mid-test)');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

@@ -283,6 +283,11 @@
   .ex li .r{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--brass);
             font-size:12.5px;flex-shrink:0;text-align:right}
   .daytag{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  /* the single divider between "still to buy" and "got it" in the grocery list. One line in the whole
+     card, replacing five section headers — see the note above the grocery <details>. */
+  .doneline{display:flex;align-items:center;gap:10px;margin:16px 0 2px;
+       font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+  .doneline::after{content:'';flex:1;height:1px;background:var(--line)}
   .upflag{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--brass-ink);background:var(--pareve);
           border-radius:6px;padding:2px 6px;margin-left:6px;text-transform:uppercase;white-space:nowrap}
 
@@ -297,6 +302,21 @@
   .suppitem.done .nm,.buyitem.done .nm{color:var(--muted);text-decoration:line-through}
   .suppitem .when,.buyitem .q{margin-left:auto;font-size:11px;color:var(--muted);letter-spacing:.06em;
             text-transform:uppercase;flex-shrink:0;font-family:var(--mono)}
+  /* ⛔ A grocery quantity can be 40 characters ("~2 LB (4 x 7 OZ RAW = 1.8 LB, + SPARE)"), and .q is
+     flex-shrink:0 while .nm had no flex rule at all — so the qty took the row and "Chicken breast —
+     regular cut, not thin-sliced" rendered as SIX stacked words in a ~90px column. Identical bug to the
+     Meals rows: the thing that should give had no basis, so the thing that cannot shrink won.
+     Give the name a real basis and let the row wrap — a long qty now drops onto its own line,
+     right-aligned, and the name keeps the width. Scoped to .buyitem: .suppitem's .when is always short
+     ("8 PM", "daily") and does not need it. */
+  .buyitem{flex-wrap:wrap}
+  .buyitem .nm{flex:1 1 16ch;min-width:0}
+  /* ⚠️ and drop the auto margin HERE specifically: an auto margin absorbs free space BEFORE flex-grow
+     runs, so .q{margin-left:auto} pinned the name at exactly its 16ch basis and never let it fill the
+     row — 132px at 390px wide, NARROWER than the same row at 320px. With the name growing, it pushes
+     .q to the right edge on its own and the auto margin is not needed. Third time this exact
+     interaction has bitten: see the flavour-card note. */
+  .buyitem .q{margin-left:0}
   .xdel{background:none;border:none;color:var(--muted);font-size:16px;padding:2px 6px;flex-shrink:0}
 
   /* ---- menu builder + pickers ---- */
@@ -5805,6 +5825,19 @@ function viewPrep(){
 
   <section id="p-buy">
   <div class="zhead"><span class="zt">② Buy</span><span class="zn">${toBuy?`${toBuy} left to buy`:'all checked'}</span></div>
+  ${/* ⛔ ONE FLAT LIST. His words, Aug 16 2026: "The grocery list is very messy. There's a bunch of
+       tabs on the list with multiple items in it, Don't do that. I want anything that was checked off
+       to be sent to the bottom of the whole list."
+       WHAT WAS WRONG, precisely: the list rendered FIVE `daytag` sections — the four menu groups plus
+       Creami / spices / your-adds / staples — and each one sorted its OWN checked items to its OWN
+       bottom. So a checked item sank a few rows and stopped, five separate times. Scanning for what was
+       left meant reading five headers and five part-done piles.
+       NOW: every source is flattened into a single array, unchecked first, and EVERY checked item in
+       the list — whatever it came from — sits below one divider at the very bottom.
+       ⭐ THE ORDER IS STILL THE OLD GROUP ORDER, headers just deleted. Same-aisle items stay adjacent,
+       so the walk through the store is unchanged; he simply no longer has to read the category to get
+       it. Grouping does its job without costing him a glance — same principle as the solvers.
+       Anything he can act on stays: quantities, the delete × on his own adds, the add box, reset. */''}
   <details class="card acc" data-acc="grocery"${openAcc.has('grocery')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">🛒 Everything to buy</h3> ${tchip(Object.values(counts).some(v=>v>0)?'from your menu':'starter list')}</summary>
   ${(()=>{
@@ -5812,58 +5845,39 @@ function viewPrep(){
     const groups = hasMenu
       ? GRP_ORDER.map(g=>[g, (buildGrocery(counts)[g]||[])]).filter(([g,items])=>items.length)
       : GROCERY;
-    return groups.map(([grp,items])=>{
-      /* unchecked (still to buy) float to the top of each group; checked-off sink to the bottom */
-      const ordered = [...items].sort((a,b)=>{
-        const onA = gDone.includes(grp+'|'+a[0]), onB = gDone.includes(grp+'|'+b[0]);
-        return (onA?1:0)-(onB?1:0);
-      });
-      return `
-      <div style="margin-top:14px"><span class="daytag">${grp}</span>
-        ${ordered.map(([n,q])=>{
-          const id = grp+'|'+n;
-          const on = gDone.includes(id);
-          return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
-            <span class="box">${on?'✓':''}</span><span class="nm">${n}</span><span class="q">${q}</span></button>`;
-        }).join('')}
-      </div>`;}).join('');
-  })()}
-  ${(()=>{
     const shopBatch = creamiState().next;
-    return `
-  <div style="margin-top:14px"><span class="daytag">Creami batch · shopping for ${shopBatch.name} (next up)</span>
-    ${shopBatch.shop.map(([n,q])=>{
-      const id = 'Creami|'+n, on = gDone.includes(id);
-      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
-        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span><span class="q">${q}</span></button>`;
-    }).join('')}
-  </div>`;
+
+    /* ---- one array, every source, in walking order ---- */
+    const rows = [];
+    groups.forEach(([grp,items])=> items.forEach(([n,q])=>
+      rows.push({gid: grp+'|'+n, nm:n, q:q||''})));
+    shopBatch.shop.forEach(([n,q])=> rows.push({gid:'Creami|'+n, nm:n, q:q||''}));
+    weekPick(RECIPES).shop.forEach(n=> rows.push({gid:'Flavor|'+n, nm:n, q:''}));
+    STAPLES.forEach(n=> rows.push({gid:'Staples|'+n, nm:n, q:''}));
+    rows.forEach(r=> r.on = gDone.includes(r.gid));
+    /* his own adds live in a different store and carry a delete, so they keep their own shape */
+    buy.forEach((b,idx)=> rows.push({bi:idx, nm:b.name, q:'', on:!!b.done, mine:true}));
+
+    const row = r => {
+      const attr = r.mine ? `data-bi="${r.bi}"` : `data-gid="${esc(r.gid)}"`;
+      return `<button class="buyitem${r.on?' done':''}" ${attr}>`
+        + `<span class="box">${r.on?'✓':''}</span>`
+        + `<span class="nm">${r.mine?esc(r.nm):r.nm}</span>`
+        + (r.q?`<span class="q">${r.q}</span>`:'')
+        + (r.mine?`<span class="xdel" data-bx="${r.bi}" role="button" aria-label="delete">×</span>`:'')
+        + `</button>`;
+    };
+
+    const todo = rows.filter(r=>!r.on), done = rows.filter(r=>r.on);
+    return (todo.length ? todo.map(row).join('') : `<div class="sub" style="margin-top:10px">Nothing left — everything is checked.</div>`)
+      + `<div class="formrow" style="margin-top:12px">
+           <input type="text" id="buyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
+           <button class="btn" id="buyAdd">Add</button>
+         </div>`
+      + (done.length
+          ? `<div class="doneline"><span>✓ got it · ${done.length}</span></div>` + done.map(row).join('')
+          : '');
   })()}
-  <div style="margin-top:14px"><span class="daytag">Spices for this week’s recipes · ${weekPick(RECIPES).name}</span>
-    <div class="sub" style="margin-top:2px">Grab only what’s not already in the cabinet.</div>
-    ${weekPick(RECIPES).shop.map(n=>{
-      const id = 'Flavor|'+n, on = gDone.includes(id);
-      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
-        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span></button>`;
-    }).join('')}
-  </div>
-  <div style="margin-top:14px"><span class="daytag">Your adds</span>
-    ${buy.map((b,i)=>`
-      <button class="buyitem${b.done?' done':''}" data-bi="${i}">
-        <span class="box">${b.done?'✓':''}</span><span class="nm">${esc(b.name)}</span>
-        <span class="xdel" data-bx="${i}" role="button" aria-label="delete">×</span></button>`).join('')}
-    <div class="formrow">
-      <input type="text" id="buyName" placeholder="Add item…" style="flex:1;font-family:var(--body)">
-      <button class="btn" id="buyAdd">Add</button>
-    </div>
-  </div>
-  <div style="margin-top:14px"><span class="daytag">Staples — check stock</span>
-    ${STAPLES.map(n=>{
-      const id = 'Staples|'+n, on = gDone.includes(id);
-      return `<button class="buyitem${on?' done':''}" data-gid="${esc(id)}">
-        <span class="box">${on?'✓':''}</span><span class="nm">${n}</span></button>`;
-    }).join('')}
-  </div>
   <div class="formrow"><button class="btn ghost" id="gReset">Reset grocery checks</button></div>
   </details>
   </section>
@@ -7215,7 +7229,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786731733';
+const BUILD = 'b1786893764';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
