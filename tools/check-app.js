@@ -1008,5 +1008,77 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           'live sessions and backfills all left alone; 2224 lb caught');
 }
 
+/* ---------- event-in-sched — a dated event has to reach the DAY, not just a card ----------
+ * His report, Aug 17 2026: "why is the birthday party not in my sched today?" He had given me the date
+ * days earlier and I had built an EVENTS card for it. The card was not the problem — dayRows() built the
+ * timeline from weekday templates and never looked at EVENTS at all, so the event existed in the app's
+ * advice and was absent from the app's schedule. He reads the schedule.
+ * Now any EVENTS entry with at:'HH:MM' becomes a row. This pins that, per event, on its own date, and
+ * pins the two ways it could go wrong: a party must not be read as a commitment that blocks a meal, and
+ * it must not displace a meal row.
+ */
+{
+  const r = run(`
+    const out = [];
+    const REALD = Date;
+    const timed = EVENTS.filter(e => e.at);
+    timed.forEach(e => {
+      const stamp = new REALD(e.d + 'T12:00:00').getTime();
+      globalThis.Date = function(){ return arguments.length ? new REALD(...arguments) : new REALD(stamp); };
+      globalThis.Date.now = () => stamp; globalThis.Date.prototype = REALD.prototype;
+      globalThis.Date.parse = REALD.parse; globalThis.Date.UTC = REALD.UTC;
+      try {
+        const m = /^([0-9]{1,2}):([0-9]{2})$/.exec(String(e.at)); /* NOT \d: this string is inside a template literal, which eats the backslash */
+        const want = m ? (+m[1]*60 + +m[2]) : null;
+        const rows = dayRows();
+        const label = e.row || e.title;
+        const hit = rows.find(x => x[0] === want && String(x[1]) === String(label));
+        const meals = plannedMealMins();
+        const busy = busyBlocks().map(b => String(b[2]));
+        out.push({
+          d: e.d, at: e.at, parsed: want, today: isoToday(),
+          present: !!hit,
+          rowCount: rows.length,
+          isBusyBlock: busy.some(b => b === String(label).replace(/<[^>]*>/g,'')),
+          mealSlots: Object.keys(meals).sort().join(','),
+          /* an event row must never be mistaken for a meal row */
+          readAsMeal: !!(typeof mealSlotOfLabel === 'function' && mealSlotOfLabel(label))
+        });
+      } finally { globalThis.Date = REALD; }
+    });
+    /* and an entry WITHOUT a time must not leak into any schedule */
+    const untimed = EVENTS.filter(e => !e.at);
+    let leaked = 0;
+    untimed.forEach(e => {
+      const stamp = new REALD(e.d + 'T12:00:00').getTime();
+      globalThis.Date = function(){ return arguments.length ? new REALD(...arguments) : new REALD(stamp); };
+      globalThis.Date.now = () => stamp; globalThis.Date.prototype = REALD.prototype;
+      globalThis.Date.parse = REALD.parse; globalThis.Date.UTC = REALD.UTC;
+      try { if(dayRows().some(x => String(x[1]) === String(e.row || e.title))) leaked++; }
+      finally { globalThis.Date = REALD; }
+    });
+    return { rows: out, timed: timed.length, untimed: untimed.length, leaked };
+  `);
+  const bad = [];
+  if (r.err) bad.push(r.err);
+  else if (!r.timed) bad.push('no EVENTS entry carries a time — the schedule wiring is untested');
+  else {
+    r.rows.forEach(x => {
+      if (x.today !== x.d) bad.push(x.d + ': date stub failed, isoToday() said ' + x.today);
+      if (x.parsed === null) bad.push(x.d + ': at="' + x.at + '" did not parse as HH:MM');
+      else if (!x.present) bad.push(x.d + ' ' + x.at + ': event is NOT a row in that day\'s schedule (' +
+                                    x.rowCount + ' rows built) — it renders as a card only, which is the exact bug he reported');
+      if (x.isBusyBlock) bad.push(x.d + ': the event became a commitment block and will stop a meal being suggested');
+      if (x.readAsMeal) bad.push(x.d + ': the event label is being read as a MEAL slot');
+      if (!x.mealSlots) bad.push(x.d + ': no meal rows survived in the schedule');
+    });
+    if (r.leaked) bad.push(r.leaked + ' untimed event(s) leaked into a schedule without an at:');
+  }
+  if (bad.length) fail('event-in-sched', bad.join(' \u00b7 '));
+  else ok('event-in-sched', r.timed + ' timed event(s) each land as a real schedule row on their own date' +
+          ' (' + r.rows.map(x => x.d.slice(5) + ' ' + x.at).join(' \u00b7 ') + '); none blocks a meal;' +
+          ' ' + r.untimed + ' untimed stay card-only');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

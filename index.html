@@ -1622,6 +1622,76 @@ Snack. Eat dinner light and early if the feast allows.<br>
 <br>
 ⚠️ <b>Tomorrow is a barbecue too.</b> Tonight is the one to be strict at.`},
 
+  /* 🎂 MON AUG 17, 6 PM — a family birthday. THIS CARD WAS OWED AND MISSING: I worked the plan out with
+     him in chat on the 17th and never landed it in the app, and he found the gap himself ("why is the
+     birthday party not in my sched today?"). Chat is not the app; he does not scroll back.
+
+     The plan, with the arithmetic that is NOT allowed on the card:
+     · Snack (330/34/31/7) is the slot that gets banked — it sits at ~8 PM, closest to a 6 PM party, and
+       dinner at 10 PM is the meal worth protecting whole.
+     · Party food has the snack's CALORIES and none of its PROTEIN. Cake is ~0-5 g against the 34 g that
+       slot owes, which is a ~30 g hole in a 187 g day — the single biggest cost of the evening.
+     · ⭐ THE SHAKE GOES BEFORE HE LEAVES, NOT AFTER HE GETS HOME, AND THE REASON IS KASHRUT:
+       whey is DAIRY. WAIT_MEAT_DAIRY is 360 min, so if the party serves meat a post-party shake is
+       blocked until well past midnight and the protein is simply lost. WAIT_DAIRY_MEAT is only 30 min,
+       so 1 scoop at ~5:30 buys back 25 g AND leaves him free to eat anything at 6. It also takes the
+       edge off, which is what keeps the slice to one slice.
+     · 1 scoop = 137/25/4/2.7 (FOOD_FACTS 'protein', label-verified). That is ~+137 cal over the day's
+       2220 once the party fills the snack budget. Protein is the thing being defended; the calories are
+       the cheaper side of that trade, and it is one evening.
+     · Dinner is meat (Burger) at 10 PM — reachable after either a dairy or a meat party.
+     🥜 Cake and ice cream are the two highest-risk items at any party: four of his nuts are anaphylactic.
+     Names stay out — the sibling and the birthday are other people, public repo. */
+  {d:'2026-08-17', at:'18:00', row:'🎂 Birthday party — one slice, skip the ice cream',
+   title:'🎂 Birthday party · 6 PM', msg:`<b>SKIP → put it into the party</b><br>
+Snack.<br>
+<br>
+<b>5:30 — BEFORE YOU LEAVE</b><br>
+<b>1 scoop in water.</b> Do it now, not when you get back.<br>
+<br>
+<b>THERE</b><br>
+<b>One slice of cake, once.</b> Skip the ice cream.<br>
+🥜 <b>Ask what is in the cake before you take it.</b><br>
+<br>
+<b>DINNER 10 PM — full, unchanged</b><br>
+<br>
+<b>💧</b> 136 oz today`},
+
+  /* 🎂 FRI AUG 21 — TWO events and a lift, and the morning one lands ON a meal slot.
+     Known: a 10:30 AM party (he confirmed "friday- am"), Legs #2, and an engagement that evening — and
+     his own call, unprompted: "not drinking friday."
+     · 10:30 AM IS the breakfast slot, so breakfast is not skipped INTO the party, the party IS breakfast.
+       That is the whole point of the card; a 545/36/54/21 slot spent on party food is a 36 g protein hole
+       on a lift day, so the scoop is not optional here either.
+     · Friday already skips the snack (feast day) — do NOT bank it twice.
+     · Dinner is the Shabbat feast and it is fixed. Nothing about it moves.
+     ⚠️ THE ENGAGEMENT TIME IS STILL OPEN. He said he would get it. Friday evening runs into Shabbat, so
+     it has to be early afternoon — but I am not going to print a time I do not have, and NOT using a
+     {{...}} placeholder is deliberate: check-food's [placeholders] check requires every one of them to
+     resolve, and an unresolvable one would fail the build rather than degrade quietly.
+     Names stay out — public repo. */
+  /* ⚠️ The row label must NOT contain breakfast/lunch/snack/dinner: mealSlotOfLabel() word-matches those
+     and plannedMealMins() would file this party AS the meal row. It happened to be harmless here (both
+     land at 10:30) but it is a trap, and the card carries "10:30 PARTY = BREAKFAST" anyway. */
+  {d:'2026-08-21', at:'10:30', row:'🎂 Birthday party — 1 scoop in water with it',
+   title:'🎂 Morning party · lift · engagement later', msg:`<b>10:30 PARTY = BREAKFAST</b><br>
+Don't eat breakfast first.<br>
+<br>
+<b>BEFORE THE LIFT</b><br>
+Pre-lift as normal.<br>
+<br>
+<b>AT THE PARTY</b><br>
+<b>1 scoop in water</b> + whatever you take.<br>
+<b>One slice, once.</b><br>
+🥜 <b>Ask what is in the cake.</b><br>
+<br>
+<b>LUNCH 1:30 — normal.</b> Snack is already skipped today.<br>
+<b>Feast dinner — unchanged.</b><br>
+<br>
+🍹 <b>Not drinking tonight.</b> Your call, holding you to it.<br>
+<br>
+<b>💧</b> Front-load it — nothing after Shabbat comes in`},
+
   /* Thursday night. Unknown menu — he has not said what is served, so this card carries the ladder and
      the nut question rather than a specific order. Thu is his other cheap night. */
   {d:'2026-08-20', title:'🌊 Thursday night out', msg:`<b>SKIP → put it into tonight</b><br>
@@ -3872,6 +3942,19 @@ function dayRows(){
     if(lift&&!done){ A(lift-45,'Pre-lift meal'); A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs #2 · log reps live'); A(lift+75,'Gym done → shower + work'); }
     A(900,'🕯️ Shabbat prep — the afternoon is free now that Legs #2 is in the morning'); A(1020,'Bank'); A(1140,'Shul'); A(1200,'Shabbat dinner — feast + one full pita'); }
   if(wd===6){ A(390,'Wake + 💧 Ryse stick — drink it before you stand up'); A(405,'Minyan'); A(525,'Class'); A(585,'Walk to grandma’s'); if(!done) A(600,'Lift — the printed card'); A(750,'Shabbat lunch'); }
+  /* ⭐ EVENTS WITH A TIME BECOME REAL SCHEDULE ROWS. His report, Aug 17 2026: "why is the birthday party
+     not in my sched today?" — the answer was that EVENTS only ever rendered a coaching CARD, and this
+     function built the timeline from weekday templates alone, so an event he had told me about was
+     nowhere in the day he actually reads. A card is advice; the schedule is the day.
+     Any EVENTS entry carrying `at:'HH:MM'` now lands here automatically, so this cannot go stale again
+     the next time he gives me a date. `row` overrides the label when the card title is too long for a
+     timeline row; otherwise the title is used with its emoji kept (it is how he finds the row).
+     ⚠️ Deliberately NOT run through busyBlocks' commitment regex: a party is a place he EATS, so it must
+     not block a meal window the way class or minyan does. */
+  EVENTS.filter(e=>e.d===isoToday() && e.at).forEach(e=>{
+    const m = /^(\d{1,2}):(\d{2})$/.exec(String(e.at));
+    if(m) A(+m[1]*60 + +m[2], e.row || e.title);
+  });
   return T;
 }
 /* the planned clock time of each meal slot today, straight off the authored plan */
@@ -7548,7 +7631,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786981788';
+const BUILD = 'b1786989826';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
