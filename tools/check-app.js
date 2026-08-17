@@ -1080,5 +1080,115 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           ' ' + r.untimed + ' untimed stay card-only');
 }
 
+/* ---------- event-noise — an event card states the event and NOTHING else ----------
+ * His instruction, Aug 17 2026, after I answered "put the party in my schedule" with a food ladder, a
+ * banked snack, a protein scoop, a hydration number and a nut prompt: "i never asked for the above. i
+ * just asked for it to be in my schedule. Don't make meal adjustments or any adjustements unless told
+ * to. when i tell you about an event, all you should do is, make a sched adjustment and a reminder for
+ * the morning of. apply that to all upcoming events i told you about."
+ * Six cards carried ~2,900 characters of coaching he never requested. This makes writing it again a
+ * BUILD FAILURE rather than something I have to remember, which is the only version of this that holds.
+ * Cutoff is the date of the instruction: earlier cards are history and are not rewritten.
+ * A clash line ("your class runs 6:30-7:45 the same evening") is deliberately allowed — two things on
+ * one evening is schedule information, not a meal adjustment.
+ */
+{
+  const RULE_FROM = '2026-08-17';
+  const BANNED = [
+    ['\u{1F6AB}', 'a do-not list'],
+    ['\u{1F95C}', 'a nut prompt'],
+    ['\u{1F4A7}', 'a hydration instruction'],
+    ['\u{1F379}', 'a drinks instruction'],
+    ['scoop', 'a protein scoop'],
+    ['SKIP \u2192', 'a banked slot'],
+    ['put it into', 'a banked slot'],
+    ['put them into', 'a banked slot'],
+    [' oz', 'a fluid/weight amount'],
+    ['starch', 'a food ladder'],
+    ['dressing', 'a food ladder'],
+    ['skin off', 'a food ladder'],
+    ['palm-sized', 'a portion instruction'],
+    ['sashimi', 'a food ladder'],
+    ['in this order', 'a food ladder'],
+    ['unchanged', 'a meal adjustment'],
+  ];
+  const r = run(`
+    return EVENTS.filter(e => e.d >= '` + RULE_FROM + `')
+      .map(e => ({ d: e.d, title: e.title, msg: String(e.msg || ''), len: String(e.msg || '').length }));
+  `);
+  const bad = [];
+  if (r.err) bad.push(r.err);
+  else if (!r.length) bad.push('no events on or after ' + RULE_FROM + ' — this check is vacuous');
+  else r.forEach(e => {
+    BANNED.forEach(([needle, what]) => {
+      if (e.msg.indexOf(needle) >= 0)
+        bad.push(e.d + ' card carries ' + what + ' ("' + needle.trim() + '") — he asked for the event only');
+    });
+    if (e.len > 220)
+      bad.push(e.d + ' card is ' + e.len + ' chars; an event statement does not need that (cap 220)');
+  });
+  if (bad.length) fail('event-noise', bad.join(' \u00b7 '));
+  else ok('event-noise', r.length + ' event card(s) since ' + RULE_FROM +
+          ' state the event only — no banked slots, ladders, scoops, water or nut prompts (longest ' +
+          Math.max.apply(null, r.map(e => e.len)) + ' chars)');
+}
+
+/* ---------- event-push — the morning reminder actually sees the events ----------
+ * The other half of what he asked for. push-reminders.js pulls EVENTS out of the served file by REGEX
+ * (not eval, so a card body can never take his defrost and weigh-in pushes down with it) — and a regex
+ * against a source literal is exactly the thing that silently stops matching. This runs the push
+ * script's own extractor via `--list` and compares it to what the app holds, so a format change fails
+ * the build instead of quietly ending the reminders.
+ */
+{
+  const { execSync } = require('child_process');
+  const path = require('path');
+  const ROOT = path.join(__dirname, '..');
+  const sh = a => JSON.parse(execSync('node push-reminders.js ' + a, { cwd: ROOT, encoding: 'utf8' }));
+  const want = run(`
+    return EVENTS.map(e => ({ d: e.d, at: e.at || null, label: e.row || e.title }));
+  `);
+  const bad = [];
+  let got = null, dryChecked = 0;
+  try { got = sh('--list'); }
+  catch (e) { bad.push('--list failed: ' + (e.stderr || e.message || '').toString().slice(0, 200)); }
+  if (want.err) bad.push(want.err);
+  else if (got) {
+    const key = x => x.d + '|' + (x.at || '-') + '|' + x.label;
+    const gotSet = new Set(got.map(key));
+    const missing = want.filter(w => !gotSet.has(key(w)));
+    if (missing.length)
+      bad.push('the push extractor does not see ' + missing.length + ' event(s): ' +
+               missing.map(m => m.d + ' "' + m.label + '"').join(', ') +
+               ' — those mornings would send no reminder');
+    if (got.length !== want.length)
+      bad.push('extractor found ' + got.length + ' events, the app has ' + want.length);
+    /* every event he has given a time to must carry it into the reminder text */
+    want.filter(w => w.at).forEach(w => {
+      if (!/[0-9]/.test(w.label)) bad.push(w.d + ' has a time but its reminder label shows none');
+    });
+    /* AND the morning branch has to actually USE the extractor. Checking grabEvents() alone passed while
+       the send path was gutted to `[].filter(...)`. --dry runs the real composition for that date. */
+    const dates = [...new Set(want.filter(w => w.d >= '2026-08-17').map(w => w.d))].sort().slice(0, 6);
+    dates.forEach(d => {
+      let items = null;
+      try { items = sh('--dry morning ' + d); }
+      catch (e) { bad.push('--dry morning ' + d + ' failed: ' +
+                           (e.stderr || e.message || '').toString().slice(0, 120)); return; }
+      const titles = items.map(i => String(i.title));
+      want.filter(w => w.d === d).forEach(w => {
+        if (!titles.some(t => t === w.label))
+          bad.push(d + ': the morning push would NOT include "' + w.label + '" (would send: ' +
+                   (titles.join(' / ') || 'nothing') + ')');
+      });
+      dryChecked++;
+    });
+  }
+  if (bad.length) fail('event-push', bad.join(' \u00b7 '));
+  else ok('event-push', '--list sees all ' + want.length + ' event(s) the app holds (times on the ' +
+          want.filter(w => w.at).length + ' he has dated); --dry morning proves the push actually sends' +
+          ' them on ' + dryChecked + ' upcoming date(s)');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
