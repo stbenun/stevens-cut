@@ -1021,23 +1021,32 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const r = run(`
     const out = [];
     const REALD = Date;
-    const timed = EVENTS.filter(e => e.at);
+    /* EVERY event, not just the timed ones: his rule gives an untimed event a card and a reminder, and
+       only the ROW is conditional on a time. Looping over timed events alone could never see an untimed
+       card go missing. */
+    const timed = EVENTS.filter(e => e.d >= '2026-08-17');
     timed.forEach(e => {
       const stamp = new REALD(e.d + 'T12:00:00').getTime();
       globalThis.Date = function(){ return arguments.length ? new REALD(...arguments) : new REALD(stamp); };
       globalThis.Date.now = () => stamp; globalThis.Date.prototype = REALD.prototype;
       globalThis.Date.parse = REALD.parse; globalThis.Date.UTC = REALD.UTC;
       try {
-        const m = /^([0-9]{1,2}):([0-9]{2})$/.exec(String(e.at)); /* NOT \d: this string is inside a template literal, which eats the backslash */
+        const m = e.at ? /^([0-9]{1,2}):([0-9]{2})$/.exec(String(e.at)) : null; /* NOT \d: template literal eats the backslash */
         const want = m ? (+m[1]*60 + +m[2]) : null;
         const rows = dayRows();
         const label = e.row || e.title;
-        const hit = rows.find(x => x[0] === want && String(x[1]) === String(label));
+        const hit = rows.find(x => String(x[1]) === String(label));
         const meals = plannedMealMins();
         const busy = busyBlocks().map(b => String(b[2]));
+        /* THE CARD. Render Today on this date and look for the title — the render site maps over EVENTS
+           with no condition today, and this is what keeps it that way. */
+        let card = false;
+        try { setTab('today'); card = document.getElementById('view').innerHTML.indexOf(e.title) >= 0; }
+        catch (err) { card = 'threw: ' + String(err.message || err); }
         out.push({
-          d: e.d, at: e.at, parsed: want, today: isoToday(),
-          present: !!hit,
+          d: e.d, at: e.at || null, parsed: want, today: isoToday(),
+          present: !!hit, rowMin: hit ? hit[0] : null,
+          card: card,
           rowCount: rows.length,
           isBusyBlock: busy.some(b => b === String(label).replace(/<[^>]*>/g,'')),
           mealSlots: Object.keys(meals).sort().join(','),
@@ -1065,9 +1074,19 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else {
     r.rows.forEach(x => {
       if (x.today !== x.d) bad.push(x.d + ': date stub failed, isoToday() said ' + x.today);
-      if (x.parsed === null) bad.push(x.d + ': at="' + x.at + '" did not parse as HH:MM');
-      else if (!x.present) bad.push(x.d + ' ' + x.at + ': event is NOT a row in that day\'s schedule (' +
-                                    x.rowCount + ' rows built) — it renders as a card only, which is the exact bug he reported');
+      /* (2) the small card — every event, timed or not */
+      if (x.card !== true)
+        bad.push(x.d + ': NO CARD renders on that date' + (typeof x.card === 'string' ? ' (' + x.card + ')' : ''));
+      /* (1) the row, iff he gave a time — a biconditional, so a row that appears WITHOUT a time is a
+         fabricated clock position and fails just as loudly as a missing one */
+      if (x.at && x.parsed === null) bad.push(x.d + ': at="' + x.at + '" did not parse as HH:MM');
+      else if (x.at && !x.present)
+        bad.push(x.d + ' ' + x.at + ': event is NOT a row in that day\'s schedule (' + x.rowCount +
+                 ' rows built) — card only, which is the exact bug he reported');
+      else if (x.at && x.rowMin !== x.parsed)
+        bad.push(x.d + ': row sits at ' + x.rowMin + ' min but he said ' + x.at);
+      else if (!x.at && x.present)
+        bad.push(x.d + ': has NO time from him but a schedule row appeared anyway — that is an invented time');
       if (x.isBusyBlock) bad.push(x.d + ': the event became a commitment block and will stop a meal being suggested');
       if (x.readAsMeal) bad.push(x.d + ': the event label is being read as a MEAL slot');
       if (!x.mealSlots) bad.push(x.d + ': no meal rows survived in the schedule');
@@ -1075,9 +1094,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if (r.leaked) bad.push(r.leaked + ' untimed event(s) leaked into a schedule without an at:');
   }
   if (bad.length) fail('event-in-sched', bad.join(' \u00b7 '));
-  else ok('event-in-sched', r.timed + ' timed event(s) each land as a real schedule row on their own date' +
-          ' (' + r.rows.map(x => x.d.slice(5) + ' ' + x.at).join(' \u00b7 ') + '); none blocks a meal;' +
-          ' ' + r.untimed + ' untimed stay card-only');
+  else ok('event-in-sched', r.rows.length + ' event(s) since 2026-08-17: all render a card, the ' +
+          r.rows.filter(x => x.at).length + ' he gave a time get a row at that time (' +
+          r.rows.filter(x => x.at).map(x => x.d.slice(5) + ' ' + x.at).join(' \u00b7 ') + '), the ' +
+          r.rows.filter(x => !x.at).length + ' without one get none; no event blocks or impersonates a meal');
 }
 
 /* ---------- event-noise — an event card states the event and NOTHING else ----------
