@@ -1600,14 +1600,14 @@ const EVENTS = [
      he needs to be told "tuna". The alternatives are a fallback CHAIN, so there is never a choice to
      make, only the next line down. Times are {{...}} placeholders off the schedule engine.
      Neutral drink wording: public repo. */
-  /* ⚠️ TWO BARBECUES IN UNDER 24 HOURS — Sat night then Sun 12–5. He listed them as separate events
-     and did not connect them; BBQ is his single biggest ApoB lever on record (Southside put 84 g of fat
-     in one sitting against a 64 g daily budget), so back-to-back is the thing worth flagging, not
-     either one alone. Saturday IS one of his two cheap nights (Thu + Sat), so the night itself is well
-     placed — it is the pairing that is expensive.
-     "Sip" means drinks are part of it. Motzei Shabbat, so it starts late. Copy stays neutral: names of
-     other people never go in this file (public repo). */
-  {d:'2026-08-22', title:'🔥 Barbecue tonight', msg:`Motzei Shabbat — <b>time still needed</b>`},
+  /* 🔴 USE HIS NAME FOR IT. His correction, Aug 17 2026: "what bbq on sat night? its called Slip Sip
+     N Que." I read "Que" as barbecue, titled the card "Barbecue tonight", and then reasoned on top of my
+     own inference — a two-barbecues-in-24-hours ApoB warning built on a guess about what the event even
+     is. Exactly the "cookies n cream isnt chocolatey" failure: I inferred the thing from its name instead
+     of using what he told me. If I do not know what is served, I do not know, and it does not matter here
+     anyway — an event gets a row and a reminder ([[event-rule]]). */
+  {d:'2026-08-22', at:'21:00', row:'🎉 Slip Sip N Que · 9 PM',
+   title:'🎉 Slip Sip N Que', msg:`<b>9:00 PM</b> · motzei Shabbat`},
 
   /* 🎂 MON AUG 17, 6 PM — a family birthday. THIS CARD WAS OWED AND MISSING: I worked the plan out with
      him in chat on the 17th and never landed it in the app, and he found the gap himself ("why is the
@@ -1652,18 +1652,17 @@ const EVENTS = [
    title:'🎂 Birthday party · engagement later', msg:`<b>10:30 AM</b> — party<br>
 Engagement in the afternoon — <b>time still needed</b>`},
 
-  /* Thursday night. Unknown menu — he has not said what is served, so this card carries the ladder and
-     the nut question rather than a specific order. Thu is his other cheap night. */
-  {d:'2026-08-20', title:'🌊 Night out', msg:`Tonight — <b>time still needed</b>`},
+  /* Thursday night. 🌊 is from the name itself — a slip-n-slide is water — not an inference about
+     what happens there. */
+  {d:'2026-08-20', at:'21:00', row:'🌊 Slip N Slide · 9 PM',
+   title:'🌊 Slip N Slide', msg:`<b>9:00 PM</b>`},
 
-  /* ⛔ Wed Sept 2 COLLIDES WITH CLASS. The semester runs Aug 31 → Dec 21 and Wednesday carries
-     ENGL 1012 online synchronous 6:30–7:45 PM, plus the campus block 8:00 AM–12:40 PM and the ~1 PM
-     lift he chose specifically to protect sleep. A wedding that evening lands on top of the online
-     class. He has to decide which gives — that is the whole point of this card firing early.
-     Food ladder is the one that worked at the Aug 5 wedding: sashimi first, carved meat second.
-     Neutral copy — no names, public repo. */
-  {d:'2026-09-02', title:'💍 Wedding tonight', msg:`<b>Time still needed.</b><br>
-⚠ Your online class runs <b>6:30–7:45 PM</b> the same evening.`},
+  /* ⛔ Wed Sept 2 COLLIDES WITH CLASS — the semester runs Aug 31 → Dec 21 and Wednesday carries ENGL 1012
+     online synchronous 6:30–7:45 PM. Two things on one evening is SCHEDULE information, so the clash line
+     stays even under [[event-rule]]; what he does about it is his call, not the card's.
+     No time and no row: he said so directly ("wed 9/2 no time"), so the card stops asking. Add an `at:`
+     the moment he has one. */
+  {d:'2026-09-02', title:'💍 Wedding tonight', msg:`⚠ Your online class runs <b>6:30–7:45 PM</b> the same evening.`},
 
   /* Aug 23 is FOUR things at once and he only mentioned two. Sunday: a 12–5 BBQ, a sibling leaving
      for Israel, a 6th birthday at home, and it is the date currently pencilled for the next Rythm
@@ -1671,14 +1670,11 @@ Engagement in the afternoon — <b>time still needed</b>`},
      ⛔ THE DRAW MUST NOT HAPPEN ON A SUNDAY. [[bloodwork]] is explicit: the panel's analytes have
      ~4-day ambient stability windows, so collection is MONDAY–WEDNESDAY MORNING ONLY — a weekend in
      transit eats the window. Monday is best (ships same day, ~44 h clear of his last lift).
-     BBQ is his single biggest ApoB lever on record — Southside put 84 g fat in one sitting against a
-     64 g daily budget. A 5-hour BBQ is a grazing window, not a meal, which is why the card banks two
-     slots and orders the food ladder leanest-first rather than explaining anything.
-     🥜 The nut line is not generic: the salad at the barbecue place he actually eats at contains pecans.
-     Names stay OUT of this copy — the sibling and the birthday are other people, and this file is
-     served from a public repo. He gets the neutral version; he knows who they are. */
-  {d:'2026-08-23', at:'12:00', row:'🔥 BBQ · 12–5',
-   title:'🔥 BBQ · 12–5', msg:`<b>12:00–5:00 PM</b>`},
+     "XTB BBQ" is HIS name for it, from his own message — unlike Saturday, where I invented "barbecue".
+     Names of PEOPLE stay out: the sibling flying to Israel and the birthday are other people and this
+     file is public. The departure has no row because he has not given a time for it. */
+  {d:'2026-08-23', at:'12:00', row:'🔥 XTB BBQ · 12–5',
+   title:'🔥 XTB BBQ · 12–5', msg:`<b>12:00–5:00 PM</b>`},
   {d:'2026-08-05', title:'🥂 Wedding tonight', msg:`<b>MEALS</b><br>
 {{BF}} — COR · almond butter 10 g<br>
 {{LU}} — Broccoli Jiben<br>
@@ -7554,7 +7550,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786990866';
+const BUILD = 'b1786993315';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
