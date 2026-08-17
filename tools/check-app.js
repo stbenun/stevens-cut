@@ -807,5 +807,206 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           ' checked below a single divider (clicked ' + r.clicked + ' mid-test)');
 }
 
+/* ---------- lift-progression — the GO UP engine ----------
+ * His report, Aug 17 2026: "The go up function isn't so good. the way its telling me to go up doesnt
+ * make sense... when im supposed to go up, make it that the weight i should do is already in the boxes."
+ * Five defects sat behind that, all reproduced from his own logged data:
+ *   1. the prescribed load was PRINTED but never written to the boxes — he retyped three every session
+ *   2. pre-session read wlog while post-session read the boxes, so one exercise printed two answers
+ *      (hack squat said 210/220/240; off his real loads it was 210/230/240)
+ *   3. verdict() ignored weight, so 10/8/7 @ 200/210/230 scored a GO UP against 11/8/6 @ 200/220/230
+ *   4. wlog was written ONLY on a weight-box edit, so a session could record reps with no load at all
+ *   5. no sanity bound — 2224 lb reached the adductor log and fed a -2000 lb delta downstream
+ * Each assertion below fails if its specific defect comes back. Synthetic history, so it does not drift
+ * when his real numbers move.
+ */
+{
+  const r = run(`
+    const D = ['2026-06-01','2026-06-08','2026-06-15'];  /* three Mondays */
+    const EX = 1, PR = 'pr_hack', T = parseTargets('3 x 8-12'), N = 3;
+    const seed = (d, reps, loads, rir, why) => {
+      const rp = {}; rp[EX] = reps; store.set('qpcut.reps.'+dkey(d), rp);
+      if(loads){ const wl = {}; wl[PR] = loads; store.set('qpcut.wlog.'+dkey(d), wl); }
+      else store.set('qpcut.wlog.'+dkey(d), {});
+      const rr = {}; if(rir!=null) rr[EX] = rir; store.set('qpcut.rir.'+dkey(d), rr);
+      const lm = {}; if(why) lm[EX] = why; store.set('qpcut.ldrop.'+dkey(d), lm);
+    };
+    const out = {};
+
+    /* --- 2 + 3: same reps at LESS weight must NOT score up, and must not be guessed --- */
+    seed(D[0], [12,12,12], ['100','100','100'], 1, null);
+    seed(D[1], [12,12,12], ['100','90','100'], 1, null);
+    const drop = sessionScore(EX, PR, T, N, D[1]);
+    out.dropVerdict = drop.v;
+    out.dropGated = !!drop.gate;
+    out.dropSets = (drop.gate||[]).map(x=>'S'+x.set);
+
+    /* the same session with the load NOT dropped is a clean GO UP — proves the gate is not blanket */
+    seed(D[1], [12,12,12], ['100','100','100'], 1, null);
+    out.flatVerdict = sessionScore(EX, PR, T, N, D[1]).v;
+
+    /* --- the three answers --- */
+    const ans = {};
+    ['purpose','bad','typo'].forEach(w => {
+      seed(D[1], [12,12,12], ['100','90','100'], 1, w);
+      const sc = sessionScore(EX, PR, T, N, D[1]);
+      const pl = plannedLoads(EX, PR, T, N, D[2]);
+      ans[w] = { v: sc.v, from: pl && pl.from, loads: pl && pl.loads ? pl.loads.join('/') : null };
+    });
+    out.answers = ans;
+
+    /* --- 2: ONE basis. The post-session number and next week's target are the same call. --- */
+    seed(D[1], [12,12,12], ['100','100','100'], 1, null);
+    /* the boxes deliberately hold a DIFFERENT number than he lifted — the old bug's exact shape */
+    const ps = store.get('qpcut.prset',{}); const keep = ps[PR]; ps[PR] = ['999','999','999'];
+    store.set('qpcut.prset', ps);
+    const fwd = plannedLoads(EX, PR, T, N, D[2]);
+    out.basisIgnoresBoxes = fwd && fwd.loads ? fwd.loads.join('/') : null;
+    out.basisWas = fwd && fwd.base ? fwd.base.join('/') : null;
+    ps[PR] = keep; store.set('qpcut.prset', ps);
+
+    /* --- 4: a session with reps but no recorded load must say so, never invent one --- */
+    seed(D[1], [12,12,12], null, 1, null);
+    const nl = plannedLoads(EX, PR, T, N, D[2]);
+    out.noLoadFrom = nl && nl.from; out.noLoadLoads = nl && nl.loads;
+
+    /* --- 5: the wild-load bound, on the real shape of his 2224 row --- */
+    out.wild = loadWild(['211','224','2224'], ['211','224','224'], 3).map(x=>x.set);
+    out.wildQuiet = loadWild(['238','238','238'], ['224','238','238'], 3).length;
+
+    /* --- 1: the prescribed load actually lands in the boxes --- */
+    /* prefillLoads() is deliberately TODAY-ONLY, and this harness pins the clock to 2026-08-06 — a
+       Thursday, his rest day — so workoutFor() returns nothing and the prefill assertions would all
+       pass vacuously. Stub Date to Mon 2026-06-15 (legs) with Mon 06-08 as its previous session. */
+    const REALD = Date, MON = '2026-06-15';
+    const stamp = new REALD(MON+'T09:00:00').getTime();
+    globalThis.Date = function(){ return arguments.length ? new REALD(...arguments) : new REALD(stamp); };
+    globalThis.Date.now = () => stamp; globalThis.Date.prototype = REALD.prototype;
+    globalThis.Date.parse = REALD.parse; globalThis.Date.UTC = REALD.UTC;
+    try {
+    const todayISO = isoToday(), wd = new Date(todayISO+'T12:00:00').getDay();
+    out.stubbedToday = todayISO; out.stubbedWd = wd;
+    const loc = store.get('qpcut.loc','deal');
+    const wo = workoutFor(wd, loc), wmap = ((WMAP[loc==='deal'?'deal':'bk']||{})[wd])||[];
+    if(wo){
+      /* a clean slate for today: no reps, no prior fill, boxes wiped for every exercise on the card */
+      store.set('qpcut.reps.'+dkey(todayISO), {});
+      store.set('qpcut.wfill.'+dkey(todayISO), {});
+      const p2 = store.get('qpcut.prset',{});
+      const slots = wo.ex.map((e,i)=>({ i, t:parseTargets(e[1]), pid:resolvePrId(wmap[i]||[], loc+'|'+wd+'|'+i) }))
+                         .filter(x=>x.t && x.pid);
+      slots.forEach(x=>{ p2[x.pid] = []; });
+      store.set('qpcut.prset', p2);
+      /* give every slot a previous session to prescribe from: top-of-range reps at 100 across the board,
+         so each one earns a GO UP and the expected box value is computable */
+      const pw = {}, pr = {}, pRir = {};
+      slots.forEach(x=>{
+        const hi = x.t.type==='ladder' ? x.t.per.slice(0,x.t.sets) : Array(x.t.sets).fill(x.t.hi);
+        pr[x.i] = hi;
+        pw[x.pid] = Array(x.t.sets).fill('100');
+        pRir[x.i] = 1;
+      });
+      store.set('qpcut.reps.'+dkey('2026-06-08'), pr);
+      store.set('qpcut.wlog.'+dkey('2026-06-08'), pw);
+      store.set('qpcut.rir.'+dkey('2026-06-08'), pRir);
+      store.set('qpcut.ldrop.'+dkey('2026-06-08'), {});
+      prefillLoads(todayISO, wo, wmap, loc);
+      const after = store.get('qpcut.prset',{});
+      const wlNow = store.get('qpcut.wlog.'+dkey(todayISO),{});
+      out.prefill = slots.map(x=>{
+        const want = plannedLoads(x.i, x.pid, x.t, x.t.sets, todayISO);
+        return { pid:x.pid,
+                 want: want && want.loads ? want.loads.join('/') : null,
+                 got: (after[x.pid]||[]).slice(0,x.t.sets).join('/'),
+                 wlogged: !!(wlNow[x.pid] && wlNow[x.pid].some(v=>v)) };
+      });
+      /* a second pass must be a NO-OP over an edit of his — that is the anti-clobber safety */
+      const p3 = store.get('qpcut.prset',{}); const first = slots[0];
+      if(first){ p3[first.pid] = ['777','777','777']; store.set('qpcut.prset', p3);
+        prefillLoads(todayISO, wo, wmap, loc);
+        out.respectsEdit = (store.get('qpcut.prset',{})[first.pid]||[]).join('/'); }
+      /* and it must refuse a day that already has a rep logged */
+      const rp2 = {}; rp2[slots[0].i] = [5,null,null];
+      store.set('qpcut.reps.'+dkey(todayISO), rp2);
+      store.set('qpcut.wfill.'+dkey(todayISO), {});
+      const p4 = store.get('qpcut.prset',{}); p4[slots[0].pid] = []; store.set('qpcut.prset', p4);
+      prefillLoads(todayISO, wo, wmap, loc);
+      out.skipsLiveSession = (store.get('qpcut.prset',{})[slots[0].pid]||[]).join('/');
+      /* Backfill must never touch the shared boxes. 2026-06-01 needs a REAL previous session (05-25) or
+         plannedLoads returns null, nothing is written either way, and this assertion passes vacuously —
+         it did exactly that until a planted defect walked straight through it. */
+      store.set('qpcut.reps.'+dkey('2026-05-25'), pr);
+      store.set('qpcut.wlog.'+dkey('2026-05-25'), pw);
+      store.set('qpcut.rir.'+dkey('2026-05-25'), pRir);
+      store.set('qpcut.ldrop.'+dkey('2026-05-25'), {});
+      store.set('qpcut.reps.'+dkey('2026-06-01'), {});
+      store.set('qpcut.reps.'+dkey(todayISO), {});
+      store.set('qpcut.wfill.'+dkey('2026-06-01'), {});
+      const p5 = store.get('qpcut.prset',{}); p5[slots[0].pid] = []; store.set('qpcut.prset', p5);
+      prefillLoads('2026-06-01', wo, wmap, loc);
+      out.skipsBackfill = (store.get('qpcut.prset',{})[slots[0].pid]||[]).join('/');
+    }
+    } finally { globalThis.Date = REALD; }
+    return out;
+  `);
+  const bad = [];
+  if (r.err) bad.push(r.err);
+  else {
+    /* 3 — the load has to count */
+    if (r.dropVerdict !== null)
+      bad.push('same reps at LESS weight scored "' + r.dropVerdict + '" — a load drop must never pay out');
+    if (!r.dropGated) bad.push('a load drop did not raise the ask-him gate');
+    if (r.dropSets.join(',') !== 'S2') bad.push('gate blamed ' + r.dropSets.join(',') + ', expected S2');
+    if (r.flatVerdict !== 'up')
+      bad.push('the SAME reps at unchanged weight scored "' + r.flatVerdict + '" — the gate is over-firing');
+    /* the three answers he chose */
+    const a = r.answers || {};
+    if (!a.purpose || a.purpose.v !== 'up')
+      bad.push('"on purpose" did not restore the GO UP (got ' + (a.purpose && a.purpose.v) + ')');
+    /* jumpFor() is PER SET — 90 takes +5, 100 takes +10 — so the lighter S2 climbs by 5, not 10 */
+    if (!a.purpose || a.purpose.loads !== '110/95/110')
+      bad.push('"on purpose" must build on the lighter load (110/95/110), got ' + (a.purpose && a.purpose.loads));
+    if (!a.bad || a.bad.v !== 'hold' || a.bad.from !== 'back')
+      bad.push('"bad day" must HOLD and roll back, got ' + JSON.stringify(a.bad));
+    if (!a.bad || a.bad.loads !== '100/100/100')
+      bad.push('"bad day" must return to the pre-drop weight 100/100/100, got ' + (a.bad && a.bad.loads));
+    if (!a.typo || a.typo.from !== 'typo' || a.typo.loads !== null)
+      bad.push('"mistyped" must refuse to prescribe, got ' + JSON.stringify(a.typo));
+    /* 2 — one basis, and it is never the boxes */
+    if (r.basisWas !== '100/100/100')
+      bad.push('the prescription basis was ' + r.basisWas + ' — it must be what he LIFTED, not the boxes (999)');
+    if (r.basisIgnoresBoxes !== '110/110/110')
+      bad.push('forward prescription = ' + r.basisIgnoresBoxes + ', expected 110/110/110 off his real loads');
+    /* 4 — no invented loads */
+    if (r.noLoadFrom !== 'noload' || r.noLoadLoads)
+      bad.push('a session with no recorded load produced ' + JSON.stringify(r.noLoadLoads) + ' instead of saying so');
+    /* 5 — the bound */
+    if (r.wild.join(',') !== '3') bad.push('2224 lb was not flagged (got sets ' + r.wild.join(',') + ')');
+    if (r.wildQuiet) bad.push('the wild-load bound fired on a legitimate 238 -> 238 row');
+    /* 1 — his actual ask */
+    if (!r.prefill || !r.prefill.length)
+      bad.push('no exercises measured for the box prefill — stubbed today was ' + r.stubbedToday +
+               ' (weekday ' + r.stubbedWd + '); if that is a rest day this guard was passing vacuously');
+    else {
+      const miss = r.prefill.filter(x => x.want && x.got !== x.want);
+      if (miss.length) bad.push('boxes NOT pre-loaded: ' + miss.map(x => x.pid + ' wanted ' + x.want + ' got "' + x.got + '"').join(', '));
+      const noWl = r.prefill.filter(x => x.want && !x.wlogged);
+      if (noWl.length) bad.push('prefilled but never recorded in wlog: ' + noWl.map(x => x.pid).join(', '));
+    }
+    if (r.respectsEdit !== '777/777/777')
+      bad.push('a second prefill pass CLOBBERED his edit (777 -> ' + r.respectsEdit + ')');
+    if (r.skipsLiveSession !== '')
+      bad.push('prefill wrote into a session already under way (got ' + r.skipsLiveSession + ')');
+    if (r.skipsBackfill !== '')
+      bad.push('prefill wrote the shared boxes from a BACKFILLED day (got ' + r.skipsBackfill + ')');
+  }
+  if (bad.length) fail('lift-progression', bad.join(' \u00b7 '));
+  else ok('lift-progression', 'load-aware: a drop gates instead of paying out, 3 answers behave (' +
+          'purpose ' + r.answers.purpose.loads + ' \u00b7 bad rolls back ' + r.answers.bad.loads +
+          ' \u00b7 typo refuses); one basis = what he ' +
+          'lifted not the boxes; ' + r.prefill.length + ' exercises pre-loaded + wlogged, edits and ' +
+          'live sessions and backfills all left alone; 2224 lb caught');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

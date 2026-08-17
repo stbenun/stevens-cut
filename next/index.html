@@ -519,7 +519,13 @@
   details.exfold>summary::after{content:'▾';position:absolute;right:0;top:50%;margin-top:-10px;
        color:var(--faint);transition:transform .15s}
   details.exfold[open]>summary::after{transform:rotate(180deg)}
-  details.exfold>summary .exnm{flex:1;min-width:0;overflow-wrap:anywhere}
+  /* a real flex-basis, not 0: with basis 0 the name collapsed to ~110px at 320 and a 2-badge row
+     ("Smith squat or hack squat" + 🎉 GO UP + ⏸ why?) towered to 3 lines. Measured, not reasoned. */
+  details.exfold>summary .exnm{flex:1 1 11ch;min-width:0;overflow-wrap:anywhere}
+  /* the "lighter because" chips mirror the RIR row. The label that used to sit beside them pushed the
+     three chips onto a second line at every width below 430 — the break is deterministic now. */
+  .whyrow{display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-top:6px}
+  .whyrow>button{flex-shrink:0}
   .exdone{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
        color:var(--pareve);flex-shrink:0;white-space:nowrap}
   /* Meals tab: each SLOT is a big collapsible section; meal cards nest inside it */
@@ -884,17 +890,127 @@ function prLoc(id, loc){
 /* progression coaching helpers */
 function jumpFor(w){ return w>=100? 10 : 5; } /* his gym: bars & DBs move in 5s — no 2.5s exist */
 function r25(x){ return Math.round(x/5)*5; } /* round every prescribed load to the nearest 5 */
-function lastSessions(dayIdx, exIdx, want){
-  const out = []; const base = menuWeekDates()[dayIdx];
-  for(let k=1;k<=8 && out.length<want;k++){
-    const dt = new Date(base+'T12:00:00'); dt.setDate(dt.getDate()-7*k);
+/* Which PR row a program slot is actually showing. exBlockHTML, the rep logger and the box prefill
+   MUST agree on this — otherwise wlog snapshots a load under a different id than the card displays,
+   and the next session prescribes off a history that belongs to another exercise. */
+function resolvePrId(ids, selKey){
+  if(!ids || !ids.length) return null;
+  const pset = store.get('qpcut.prset',{});
+  const legacy = store.get('qpcut.prs',{});
+  const sel = store.get('qpcut.exsel',{});
+  if(selKey && sel[selKey] && ids.includes(sel[selKey])) return sel[selKey];
+  return ids.find(id=>(pset[id]||[]).some(v=>v))
+      || ids.find(id=>legacy[id]!=null&&legacy[id]!=='')
+      || ids[0];
+}
+/* Previous sessions of THIS slot, walking back a week at a time from a given date. Date-driven, so it
+   answers correctly for a backfilled day too — the old version always walked from THIS week's date. */
+function prevSessionOf(exIdx, fromISO, want){
+  const out = [];
+  for(let k=1;k<=8 && out.length<(want||1);k++){
+    const dt = new Date(fromISO+'T12:00:00'); dt.setDate(dt.getDate()-7*k);
     const dISO = iso(dt);
     const rp = (store.get('qpcut.reps.'+dkey(dISO),{}))[exIdx];
     if(rp && rp.some(v=>v!=null)) out.push({date:dISO, reps:rp});
   }
   return out;
 }
+function lastSessions(dayIdx, exIdx, want){ return prevSessionOf(exIdx, menuWeekDates()[dayIdx], want); }
 function lastSessionInfo(dayIdx, exIdx){ return lastSessions(dayIdx, exIdx, 1)[0] || null; }
+function loadsOn(isoD, prId){ return (store.get('qpcut.wlog.'+dkey(isoD),{}))[prId] || null; }
+/* verdict() scores REPS ONLY, and that is how a hack-squat session which lost a rep AND 10 lb still
+   printed 🎉 GO UP (Aug 17 2026: 10/8/7 @ 200/210/230 against 11/8/6 @ 200/220/230). Progress is reps
+   at the same-or-more weight, so the LOAD has to be part of the score. */
+function loadDrop(cur, prev, sets){
+  const c = (cur||[]).slice(0,sets).map(x=>parseFloat(x));
+  const p = (prev||[]).slice(0,sets).map(x=>parseFloat(x));
+  const hits = [];
+  for(let i=0;i<sets;i++){
+    if(isNaN(c[i]) || isNaN(p[i])) continue;
+    if(c[i] < p[i]-0.01) hits.push({set:i+1, from:p[i], to:c[i]});
+  }
+  return hits;
+}
+/* a load that cannot be real. 2224 lb went into the adductor machine's log (wlog 2026-7-24) and fed a
+   −2000 lb delta into every comparison downstream, silently. */
+function loadWild(cur, prev, sets){
+  const c = (cur||[]).slice(0,sets).map(x=>parseFloat(x));
+  const p = (prev||[]).slice(0,sets).map(x=>parseFloat(x)).filter(n=>!isNaN(n));
+  if(!p.length) return [];
+  const ref = Math.max(...p);
+  return c.map((v,i)=>({set:i+1, v})).filter(o=>!isNaN(o.v) && o.v > ref*3);
+}
+/* ⭐ THE ONE ANSWER to "what goes on the bar today". The pre-session target, the post-session
+   prescription and the box prefill all come from here, so they can no longer disagree. They used to
+   read different stores — pre-session took last session's wlog, post-session took whatever was in the
+   boxes — which is why one card said 210/220/240 when the honest answer off his real loads was
+   210/230/240. The basis is ALWAYS what he actually lifted (wlog), never the boxes: boxes drift. */
+function plannedLoads(exIdx, prId, t, sets, isoD){
+  const ls = prevSessionOf(exIdx, isoD, 1)[0];
+  if(!ls) return null;
+  const base = loadsOn(ls.date, prId);
+  if(!base || !base.slice(0,sets).some(x=>!isNaN(parseFloat(x)))) return {from:'noload', last:ls, loads:null};
+  const rir = (store.get('qpcut.rir.'+dkey(ls.date),{}))[exIdx];
+  const why = (store.get('qpcut.ldrop.'+dkey(ls.date),{}))[exIdx];
+  let v = verdict(ls.reps, t);
+  /* a load he flagged as MISTYPED and never corrected cannot be built on — prescribing off it would
+     launder the bad number into every week that follows */
+  if(why==='typo') return {from:'typo', last:ls, loads:null, base, rir, why, verdict:v};
+  /* a drop he called a BAD DAY is not a new baseline — he goes back to the weight he had before it.
+     a drop he called ON PURPOSE (Q's depth cue) keeps the lighter load and builds from there. */
+  let src = base, pend = false;
+  const prior = prevSessionOf(exIdx, ls.date, 1)[0];
+  const priorL = prior? loadsOn(prior.date, prId) : null;
+  if(why==='bad'){
+    v = 'hold';
+    if(priorL && priorL.slice(0,sets).some(x=>!isNaN(parseFloat(x)))) src = priorL;
+  } else if(!why && priorL && loadDrop(base, priorL, sets).length){
+    /* the drop was never explained, so that session was never scored — it cannot pay out a GO UP now.
+       Hold at what he actually lifted and keep the question open. */
+    v = 'hold'; pend = true;
+  }
+  const sn = src.slice(0,sets).map(x=>parseFloat(x));
+  const step = (v==='up')? (rir===0? (n=>n+5) : (n=>n+jumpFor(n)))
+             : (v==='down')? (n=>n*0.9) : (n=>n);
+  const loads = src.slice(0,sets).map((x,i)=> isNaN(sn[i])? '' : String(r25(step(sn[i]))));
+  return { from:(why==='bad'? 'back' : pend? 'pending' : (v||'hold')), loads, base:src, last:ls, rir, why, verdict:v };
+}
+/* Today's verdict, load-aware. `gate` means "I will not score this until he says WHY the load
+   dropped" — his call, Aug 17 2026: ask every time, never guess. */
+function sessionScore(exIdx, prId, t, sets, isoD){
+  const reps = (store.get('qpcut.reps.'+dkey(isoD),{}))[exIdx]||[];
+  const rv = verdict(reps, t);
+  if(rv===null) return {v:null};
+  const ls = prevSessionOf(exIdx, isoD, 1)[0];
+  const cur = loadsOn(isoD, prId), prev = ls? loadsOn(ls.date, prId) : null;
+  if(!cur || !prev) return {v:rv};
+  const wild = loadWild(cur, prev, sets);
+  if(wild.length) return {v:null, wild, cur, prev, last:ls};
+  const drops = loadDrop(cur, prev, sets);
+  if(!drops.length) return {v:rv};
+  const why = (store.get('qpcut.ldrop.'+dkey(isoD),{}))[exIdx];
+  if(!why) return {v:null, gate:drops, cur, prev, last:ls, repv:rv};
+  if(why==='typo') return {v:null, fixme:drops, cur, prev, last:ls};
+  if(why==='bad') return {v:'hold', drops, why, cur, prev, last:ls};
+  return {v:rv, drops, why, cur, prev, last:ls}; /* 'purpose' → reps decide; today's load is the new baseline */
+}
+/* Gated verdict for one logged exercise, resolving the PR row itself. The wins strip, the session
+   summary and the Q export each called raw verdict() directly, so all three counted a load drop as a
+   GO UP. One helper, so they cannot drift apart from the lift card again. */
+function scoreFull(isoD, exKey, ex, loc){
+  const t = parseTargets(ex[1]);
+  const reps = (store.get('qpcut.reps.'+dkey(isoD),{}))[exKey]||[];
+  if(!t) return {v:verdict(reps, t)};
+  const exIdx = parseInt(String(exKey),10);
+  if(isNaN(exIdx)) return {v:verdict(reps, t)}; /* core rows carry no PR history to compare loads to */
+  const L = loc || store.get('qpcut.loc','deal');
+  const wd = new Date(isoD+'T12:00:00').getDay();
+  const ids = ((WMAP[L==='deal'?'deal':'bk']||{})[wd]||[])[exIdx]||[];
+  const pid = resolvePrId(ids, `${L}|${wd}|${exIdx}`);
+  if(!pid) return {v:verdict(reps, t)};
+  return sessionScore(exIdx, pid, t, t.sets, isoD);
+}
+function scoreOn(isoD, exKey, ex, loc){ return scoreFull(isoD, exKey, ex, loc).v; }
 /* single-arm exercises: optional per-arm (L/R) logging */
 const ARM_EX = new Set(['pr_lat','pr_yraise','pr_slat','pr_ham','pr_shrug','pr_reardelt',
  'pr_sat_latr','pr_sat_ham','pr_sat_rear',
@@ -913,23 +1029,68 @@ function plateCombo(v){
   for(const p of [45,35,25,10,5]){ while(rem >= p-0.01){ out.push(p); rem -= p; } }
   return out.length? out.join('+') + (rem>0.01? ` +${rem.toFixed(1)}`:'') : 'empty';
 }
-function prescribe(lv, baseVals, curVals, sets){
-  const cur = (curVals||[]).slice(0,sets);
-  const base = (baseVals&&baseVals.length? baseVals : cur).slice(0,sets);
-  const nums = base.map(x=>parseFloat(x));
-  const hasNums = nums.some(n=>!isNaN(n));
-  const fmt = f => base.map((x,i)=> isNaN(nums[i])? (x||'?') : String(r25(f(nums[i])))).join(' / ');
-  if(lv==='up'){
-    const curN = cur.map(x=>parseFloat(x)).filter(n=>!isNaN(n));
-    const baseN = nums.filter(n=>!isNaN(n));
-    const already = curN.length && baseN.length && Math.min(...curN) > Math.min(...baseN)+0.01;
-    if(already) return `GO UP — already loaded: ${cur.filter(x=>x).join(' / ')} ✓ hit the rep targets with 1–2 in the tank`;
-    return `GO UP → load ${hasNums? fmt(n=>n+jumpFor(n)) : 'the smallest jump on every set'} · same rep targets`;
-  }
-  if(lv==='down') return `LIGHTEN → ${hasNums? fmt(n=>n*0.9) : '~10% down'}`;
-  return `SAME weight → ${cur.filter(x=>x).join(' / ')||base.filter(x=>x).join(' / ')||'repeat last loads'} · beat last week’s reps`;
+const loadStr = ls => (ls||[]).filter(x=>x!=='' && x!=null).join(' / ');
+/* The pre-session line. It no longer tells him to type anything: prefillLoads() has already put these
+   exact numbers in the boxes, so this line's job is to say WHY they are what they are. */
+function targetLine(pl, boxes, sets){
+  if(!pl) return null;
+  if(pl.from==='noload')
+    return `📜 Last ${pl.last.date.slice(5).replace('-','/')}: ${pl.last.reps.filter(x=>x!=null).join('/')} reps — but no weight was recorded that session, so there is nothing to prescribe from. Whatever you type today becomes the baseline.`;
+  if(pl.from==='typo')
+    return `✎ Last ${pl.last.date.slice(5).replace('-','/')} was logged at ${loadStr(pl.base)} and you flagged that as mistyped, so I will not build on it. Type today's real load and it becomes the baseline.`;
+  const L = loadStr(pl.loads);
+  const inBoxes = (boxes||[]).slice(0,sets).map(x=>String(x==null?'':x)).join('|') === pl.loads.join('|');
+  const seal = inBoxes? ' <b>✓ already loaded</b>' : '';
+  const lastReps = pl.last.reps.filter(x=>x!=null).join('/');
+  if(pl.from==='up')
+    return `🎉 <b>GO UP → ${L}</b>${seal} · same rep targets, 1–2 in the tank${pl.rir===0?' · smallest jump only — last week was true failure':''}`;
+  if(pl.from==='down')
+    return `⬇ <b>LIGHTEN → ${L}</b>${seal} · rebuild one rep a week from here`;
+  if(pl.from==='back')
+    return `↩ <b>BACK TO ${L}</b>${seal} — you called last week's lighter load a bad day, so it was never a new baseline`;
+  if(pl.from==='pending')
+    return `⏸ <b>HOLD ${L}</b>${seal} — the weight dropped on ${pl.last.date.slice(5).replace('-','/')} and you never said why, so that session was never scored. Answer it on that day's card and this turns into the GO UP if the reps earned one.`;
+  return `🎯 <b>HOLD ${L}</b>${seal} · beat ${lastReps} by one rep anywhere. That's the whole game.`;
 }
 
+/* ⭐ PUT THE PRESCRIBED LOAD IN THE BOXES. His ask, Aug 17 2026: "when im supposed to go up, make it
+   that the weight i should do is already in the boxes." Before this the card printed "load 90/90/90"
+   beside three boxes reading 85, and he retyped all three at the gym — wlog 2026-8-17 pr_hip proves it.
+   Fills on every verdict, not just GO UP (his call): up · hold · lighten · back-off all land.
+   THREE SAFETIES, because this writes to his live log:
+     · never touches an exercise that already has a rep logged that day — a session under way is his
+     · fills once per day per exercise (qpcut.wfill), so an edit of his is never overwritten on re-render
+     · writes wlog at the same time, which also fixes the hole where logging reps without touching a
+       box recorded a session with NO weight at all (leg curl, 2026-8-17) */
+function prefillLoads(ld, wo, wmap, loc){
+  /* TODAY ONLY. qpcut.prset is one array per exercise shared across every day, so prefilling a
+     backfilled date would stamp that day's prescription onto the box today's card reads — and pr_hack
+     sits in BOTH Monday's and Friday's program, so the two would trade numbers every time he backfilled.
+     Backfilling is data entry anyway: there he types what he actually lifted. */
+  if(ld !== isoToday()) return;
+  const fkey = 'qpcut.wfill.'+dkey(ld);
+  const filled = store.get(fkey,{});
+  const repLog = store.get('qpcut.reps.'+dkey(ld),{});
+  const pset = store.get('qpcut.prset',{});
+  const wkey = 'qpcut.wlog.'+dkey(ld);
+  const wl = store.get(wkey,{});
+  const wd = new Date(ld+'T12:00:00').getDay();
+  let touched = false;
+  wo.ex.forEach(([n,r],i)=>{
+    const t = parseTargets(r); if(!t) return;
+    const prId = resolvePrId(wmap[i]||[], `${loc}|${wd}|${i}`);
+    if(!prId || filled[prId]) return;
+    if((repLog[i]||[]).some(v=>v!=null)) return; /* already lifting — hands off */
+    const pl = plannedLoads(i, prId, t, t.sets, ld);
+    if(!pl || !pl.loads || !pl.loads.some(x=>x!=='')) return;
+    const arr = pset[prId] = pset[prId]||[];
+    pl.loads.forEach((v,s)=>{ if(v!=='') arr[s] = v; });
+    wl[prId] = arr.slice(0,t.sets);
+    filled[prId] = pl.loads.slice();
+    touched = true;
+  });
+  if(touched){ store.set('qpcut.prset',pset); store.set(wkey,wl); store.set(fkey,filled); }
+}
 /* unified per-set block: one row per set = [S#] [weight] × [reps], with an
    option dropdown when the program line is "A or B" */
 function exBlockHTML(o){
@@ -938,9 +1099,7 @@ function exBlockHTML(o){
   const sel = store.get('qpcut.exsel',{});
   let prId = null, selHTML = '';
   if(o.ids && o.ids.length){
-    const hasData = id => (pset[id]||[]).some(v=>v);
-    prId = (o.selKey && sel[o.selKey] && o.ids.includes(sel[o.selKey]))? sel[o.selKey]
-         : o.ids.find(hasData) || o.ids.find(id=>legacy[id]!=null&&legacy[id]!=='') || o.ids[0];
+    prId = resolvePrId(o.ids, o.selKey); /* shared with the rep logger and the prefill — see resolvePrId */
     if(o.ids.length>1){
       selHTML = `<div style="display:flex;justify-content:flex-end;margin-top:6px">
         <select class="exsel" data-selkey="${esc(o.selKey||'')}">${o.ids.map(id=>{
@@ -1057,20 +1216,21 @@ function exGuideHTML(p){
   let guide = '';
   const doneCount = reps.slice(0,o.sets).filter(x=>x!=null).length;
   {
-    const ls = (o.day!=null)? lastSessionInfo(o.day, o.ex) : null;
-    const lv = ls? verdict(ls.reps, o.t) : null;
-    const wlLast = ls? (store.get('qpcut.wlog.'+dkey(ls.date),{}))[prId] : null;
+    const ls = prevSessionOf(o.ex, o.rd, 1)[0] || null;
+    const wlLast = ls? loadsOn(ls.date, prId) : null;
     const lsRir = ls? (store.get('qpcut.rir.'+dkey(ls.date),{}))[o.ex] : undefined;
-    const lastLine = ls? `<div class="coachline" style="opacity:.85">📜 Last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}${lsRir!=null?` · RIR ${lsRir===3?'3+':lsRir}`:''}</div>` : '';
+    const lsWhy = ls? (store.get('qpcut.ldrop.'+dkey(ls.date),{}))[o.ex] : undefined;
+    const whyTag = lsWhy? ` · ${lsWhy==='purpose'?'lighter on purpose':lsWhy==='bad'?'bad day':'mistyped'}` : '';
+    const lastLine = ls? `<div class="coachline" style="opacity:.85">📜 Last ${ls.date.slice(5).replace('-','/')}: ${ls.reps.slice(0,o.sets).map(x=>x==null?'·':x).join('/')} reps${wlLast&&wlLast.some(x=>x)?` @ ${wlLast.filter(x=>x).join('/')}`:''}${lsRir!=null?` · RIR ${lsRir===3?'3+':lsRir}`:''}${whyTag}</div>` : '';
     if(doneCount===0){
-      guide = `<div class="coachline">🎯 ${lv? prescribe(lv, wlLast, vals, o.sets)
-        : (vals.some(x=>x)? `Plan: ${vals.filter(x=>x).join(' / ')} · ${o.t.type==='ladder'?'climb the boxes':`${o.t.lo}–${o.t.hi} reps every set`} · finish each set with 1–2 in the tank`
-        : 'No weight yet — 📖 calibration guide is at the top of Train → PRs')}</div>`;
-      if(o.day!=null){
-        const past3 = lastSessions(o.day, o.ex, 3);
-        if(past3.length===3 && past3.every(s=>verdict(s.reps, o.t)==='hold'))
-          guide += `<div class="coachline" style="color:var(--meat)">⚠ 3 sessions stalled at this weight — today: drop ~10%, rebuild a rep per week. Stalls break from behind, not from pushing the same wall.</div>`;
-      }
+      const pl = plannedLoads(o.ex, prId, o.t, o.sets, o.rd);
+      const tl = targetLine(pl, vals, o.sets);
+      guide = `<div class="coachline">${tl
+        || (vals.some(x=>x)? `🎯 Plan: ${vals.filter(x=>x).join(' / ')} · ${o.t.type==='ladder'?'climb the boxes':`${o.t.lo}–${o.t.hi} reps every set`} · finish each set with 1–2 in the tank`
+        : '🎯 No weight yet — 📖 calibration guide is at the top of Train → PRs')}</div>`;
+      const past3 = prevSessionOf(o.ex, o.rd, 3);
+      if(past3.length===3 && past3.every(s=>verdict(s.reps, o.t)==='hold'))
+        guide += `<div class="coachline" style="color:var(--meat)">⚠ 3 sessions stalled at this weight — today: drop ~10%, rebuild a rep per week. Stalls break from behind, not from pushing the same wall.</div>`;
     } else if(v===null){
       let idx = -1;
       for(let s=1;s<o.sets;s++){ if(reps[s]==null && reps[s-1]!=null){ idx = s; break; } }
@@ -1096,19 +1256,40 @@ function exGuideHTML(p){
         guide = `<div class="coachline">▶ ${msg}</div>`;
       }
     } else {
-      const nums = vals.slice(0,o.sets).map(x=>parseFloat(x));
-      const hasNums = nums.some(n=>!isNaN(n));
-      const fmt = f => vals.slice(0,o.sets).map((x,i)=> isNaN(nums[i])? (x||'?') : String(r25(f(nums[i])))).join(' / ');
-      if(v==='up'){
-        guide = rir===0
-          ? `<div class="coachline">🎉 GO UP — but that was failure (0 in the tank), so next session take the SMALLEST jump only${hasNums?`: ${fmt(n=>n+5)}`:''}.</div>`
-          : `<div class="coachline">🎉 GO UP next session → ${hasNums? fmt(n=>n+jumpFor(n)) : 'smallest solid jump every set'}. Update the boxes at the gym next time, not now.</div>`;
-      } else if(v==='down'){
-        guide = `<div class="coachline">⬇ LIGHTEN next session → ${hasNums? fmt(n=>n*0.9) : '~10% down'}, rebuild from there.</div>`;
+      const sc = sessionScore(o.ex, prId, o.t, o.sets, o.rd);
+      /* Next session's number comes from the SAME function next week's card will call, seeded one week
+         forward — so the verdict here and the target there are physically incapable of disagreeing. */
+      const nx = (()=>{ const d=new Date(o.rd+'T12:00:00'); d.setDate(d.getDate()+7); return iso(d); })();
+      const np = plannedLoads(o.ex, prId, o.t, o.sets, nx);
+      const nxL = (np && np.loads)? loadStr(np.loads) : null;
+      const chips = on => [['purpose','on purpose'],['bad','bad day'],['typo','mistyped']]
+        .map(([k,lab])=>`<button class="mealpick${on===k?' on':''}" style="padding:3px 10px;font-size:12px" data-ldrop="${o.rd}|${o.ex}|${k}">${lab}</button>`).join('');
+      const askRow = on => `<div class="whyrow">${chips(on)}</div>`;
+      const dropTxt = ds => ds.map(d=>`S${d.set} ${d.from}→${d.to}`).join(' · ');
+      if(sc.wild){
+        guide = `<div class="coachline" style="color:var(--meat)">⚠ ${sc.wild.map(w=>`S${w.set} reads <b>${w.v}</b>`).join(' · ')} — more than 3× anything you have ever lifted on this. Fix the weight box above; I am not scoring a session off a number that cannot be real.</div>`;
+      } else if(sc.gate){
+        guide = `<div class="coachline" style="color:var(--meat)">⏸ The weight went DOWN — ${dropTxt(sc.gate)}. On reps alone this would read ${sc.repv==='up'?'GO UP':sc.repv==='down'?'lighten':'hold'}, but I am not calling it until you tell me why.</div>${askRow(null)}`;
+      } else if(sc.fixme){
+        guide = `<div class="coachline" style="color:var(--meat)">✎ Mistyped — fix the weight boxes above (${dropTxt(sc.fixme)}) and I will score it. Nothing gets recorded off a wrong number.</div>${askRow('typo')}`;
       } else {
-        guide = (rir!=null && rir>=3)
-          ? `<div class="coachline">HOLD — but 3+ in the tank means the reps are there. Same weight next session, take every set to 1–2 left. Then it’s a GO UP.</div>`
-          : `<div class="coachline">HOLD — same weight next session, beat today by one rep anywhere. That’s the whole game.</div>`;
+        let line;
+        if(sc.v==='up'){
+          line = sc.why==='purpose'
+            ? `🎉 GO UP — every target hit, and you called the lighter load deliberate, so <b>${loadStr(sc.cur)||'today’s load'}</b> is the new baseline. Next session → <b>${nxL||'the smallest jump'}</b>.`
+            : (rir===0
+              ? `🎉 GO UP — but that was true failure (0 in the tank), so next session takes the SMALLEST jump only → <b>${nxL||'+5 lb'}</b>.`
+              : `🎉 GO UP → next session <b>${nxL||'the smallest solid jump'}</b>. It will already be in the boxes.`);
+        } else if(sc.v==='down'){
+          line = `⬇ LIGHTEN → next session <b>${nxL||'~10% down'}</b>, rebuild from there. It will already be in the boxes.`;
+        } else if(sc.why==='bad'){
+          line = `HOLD — a bad day, so the lighter load does not stick. Next session goes BACK to <b>${nxL||'the weight before it'}</b>.`;
+        } else {
+          line = (rir!=null && rir>=3)
+            ? `HOLD <b>${nxL||'the same weight'}</b> next session — but 3+ in the tank means the reps are there. Take every set to 1–2 left and it is a GO UP.`
+            : `HOLD <b>${nxL||'the same weight'}</b> next session — beat today by one rep anywhere. That’s the whole game.`;
+        }
+        guide = `<div class="coachline">${line}</div>` + (sc.why? askRow(sc.why) : '');
       }
     }
     guide = lastLine + guide; /* last session stays visible in every state — that's the reference point */
@@ -1218,6 +1399,22 @@ function wireReps(){
     const v = parseInt(inp.value);
     arr[+inp.dataset.set] = isNaN(v)? null : v;
     store.set(key,rp);
+    /* Snapshot the load he is lifting, if nothing has recorded it yet. wlog USED to be written only when
+       he edited a weight box, so a session where the box was already right recorded reps with NO weight
+       (leg curl, 2026-8-17) — and the next session then prescribed off a drifted box instead of history. */
+    if(!isNaN(v) && !/^core/.test(String(inp.dataset.ex))){
+      const d = inp.dataset.rd, wdS = new Date(d+'T12:00:00').getDay(), locS = store.get('qpcut.loc','deal');
+      const exIdx = parseInt(String(inp.dataset.ex),10);
+      const idsS = ((WMAP[locS==='deal'?'deal':'bk']||{})[wdS]||[])[exIdx]||[];
+      const pidS = resolvePrId(idsS, `${locS}|${wdS}|${exIdx}`);
+      if(pidS){
+        const wkS = 'qpcut.wlog.'+dkey(d), wlS = store.get(wkS,{});
+        if(!wlS[pidS] || !wlS[pidS].some(x=>x)){
+          const cur = (store.get('qpcut.prset',{}))[pidS]||[];
+          if(cur.some(x=>x)){ wlS[pidS] = cur.slice(); store.set(wkS,wlS); }
+        }
+      }
+    }
     /* logging a real set TODAY auto-starts the rest clock — compounds get 120 s.
        parseInt strips the 'R' off right-arm ids so both arms rest the same. */
     if(!isNaN(v) && inp.dataset.rd===isoToday() && !/^core/.test(String(inp.dataset.ex))){
@@ -3708,7 +3905,7 @@ function weekGoUps(){
       const core = /^core(\d+)$/.exec(i);
       const ex = core? CORE.ex[+core[1]] : (wo? wo.ex[+i] : null);
       if(!ex||!arr||!arr.some(v=>v!=null)) return;
-      if(verdict(arr, parseTargets(ex[1]))==='up') ups.push(ex[0].replace(/<[^>]*>/g,''));
+      if(scoreOn(d, i, ex, loc)==='up') ups.push(ex[0].replace(/<[^>]*>/g,''));
     });
   });
   return ups;
@@ -4383,13 +4580,18 @@ function seshSummaryHTML(ld, wo){
   const s = seshGet(ld);
   if(!s || !s.end || !wo) return '';
   const mins = Math.max(1, Math.round((s.end-s.start)/60000));
-  const reps = store.get('qpcut.reps.'+dkey(ld),{});
-  const verdicts = wo.ex.map(([n,r],i)=>({n:n.replace(/<[^>]*>/g,''), v:verdict(reps[i]||[], parseTargets(r))})).filter(x=>x.v);
+  const locS = store.get('qpcut.loc','deal');
+  const scored = wo.ex.map(([n,r],i)=>({n:n.replace(/<[^>]*>/g,''), s:scoreFull(ld, i, [n,r], locS)}));
+  const verdicts = scored.filter(x=>x.s.v).map(x=>({n:x.n, v:x.s.v}));
   const ups = verdicts.filter(x=>x.v==='up');
+  /* an unanswered load drop is not "no GO UP" — it is an unscored session, and saying so here is the
+     only place he sees it without opening every exercise */
+  const waiting = scored.filter(x=>x.s.gate||x.s.wild||x.s.fixme).map(x=>x.n);
   return `
   <div class="card seshsum">
     <div class="slotlbl" style="margin-top:0">✅ Session done · ${mins} min · ${setsDone(ld)} sets</div>
-    ${ups.length?`<div style="margin-top:6px">🎉 <b>GO UP next time:</b> ${ups.map(x=>x.n).join(' · ')}</div>`:'<div class="sub" style="margin-top:6px">No GO UPs today — beat one rep next session, that’s the win.</div>'}
+    ${waiting.length?`<div style="margin-top:6px;color:var(--meat)">⏸ <b>Not scored yet:</b> ${waiting.join(' · ')} — the weight dropped, open it and say why.</div>`:''}
+    ${ups.length?`<div style="margin-top:6px">🎉 <b>GO UP next time:</b> ${ups.map(x=>x.n).join(' · ')}</div>`:(waiting.length?'':'<div class="sub" style="margin-top:6px">No GO UPs today — beat one rep next session, that’s the win.</div>')}
     ${verdicts.filter(x=>x.v==='down').length?`<div class="sub" style="margin-top:4px">⬇ Lighten: ${verdicts.filter(x=>x.v==='down').map(x=>x.n).join(' · ')}</div>`:''}
     <div class="sub" style="margin-top:6px">Now: tap <b>session effort</b> below + the <b>reps-left-in-tank</b> chips on your last sets — that data shapes next week's calls.</div>
   </div>`;
@@ -5117,8 +5319,10 @@ function viewToday(){
     const wd = new Date(ld+'T12:00:00').getDay();
     const wo = workoutFor(wd, loc);
     if(!wo) return '';
-    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
     const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[wd]||[];
+    /* loads the prescribed weights into the boxes BEFORE anything reads qpcut.prset below */
+    prefillLoads(ld, wo, wmap, loc);
+    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
     const sesh = seshGet(ld);
     /* date-aware leave/lift time (per-date override beats the weekday default) + done detection, so a
        shifted AM lift reads correctly and a FINISHED lift stops advertising "leave at 3:30". */
@@ -5172,7 +5376,11 @@ function viewToday(){
       const t = parseTargets(r);
       const sets = t? t.sets : (parseInt(r)||3);
       const reps = repLog[i]||[];
-      const v = verdict(reps, t);
+      /* the badge carries the GATED verdict: while the card is asking why the load dropped, the rolled-up
+         row must not still be flashing 🎉 GO UP — that is the mismatch he screenshotted */
+      const scId = resolvePrId(wmap[i]||[], `${loc}|${wd}|${i}`);
+      const sc = (t && scId)? sessionScore(i, scId, t, sets, ld) : {v:verdict(reps, t)};
+      const v = sc.v;
       /* Rolled up, the summary still has to answer "did I do this one, and what did I get?" — otherwise
          collapsing loses the at-a-glance the lift card exists for. */
       const logged = reps.filter(x=>x!=null&&x!=='');
@@ -5183,7 +5391,7 @@ function viewToday(){
       return `<li style="display:block">
         <details class="exfold" data-exfold="${esc(foldKey)}"${exFolded(foldKey)?'':' open'}>
           <summary>
-            <span class="exnm"${v?' style="color:var(--muted)"':''}>${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}</span>
+            <span class="exnm"${v?' style="color:var(--muted)"':''}>${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}${(sc.gate||sc.wild||sc.fixme)?' <span class="upflag" style="background:var(--meat);color:#fff">⏸ why?</span>':''}</span>
             ${tally}<span class="r">${r}</span>
           </summary>
           ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
@@ -5195,7 +5403,7 @@ function viewToday(){
       return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
         <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
     })()}
-    <div class="sub" style="margin-top:8px">Grey number = target. Logging a set auto-starts the rest clock. Weights sync with Train → PRs.</div>
+    <div class="sub" style="margin-top:8px">Grey number = target. <b>The weight boxes are pre-loaded with what you should be lifting</b> — change any of them and yours sticks. Logging a set auto-starts the rest clock. Weights sync with Train → PRs.</div>
   </details>
   </section>`;
   })();
@@ -6086,6 +6294,8 @@ function viewTrain(){
         <li><span class="t">2</span><span><b>Range (8-12):</b> the weight where 12 clean reps leaves 1–2 in the tank — same weight in every box. <b>Ladder (10-8-6):</b> box 1 = where the first number is hard, +~10% per box after.</span></li>
         <li><span class="t">3</span><span><b>Session flow:</b> the 🎯 line shows today’s exact loads (computed from last session). Log reps set by set — the ▶ line calls each next set. After the last set, tap <b>reps left in tank</b> (that’s the effort check).</span></li>
         <li><span class="t">4</span><span><b>Verdicts:</b> 🎉 GO UP = every set hit the top target → next session’s loads are printed for you (smaller jump if you were at true failure). HOLD = same weight, beat it by one rep. ⬇ LIGHTEN = drop ~10%, rebuild.</span></li>
+        <li><span class="t">⚖</span><span><b>Nothing to type — the weight is already in the boxes.</b> Whatever the verdict was last time, this session opens with the prescribed load loaded. Change any box and yours wins; the app then builds from what you actually lifted, not from what it told you to lift.</span></li>
+        <li><span class="t">⏸</span><span><b>A load drop stops the score.</b> Same reps at less weight is not progress, so if any set’s weight came DOWN the app refuses to call it until you say why: <b>on purpose</b> (the depth trade — the lighter load becomes your new baseline), <b>bad day</b> (it doesn’t stick, next session goes back to the old weight), or <b>mistyped</b> (fix the box). It will never guess this for you.</span></li>
         <li><span class="t">5</span><span><b>The tank number matters:</b> hitting reps with 3+ left isn’t a GO UP — it’s sandbagging, and the app will say so. Growth lives at 1–2 from failure; failure itself costs more than it pays.</span></li>
         <li><span class="t">6</span><span><b>Stalls:</b> 3 sessions stuck at the same weight → the app prescribes a ~10% drop-and-rebuild. Stalls break from behind, not by pushing the same wall a 4th week.</span></li>
         <li><span class="t">💡</span><span>On a cut, one more rep than last week IS progress. Small jumps every week beat big jumps every month.</span></li>
@@ -6578,7 +6788,7 @@ function weekReport(){
       const ex = core? CORE.ex[+core[1]] : (wo? wo.ex[+i] : null);
       if(!ex||!arr||!arr.some(v=>v!=null)) return null;
       const nm = ex[0].replace(/<[^>]*>/g,'');
-      const v = verdict(arr, parseTargets(ex[1]));
+      const v = scoreOn(d, i, ex, loc);
       return `- ${nm}${core?' (core)':''}: ${arr.map(x=>x==null?'·':x).join('/')}${v?` → ${v==='up'?'GO UP':v==='down'?'LIGHTEN':'hold'}`:''}`;
     }).filter(Boolean);
     if(exLines.length){ lines.push('', `Lift ${day} (${wo?wo.tag:'Core / extra'}):`, ...exLines); }
@@ -7300,6 +7510,18 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
     m[ex] = m[ex]===+n? null : +n;
     store.set(key,m); refreshGuides();
   });
+  /* "lighter because" chips — same delegation reason. This answer is load-bearing: it decides whether a
+     lighter session becomes the new baseline (on purpose) or gets rolled back next week (bad day), so it
+     changes what lands in the boxes. A full render follows, because the badge on the rolled-up row and
+     the weekly GO UP collector both read the gated verdict. */
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('[data-ldrop]'); if(!b) return;
+    const [rd,ex,k] = b.dataset.ldrop.split('|');
+    const key = 'qpcut.ldrop.'+dkey(rd);
+    const m = store.get(key,{});
+    m[ex] = m[ex]===k? null : k;
+    store.set(key,m); refreshGuides(); renderWhenIdle();
+  });
   /* NOW-strip action + nudge snooze are delegated — the strip's innerHTML is patched by the ticker */
   document.addEventListener('click', e=>{
     const a = e.target.closest('[data-nact-tab],[data-nact-jump],[data-nact-sesh]');
@@ -7327,7 +7549,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1786897680';
+const BUILD = 'b1786981788';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
