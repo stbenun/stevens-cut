@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 41 / 62 foods in the meal plan (**66%**)
+## Coverage: 38 / 58 foods in the meal plan (**66%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 84 rows: **33** USDA · **32** label · **17** derived · **2** UNVERIFIED
+Provenance of the 84 rows: **33** USDA · **31** label · **18** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -46,7 +46,7 @@ Provenance of the 84 rows: **33** USDA · **32** label · **17** derived · **2*
 | `hummus` | g | 1.83 | 0.04 | 0.13 | 0.1 | derived | Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub. |
 | `justins classic almond butter` | g | 6.875 | 0.1875 | 0.15625 | 0.59375 | label | Justin's Classic Almond Butter official panel: 32 g squeeze pack = 220 cal / 6 P / 5 C / 19 F -> per gram. The same panel is already cited inside the generic almond-butter entry as its upper bound; this key exists so a row that NAMES the brand is priced as the brand instead of at the 190 low end. His rule stands for the generic key: do not pin it. |
 | `kodiak flapjack` | each | 63 | 4.7 | 9 | 1.3 | derived | Kodiak Buttermilk Power Flapjacks, FROZEN: 3 flapjacks = 190 cal / 14 P -> ~63 cal / 4.7 P each. ⚠️ Kodiak lists 14-16 P per serving across formulations, so this is the low end; re-check against his box. |
-| `kodiak protein oats` | g | 3.8 | 0.1996 | 0.5807 | 0.0807 | label | Q's MEALS.xlsx, verbatim row: 'Kodiak Classic Protein Rolled Oats - 44.6g \| 169.5 cal \| 3.6 F \| 25.9 C \| 8.9 P' -> per gram. Reproduces three separate app rows: 15 g = 57/3.0, 25 g = 95/5.0, 44.6 g = 170/8.9. Kodiak's published figures cover the packets (12 g protein), Power Cups (14 g) and PEAK (20 g) but not this bulk Classic canister, so this is HIS/Q's figure and NOT a label read. Replace it the moment he photographs the container. Distinct from the plain 'oats' key on purpose — conflating them is the error that cost his breakfast 1.6 g of protein. |
+| `kodiak protein oats` | g | 3.8 | 0.2 | 0.58 | 0.08 | derived | Kodiak Cakes Protein Oats canister, HIS OWN LABEL photographed Aug 18 2026: serving 1/2 cup (50 g) = 190 cal / 4 F (1 sat) / 29 C (5 fiber, 1 sugar) / 10 P, about 9 servings per container. Ingredients are 100% whole grain rolled oats, pea protein concentrate and whey protein crisps -- which is why it is not plain oats. Per gram: 3.8 cal / 0.2 P / 0.58 C / 0.08 F. This REPLACES a figure derived from Q's spreadsheet, and the label confirms that derivation to three decimals, so his 5 P at 25 g was right all along and my 3.4 P (plain USDA oats) was the error. Kodiak's packets/Power Cups/PEAK figures do not apply to this canister. |
 | `kodiak waffle` | each | 220 | 10 | 25 | 9 | derived | Kodiak Thick & Fluffy Buttermilk & Vanilla FROZEN waffles, verified Jul 24 2026: 220 cal EACH (they are thick, 1 per serving). His 2-waffle row = 440/20/50/18. Confirmed correct, not the mix. |
 | `lakanto sugar-free maple syrup` | g | 0.256 | 0 | 0.154 | 0 | label | Lakanto Maple Flavored Syrup (monk fruit + erythritol) label: 2 tbsp / 30 mL = 10 cal / 6 C, syrup density ~1.3 g/mL so ~39 g -> per gram. ⚠️ Caught an internal contradiction: his 15 g row said 4 C while the 60 g row said 1 C — four times the syrup for a quarter of the carbs. 60 g corrected to 15 cal / 9 C. |
 | `light mayo` | g | 2.67 | 0 | 0.067 | 0.267 | label | Hellmann's Light label: 1 tbsp (15 g) = 40 cal / 0 P / 1 C / 4 F -> per gram. Fetched Aug 18 2026. Older panels said 35/3.5; this is the current one. |
@@ -96,16 +96,15 @@ Provenance of the 84 rows: **33** USDA · **32** label · **17** derived · **2*
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 | `whole egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | HE BUYS LARGE — confirmed Aug 12 2026. USDA large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. The app rows were priced at 80/7/0/5, i.e. EXTRA-LARGE, so every egg was 8 cal high; corrected. Old note: USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
 
-## Still to source — 21 foods, most-used first
+## Still to source — 20 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
 | food | times it appears in the plan |
 |---|---:|
-| berries | 4 |
+| berries | 2 |
 | frozen berries | 2 |
 | sf chocolate syrup, drizzled | 2 |
-| cinnamon roll cor | 2 |
 | elev8 cor | 1 |
 | balsamic drizzle | 1 |
 | sf chocolate chips / cacao nibs | 1 |

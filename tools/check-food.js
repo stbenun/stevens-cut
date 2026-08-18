@@ -810,15 +810,9 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   /* Different foods that share a word — left unchecked until each earns its own fact. */
   const DENY = [['tomato paste', 'tomato'], ['kodiak', 'oats'], ['0%', 'fage 2% greek yogurt'],
                 ['shortcake', 'strawberries'], ['frozen', 'strawberries'], ['powder', 'fruity pebbles'],
-                /* Surfaced Aug 18 2026 once `ea:` let this check price count-based rows for the first
-                   time. The 'biscoff' fact is the Lotus CLASSIC panel — a plain speculoos biscuit with
-                   NO filling — while b5 and b9 both say "de-creamed Biscoff", which only means anything
-                   for the SANDWICH product. So the row states 31.5 cal a cookie and the Classic panel
-                   gives 37.5, and neither number is trustworthy until he says which box he buys.
-                   Per this check's own rule, ambiguity resolves to UNCHECKED, never to a guess — it stays
-                   visible in the unpriceable count instead of being quietly "corrected" 12 cal upward.
-                   ⛔ Do not remove this without his answer; removing it re-enables a wrong match. */
-                ['de-creamed', 'biscoff']];
+                /* The de-creamed-Biscoff denial is GONE: he answered on Aug 18 2026 -- "start using the
+                   regular lotus biscoff cookies" -- and sent the Lotus Original panel, so those rows now
+                   price off the real cookie instead of being refused as ambiguous. */];
 
   /* ⛔ NEVER add a row here to make a failure go away. Only when the source genuinely does not exist yet,
      and always with the specific thing that would close it. */
