@@ -26,9 +26,9 @@ const CASES = [
     from: '\u{1F41F} 8\u201310 pieces sashimi \u2014 <b>TUNA</b> (salmon is +20 cal each)<br>',
     to:   '\u{1F41F} 8\u201310 pieces sashimi or a couple of rolls<br>' },
   { name: 'a recipe total that no longer matches its ingredients', check: 'recipe-totals',
-    from: "], t:[586,55,49,19]}]},", to: "], t:[520,55,49,19]}]}," },
+    from: "['Asparagus','100 g',{f:'asparagus',n:100}]", to: "['Asparagus','100 g',{f:'asparagus',n:900}]" },
   { name: 'a cashew smuggled into an ingredient list', check: 'nuts',
-    from: "['Broccoli (or asparagus / string beans)','150 g',[50,3,10,0]]", to: "['Cashew butter','10 g',[60,2,2,5]]" },
+    from: "['Broccoli — asparagus and string beans swap 1:1','150 g',{f:'broccoli',n:150}]", to: "['Cashew butter','10 g',{f:'almond butter',n:10}]" },
   { name: 'the sushi anchor drifting away from FOOD_FACTS', check: 'anchors',
     from: "cal:22,p:4.7,c:0,f:.3,min:6,max:16", to: "cal:31,p:4.7,c:0,f:.3,min:6,max:16" },
   /* --- the Aug 6 2026 bug: a venue whose plan cannot respond to the budget --- */

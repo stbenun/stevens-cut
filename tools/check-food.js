@@ -802,10 +802,10 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * corrupted correct rows, so ambiguity resolves to unchecked, never to a guess.
  */
 (function rowMath() {
-  const UNCHECKED_CEILING   = 12;  /* single-food rows with no fact that prices them. Only goes DOWN. */
-  const COMPOSITE_CEILING   = 24;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
+  const UNCHECKED_CEILING   = 2;  /* single-food rows with no fact that prices them. Only goes DOWN. */
+  const COMPOSITE_CEILING   = 2;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
   const NEEDS_LABEL_CEILING = 3;   /* rows awaiting a photo of his package. Only goes DOWN. */
-  const MISLABELLED_CEILING = 9;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
+  const MISLABELLED_CEILING = 1;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
 
   /* Different foods that share a word — left unchecked until each earns its own fact. */
   const DENY = [['tomato paste', 'tomato'], ['kodiak', 'oats'], ['0%', 'fage 2% greek yogurt'],
@@ -965,7 +965,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  */
 (function priced() {
 
-  const LEGACY_CEILING = 38;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
+  const LEGACY_CEILING = 4;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
 
   const broken = [], legacy = [], pricedRows = [], totalDrift = [];
   SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {
@@ -1040,6 +1040,47 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     fail('dup-keys', 'the block declares ' + uniq + ' keys but the object has ' + live +
       ' — something is shadowing a key in a way this check cannot see.');
   else pass('dup-keys', uniq + ' FOOD_FACTS keys, each defined exactly once');
+})();
+
+
+/* ============ [slot-fit] no meal may go OVER its slot budget ============
+ * HIS RULE, stated plainly Aug 18 2026: "You should be making sure that nothing goes over calories and
+ * that everything matches the correct macros as best as possible."
+ *
+ * WHY IT EXISTS: minutes after the last recipe was converted, s4 The Brookie was sitting at 3,896 cal
+ * against a 330 snack slot -- +3,566. One part of a split row said {f:'oikos triple zero',n:40} where the
+ * row text reads "Oikos vanilla 40 g", and that fact is priced per CUP, so it read forty CUPS. Every
+ * other check passed: the spec resolved, the units were legal, the total equalled the sum of its rows.
+ * Nothing was inconsistent -- it was just wrong, and only the SIZE of the number gave it away.
+ * That is the gap this closes. An engine can verify that a plate adds up; only a budget can say whether
+ * the plate is food.
+ *
+ * OVER is a hard failure, because on a cut an overshoot is the error that costs him the deficit.
+ * UNDER is a ratcheted count -- being short is survivable and sometimes deliberate (p4 is Q's own light
+ * pre-lift at 180/10), but it must not quietly grow.
+ */
+(function slotFit() {
+  const OVER_CAL = 25;      /* ⛔ hard fail past this. Never raise it to make a build pass. */
+  const UNDER_CEILING = 4;  /* variants more than 25 under. Only ever falls. */
+  const over = [], under = [];
+  SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {
+    const tag = sl.key + '/' + o.id + (o.vars.length > 1 ? '#' + vi : '');
+    const t = varTotal(v), b = sl.b;
+    if (!b || !b.length) return;
+    const d = t[0] - b[0];
+    if (d > OVER_CAL) over.push(tag + ' ' + o.name.slice(0, 30) + ': ' + t[0] + ' cal against a ' + b[0] + ' slot, +' + Math.round(d));
+    else if (d < -OVER_CAL) under.push(tag + ' (' + Math.round(d) + ')');
+  })));
+  const bad = [];
+  if (over.length)
+    bad.push(over.length + ' variant(s) OVER their slot budget by more than ' + OVER_CAL +
+      ' cal: ' + over.join(' · ') + '. Fix the FOOD (portions), never the budget.');
+  if (under.length > UNDER_CEILING)
+    bad.push(under.length + ' variant(s) more than ' + OVER_CAL + ' cal UNDER, past the ceiling of ' +
+      UNDER_CEILING + ': ' + under.join(', '));
+  if (bad.length) fail('slot-fit', bad.join(' · '));
+  else pass('slot-fit', 'every variant within +' + OVER_CAL + ' cal of its slot budget; ' +
+            under.length + ' running more than ' + OVER_CAL + ' under (ceiling ' + UNDER_CEILING + ')');
 })();
 
 
