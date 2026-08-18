@@ -1,8 +1,36 @@
 # CLAUDE.md — how to work on this repo
 
+## ⭐ START HERE — read these four, in this order
+
+A new session gets oriented from these and nothing else. **Do not read the old chat transcripts.**
+They are tens of megabytes, and reading them recreates the exact failure he named on 2026-08-18:
+*"you sometimes use memory, sometimes use chat history, sometimes use lines in the app... and its
+messing up everything."* More sources did not make decisions better, it made them contradictory.
+
+| # | read | what it is for |
+|---|---|---|
+| 1 | `working-with-steven.md` (his memory dir) | **How to work with him.** Canonical for behaviour. |
+| 2 | **this file** | Code and product rules, the deploy sequence, and the gotchas that have cost hours. |
+| 3 | `STATUS.md` | **Where the project actually is.** GENERATED — trust it over any prose, including mine. |
+| 4 | `DECISIONS.md` | His standing calls and why. Append-only. |
+
+**Precedence, so two documents can never both claim to win:** on how to *behave*,
+`working-with-steven.md` wins. On code, data shape, product spec and deploy, **this file** wins. On any
+current *number or count*, `STATUS.md` and the guards win over both — and if prose here disagrees with
+what `node tools/check-food.js` prints, **the prose is the thing that is wrong.**
+
+Version history is `git log`. The commit messages are written to carry what changed, the error that
+caused it, and his own words — so `git log --oneline` is a real decision trail and far cheaper to read
+than a transcript.
+
+---
+
 The app: a personal nutrition and training tracker — meals, macros, lifts, hydration, supplements, and
-the meal-timing rules its owner keeps. **The entire app is ONE file, `index.html` (~540 KB).** There is no framework, no build for the
-main file, and no other source. `next/index.html` is generated.
+the meal-timing rules its owner keeps. **The entire app is ONE file, `index.html`.** There is no
+framework, no build for the main file, and no other source. `next/index.html` is generated.
+For its current size, row counts and coverage, read `STATUS.md` — those numbers are not repeated here,
+because the version of this paragraph that hard-coded "~540 KB" was wrong by 120 KB before anyone
+noticed, and a stale onboarding line is worse than no line at all.
 
 He built this to be a nutritionist and coach that is *precise*. He has said, in his words, that what he
 values most is **precision and accuracy**, and the way I have failed him is by **asserting numbers
@@ -72,16 +100,28 @@ clarifying question from him ("just confirming…", "no X?") means **verify**, n
 `git commit` is not deploy. `git push` is not deploy either, on its own.
 
 ```bash
-node tools/check-food.js                                    # food numbers
+# 1. regenerate the two GENERATED docs FIRST — their guards fail the build if they are stale
+node tools/food-doc.js                                      # FOOD_FACTS.md
+node tools/status.js                                        # STATUS.md
+
+# 2. the five verifications. Do not skip the last two: they are what prove the guards still bite.
+node tools/check-food.js                                    # food numbers, budgets, provenance, doc freshness
 NODE_PATH=.work/node_modules node tools/check-app.js        # schedule, rotations, name leak
 NODE_PATH=.work/node_modules node tools/probe.js            # renders his real data, every tab/day
-node tools/food-doc.js                                      # regenerate FOOD_FACTS.md
-# bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
+node tools/check-priced.plant.js                            # plants real defects, proves [priced] fires
+node tools/check-food.selftest.js                           # plants real defects across the food guards
+
+# 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
 node tools/build-next.js                                    # regenerate next/index.html
 git add -A && git commit && git push origin main
-# then PROVE it is live:
+
+# 4. then PROVE it is live — a push is not a deploy:
 curl -s "https://stbenun.github.io/stevens-cut/index.html?cb=$RANDOM" | grep -o "const BUILD = 'b[0-9]*'"
 ```
+**⛔ RUN THE TWO PLANT HARNESSES, EVERY TIME.** They are the only things that test the TESTS. On
+2026-08-18 three plant fixtures and two selftest cases quietly stopped firing — each named a specific
+row, and each row got migrated — so they printed `SKIP` or `BROKEN CASE` while the suite still read as
+"all checks passed". A harness that tests nothing looks exactly like a harness that finds nothing.
 `checkUpdate()` compares the served file's `BUILD` against the running app's. **Unchanged BUILD → the
 updater stays silent and nothing reaches his phone.** Also confirm `wc -c` of the live fetch equals
 local `index.html`; that is the only proof he and I are reading the same file.
@@ -107,17 +147,44 @@ local `index.html`; that is the only proof he and I are reading the same file.
 instead of reimplementing engine logic and getting a different answer than his phone gets. Write a
 bare body with `return` (it is wrapped in an IIFE for you).
 
-## THE OPEN PROBLEM — provenance coverage
+## HOW A ROW GETS ITS NUMBERS — the core data rule
 
-`FOOD_FACTS.md` carries the live number. **Most ingredient rows in `SLOTS` are hand-typed with no
-source anywhere in the repo.** The recipe-total guard passes because it verifies that a sum of guesses
-equals the stated sum of those guesses — internally consistent, externally unverified. **A vacuous
-guard is worse than no guard: it manufactures confidence.**
+**An ingredient row NAMES its source. It never carries a copy of the numbers.** Row index 2 is exactly
+one of:
 
-Goal is 100%. Work in order of how often he eats a thing — breakfast and lunch first, they are daily.
-Prefer published labels and USDA; **he should not have to photograph a national brand.** Ask him only
-for a **brand name** when the product is genuinely local or ambiguous, never for a photo of something
-findable online. Anything unsourceable gets marked UNVERIFIED **in the app**, visibly.
+| shape | meaning |
+|---|---|
+| `{f:'key', n:2}` | n units of `FOOD_FACTS['key']`, in that fact's OWN unit |
+| `{f:'key', n:6, u:'oz'}` | same, in a convertible unit — mass and volume only |
+| `{parts:[{f,n},{f,n}]}` | one displayed line built from several foods (a glaze, a sauce) |
+| `{free:1}` | deliberately zero: spices, a dry rub, a pinch of sweetener |
+| `[cal,P,C,F]` | LEGACY hand-typed copy. Allowed only where `STATUS.md` explains why. Ratcheted down. |
+
+A variant's `t:` total is the SUM of its rows, assigned at boot by the engine — not a claim about them.
+The engine lives between the `PRICING-ENGINE-BEGIN` / `PRICING-ENGINE-END` sentinels in `index.html`,
+and every tool that needs it **lifts that same text** rather than reimplementing it. Two copies of one
+rule is the bug this whole design deletes; `migrate2.js` reproduced it once by keeping its own stale
+`ffScale`, and reported "0 rows to migrate" while a guard was listing eight it could price.
+
+**⛔ THE TRAP THAT GOT PAST EVERY OTHER CHECK.** Omitting `u:` means "in the fact's own unit". A part
+written `{f:'oikos triple zero', n:40}` next to row text reading "40 g" priced **forty CUPS**, and put a
+snack at 3,896 cal against a 330 slot. The spec resolved, the units were legal, the total equalled its
+rows — nothing was *inconsistent*, it was just wrong, and only the SIZE gave it away. **Always state
+`u:` when the fact's unit is not what the row says.** `[slot-fit]` is what catches this class now.
+
+**Sourcing rules.** Prefer published labels and USDA; **he should not have to photograph a national
+brand** — he pushed back on exactly that, and he was right that produce unit weights ("1 medium
+tomato") are published reference figures, not unknowables. Ask him only for a **brand** when the product
+is genuinely local or ambiguous. Anything unsourceable is marked UNVERIFIED **visibly in the app**, and
+listed in `STATUS.md` with what would close it.
+
+**A brand- or blend-variable food gets `sp:[lo,hi]` and a basis** — never a false single number. The
+basis is what the PLAN uses and it moves only when he says so. Pricing Oikos at the published-vanilla
+low end quietly cut 20 cal from a breakfast, against this repo's own note that his figure stands.
+`[row-math]` rejects a spread wider than ±20%, because past that a spread stops describing honest
+variation and starts burying a wrong number.
+
+For the current coverage, the rows that remain, and what each is waiting on: **`STATUS.md`.**
 
 ## GOTCHAS THAT HAVE COST HOURS
 

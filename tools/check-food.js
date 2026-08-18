@@ -1084,6 +1084,24 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [status-doc] STATUS.md must not drift from reality ============
+ * The mechanism CLAUDE.md never had. Its onboarding section claimed most ingredient rows were
+ * hand-typed with no source — true in the morning of Aug 18 2026, false by that evening — and nothing
+ * anywhere would have said so. A status document with no staleness check is a document that will
+ * eventually mislead the next session with total confidence.
+ * Same contract as [food-doc]: the generator is the source, the file is a view, and a mismatch fails
+ * the build rather than sitting quietly. Run `node tools/status.js` to fix.
+ */
+(function statusDoc() {
+  const cp = require('child_process');
+  const r = cp.spawnSync(process.execPath, [require('path').join(__dirname, 'status.js'), '--check'],
+                         {encoding: 'utf8'});
+  const out = ((r.stdout || '') + (r.stderr || '')).trim().split(/\r?\n/).pop();
+  if (r.status === 0) pass('status-doc', 'STATUS.md matches what the repo actually contains');
+  else fail('status-doc', out || 'status.js --check failed to run');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
