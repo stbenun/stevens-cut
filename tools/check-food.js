@@ -719,6 +719,155 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
        CRUNCH_CEILING + ') — known debt, his call pending');
 })();
 
+/* ============ [row-math] every ingredient row recomputed from its source ============
+ * The check that should always have existed. [recipe-totals] only proves a sum of guesses equals the
+ * stated sum of those guesses (CLAUDE.md says exactly that); this one prices each row against FOOD_FACTS.
+ *
+ * Built Aug 18 2026 after he said: "Every recipe should be FACT checked when being made... I cant be the
+ * one to find these mistakes all the time."
+ *
+ * THREE OUTCOMES, and the distinction is the whole point:
+ *   VERIFIED       the row matches its source
+ *   NEEDS A LABEL  listed by name in KNOWN_UNSOURCED with what would close it. Ratcheted and printed
+ *                  every run, so it is a shrinking debt rather than a silence.
+ *   WRONG          anything else fails the build.
+ * "Everything is checked" would be a lie. "Everything is either checked or named" is true.
+ *
+ * Matching UNDER-matches by design. An earlier subset matcher paired 'Tomato paste' with raw tomato
+ * (~5x denser; the row was right) and 'Frozen strawberries' with fresh. Acting on that list would have
+ * corrupted correct rows, so ambiguity resolves to unchecked, never to a guess.
+ */
+(function rowMath() {
+  const UNCHECKED_CEILING   = 78;  /* single-food rows with no fact that prices them. Only goes DOWN. */
+  const COMPOSITE_CEILING   = 38;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
+  const NEEDS_LABEL_CEILING = 3;   /* rows awaiting a photo of his package. Only goes DOWN. */
+  const MISLABELLED_CEILING = 16;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
+
+  /* Different foods that share a word — left unchecked until each earns its own fact. */
+  const DENY = [['tomato paste', 'tomato'], ['kodiak', 'oats'], ['0%', 'fage 2% greek yogurt'],
+                ['shortcake', 'strawberries'], ['frozen', 'strawberries'], ['powder', 'fruity pebbles']];
+
+  /* ⛔ NEVER add a row here to make a failure go away. Only when the source genuinely does not exist yet,
+     and always with the specific thing that would close it. */
+  const KNOWN_UNSOURCED = {
+    'Kodiak buttermilk Power Flapjacks (frozen)':
+      "the fact's own src says Kodiak runs 14-16 P across formulations and to re-check his box - needs a photo of the package",
+    'Chocolate Cookie Blast protein':
+      'this row implies 150 cal a scoop; the four label-verified flavours run 130-140 - needs a photo of the Cookie Blast tub'
+  };
+
+  const FRAC = {'\u00bd': 0.5, '\u00bc': 0.25, '\u00be': 0.75, '\u2153': 1/3, '\u2154': 2/3, '\u215b': 0.125};
+  function qtyOf(q) {
+    const t = String(q).trim();
+    let m = /^(\d+(?:\.\d+)?)\s*(g|mL|ml|oz)\b/.exec(t);
+    if (m) return {n: parseFloat(m[1]), unit: m[2].toLowerCase() === 'ml' ? 'ml' : m[2].toLowerCase()};
+    m = /^(\d+)\s*(?:pack|cup|piece|bag)?\s*\((\d+(?:\.\d+)?)\s*g\)/.exec(t);
+    if (m) return {n: parseFloat(m[1]) * parseFloat(m[2]), unit: 'g'};
+    m = /^([\u00bd\u00bc\u00be\u2153\u2154\u215b])\s*(scoop|serving|med|cup|can)?/.exec(t);
+    if (m) return {n: FRAC[m[1]], unit: m[2] || 'each'};
+    m = /^(\d+(?:\.\d+)?)\s*(slices?|scoops?|servings?|pieces?|cups?|packets?|bars?|each|med|medium|can|bag|sheet)?\b/.exec(t);
+    if (m) { let u = (m[2] || 'each').replace(/s$/, ''); if (u === 'medium' || u === 'med') u = 'each'; return {n: parseFloat(m[1]), unit: u}; }
+    return null;
+  }
+  const stemW = w => w.replace(/ies$/, 'y').replace(/([^s])s$/, '$1');
+  function toks(str) {
+    const seen = {}, out = [];
+    String(str).toLowerCase().replace(/\([^)]*\)/g, ' ').split(/[^a-z0-9%]+/).forEach(function (t) {
+      if (t.length > 1) { const k = stemW(t); if (!seen[k]) { seen[k] = 1; out.push(k); } }
+    });
+    return out;
+  }
+  const FACTS = Object.keys(FOOD_FACTS).map(k => ({k: k, t: toks(k), f: FOOD_FACTS[k]})).filter(x => x.t.length);
+  const isComposite = lab => / \+ | OR |\u00b7|\/ | or /i.test(lab);
+  function matchFact(label) {
+    const rt = toks(label), low = label.toLowerCase();
+    let subs = FACTS.filter(x => x.t.every(t => rt.indexOf(t) >= 0));
+    subs = subs.filter(x => !DENY.some(d => low.indexOf(d[0]) >= 0 && x.k === d[1]));
+    if (!subs.length) return null;
+    subs.sort((a, z) => z.t.length - a.t.length);
+    if (subs.length > 1 && subs[1].t.length === subs[0].t.length) return null;
+    return subs[0];
+  }
+  function scale(fact, q) {
+    const f = fact.f, u = String(f.unit).toLowerCase().replace(/\s*\(.*\)/, '');
+    if (u === q.unit) return q.n;
+    if (u === 'ml' && q.unit === 'ml') return q.n;
+    if (u === 'scoop' && q.unit === 'serving') return q.n;
+    if (/^piece/.test(u) && (q.unit === 'piece' || q.unit === 'each')) return q.n;
+    if (['each','slice','packet','cup','scoop','can','bar','sheet'].indexOf(u) >= 0 && q.unit === 'each') return q.n;
+    if (u === 'g' && q.unit === 'each' && f.ea) return q.n * f.ea;
+    return null;
+  }
+
+  const off = [], verified = [], unchecked = [], composite = [], spreadBad = [], needsLabel = [], mislabelled = [];
+  FACTS.forEach(function (x) {
+    if (x.f.sp && (x.f.sp[0] < x.f.cal * 0.8 - 1e-9 || x.f.sp[1] > x.f.cal * 1.2 + 1e-9))
+      spreadBad.push(x.k + ' declares sp:[' + x.f.sp.join(',') + '] around a base of ' + x.f.cal +
+                     ' - a spread wider than +/-20% can bury a wrong number');
+  });
+  SLOTS.forEach(slot => (slot.opts || []).forEach(opt => (opt.vars || []).forEach(function (v, vi) {
+    (v.ing || []).forEach(function (row) {
+      const plain = String(row[0]).replace(/<[^>]*>/g, '');
+      const tag = slot.key + '/' + opt.id + (opt.vars.length > 1 ? '#' + vi : '') + ' "' + plain.slice(0, 34) + '"';
+      if (isComposite(plain)) {
+        /* A descriptive ' + ' ('split + toasted dark') exempts a row from checking, which is
+           how an understated Sola bagel walked past a plant test. If exactly ONE fact matches a
+           supposedly compound row it is MISLABELLED, not compound - say so, never skip quietly. */
+        if (matchFact(plain) && qtyOf(row[1])) mislabelled.push(tag);
+        composite.push(tag); return;
+      }
+      const q = qtyOf(row[1]), hit = matchFact(plain);
+      if (!q || !hit) { unchecked.push(tag); return; }
+      const n = scale(hit, q);
+      if (n === null) { unchecked.push(tag); return; }
+      const f = hit.f, mac = row[2];
+      const exp = [n * f.cal, n * f.p, n * f.c, n * f.f];
+      let loCal = exp[0], hiCal = exp[0];
+      if (f.sp) { loCal = n * f.sp[0]; hiCal = n * f.sp[1]; }
+      const tol = Math.max(4, exp[0] * 0.03);
+      const calBad = mac[0] < loCal - tol || mac[0] > hiCal + tol;
+      /* a brand spread moves the MACROS too, proportionally: almond butter's calories ARE its fat, so
+         widening only the calorie bound flagged Justin's own 220/6/5/19 panel as an error */
+      const up = f.sp ? f.sp[1] / f.cal : 1;
+      const macBad = [1, 2, 3].some(function (i) {
+        const lo = Math.min(exp[i], exp[i] * up), hi = Math.max(exp[i], exp[i] * up);
+        return mac[i] < lo - 2 || mac[i] > hi + 2;
+      });
+      if (calBad || macBad) {
+        if (KNOWN_UNSOURCED[plain]) needsLabel.push(tag + ' - ' + KNOWN_UNSOURCED[plain]);
+        else off.push(tag + ' [' + row[1] + ' -> ' + hit.k + '] states ' + mac.join('/') +
+                      ' but the source gives ' + exp.map(x => Math.round(x * 10) / 10).join('/'));
+      } else verified.push(tag);
+    });
+  })));
+
+  const bad = [];
+  if (spreadBad.length) bad.push(spreadBad.join(' \u00b7 '));
+  /* Ratcheted, NOT a hard fail: most of these are legitimately compound (a protein plus a
+     zero-calorie extract) and as an unconditional failure it masked every other result in this
+     check, including the plant tests. A noisy diagnostic that drowns the real signal is worse
+     than none - so it is a count that can only fall. */
+  if (mislabelled.length > MISLABELLED_CEILING)
+    bad.push(mislabelled.length + ' row(s) read as compound but match exactly one fact, past the'
+      + ' ceiling of ' + MISLABELLED_CEILING + ' - a new row is escaping the check via a stray +: '
+      + mislabelled.join(' / '));
+  if (off.length) bad.push(off.length + ' row(s) disagree with their source: ' + off.join(' \u00b7 '));
+  if (needsLabel.length > NEEDS_LABEL_CEILING)
+    bad.push(needsLabel.length + ' rows parked as needing a label, past the ceiling of ' + NEEDS_LABEL_CEILING +
+             ' - a row must never be parked there to silence a failure');
+  if (unchecked.length > UNCHECKED_CEILING)
+    bad.push(unchecked.length + ' single-food rows have no fact that prices them, past the ceiling of ' +
+             UNCHECKED_CEILING + ' - an ingredient was added with no FOOD_FACTS entry behind it');
+  if (composite.length > COMPOSITE_CEILING)
+    bad.push(composite.length + ' composite rows, past the ceiling of ' + COMPOSITE_CEILING +
+             ' - a new row packs several foods into one line, which cannot be priced');
+  if (bad.length) fail('row-math', bad.join(' \u00b7 '));
+  else pass('row-math', verified.length + ' rows recomputed from FOOD_FACTS and CORRECT \u00b7 ' +
+       needsLabel.length + ' awaiting a label from him \u00b7 ' + unchecked.length +
+       ' not yet priceable (ceiling ' + UNCHECKED_CEILING + ') \u00b7 ' + composite.length +
+       ' composite (ceiling ' + COMPOSITE_CEILING + ') \u2014 every ceiling only ever falls');
+})();
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');

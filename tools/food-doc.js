@@ -55,11 +55,16 @@ function build() {
      62%). It went unnoticed because [food-doc] compares this parser's output against this parser's
      output — a fact it cannot see is missing from both sides and the check still passes.
      check-food.js now cross-checks this count against the live Object.keys(FOOD_FACTS). */
-  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
+  /* `sp:[lo,hi]` is OPTIONAL and sits between unit: and cal: — it marks a deliberate brand or
+     flavour spread that [row-math] is allowed to accept. Adding it made three facts invisible to
+     the earlier version of this regex; [food-doc-parse] caught that on the next run. */
+  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
   let m;
   while ((m = rx.exec(ffBlock))) {
-    facts.push({ name: m[1], unit: m[2], cal: +m[3], p: +m[4], c: +m[5], f: +m[6],
-                 src: m[7] !== undefined ? m[7] : m[8] });
+    facts.push({ name: m[1], unit: m[2],
+                 sp: m[3] !== undefined ? [+m[3], +m[4]] : null,
+                 cal: +m[5], p: +m[6], c: +m[7], f: +m[8],
+                 src: m[9] !== undefined ? m[9] : m[10] });
   }
 
   /* what the meal plan actually needs */
