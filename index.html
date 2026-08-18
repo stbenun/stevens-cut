@@ -672,33 +672,33 @@ function sleepFmt(dec){ if(dec==null||isNaN(dec)) return ''; const H=Math.floor(
 /* ing rows: [label, qty, [cal, P, C, F]] — per-ingredient macros from his sheet */
 const SLOTS = [
  {key:'pre', slot:'Pre-Lift', time:'7:45 AM', b:[200,16,32,1], opts:[
-   {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Tuna packet','1',[70,17,0,0]]], t:[175,18,21,0]}]},
-   {id:'p3', name:'Rice Cakes + Yogurt', k:[['dairy']], vars:[{ing:[['Rice cakes (35 cal each)','3',[105,1,21,0]],['Oikos Triple Zero','1',[90,15,6,0]]], t:[195,16,27,0]}]},
-   {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',[160,8,30,1]],['Smucker’s SF jelly','32 g',[20,0,10,0]]], t:[180,8,40,1]}]},
-   {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',[90,15,6,0]],['Banana','1 med',[110,1,27,0]]], t:[200,16,33,0]}]},
-   {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',[70,17,0,0]],['Banana','1 med',[110,1,27,0]]], t:[180,18,27,0]}]},
+   {id:'p2', name:'Rice Cakes + Tuna', k:[['pareve']], vars:[{ing:[['Rice cakes (35 cal each)','3',{f:'rice cake',n:3}],['Tuna packet','1',{f:'tuna packet',n:1,u:'each'}]], t:[175,18,21,1]}]},
+   {id:'p3', name:'Rice Cakes + Yogurt', k:[['dairy']], vars:[{ing:[['Rice cakes (35 cal each)','3',{f:'rice cake',n:3}],['Oikos Triple Zero','1',{f:'oikos triple zero',n:1,u:'each'}]], t:[195,16,27,0]}]},
+   {id:'p4', name:'Ezekiel + Jelly', k:[['pareve']], vars:[{ing:[['Ezekiel bread','2 slices',{f:'ezekiel bread',n:2}],['Smucker’s SF jelly','32 g',{f:'smucker sf jelly',n:32}]], t:[179,8,39,1]}]},
+   {id:'p5', name:'Yogurt + Banana', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','1',{f:'oikos triple zero',n:1,u:'each'}],['Banana','1 med',{f:'banana',n:1,u:'each'}]], t:[195,16,33,0]}]},
+   {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',{f:'tuna packet',n:1,u:'each'}],['Banana','1 med',{f:'banana',n:1,u:'each'}]], t:[175,18,27,1]}]},
  ]},
  {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[540,36,50,21], opts:[
-   {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',[95,5.0,16,2]],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',[190,7,7,17]]], t:[545,39,54,22]}]},
-   {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',[140,15,36,5]],['Philadelphia ⅓-less-fat cream cheese','45 g',[98,3,3,8]],['Acme Nova lox','130 g',[161,29,0,5]],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[539,48,73,18]}]},
+   {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',{f:'oats',n:25}],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',{f:'almond butter',n:32}]], t:[545,36,54,21]}]},
+   {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',{f:'sola everything bagel',n:1}],['Philadelphia ⅓-less-fat cream cheese','45 g',{f:'philadelphia cream cheese',n:45}],['Acme Nova lox','130 g',{f:'acme nova lox',n:130}],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[540,49,73,19]}]},
    {id:'b3', name:'Kodiak Breakfast', k:[['dairy']], vars:[
-     {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',[440,20,50,18]],['Fage 2% plain Greek yogurt','1 cup (150 g)',[106,15,4,3]],['Lakanto sugar-free maple syrup','60 g',[15,0,9,0]]], t:[561,35,63,21]},
-     {label:'Flapjacks', ing:[['Kodiak buttermilk Power Flapjacks (frozen)','4',[255,19,40,3]],['Justin’s Classic almond butter','1 pack (32 g)',[220,6,6,19]],['Fage Total 0% plain Greek yogurt','125 g',[70,13,4,0]],['Lakanto sugar-free maple syrup','15 g',[5,0,4,0]]], t:[550,38,54,22]}]},
-   {id:'b5', name:'Banana Cream Protein Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk (shake the powder into this FIRST)','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ½ tsp banana extract','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen berries','50 g',[25,0.5,6,0]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Biscoff cookies','2',[63,1,12,1]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[550,60,49,14]}]},
-   {id:'b6', name:'Strawberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + ¼ tsp lemon extract (the cheesecake tang)','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[53,1,14,0]],['Graham cracker sheet, crushed (the crust)','1',[65,1,12,1.5]],['Almond butter (for breakfast size)','7 g',[42,2,2,4]]], t:[527,60,43,15]}]},
-   {id:'b7', name:'Cookies & Cream Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein + 1 tsp vanilla bean paste','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['De-creamed Oreo Thins, crushed','5',[125,0,20,5]],['SF chocolate syrup, drizzled','15 g',[5,0,2,0]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[550,58,39,19]}]},
-   {id:'b8', name:'Piña Colada Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['RAW Piña Colada protein + ½ tsp coconut extract','½ serving · 15.5 g',[55,12.5,1,0.5]],['Pineapple (fresh or frozen)','150 g',[75,1,18,0]],['Toasted coconut chips','8 g',[45,0,3,4]],['Almond butter (for breakfast size)','12 g',[71,3,3,6]]], t:[548,60,39,19]}]},
-   {id:'b9', name:'Butterscotch Apple Pie Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Cinnamon Toast protein + ½ tsp caramel extract + Golden Lakanto (this is the butterscotch now)','½ serving · 18 g',[70,12.5,2,1.25]],['Warm cinnamon apples','100 g',[52,0,14,0]],['De-creamed Biscoff cookies, crumbled','2',[63,1,12,1]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[540,59,44,15]}]},
-   {id:'b10', name:'Lemon Blueberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Lemon Cake protein + ¼ tsp lemon extract','½ serving · 17 g',[65,12.5,1.5,1.25]],['Blueberries','100 g',[57,1,14,0]],['Nilla wafers, crushed','4',[56,0,11,2]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[545,59,42,17]}]},
-   {id:'b11', name:'Chocolate Almond-Butter Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','1 med',[105,1,27,0]],['Almond butter (his safe nut · stir it right in here)','10 g',[59,2,2,5]],['SF chocolate syrup, drizzled','15 g',[5,0,2,0]]], t:[546,59,48,15]}]},
-   {id:'b12', name:'Fruity Pebbles Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Fruity Pebbles protein','½ serving · 15 g',[65,12.5,2,1]],['Banana','½ med',[53,0.5,14,0]],['Fruity Pebbles cereal, on top','10 g',[40,0.5,9,0.5]],['Almond butter (for breakfast size)','15 g',[89,3,3,8]]], t:[549,60,42,18]}]},
-   {id:'b13', name:'Mint Chip Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Mint Chip Ice Cream protein','½ serving · 18.5 g',[70,12.5,2.5,1.5]],['Frozen berries','100 g',[50,1,12,0]],['SF chocolate chips / cacao nibs','8 g',[45,1,4,3]],['Almond butter (for breakfast size)','14 g',[83,3,3,7]]], t:[550,61,35,20]}]},
-   {id:'b14', name:'Cinnamon Toast Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Cinnamon Toast protein + ½ tsp cinnamon','½ serving · 18 g',[70,12.5,2,1.25]],['Banana','½ med',[53,0.5,14,0]],['Cinnamon Toast Crunch, on top','10 g',[40,0.5,8,1]],['Almond butter (for breakfast size)','14 g',[83,3,3,7]]], t:[548,60,41,17]}]},
-   {id:'b15', name:'Vanilla Berry Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Vanilla Ice Cream protein','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen mixed berries','150 g',[75,1,18,0]],['Nilla wafers, crushed','3',[42,0,8,1.5]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[549,59,43,17]}]},
-   {id:'b16', name:'Strawberry Shortcake Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['LD Strawberry Shortcake protein','½ serving · 17.1 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',[53,1,14,0]],['Nilla wafers, crushed','3',[42,0,8,1.5]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[527,59,39,17]}]},
-   {id:'b17', name:'Apple Pie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['RAW Grandma’s Apple Pie protein + ¾ tsp cinnamon','½ serving · 17 g',[65,12.5,1,1.25]],['Warm cinnamon apples','100 g',[52,0,14,0]],['Cinnamon Fiber One bar, crumbled','1',[70,1,17,2]],['Almond butter (for breakfast size)','9 g',[53,2,2,5]]], t:[542,59,48,16]}]},
-   {id:'b18', name:'Chocolate Cookie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',[282,40,12,8]],['Fairlife 0% milk','60 mL',[20,3.3,1.5,0]],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','½ med',[53,0.5,14,0]],['De-creamed Oreo Thins, crushed','2',[50,0,8,2]],['Almond butter (for breakfast size)','11 g',[65,2,2,6]]], t:[545,58,41,18]}]},
-   {id:'b4', name:'Oikos Power Parfait — no scale / no cook', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','2 cups',[180,30,12,0]],['Banana','1 med',[110,1,27,0]],['Cereal (Fruity Pebbles etc.)','~1 cup',[120,1,26,1]],['Justin’s almond butter','½ packet (~16 g)',[100,3,3,8]],['Berries','handful (optional)',[15,0,3,0]]], t:[525,35,71,9]}]},
+     {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',{f:'kodiak waffle',n:2}],['Fage 2% plain Greek yogurt','1 cup (150 g)',{f:'fage 2% greek yogurt',n:150}],['Lakanto sugar-free maple syrup','60 g',{f:'lakanto sugar-free maple syrup',n:60}]], t:[560,35,64,21]},
+     {label:'Flapjacks', ing:[['Kodiak buttermilk Power Flapjacks (frozen)','4',[255,19,40,3]],['Justin’s Classic almond butter','1 pack (32 g)',{f:'justins classic almond butter',n:32}],['Fage Total 0% plain Greek yogurt','125 g',[70,13,4,0]],['Lakanto sugar-free maple syrup','15 g',{f:'lakanto sugar-free maple syrup',n:15}]], t:[549,38,51,22]}]},
+   {id:'b5', name:'Banana Cream Protein Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk (shake the powder into this FIRST)','60 mL',{f:'fairlife 0% milk',n:60}],['Vanilla Ice Cream protein + ½ tsp banana extract','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen berries','50 g',[25,0.5,6,0]],['Banana','½ med',{f:'banana',n:0.5,u:'med'}],['De-creamed Biscoff cookies','2',[63,1,12,1]],['Almond butter (for breakfast size)','7 g',{f:'almond butter',n:7}]], t:[546,59,48,14]}]},
+   {id:'b6', name:'Strawberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','420 g',{f:'fage 2% greek yogurt',n:420}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Vanilla Ice Cream protein + ¼ tsp lemon extract (the cheesecake tang)','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',{f:'frozen strawberries',n:150}],['Graham cracker sheet, crushed (the crust)','1',{f:'graham cracker',n:1,u:'each'}],['Almond butter (for breakfast size)','7 g',{f:'almond butter',n:7}]], t:[537,60,43,15]}]},
+   {id:'b7', name:'Cookies & Cream Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Vanilla Ice Cream protein + 1 tsp vanilla bean paste','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['De-creamed Oreo Thins, crushed','5',[125,0,20,5]],['SF chocolate syrup, drizzled','15 g',[5,0,2,0]],['Almond butter (for breakfast size)','9 g',{f:'almond butter',n:9}]], t:[547,57,39,19]}]},
+   {id:'b8', name:'Piña Colada Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['RAW Piña Colada protein + ½ tsp coconut extract','½ serving · 15.5 g',[55,12.5,1,0.5]],['Pineapple (fresh or frozen)','150 g',[75,1,18,0]],['Toasted coconut chips','8 g',{f:'bare coconut chips',n:8}],['Almond butter (for breakfast size)','12 g',{f:'almond butter',n:12}]], t:[549,59,39,18]}]},
+   {id:'b9', name:'Butterscotch Apple Pie Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Cinnamon Toast protein + ½ tsp caramel extract + Golden Lakanto (this is the butterscotch now)','½ serving · 18 g',[70,12.5,2,1.25]],['Warm cinnamon apples','100 g',{f:'cinnamon apples',n:100}],['De-creamed Biscoff cookies, crumbled','2',[63,1,12,1]],['Almond butter (for breakfast size)','9 g',{f:'almond butter',n:9}]], t:[537,59,43,15]}]},
+   {id:'b10', name:'Lemon Blueberry Cheesecake Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Lemon Cake protein + ¼ tsp lemon extract','½ serving · 17 g',[65,12.5,1.5,1.25]],['Blueberries','100 g',{f:'blueberries',n:100}],['Nilla wafers, crushed','3',{f:'nilla wafer',n:3,u:'each'}],['Almond butter (for breakfast size)','11 g',{f:'almond butter',n:11}]], t:[539,59,39,18]}]},
+   {id:'b11', name:'Chocolate Almond-Butter Bowl', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','1 med',{f:'banana',n:1,u:'each'}],['Almond butter (his safe nut · stir it right in here)','10 g',[59,2,2,5]],['SF chocolate syrup, drizzled','15 g',[5,0,2,0]]], t:[543,59,47,15]}]},
+   {id:'b12', name:'Fruity Pebbles Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Fruity Pebbles protein','½ serving · 15 g',[65,12.5,2,1]],['Banana','½ med',{f:'banana',n:0.5,u:'med'}],['Fruity Pebbles cereal, on top','10 g',{f:'fruity pebbles',n:10}],['Almond butter (for breakfast size)','15 g',{f:'almond butter',n:15}]], t:[544,59,40,18]}]},
+   {id:'b13', name:'Mint Chip Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Mint Chip Ice Cream protein','½ serving · 18.5 g',[70,12.5,2.5,1.5]],['Frozen berries','100 g',[50,1,12,0]],['SF chocolate chips / cacao nibs','8 g',[45,1,4,3]],['Almond butter (for breakfast size)','14 g',{f:'almond butter',n:14}]], t:[547,60,35,20]}]},
+   {id:'b14', name:'Cinnamon Toast Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Cinnamon Toast protein + ½ tsp cinnamon','½ serving · 18 g',[70,12.5,2,1.25]],['Banana','½ med',{f:'banana',n:0.5,u:'med'}],['Cinnamon Toast Crunch, on top','10 g',{f:'cinnamon toast crunch',n:10}],['Almond butter (for breakfast size)','14 g',{f:'almond butter',n:14}]], t:[546,59,40,18]}]},
+   {id:'b15', name:'Vanilla Berry Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Vanilla Ice Cream protein','½ serving · 17.5 g',[65,12.5,1.5,1.25]],['Frozen mixed berries','150 g',[75,1,18,0]],['Nilla wafers, crushed','2',{f:'nilla wafer',n:2,u:'each'}],['Almond butter (for breakfast size)','11 g',{f:'almond butter',n:11}]], t:[539,59,40,17]}]},
+   {id:'b16', name:'Strawberry Shortcake Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['LD Strawberry Shortcake protein','½ serving · 17.1 g',[65,12.5,1.5,1.25]],['Frozen strawberries','150 g',{f:'frozen strawberries',n:150}],['Nilla wafers, crushed','3',{f:'nilla wafer',n:3,u:'each'}],['Almond butter (for breakfast size)','11 g',{f:'almond butter',n:11}]], t:[534,59,39,17]}]},
+   {id:'b17', name:'Apple Pie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['RAW Grandma’s Apple Pie protein + ¾ tsp cinnamon','½ serving · 17 g',[65,12.5,1,1.25]],['Warm cinnamon apples','100 g',{f:'cinnamon apples',n:100}],['Cinnamon Fiber One bar, crumbled','1',{f:'fiber one bar',n:1,u:'each'}],['Almond butter (for breakfast size)','9 g',{f:'almond butter',n:9}]], t:[539,60,47,17]}]},
+   {id:'b18', name:'Chocolate Cookie Bowl (protein-powder base)', k:[['dairy']], vars:[{ing:[['FAGE 2% Greek yogurt','400 g',{f:'fage 2% greek yogurt',n:400}],['Fairlife 0% milk','60 mL',{f:'fairlife 0% milk',n:60}],['Chocolate Cookie Blast protein','½ serving · 20.5 g',[75,12.5,3,1.75]],['Banana','½ med',{f:'banana',n:0.5,u:'med'}],['De-creamed Oreo Thins, crushed','2',[50,0,8,2]],['Almond butter (for breakfast size)','11 g',{f:'almond butter',n:11}]], t:[542,58,40,18]}]},
+   {id:'b4', name:'Oikos Power Parfait — no scale / no cook', k:[['dairy']], vars:[{ing:[['Oikos Triple Zero','2 cups',{f:'oikos triple zero',n:2}],['Banana','1 med',{f:'banana',n:1,u:'each'}],['Cereal (Fruity Pebbles etc.)','~1 cup',[120,1,26,1]],['Justin’s almond butter','½ packet (~16 g)',[100,3,3,8]],['Berries','handful (optional)',[15,0,3,0]]], t:[520,35,71,9]}]},
    /* b19 shipped at 710 cal against a 545 slot — 165 over, the single worst-fitting option in the
       app, and it only surfaced because he asked "what is b19?". Rather than edit his food out from
       under him, the cut-day build is now the DEFAULT variant and the original two-plate version is
@@ -706,38 +706,38 @@ const SLOTS = [
       5→11 g: the trim comes off the yogurt (the biggest single line) and the fat goes back up so the
       bowl stays over the 14 g satiety floor the breakfast guard enforces. */
    {id:'b19', name:'Warm COR + Yogurt Cup — 2 plates', k:[['dairy']], vars:[
-     {label:'Cut day (545)', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','260 g',[184,26,7.7,5.4]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','11 g',[66,2.2,2.2,5.9]],['Cinnamon + Lakanto (free flavor — no extract needed)','—',[0,0,0,0]]], t:[545,58,45,15]},
-     {label:'Two plates, full (710) — feast/refeed day', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',[332,47,14,9.7]],['🥶 Banana','½ med',[53,0.5,14,0]],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',[30,1,1,2.7]],['Cinnamon + Lakanto (free flavor — no extract needed)','—',[0,0,0,0]]], t:[710,78,64,16]}]},
+     {label:'Cut day (545)', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','260 g',{f:'fage 2% greek yogurt',n:260}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','11 g',{f:'almond butter',n:11}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[542,57,45,15]},
+     {label:'Two plates, full (710) — feast/refeed day', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',{f:'fage 2% greek yogurt',n:470}],['🥶 Banana','½ med',{f:'banana',n:0.5,u:'med'}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',{f:'almond butter',n:5}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[705,78,63,16]}]},
  ]},
  {key:'lu', slot:'Lunch', time:'1:30 PM', b:[575,50,59,15], opts:[
-   {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['Sweet potato','225 g',[190,4,46,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[580,52,63,15]}]},
-   {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['White rice (dry)','55 g',[199,4,44,0]],['Mini guac cup','1',[100,1,6,8]],['String beans','150 g',[45,3,11,0]]], t:[589,52,61,15]}]},
-   {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[144,13,1,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[103,14,2,5]],['Low-moisture mozzarella','28 g',[80,7,2,6]],['Broccoli','150 g',[50,3,10,0]],['Ezekiel bread','2 slices',[160,8,30,1]]], t:[587,55,45,22]}]},
-   {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',[144,13,1,10]],['Egg whites','100 g',[50,10,0,0]],['4% cottage cheese','113 g',[103,14,2,5]],['Low-moisture mozzarella','28 g',[80,7,2,6]],['Spinach (fresh)','150 g',[35,4,6,1]],['Ezekiel bread','2 slices',[160,8,30,1]]], t:[572,56,41,23]}]},
-   {id:'l4', name:'Tuna Melt Stack', k:[['dairy']], vars:[{ing:[['Tuna packets','2',[140,34,0,0]],['Ezekiel bread, toasted','2 slices',[160,8,30,1]],['Low-moisture mozzarella','28 g',[80,7,2,6]],['Mini guac cup','1',[100,1,6,8]],['Apple','1 med',[95,0,25,0]]], t:[575,50,63,15]}]},
-   {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','45 g',[163,3,36,0]],['Edamame','85 g',[103,10,8,4]],['Israeli salad — pile it (tomato 150 g · cucumber 150 g · lemon · sumac)','big bowl',[36,1,8,0]],['Hummus — optional 15 g smear (or skip, lean on lemon + sumac)','15 g',[27,1,2,1.5]],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',[0,0,0,0]]], t:[579,52,54,16]}]},
-   {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Rice (dry)','40 g',[145,3,32,0]],['Mayo: Hellmann’s Real 8 g (weighed) OR light 20 g · + sriracha 5 g','—',[60,0,1,6]],['Edamame','85 g',[103,10,8,4]],['Cucumber','75 g',[15,0,3,0]],['Soy sauce','15 mL',[5,0,1,0]],['Rice cake, crushed on top','1',[35,0,7,0]]], t:[573,64,52,10]}]},
-   {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',[250,37,0,10]],['Egg whites (binder)','15 g',[8,2,0,0]],['Keto bread','2 slices',[70,12,20,1]],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','290 g',[220,6,51,0]],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',[0,0,0,0]]], t:[608,58,76,14]}]},
-   {id:'l10', name:'Spicy Tuna & Avocado', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets, pressed dry','3',[210,51,0,0]],['Sola everything bagel, split and toasted dark','1',[140,15,36,5]],['Mini guac cup — mashed with the vinegar + sriracha as the dressing','1',[100,1,6,8]],['Cucumber, salted and drained','300 g',[45,2,11,0]],['Romaine lettuce, torn as the bed (not mixed)','150 g',[26,2,5,0]],['Tomato, seeded then diced','1 med',[22,1,5,0]],['Celery, small dice','100 g',[16,1,3,0]],['Scallion, sliced','30 g',[10,1,2,0]],['Sriracha 12 g + rice vinegar 15 g','—',[15,0,3,0]]], t:[584,74,71,13]}]},
-   {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Mini guac cup','1',[100,1,6,8]],['Rice cakes','5',[175,1,35,0]],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',[0,0,0,0]]], t:[575,53,46,16]}]},
+   {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['Sweet potato','205 g',{f:'sweet potato',n:205}],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['String beans','150 g',{f:'string beans',n:150}]], t:[573,51,57,17]}]},
+   {id:'l1r', name:'Chicken Meal — Rice', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['White rice (dry)','50 g',{f:'white rice dry',n:50}],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['String beans','150 g',{f:'string beans',n:150}]], t:[578,51,56,17]}]},
+   {id:'l2', name:'Broccoli Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',{f:'egg',n:2}],['Egg whites','100 g',{f:'egg whites',n:100}],['4% cottage cheese','113 g',{f:'cottage cheese 4%',n:113}],['Low-moisture mozzarella','23 g',{f:'low-moisture mozzarella',n:23}],['Broccoli','150 g',{f:'broccoli',n:150}],['Ezekiel bread','2 slices',{f:'ezekiel bread',n:2}]], t:[575,56,45,21]}]},
+   {id:'l3', name:'Spinach Jiben', k:[['dairy']], vars:[{ing:[['Eggs','2',{f:'egg',n:2}],['Egg whites','100 g',{f:'egg whites',n:100}],['4% cottage cheese','113 g',{f:'cottage cheese 4%',n:113}],['Low-moisture mozzarella','28 g',{f:'low-moisture mozzarella',n:28}],['Spinach (fresh)','150 g',{f:'spinach',n:150}],['Ezekiel bread','2 slices',{f:'ezekiel bread',n:2}]], t:[573,57,41,22]}]},
+   {id:'l4', name:'Tuna Melt Stack', k:[['dairy']], vars:[{ing:[['Tuna packets','2',{f:'tuna packet',n:2,u:'each'}],['Ezekiel bread, toasted','2 slices',{f:'ezekiel bread',n:2}],['Low-moisture mozzarella','28 g',{f:'low-moisture mozzarella',n:28}],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['Apple','1 med',{f:'apple',n:1,u:'each'}]], t:[580,51,62,17]}]},
+   {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',{f:'salmon',n:6,u:'oz'}],['Rice (dry)','45 g',{f:'white rice dry',n:45}],['Edamame','85 g',{f:'edamame',n:85}],['Israeli salad — pile it (tomato 150 g · cucumber 150 g · lemon · sumac)','big bowl',[36,1,8,0]],['Hummus — optional 15 g smear (or skip, lean on lemon + sumac)','15 g',[27,1,2,1.5]],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',{free:1}]], t:[577,52,54,16]}]},
+   {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',{f:'tuna packet',n:3,u:'each'}],['Rice (dry)','40 g',{f:'white rice dry',n:40}],['Mayo: Hellmann’s Real 8 g (weighed) OR light 20 g · + sriracha 5 g','—',[60,0,1,6]],['Edamame','85 g',{f:'edamame',n:85}],['Cucumber','75 g',{f:'cucumber',n:75}],['Soy sauce','15 mL',{f:'soy sauce',n:15}],['Rice cake, crushed on top','1',{f:'rice cake',n:1}]], t:[569,65,51,12]}]},
+   {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',{f:'salmon',n:6,u:'oz'}],['Egg whites (binder)','15 g',{f:'egg whites',n:15}],['Keto bread','2 slices',{f:'natures own keto bread',n:2}],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','235 g',{f:'potatoes',n:235}],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',{free:1}]], t:[572,56,67,14]}]},
+   {id:'l10', name:'Spicy Tuna & Avocado', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets, pressed dry','3',{f:'tuna packet',n:3,u:'each'}],['Sola everything bagel, split and toasted dark','1',{f:'sola everything bagel',n:1}],['Mini guac cup — mashed with the vinegar + sriracha as the dressing','1',[100,1,6,8]],['Cucumber, salted and drained','300 g',{f:'cucumber',n:300}],['Romaine lettuce, torn as the bed (not mixed)','150 g',{f:'romaine lettuce',n:150}],['Tomato, seeded then diced','1 med',[22,1,5,0]],['Celery, small dice','100 g',{f:'celery',n:100}],['Scallion, sliced','30 g',{f:'scallion',n:30}],['Sriracha 12 g + rice vinegar 15 g','—',[15,0,3,0]]], t:[583,73,71,15]}]},
+   {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',{f:'tuna packet',n:3,u:'each'}],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['Rice cakes','5',{f:'rice cake',n:5}],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',{free:1}]], t:[580,54,45,19]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[325,33,28,8], opts:[
    {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['BROWNIE wet: egg whites 60 mL · pumpkin purée 40 g · Oikos vanilla 40 g · ¼ tsp vanilla — NO Fairlife (the old flood is why it was watery)','bowl 1',[78,12,7,0]],['BROWNIE dry: all-purpose flour 18 g · Lakanto 28 g · Ryse Choc Cookie Blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt','bowl 2',[137,13,20,2]],['COOKIE DOUGH (thick + scoopable, brown-sugar flavor): oat flour 10 g · AP flour 7 g · Ryse vanilla 7 g · Lakanto GOLDEN 14 g · softened butter 3 g · egg white 10 mL · ¼ tsp vanilla · pinch soda + salt','one bowl',[118,9,12,3.5]]], t:[333,34,39,6]}]},
-   {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',[107,17.3,8.0,0]],['Ryse protein','½ scoop',[70,13,2,1]],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[317,32,30,7]}]},
-   {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',[43,8,3,0]],['Justin’s Classic almond butter','3.1 g',[21,1,1,2]],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[326,35,33,8]}]},
+   {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',{f:'fairlife 0% milk',n:320}],['Ryse protein','½ scoop',{f:'protein',n:0.5}],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[315,32,30,7]}]},
+   {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',{f:'oikos triple zero',n:80.1,u:'g'}],['Justin’s Classic almond butter','3.1 g',{f:'justins classic almond butter',n:3.1}],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[331,35,33,8]}]},
  ]},
  {key:'di', slot:'Dinner', time:'10:00 PM', b:[580,52,58,19], opts:[
-   {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',[255,35,0,12]],['Keto bread','2 slices',[70,12,20,1]],['Egg','1',[72,6,0,5]],['Potatoes','220 g',[167,5,38,0]],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',[20,2,4,0]]], t:[604,60,64,18]}]},
-   {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',[255,35,0,12]],['Tomato paste','33 g',[27,1,6,0]],['Keto bread','2 slices',[70,12,20,1]],['Egg','1',[72,6,0,5]],['Potatoes','220 g',[167,5,38,0]],['Asparagus','100 g',[20,2,4,0]]], t:[611,61,68,18]}]},
-   {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','50 g',[181,4,40,0]],['Soy sauce','30 mL',[10,0,2,0]],['Edamame','85 g',[103,10,8,4]],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',[15,0,3,0]]], t:[579,52,54,16]}]},
-   {id:'d3', name:'Blackened Salmon Plate', k:[['pareve']], vars:[{ing:[['Salmon (any — it’s cooked, raw weight)','6 oz',[250,37,0,10]],['Potatoes','220 g',[167,5,38,0]],['Asparagus','100 g',[20,2,4,0]],['Edamame','85 g',[103,10,8,4]],['Rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne','—',[0,0,0,0]],['SF ketchup','32 g',[20,0,2,0]]], t:[560,54,52,14]}]},
-   {id:'d16', name:'Teriyaki-Glaze Salmon Bowl (fresh · seared)', k:[['pareve']], vars:[{ing:[['Salmon cubes (raw weight)','7 oz',[290,42,0,13]],['White rice (dry)','50 g',[181,4,40,0]],['Edamame','60 g',[73,7,5,3]],['Cucumber','free, sliced',[10,0,2,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto 8 g · sriracha ½ tsp · garlic ¼ tsp','—',[15,1,3,0]],['Scallion + everything-bagel seasoning','—',[5,0,1,0]]], t:[574,54,51,16]}]},
+   {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',{f:'93/7 ground beef',n:6,u:'oz'}],['Keto bread','2 slices',{f:'natures own keto bread',n:2}],['Egg','1',{f:'egg',n:1}],['Potatoes','175 g',{f:'potatoes',n:175}],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',{f:'asparagus',n:100}]], t:[579,60,58,18]}]},
+   {id:'d15', name:'Tomato Beef', k:[['meat']], vars:[{ing:[['93/7 ground beef, simmered in paste (raw weight)','6 oz',{f:'93/7 ground beef',n:6,u:'oz'}],['Tomato paste','33 g',[27,1,6,0]],['Keto bread','2 slices',{f:'natures own keto bread',n:2}],['Egg','1',{f:'egg',n:1}],['Potatoes','165 g',{f:'potatoes',n:165}],['Asparagus','100 g',{f:'asparagus',n:100}]], t:[578,61,60,18]}]},
+   {id:'d2', name:'Poke Bowl', k:[['pareve']], vars:[{ing:[['Salmon, sushi-grade — served raw (raw weight)','6 oz',{f:'salmon',n:6,u:'oz'}],['Rice (dry)','50 g',{f:'white rice dry',n:50}],['Soy sauce','30 mL',{f:'soy sauce',n:30}],['Edamame','85 g',{f:'edamame',n:85}],['Seaweed packet','1',[20,1,1,2]],['Cucumber','75 g',{f:'cucumber',n:75}]], t:[573,53,53,17]}]},
+   {id:'d3', name:'Blackened Salmon Plate', k:[['pareve']], vars:[{ing:[['Salmon (any — it’s cooked, raw weight)','6 oz',{f:'salmon',n:6,u:'oz'}],['Potatoes','235 g',{f:'potatoes',n:235}],['Asparagus','100 g',{f:'asparagus',n:100}],['Edamame','85 g',{f:'edamame',n:85}],['Rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne','—',{free:1}],['SF ketchup','32 g',[20,0,2,0]]], t:[577,54,56,15]}]},
+   {id:'d16', name:'Teriyaki-Glaze Salmon Bowl (fresh · seared)', k:[['pareve']], vars:[{ing:[['Salmon cubes (raw weight)','7 oz',{f:'salmon',n:7,u:'oz'}],['White rice (dry)','50 g',{f:'white rice dry',n:50}],['Edamame','60 g',{f:'edamame',n:60}],['Cucumber','free, sliced',[10,0,2,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto 8 g · sriracha ½ tsp · garlic ¼ tsp','—',[15,1,3,0]],['Scallion + everything-bagel seasoning','—',[5,0,1,0]]], t:[573,55,51,15]}]},
    /* His Aug 4 wedding-week dinner, the first custom plate he called delicious. Scaled from the
       one-off (7 oz salmon / 240 g potato, built for a 895-cal dinner+snack hole) to the 585 dinner
       slot: salmon UP to 7.5 oz and potato DOWN to 200 g, which locks calories and puts protein at
       55 against a 54 budget. Carbs land 9 under and that is fine — cals lock, protein holds, carbs flex.
       Both sauces are in it: he confirmed the almond-chili drizzle worked once thinned. */
-   {id:'d17', name:'Sweet-Chili Salmon Plate (air fryer)', k:[['pareve']], vars:[{ing:[['Salmon fillet (raw weight)','7.5 oz',[311,45,0,14]],['Potatoes, ¾" cubes','200 g',[152,4,35,0]],['Broccoli (or asparagus / string beans)','150 g',[50,3,10,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto Golden 8 g · sriracha ½ tsp · garlic powder ¼ tsp','—',[15,1,3,0]],['Almond-chili drizzle: almond butter 8 g · sriracha 5 g · Lakanto 2 g · squeeze of lemon · warm water 2 tsp','—',[55,2,3,4]],['Chosen Foods avocado oil spray','~8 sprays',[10,0,0,1]]], t:[593,55,51,19]}]},
+   {id:'d17', name:'Sweet-Chili Salmon Plate (air fryer)', k:[['pareve']], vars:[{ing:[['Salmon fillet (raw weight)','7.5 oz',{f:'salmon',n:7.5,u:'oz'}],['Potatoes, ¾" cubes','175 g',{f:'potatoes',n:175}],['Broccoli (or asparagus / string beans)','150 g',[50,3,10,0]],['Glaze: soy 20 mL · rice vinegar 5 mL · Lakanto Golden 8 g · sriracha ½ tsp · garlic powder ¼ tsp','—',[15,1,3,0]],['Almond-chili drizzle: almond butter 8 g · sriracha 5 g · Lakanto 2 g · squeeze of lemon · warm water 2 tsp','—',[55,2,3,4]],['Chosen Foods avocado oil spray','~8 sprays',[10,0,0,1]]], t:[579,56,47,18]}]},
  ]},
 ];
 const OPTBYID = {}; SLOTS.forEach(s=>s.opts.forEach(o=>OPTBYID[o.id]={...o, slotKey:s.key, slotName:s.slot}));
@@ -1897,12 +1897,12 @@ const FOOD_FACTS = {
      value is PER GRAM; his cups are written in both grams and counts, so the piece weight is in the
      src for the count-based ones. This is what lets a cup's macros be COMPUTED instead of assumed:
      the s1 row's "Topping / mix-in (140-cal budget)" placeholder is why all 36 cups claimed 317. */
-  'nilla wafer':    {unit:'g',             cal:4.67, p:0.033, c:0.70,  f:0.20,  src:'Nabisco Nilla Wafers label: 8 wafers (30 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 3.75 g per wafer, which matches his own "9 crushed Nilla wafers (34 g)" row to within 0.03 g. 11 cups use these.'},
+  'nilla wafer':    {unit:'g',             ea:3.75, /* its own src: "3.75 g per wafer", which it notes matches his own 9-wafer/34 g row */ cal:4.67, p:0.033, c:0.70,  f:0.20,  src:'Nabisco Nilla Wafers label: 8 wafers (30 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 3.75 g per wafer, which matches his own "9 crushed Nilla wafers (34 g)" row to within 0.03 g. 11 cups use these.'},
   'oreo thin':      {unit:'g',             cal:4.83, p:0.034, c:0.724, f:0.207, src:'Oreo Thins label: 4 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram. 7.25 g per WHOLE cookie. ⚠️ 6 cups specify DE-CREAMED and the filling conversion is UNKNOWN — do not apply this to a de-creamed cup until he says whether he weighs before or after.'},
-  'biscoff':        {unit:'g',             cal:4.84, p:0.065, c:0.742, f:0.194, src:'lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups.'},
+  'biscoff':        {unit:'g',             ea:7.75, /* its own src: "7.75 g per cookie" */ cal:4.84, p:0.065, c:0.742, f:0.194, src:'lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups.'},
   'fruity pebbles': {unit:'g',             cal:3.89, p:0.028, c:0.861, f:0.056, src:'Post Fruity Pebbles label: 1 cup (36 g) = 140 cal / 1 P / 31 C / 2 F -> per gram. 3 cups.'},
   'cinnamon toast crunch': {unit:'g',      cal:4.15, p:0.049, c:0.805, f:0.098, src:'General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups.'},
-  'graham cracker': {unit:'g',             cal:4.19, p:0.065, c:0.774, f:0.097, src:'Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g.'},
+  'graham cracker': {unit:'g',             ea:15.5, /* its own src: "31 g (8 crackers / 2 full sheets) = 130 cal", so 15.5 g a sheet */ cal:4.19, p:0.065, c:0.774, f:0.097, src:'Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g.'},
   'sliced almonds': {unit:'g',             cal:5.79, p:0.212, c:0.216, f:0.499, src:'USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1.'},
   'sf pudding mix': {unit:'g',             cal:2.90, p:0.10,  c:0.70,  f:0,     src:'Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C.'},
   /* He confirmed Aug 11 2026: the Fiber One is the 70-CALORIE version, not the 90. Cinnamon Coffee
@@ -1935,7 +1935,13 @@ const FOOD_FACTS = {
      recipes between them, so changing the ingredient rows moves ten totals and can ripple into
      option-fits-slot and final-meal (the cottage-cheese fix already did exactly that). One controlled
      pass, not a dribble. */
-  'oikos triple zero': {unit:'cup (150 g)', sp:[80,90], cal:80, p:15, c:6, f:0, src:'FLAVOUR-VARIABLE — his call Aug 12 2026 when shown the 80-vs-90 conflict: "depends on flavor." oikos.com official for VANILLA: 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F. Retailers list 90 for other flavours. So treat as 80-90 per cup and do NOT pin one number; the app row of 90 is the top of the range and stands. Same handling as almond butter.'},
+  /* ⛔ BASIS, not just a range. `cal` is the number THE PLAN USES; `sp` is the honest spread around
+     it. Getting that backwards cost him 20 cal on b4: the basis sat at 80 (the vanilla figure) while
+     this entry's own src said the app's 90 "stands", so migrating b4's two cups priced them at 160
+     against the 180 he had decided on. The basis is now 90 — his documented call, and also the safe
+     end on a cut, since under-counting is the failure that matters. Do NOT move a basis to whichever
+     end a label happens to state; move it only when he says so. */
+  'oikos triple zero': {unit:'cup (150 g)', sp:[80,90], cal:90, p:15, c:6, f:0, src:"FLAVOUR-VARIABLE. His call Aug 12 2026 when shown the 80-vs-90 conflict: 'depends on flavor.' oikos.com official for VANILLA is 1 cup (150 g) = 80 cal / 15 P / 6 C / 0 F; retailers list 90 for other flavours. Spread recorded as 80-90 and NOT pinned. BASIS IS 90 because that is what his app rows have always used and he confirmed it stands — pricing at 80 silently cut 20 cal from b4."},
   'ezekiel bread':     {unit:'slice',       cal:80, p:4,  c:15, f:0.5, src:'Food For Life Ezekiel 4:9 Sprouted Whole Grain label: 1 slice = 80 cal / 4 P / 15 C total (3 g fiber) / 0.5 F. ⚠️ The app rows use 5 P per slice, so every Ezekiel row overstates protein by 1 g per slice.'},
   'edamame':           {unit:'g',           cal:1.21, p:0.119, c:0.089, f:0.052, src:'USDA edamame, frozen, PREPARED: 100 g = 121 cal / 11.9 P / 8.9 C total (5.2 g fibre, so 3.7 net — an earlier search handed me the NET figure as if it were total) / 5.2 F -> per gram. He confirmed Aug 12 2026 it is just regular frozen edamame, so USDA is the right basis. ⚠️ The app rows ran ~17% high (85 g priced at 120 cal, real 103) and are corrected.'},
   /* VARIETY-VARIABLE, and he settled it Aug 12 2026: "i cook potatos skin on. sometimes russet
@@ -1954,10 +1960,17 @@ const FOOD_FACTS = {
      provenance record disappeared. Commit before planting, or test guards against a copy. ===== */
   /* BRAND-VARIABLE by his own call: "majority of almond butter brands are between 190-220 calories
      per 32g and i dont always use the same brand." So a range, and the plan sits at the low end. */
+  /* HIS RULE, verbatim Aug 2026: "leave the almond butter as is becuase majority of almond butter
+     brands are between 190-220 calories per 32g and i dont always use the same brand." So the generic
+     'almond butter' key stays on the 190 basis and must NOT be pinned. But a row that NAMES Justin's is
+     not brand-variable — it is a known product, and pricing it off the generic low end made his own jar
+     read 30 cal cheaper than the panel on it. Two keys, so a named brand prices as itself and an
+     unnamed spoonful keeps the spread. The migration holds any Justin's row until it points here. */
+  'justins classic almond butter': {unit:'g', cal:6.875, p:0.1875, c:0.15625, f:0.59375, src:"Justin's Classic Almond Butter official panel: 32 g squeeze pack = 220 cal / 6 P / 5 C / 19 F -> per gram. The same panel is already cited inside the generic almond-butter entry as its upper bound; this key exists so a row that NAMES the brand is priced as the brand instead of at the 190 low end. His rule stands for the generic key: do not pin it."},
   'almond butter':     {unit:'g',           sp:[5.94,6.88], cal:5.94, p:0.19,  c:0.19,  f:0.53,  src:'BRAND-VARIABLE, his call: 190-220 cal per 32 g depending on brand, and he does not standardise. Basis is the low end (190/32 = 5.94 cal/g), which is what the app rows already use. Justin\'s Classic official panel for reference: 32 g = 220 / 6 P / 5 C / 19 F. Do NOT pin a single brand.'},
   'fage 2% greek yogurt': {unit:'g',        cal:0.697, p:0.0995, c:0.0299, f:0.0199, src:'FAGE Total 2% panel: 7.1 oz container (201 g) = 140 cal / 20 P / 6 C / 4 F -> per gram. Cross-checked against the app: his 400 g row says 282/40/12/8 and this gives 279/39.8/11.9/8.0 — the row was already right.'},
   'fairlife 0% milk':  {unit:'mL',          cal:0.333, p:0.0542, c:0.025, f:0,     src:'Fairlife Fat Free ultra-filtered label: 240 mL = 80 cal / 13 P / 6 C / 0 F -> per mL. Cross-checked: his 320 mL row says 107/17.3 and this gives 106.7/17.3 — exact to the decimal.'},
-  'banana':            {unit:'g',           cal:0.89, p:0.0109, c:0.228, f:0.0033, src:'USDA bananas raw: 100 g = 89 cal / 1.09 P / 22.8 C / 0.33 F -> per gram. A medium banana is 118 g = 105 cal. NOTE the app carries BOTH 105 and 110 for "1 med"; 105 is the USDA figure.'},
+  'banana':            {unit:'g',           ea:118, /* its own src: "A medium banana is 118 g = 105 cal" */ cal:0.89, p:0.0109, c:0.228, f:0.0033, src:'USDA bananas raw: 100 g = 89 cal / 1.09 P / 22.8 C / 0.33 F -> per gram. A medium banana is 118 g = 105 cal. NOTE the app carries BOTH 105 and 110 for "1 med"; 105 is the USDA figure.'},
   'mini guac cup':     {unit:'cup',         sp:[100,110], cal:105,  p:1,     c:5,     f:9,     src:'Wholly Guacamole Classic Minis: 2 oz (57 g) = 110 cal, ~9.5 F / 5 C / 1 P. He uses Wegmans cups OR Wholly (confirmed Aug 12), so this is a midpoint of the two; the app row (100/1/6/8) sits inside the brand spread and was left alone.'},
   'natures own keto bread': {unit:'slice',  cal:35,   p:6,     c:10,    f:0.5,   src:'Nature\'s Own Keto Soft White Bread label, his brand confirmed Aug 12 2026: 1 slice = 35 cal / 6 P / 10 C total (9 g fibre, 1 g net) / 0.5 F. He has the LOAF, not the buns. OPEN: how many slices he uses as a burger bun — the app row says 50 cal, which matches neither 1 slice nor 2.'},
   'cottage cheese 4%': {unit:'g',           cal:0.909, p:0.127, c:0.018, f:0.041, src:'Good Culture Organic 4% official panel: 1/2 cup (110 g) = 100 cal / 14 P / 2 C / 4.5 F -> per gram. BRAND RANGE: Daisy 4% is 113 g = 110 / 13 P / 5 C / 5 F, so 103-110 cal per 113 g. He uses either. The app had 113 g at 80 cal — 23 cal and 3.6 g fat LOW on his jiben lunch — corrected in l2 and l3.'},
@@ -1968,6 +1981,32 @@ const FOOD_FACTS = {
      which is worth recording: oats and egg whites were already right. ===== */
   'whole egg':         {unit:'each',        cal:72,   p:6.3,   c:0.4,   f:4.8,     src:'HE BUYS LARGE — confirmed Aug 12 2026. USDA large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. The app rows were priced at 80/7/0/5, i.e. EXTRA-LARGE, so every egg was 8 cal high; corrected. Old note: USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high.'},
   'egg whites':        {unit:'g',           cal:0.52, p:0.109, c:0.007, f:0.002, src:'USDA egg white, raw: 100 g = 52 cal / 10.9 P / 0.73 C / 0.17 F -> per gram. The app prices 100 g at 50 / 10 / 0 / 0 — within 4%, so the rows were already right and were NOT changed.'},
+  /* ==== THE STAPLES, added Aug 18 2026. Every figure fetched this session from USDA FoodData
+     Central, not recalled. These are the biggest single lines in his day — 150-311 cal each — and
+     until now not one of them had a source behind it: 43% of the plan's calories sat on hand-typed
+     numbers, and dinner was 89% unpriced. The toppings were label-verified before the protein was. */
+
+  /* WILD PACIFIC, per HIS answer Aug 18 2026: 'its wild. skin off', ordered sushi-grade from a kosher
+     market in Brooklyn. Wild ATLANTIC is deliberately NOT the basis — US commercial sale of it has been
+     banned since the late 1940s, so it is not a purchasable fish; wild here means Pacific. Basis is COHO,
+     which matches all six of his existing rows to within 1 cal and 0.4 g fat. Species still open: sockeye
+     would make the app read ~30 cal HIGH per meal, king ~59 LOW and ~7 g fat LOW, which would push five of
+     the six plates over their fat budget. He is asking at the counter. */
+  'salmon': {unit:'g', sp:[1.30,1.75], cal:1.46, p:0.216, c:0, f:0.059, src:"USDA 'Fish, salmon, coho, wild, raw': 100 g = 146 cal / 21.6 P / 0 C / 5.9 F -> per gram. Fetched Aug 18 2026. Spread covers the purchasable wild Pacific species: sockeye 130 cal/100 g at the low end, chinook/king 179 at the high. Wild Atlantic (142) is excluded on purpose — it cannot legally be sold in the US. Rows are in ounces and convert via the engine; all weights RAW, skin off, per his answer."},
+
+  '93/7 ground beef': {unit:'g', cal:1.52, p:0.209, c:0, f:0.071, src:"USDA FDC 173110, 'Beef, ground, 93% lean meat / 7% fat, raw': 100 g = 152 cal / 20.9 P / 0 C / 7.1 F -> per gram. Fetched Aug 18 2026. His 6 oz raw row states 255/35/0/12 and this gives 259/35.6/0/12.1 — it was already right, just unsourced."},
+
+  /* SEPARATE KEY from the existing 'chicken breast', which is per OZ COOKED and belongs to the eat-out
+     numbers. His lunch rows are RAW weight, and conflating the two would price a raw row at cooked
+     density — roughly a 40% error in the direction that matters. */
+  'chicken breast raw': {unit:'g', cal:1.20, p:0.225, c:0, f:0.026, src:"USDA FDC 171077, chicken breast, boneless skinless, raw: 100 g = 120 cal / 22.5 P / 0 C / 2.6 F -> per gram. Fetched Aug 18 2026. His 7 oz raw row states 245/44/0/7; this gives 238/44.6/0/5.2, so calories were 7 high and fat 1.8 high."},
+
+  /* HIS PREP, stated Aug 2026: 'i cook potatos skin on. sometimes russet sometimes golden. always with
+     skin.' So flesh-and-skin is the right USDA basis, and the spread covers russet vs gold. */
+  'potatoes': {unit:'g', sp:[0.77,0.80], cal:0.79, p:0.021, c:0.179, f:0.001, src:"USDA 'Potatoes, russet, flesh and skin, raw': 100 g = 79 cal / 2.1 P / 17.9 C / 0.1 F -> per gram. Fetched Aug 18 2026. Spread 77-80 covers the generic flesh-and-skin entry and gold varieties, because he buys either and always cooks skin on. His 220 g row states 167 cal; this gives 174."},
+
+  /* `ea:` lets a row written as a COUNT price off a per-gram-aware fact; a large egg is 50 g. */
+  'egg': {unit:'each', ea:50, cal:72, p:6.3, c:0.4, f:4.8, src:"USDA FDC 171287, egg, whole, raw, fresh: 1 large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. Fetched Aug 18 2026. Confirms the app's 2-egg row at 144/13/1/10 and shows Q's original sheet figure of 80 cal an egg was for a larger grade."},
   'oats':              {unit:'g',           cal:3.79, p:0.135, c:0.674, f:0.069, src:'USDA oats, rolled, dry: 100 g = 379 cal / 13.5 P / 67.4 C / 6.9 F -> per gram. The app prices 25 g at 95 cal, i.e. 3.8 cal/g — already exact. No change.'},
   'white rice dry':    {unit:'g',           cal:3.62, p:0.071, c:0.80,  f:0.007, src:'USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved.'},
   'rice cake':         {unit:'each',        cal:35,   p:0.33,  c:7,     f:0,     src:'HIS figure, stated repeatedly and baked into the row label "Rice cakes (35 cal each)". Plain brown-rice cakes run 35 cal / 7 C, so his number checks out against the category. He always eats 3.'},
@@ -2003,7 +2042,7 @@ const FOOD_FACTS = {
   'lakanto sugar-free maple syrup': {unit:'g', cal:0.256, p:0, c:0.154, f:0, src:'Lakanto Maple Flavored Syrup (monk fruit + erythritol) label: 2 tbsp / 30 mL = 10 cal / 6 C, syrup density ~1.3 g/mL so ~39 g -> per gram. ⚠️ Caught an internal contradiction: his 15 g row said 4 C while the 60 g row said 1 C — four times the syrup for a quarter of the carbs. 60 g corrected to 15 cal / 9 C.'},
   'smucker sf jelly':  {unit:'g',           cal:0.59, p:0,     c:0.294, f:0,     src:"Smucker's Sugar Free jam label: 1 tbsp (17 g) = 10 cal / 5 C total (3 net) -> per gram. His 32 g row reads 20/0/10/0; this gives 18.8/9.4. Already right, not changed."},
   'cucumber':          {unit:'g',           cal:0.15, p:0.007, c:0.036, f:0.001, src:'USDA cucumber, with peel, raw: 100 g = 15 cal / 0.65 P / 3.63 C / 0.11 F -> per gram. His 75 g row reads 15 cal; USDA gives 11. Four calories, left alone.'},
-  'apple':             {unit:'g',           cal:0.52, p:0.003, c:0.138, f:0.002, src:'USDA apples, raw, WITH SKIN: 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram. A medium apple is ~182 g = 95 cal, which is exactly what his row says. Confirmed correct.'},
+  'apple':             {unit:'g',           ea:182, /* its own src: "A medium apple is ~182 g = 95 cal" */ cal:0.52, p:0.003, c:0.138, f:0.002, src:'USDA apples, raw, WITH SKIN: 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram. A medium apple is ~182 g = 95 cal, which is exactly what his row says. Confirmed correct.'},
   'sweet potato':      {unit:'g',           cal:0.86, p:0.016, c:0.20,  f:0.001, src:'USDA sweet potato, raw: 100 g = 86 cal / 1.6 P / 20.1 C / 0.05 F -> per gram. His 225 g row reads 190; USDA gives 194. Within 2%, confirmed correct — and this is the row I wrongly told him would move with the white-potato answer. It does not.'},
   'hummus':            {unit:'g',           cal:1.83, p:0.04,  c:0.13,  f:0.10,  src:'Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub.'},
   'soy sauce':         {unit:'mL',          cal:0.33, p:0.03,  c:0.05,  f:0,     src:'Category figure for regular soy sauce (~0.5 cal/mL for Kikkoman; low-sodium similar). His rows use 0.33 (15 mL = 5 cal), slightly light but under 3 cal on any row he uses. NOT brand-verified.'},
@@ -2019,6 +2058,125 @@ const FOOD_FACTS = {
   'chicken breast': {unit:'oz cooked',    cal:47,   p:8.8, c:0,  f:1.0, src:'grilled skinless, 165 cal / 31 P per 100 g'},
   'smoked half chicken': {unit:'half bird', cal:620, p:85, c:2, f:29, src:'DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number.'},
 };
+/* ============ PRICING — a row's numbers are LOOKED UP, never stored =============================
+   Built Aug 18 2026 on his instruction, verbatim: "Every recipe should be FACT checked when being
+   made. I cant be the one to find these mistakes all the time... NOTHING SHOULD BE OFF CALORIES AND
+   MACROS!" — and on his answer to what it would take: "yes go ahead."
+
+   THE BUG CLASS THIS DELETES. An ingredient row used to carry its own copy of [cal,P,C,F]. FOOD_FACTS
+   held the sourced per-unit number, the row held a hand-typed total, and NOTHING BOUND THEM — so the
+   two drifted. Measured on the file before this change: 46 rows disagreed with their own source by a
+   combined 199 cal (Justin's almond butter pack 220 against a label 190; an Oikos cup 90 against 80,
+   in three separate meals), and every one of them PASSED [row-math], because that check tolerates the
+   greater of 4 cal or 3%. Worse, 43% of the calories in the plan sat on rows that no fact priced at
+   all — dinner was 89% unpriced — so d17 could read "+13 cal vs budget" with all six of its lines
+   invented. A total that is a SUM cannot lie about its rows; a total that is a CLAIM can.
+
+   HOW IT WORKS. Row index 2 is the SOURCE OF THE NUMBERS, and it is exactly one of:
+     [cal,P,C,F]              legacy hand-typed copy. priceRow returns it unchanged, so the migration
+                              can proceed one food at a time without the app ever going dark.
+     {f:'key', n:2}           n units of FOOD_FACTS['key'], expressed in THAT FACT'S OWN unit.
+     {f:'key', n:6, u:'oz'}   same, in a convertible unit — mass and volume only.
+     {parts:[{f,n},{f,n}]}    one displayed line built from several foods (a glaze, a sauce).
+     {free:1}                 deliberately zero: spices, a dry rub, water, vinegar under a gram.
+   A row can no longer hold a number that contradicts its source, because it holds no number.
+
+   ⛔ A UNIT MISMATCH IS A BUILD FAILURE, NOT A SKIP. The fuzzy token matcher this replaces resolved
+   anything ambiguous to "unchecked" — which is exactly how 78 rows went unpriced while the build
+   printed "all food checks passed". ffScale returns null, priceRow returns null, and [row-math] fails
+   the build. The silence was the defect, not the ambiguity.
+   ⛔ ROUND ONCE, AT THE END. priceRow returns unrounded floats on purpose; rounding each row first
+   and then summing is how a 6-row recipe drifts 3 cal from its own ingredients. varTotal rounds all
+   four to integers, which is what [recipe-totals] has always done, so every legacy total is
+   byte-identical after this change. */
+/* ==== PRICING-ENGINE-BEGIN — [priced] in check-food.js lifts this block VERBATIM so the
+   guard and the app share one implementation. A second copy of pricing logic would be the
+   exact bug this engine exists to delete. Do not remove the sentinels. ==== */
+const FF_ALIAS = {ml:'ml', millilitre:'ml', milliliter:'ml', g:'g', gram:'g', grams:'g',
+                  oz:'oz', ounce:'oz', ounces:'oz', each:'each', ea:'each', piece:'each',
+                  pieces:'each', med:'each', medium:'each', whole:'each'};
+/* A fact's unit may carry a parenthetical for the reader ('cup (150 g)'); the unit is the head word. */
+const ffUnit = u => {
+  const head = String(u).replace(/\s*\(.*$/, '').trim().toLowerCase();
+  return FF_ALIAS[head] || head;
+};
+/* Mass converts to mass and volume to volume. A discrete unit ('slice', 'packet', 'cup', 'scoop')
+   only ever matches itself — an ounce is not a scoop and the engine must never assume it is. */
+const FF_BASE = {g:['g', 1], oz:['g', 28.349523125], ml:['ml', 1]};
+/* The gram weight of ONE discrete unit, so a row written as a count can price off a per-gram fact.
+   Read from an explicit `ea:` first, else from a parenthetical already in the unit string — a fact
+   declared `unit:'cup (150 g)'` has always carried its own conversion and nothing was reading it. */
+function ffEach(fact) {
+  if (fact && typeof fact.ea === 'number') return fact.ea;
+  const m = /\((\d+(?:\.\d+)?)\s*g\)/.exec(String(fact && fact.unit || ''));
+  return m ? parseFloat(m[1]) : null;
+}
+/* ⛔ I OVER-TIGHTENED THIS AND IT COST ~40 ROWS. The first version required the row's unit to equal
+   the fact's exactly, so `['Tuna packet','1',...]` — a quantity of "1" that parses to the generic
+   'each' — would not price against a fact declared per 'packet', and 40 rows stayed hand-typed with
+   the engine reporting them as unit mismatches. One of a per-packet food IS one packet. The rule:
+   a GENERIC 'each' row matches any DISCRETE fact unit (packet, cup, bar, slice, scoop, sheet), and a
+   count against a per-MASS fact converts only when the fact states what one unit weighs.
+   What is still refused, and must stay refused: mass against volume, and a count against a per-gram
+   fact with no stated unit weight. Those are guesses, and a guess is the thing being deleted here. */
+function ffScale(fact, n, rowUnit) {
+  const factUnit = typeof fact === 'string' ? fact : (fact && fact.unit);
+  const fu = ffUnit(factUnit), ru = ffUnit(rowUnit === undefined || rowUnit === null ? factUnit : rowUnit);
+  const fb = FF_BASE[fu], rb = FF_BASE[ru];
+  if (fb && rb) return fb[0] === rb[0] ? n * rb[1] / fb[1] : null;   /* mass<->mass, volume<->volume */
+  if (fb && !rb) {                          /* per-mass fact, counted row: needs a stated unit weight */
+    if (ru !== 'each' || fb[0] !== 'g') return null;
+    const ea = ffEach(fact);
+    return ea === null ? null : n * ea;
+  }
+  if (!fb && rb) {                          /* per-unit fact, row in grams: same conversion, inverted */
+    const ea = ffEach(fact);
+    if (ea === null || rb[0] !== 'g') return null;
+    return n * rb[1] / ea;
+  }
+  if (fu === ru) return n;
+  return ru === 'each' ? n : null;          /* "1" of a per-packet / per-cup / per-bar food */
+}
+/* The four macros for one ingredient row. UNROUNDED — see the round-once note above.
+   Returns null when the row names something unpriceable, so the guard can fail loudly. */
+function priceRow(row) {
+  const sp = row && row[2];
+  if (!sp) return [0, 0, 0, 0];
+  if (Array.isArray(sp)) return sp;                /* legacy copy, on its way out */
+  if (sp.free) return [0, 0, 0, 0];
+  if (sp.parts) {
+    let out = [0, 0, 0, 0];
+    for (const p of sp.parts) {
+      const m = priceRow([null, null, p]);
+      if (m === null) return null;                 /* one bad part condemns the line, not silently */
+      out = [out[0]+m[0], out[1]+m[1], out[2]+m[2], out[3]+m[3]];
+    }
+    return out;
+  }
+  const f = FOOD_FACTS[sp.f];
+  if (!f) return null;                             /* no such fact */
+  const n = ffScale(f, sp.n, sp.u);   /* whole fact, so ffScale can read ea: / the unit parenthetical */
+  if (n === null) return null;                     /* unit mismatch */
+  return [n * f.cal, n * (f.p || 0), n * (f.c || 0), n * (f.f || 0)];
+}
+/* A variant's total is THE SUM OF ITS ROWS, not a claim about them. Integer-rounded to match what
+   [recipe-totals] has always computed, so migrating a row can never silently move a displayed total. */
+function varTotal(v) {
+  let s = [0, 0, 0, 0];
+  for (const r of (v.ing || [])) {
+    const m = priceRow(r);
+    if (m === null) continue;                      /* [row-math] reports it; do not fake a total */
+    s = [s[0]+m[0], s[1]+m[1], s[2]+m[2], s[3]+m[3]];
+  }
+  return s.map(x => Math.round(x));
+}
+/* ⛔ THE ASSIGNMENT THAT RETIRES THE STORED TOTAL. Every `t:` literal still in SLOTS is overwritten
+   here at boot with the computed sum. For an unmigrated variant the two are identical (that is what
+   [recipe-totals] proves), so this is a no-op today and becomes the only source of a total as rows
+   migrate. OPTBYID shallow-copies each option but shares its `vars` array by reference, so it sees
+   these totals too — do not reorder this above OPTBYID expecting otherwise. */
+/* ==== PRICING-ENGINE-END ==== */
+SLOTS.forEach(s => s.opts.forEach(o => (o.vars || []).forEach(v => { v.t = varTotal(v); })));
 /* Pairs he could plausibly read as interchangeable, expressed as plain substring lists.
    NO REGEX ON PURPOSE: the first version used \b word boundaries, they were written through a
    Python heredoc, and \b became a literal backspace character -- so the check silently matched
@@ -4995,7 +5153,7 @@ const PRO_SALMON = {id:'salmon', label:'Salmon, frozen 6 oz bags',       unit:'b
 const PRO_TUNA   = {id:'tuna',   label:'Tuna packets',                   unit:'packet', per:[70,17,0,0],   lo:2, hi:5};
 const PRO_CHICK  = {id:'chicken',label:'Cooked chicken, LEFTOVER only',  unit:'oz',     per:[35,6.29,0,1.0], lo:4, hi:10, step:1, leftoverOnly:true};
 const PRO_JIBEN  = {id:'jiben',  label:'Eggs ×2 · egg whites 100 g · cottage cheese 113 g · mozzarella 28 g',
-                    unit:'× block', per:[377,44,5,21], lo:1, hi:2};
+                    unit:'× block', per:[364,44,5,19], lo:1, hi:2};
 /* ⚠️ PRO_JIBEN.per is a HAND-COPIED sum of four SLOTS rows: eggs x2 + egg whites 100 g +
    4% cottage cheese 113 g + mozzarella 28 g. It was exactly right until the cottage-cheese label
    was corrected on 2026-08-12 (80 -> 103 cal), and then it was silently stale — [final-meal] caught
@@ -5053,6 +5211,11 @@ const FINAL_DISHES = [
  {id:'smash', lane:'meat', name:'Smash Burger Bowl',
   note:'Whole patties only — nothing here asks him to split a frozen one.',
   pro:PRO_BEEF, carb:C_POT, fat:F_GUAC,
+  /* The fried egg off his own Q-built burger (d1), promoted to a solver axis. It is the only fine-grained
+     protein on this lane: the patty moves in 35 g jumps and the plate needs to land between them.
+     USDA large egg, FDC 171287: 72 cal / 6.3 P / 0.4 C / 4.8 F, fetched Aug 18 2026. lo 0 so a plate that
+     does not need it never shows one; hi 2 because three fried eggs on a burger is not a plate he asked for. */
+  pro2:{id:'egg', label:'Fried egg, over easy — on top of the patty', unit:'egg', per:[72,6.3,0.4,4.8], lo:0, hi:2},
   extras:[FINAL_VEG,
           ['Pickles + sliced raw onion','free',[5,0,1,0]],
           ['Sugar-free ketchup + deli mustard','32 g',[20,0,2,0]],
@@ -5199,9 +5362,6 @@ function finalMeal(ld, opts){
     const fixed = d.extras.reduce((a,r)=> a.map((v,i)=> v + r[2][i]), [0,0,0,0]);
     for(let n = d.pro.lo; n <= d.pro.hi; n += pStep){
       const afterP = dishT.map((v,i)=> v - fixed[i] - d.pro.per[i]*n);
-      const sol = solve2([d.carb.per[2], d.carb.per[3]], [d.fat.per[2], d.fat.per[3]], afterP[2], afterP[3]);
-      const c0  = fmSnap(sol ? sol[0] : d.carb.lo, d.carb);
-      const f0  = fmSnap(sol ? sol[1] : d.fat.lo,  d.fat);
       /* ⛔ DO NOT TRUST solve2's answer as final. It hits CARBS and FAT exactly and lets calories be
          whatever falls out — and after snapping to real quantities, calories can land far off with
          nothing left to correct them. Measured 2026-08-12 on a 555-cal dairy hole: all 38 candidates
@@ -5211,20 +5371,40 @@ function finalMeal(ld, opts){
          each. His instruction, and the reason this matters: "we shouldnt be overfeeding or underfeeding.
          we should be on target always." Bounded at 5x3 = 15 extra evaluations per protein step. */
       const cStep = d.carb.step || 1, fStep = d.fat.step || 1;
-      for(let dc = -2; dc <= 2; dc++){
-        const cQ = fmSnap(c0 + dc*cStep, d.carb);
-        for(let df = -1; df <= 1; df++){
-          const fQ = fmSnap(f0 + df*fStep, d.fat);
-          const tot = [0,1,2,3].map(i=> fixed[i] + d.pro.per[i]*n + d.carb.per[i]*cQ + d.fat.per[i]*fQ);
-          const gap = dishT.map((v,i)=> v - tot[i]);
-          const sc  = fmScore(gap) + (opts.dish === d.id ? -1000 : 0);   /* his explicit pick always wins */
-          if(best == null || sc < best.sc) best = {sc, d, n, cQ, fQ, tot};
+      /* ⛔ A SECOND, FINER PROTEIN — and it exists because of a real miss. On the meat lane the anchor is
+         a FROZEN 6 oz patty and whole units are non-negotiable, so plate protein could only land at
+         42.6 or 77.6 g and nothing between. On the "missed snack AND dinner" hole the target is ~52 g,
+         so the solver picked one patty, nailed calories to within half a one, and came in 9.4 g of
+         protein short every time — a real shortfall that only surfaced once the row numbers were
+         corrected and the hole stopped being understated.
+         Adding a patty is not the answer: +255 cal and +35 P scores far worse than the shortfall it
+         fixes. What closes it is a food already ON this plate in his own Q-built burger (d1) — an egg.
+         72 cal / 6.3 P each, so the solver adds one or two and pays for them by trimming the potatoes,
+         which is a protein-for-starch trade at constant calories. `pro2` is opt-in per dish; every dish
+         without it evaluates exactly as before, at a cost of two extra scores per candidate. */
+      const p2 = d.pro2, p2hi = p2 ? p2.hi : 0, p2lo = p2 ? p2.lo : 0;
+      for(let n2 = p2lo; n2 <= p2hi; n2++){
+        const fixed2 = p2 ? fixed.map((v,i)=> v + p2.per[i]*n2) : fixed;
+        const afterP2 = dishT.map((v,i)=> v - fixed2[i] - d.pro.per[i]*n);
+        const s2 = solve2([d.carb.per[2], d.carb.per[3]], [d.fat.per[2], d.fat.per[3]], afterP2[2], afterP2[3]);
+        const c0b = fmSnap(s2 ? s2[0] : d.carb.lo, d.carb);
+        const f0b = fmSnap(s2 ? s2[1] : d.fat.lo,  d.fat);
+        for(let dc = -2; dc <= 2; dc++){
+          const cQ = fmSnap(c0b + dc*cStep, d.carb);
+          for(let df = -1; df <= 1; df++){
+            const fQ = fmSnap(f0b + df*fStep, d.fat);
+            const tot = [0,1,2,3].map(i=> fixed2[i] + d.pro.per[i]*n + d.carb.per[i]*cQ + d.fat.per[i]*fQ);
+            const gap = dishT.map((v,i)=> v - tot[i]);
+            const sc  = fmScore(gap) + (opts.dish === d.id ? -1000 : 0);   /* his explicit pick always wins */
+            if(best == null || sc < best.sc) best = {sc, d, n, cQ, fQ, tot, n2};
+          }
         }
       }
     }
   });
   if(!best) return null;
-  const {d, n, cQ, fQ} = best;
+  const {d, n, fQ} = best;
+  let cQ = best.cQ;   /* mutable: the protein-rescue pass below may trade carb steps for protein */
 
   /* ON THE SIDE — close whatever the dish physically cannot, one step at a time, cheapest error first */
   const sides = {};
@@ -5248,8 +5428,59 @@ function finalMeal(ld, opts){
     sides[pick.s.id] = (sides[pick.s.id] || 0) + pick.s.step;
   }
 
+  /* ⭐ PROTEIN RESCUE — the fix for a real, reproducible shortfall, not a tolerance nudge.
+     THE BUG: the dish stage and the side stage optimise SEQUENTIALLY. The dish stage lands calories
+     exactly, spending every one of them on carbs and fat, and the side stage can then only ADD food —
+     so buying protein always costs calories the plate no longer has. On the "missed snack AND dinner"
+     meat hole that produced a 9.4 g protein shortfall on every run: one frozen 6 oz patty gives 42.6 g
+     against a 52 g target, a SECOND patty is +255 cal and scores far worse, and 50 g of egg whites was
+     refused because its 25 calories cost more in the calorie term than the 5 g of protein was worth.
+     Each stage was locally optimal and the pair was not.
+     THE FIX: trade the dish's carb side DOWN a step and a lean protein side UP a step, together, and
+     keep the swap only when the JOINT score improves. That is a protein-for-starch trade at roughly
+     constant calories, which is the move a person would make looking at the plate.
+     Only fires when protein is genuinely short, so every already-landing plate is untouched. Bounded
+     at 8 swaps and it reverts the moment a swap stops helping — no ratchet was loosened for this. */
+  {
+    /* Pick by FINENESS, not by the best protein-per-calorie. Sorting on P/cal chose the tuna packet
+       (0.24 P/cal, beating egg whites' 0.20) and one packet is +70 cal / +17 P — so coarse it overshot
+       protein by 7 g and calories by 63, scored worse than the shortfall, and reverted on the first
+       iteration every time. Among sides that are protein-dense enough to be worth trading for, the one
+       whose STEP adds the fewest calories gives the control this needs. */
+    const leanest = FINAL_SIDES
+      .filter(s => s.lanes.includes(want) && s.id !== d.carb.id && s.id !== d.fat.id && s.id !== d.pro.id)
+      .filter(s => s.per[0] > 0 && s.per[1] / s.per[0] > 0.15)   /* protein per calorie — whites are ~0.20 */
+      .sort((a, z) => (a.per[0] * a.step) - (z.per[0] * z.step))[0];
+    const cStep = d.carb.step || 1;
+    /* PAY FOR IT IN FULL. Trading one carb step per protein step left calories 18 over, and the
+       calorie-over term (/1.4) is steep enough to sink the swap on its own. Cut as many carb steps as
+       the protein step actually costs, so the trade is calorie-neutral and only the macros move. */
+    const cPerStep = Math.abs(d.carb.per[0] * cStep) || 1;
+    const payStep = Math.max(1, Math.round((leanest ? leanest.per[0] * leanest.step : 0) / cPerStep));
+    const scoreNow = () => {
+      const cur = [0,1,2,3].map(i => best.tot[i] + (cQ - best.cQ) * d.carb.per[i]
+        + Object.entries(sides).reduce((a,[id,q]) => a + FINAL_SIDES.find(s=>s.id===id).per[i]*q, 0));
+      return fmScore(dishT.map((v,i) => v - cur[i]));
+    };
+    for (let it = 0; leanest && it < 8; it++) {
+      const gapP = dishT[1] - (best.tot[1] + (cQ - best.cQ) * d.carb.per[1]
+        + Object.entries(sides).reduce((a,[id,q]) => a + FINAL_SIDES.find(s=>s.id===id).per[1]*q, 0));
+      if (gapP <= 4) break;                                   /* close enough; stop trading his food */
+      const have = sides[leanest.id] || 0;
+      const cut = cStep * payStep;
+      if (cQ - cut < d.carb.lo || have + leanest.step > leanest.hi) break;
+      const before = scoreNow();
+      cQ -= cut; sides[leanest.id] = have + leanest.step;
+      if (scoreNow() >= before) { cQ += cut; sides[leanest.id] = have; break; }   /* revert, keep the better plate */
+    }
+    if (sides[leanest && leanest.id] === 0) delete sides[leanest.id];
+  }
+
   const rows = [
     [d.pro.label,  fmQty(d.pro, n),               fmMac(d.pro, n)],
+    /* the finer second protein, only when the solve actually used one — a "0 eggs" row would read as
+       a dropped ingredient, which is exactly what [final-meal]'s zero-quantity check exists to catch */
+    ...(d.pro2 && best.n2 > 0 ? [[d.pro2.label, fmPlural(best.n2, d.pro2.unit), fmMac(d.pro2, best.n2)]] : []),
     [d.carb.label, fmPlural(cQ, d.carb.unit),     fmMac(d.carb, cQ)],
     [d.fat.label, fmPlural(fQ, d.fat.unit), fmMac(d.fat, fQ)],   /* fat floors are >0, so this row always exists — see F_* lo values */
     ...d.extras.map(r=> [r[0], r[1], r[2]]),
@@ -6021,10 +6252,16 @@ function viewToday(){
   ${nowZone}
   ${order.map(k=>Z[k]).join('\n')}`;
 }
-function ingRow([n,q,m]){
+/* Takes the WHOLE row, not a destructured copy of its macros, so the four numbers under an
+   ingredient are the same ones varTotal added up. An unpriceable row says so on his screen
+   rather than rendering blank — a missing macro line used to read as "no macros here". */
+function ingRow(row){
+  const n = row[0], q = row[1], m = priceRow(row);
+  const d = m ? m.map(x=>Math.round(x*10)/10) : null;
   return `<li style="display:block;padding:5px 0">
     <div style="display:flex;justify-content:space-between;gap:12px"><span>${n}</span><span class="q">${q}</span></div>
-    ${m?`<div class="ingmac">${m[0]} cal · ${m[1]}P · ${m[2]}C · ${m[3]}F</div>`:''}
+    ${d?`<div class="ingmac">${d[0]} cal · ${d[1]}P · ${d[2]}C · ${d[3]}F</div>`
+       :`<div class="ingmac" style="color:var(--danger)">⚠ UNPRICED — no source behind this row</div>`}
   </li>`;
 }
 function viewMeals(){
@@ -7628,7 +7865,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787070597';
+const BUILD = 'b1787076941';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -89,6 +89,35 @@ const COR_OVERRIDE    = grab('COR_OVERRIDE');    /* [cor-bowl-total] */
 
 if (!FOOD_FACTS || !SLOTS) { console.log('\ncould not read the food data at all'); process.exit(1); }
 
+/* ---- the pricing engine, lifted once from index.html and shared by every check below ----
+   index.html holds the ONE implementation; this file evaluates that same text between the
+   PRICING-ENGINE sentinels, so a guard can never drift from what his phone actually runs.
+   Hoisted here (rather than living inside [priced]) because [recipe-totals],
+   [macro-provenance] and [cor-bowl-total] all need to price a row too. */
+{
+  const B = src.indexOf('PRICING-ENGINE-BEGIN'), E = src.indexOf('PRICING-ENGINE-END');
+  if (B < 0 || E < 0 || E < B) {
+    console.log('\ncould not find the PRICING-ENGINE sentinels in index.html — every food check below');
+    console.log('would run blind, so this is a hard stop rather than a FAIL line.');
+    process.exit(1);
+  }
+  /* E lands INSIDE the end sentinel comment; slicing to it leaves a dangling comment opener and
+     the eval dies with "Invalid or unexpected token". Cut at the comment OPENER on both sides. */
+  const engine = src.slice(src.indexOf('*/', B) + 2, src.lastIndexOf('/*', E));
+  /* Strict mode keeps eval declarations inside the eval, so the names are handed out by code that
+     runs INSIDE it — no regex over the engine body, which is where shell escaping kept eating
+     backslashes exactly as CLAUDE.md warns. */
+  const EXPORTS = ['ffUnit', 'ffScale', 'priceRow', 'varTotal', 'FF_ALIAS', 'FF_BASE'];
+  const handoff = EXPORTS.map(n => 'globalThis.' + n + ' = ' + n + ';').join('\n');
+  try { eval(engine + '\n' + handoff); }
+  catch (e) {
+    console.log('\nthe pricing engine in index.html would not evaluate: ' + e.message);
+    console.log('the app runs this same text, so this is a hard stop.');
+    process.exit(1);
+  }
+}
+
+
 /* ============ 1. recipe totals == sum of their ingredients ============
    The check that has never let a bad number through. Kept here so it is
    durable rather than living in a scratchpad harness. */
@@ -96,7 +125,14 @@ if (!FOOD_FACTS || !SLOTS) { console.log('\ncould not read the food data at all'
   let n = 0, bad = 0;
   SLOTS.forEach(sl => sl.opts.forEach(o => o.vars.forEach(v => {
     n++;
-    const want = [0, 1, 2, 3].map(k => Math.round(v.ing.reduce((t, i) => t + (i[2] ? i[2][k] : 0), 0)));
+    /* Was `i[2][k]`, which read the row's own copy of the macros. The moment a row started NAMING
+       its source instead of carrying a copy, i[2] became an object and every total came out NaN —
+       reported as 22 failures that looked like corrupted data rather than a guard reading the wrong
+       shape. It now prices each row through the same engine the app uses. */
+    const want = [0, 1, 2, 3].map(k => Math.round(v.ing.reduce(function (t, i) {
+      const m = priceRow(i);
+      return t + (m ? m[k] : 0);
+    }, 0)));
     if (want.join(',') !== v.t.join(',')) {
       bad++;
       fail('recipe-totals', o.id + ' ' + o.name + ' stored ' + v.t.join('/') + ' but ingredients sum to ' + want.join('/'));
@@ -197,6 +233,19 @@ const ALT = /\bor\b|\/|\beither\b/i;
       const words = n.split(' ');
       return words.every(w => new RegExp('\\b' + w.replace(/[%]/g, '') + '\\b', 'i').test(line));
     });
+    /* ⛔ DROP THE SUBSUMED GENERIC. Adding a plain 'salmon' fact (for his raw-weight dinner rows) meant
+       the sushi swap line matched THREE names — 'tuna sashimi', 'salmon sashimi' and now 'salmon' — so
+       `hit.length !== 2` bailed out and the check silently stopped running on the one line it was
+       written for. The selftest caught it: the planted "+5 cal" salmon swap, the exact error this guard
+       exists to catch, sailed through. A new fact must never be able to switch a check off, so a name
+       whose words are a strict SUBSET of another hit's words is not a second food — it is the same food
+       named less precisely. Most specific wins, the same rule [row-math] uses. */
+    const specific = hit.filter(n => !hit.some(o => {
+      if (o === n) return false;
+      const nw = n.split(' '), ow = o.split(' ');
+      return nw.length < ow.length && nw.every(w => ow.indexOf(w) >= 0);
+    }));
+    hit.length = 0; specific.forEach(n => hit.push(n));
     if (hit.length !== 2) return;
     /* Only compare foods measured the SAME way. Cucumber is per-gram and a tuna roll is per-roll,
        so their 'difference' was reported as +190 per g — arithmetic on incompatible units. This
@@ -562,11 +611,18 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
     const j = src.indexOf('\n];', i); return j < 0 ? '' : src.slice(i, j);
   })();
-  const rx = /\['([^']+)','([^']*)',\[[\d.]+,[\d.]+,[\d.]+,[\d.]+\]\]/g;
+  /* ⛔ This regex used to match ONLY the legacy shape ['label','qty',[n,n,n,n]], so every row that
+     migrated to naming its source vanished from the denominator: coverage "FELL to 63% (56/89)" when
+     nothing had become less sourced — 37 foods had simply stopped being counted. A ratchet whose
+     denominator moves is not a ratchet. Both shapes are matched now, and a row carrying a SPEC is
+     covered by definition, because a spec that does not resolve fails [priced] outright. */
+  const priced = new Set();
+  const rx = /\['([^']+)','([^']*)',(\[[\d.,]+\]|\{[^{}]*\})\]/g;
   let m;
   while ((m = rx.exec(slotsBlock))) {
     const key = foodKey(m[1]);
     need.set(key, (need.get(key) || 0) + 1);
+    if (m[3].charAt(0) === '{') priced.add(key);
   }
   const names = Object.keys(FOOD_FACTS || {});
   /* Does a FOOD_FACTS entry cover this ingredient? Third attempt, and the first two failures are
@@ -585,7 +641,8 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     .filter(t => t.length > 2 && !STOP.has(t)).map(stem);
   const NAMETOKS = names.map(n => toks(n)).filter(a => a.length);
   const COVER = k => { const b = new Set(toks(k)); return NAMETOKS.some(a => a.every(t => b.has(t))); };
-  const covered = COVER;
+  /* a food is sourced if a FOOD_FACTS entry covers its name OR one of its rows now names a fact */
+  const covered = k => COVER(k) || priced.has(k);
 
   const total = need.size, done = [...need.keys()].filter(covered).length;
   const pct = total ? Math.round(100 * done / total) : 0;
@@ -648,8 +705,14 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   if (!l2 || !anchor) { fail('jiben-anchor', 'could not read l2 or PRO_JIBEN'); return; }
   const sum = [0, 0, 0, 0];
   const found = [];
-  l2.vars[0].ing.forEach(([name, , mac]) => {
-    if (NEED.some(n => name.startsWith(n))) { found.push(name); mac.forEach((v, i) => sum[i] += v); }
+  /* `mac` was the row's own copy of the macros; once these four rows started naming their source it
+     became a spec object and mac.forEach threw. Price it through the engine instead. */
+  l2.vars[0].ing.forEach(row => {
+    const name = row[0];
+    if (!NEED.some(n => name.startsWith(n))) return;
+    found.push(name);
+    const mac = priceRow(row);
+    if (mac) mac.forEach((v, i) => sum[i] += v);
   });
   const miss = NEED.filter(n => !found.some(f => f.startsWith(n)));
   if (miss.length) { fail('jiben-anchor', 'l2 no longer contains: ' + miss.join(', ')); return; }
@@ -679,7 +742,8 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   const fruitRow = v.ing.find(r => /berries/i.test(r[0]));
   if (!fruitRow) { fail('cor-bowl-total', 'b1 has no fruit row to anchor against'); return; }
   const FRUIT_G = parseFloat(fruitRow[1]);
-  const rowSum = v.ing.reduce((a, r) => a + r[2][0], 0);
+  /* `r[2][0]` read the row's own calorie copy and became NaN once these rows named their source */
+  const rowSum = Math.round(v.ing.reduce(function (a, r) { const p = priceRow(r); return a + (p ? p[0] : 0); }, 0));
   if (!COR_SETS || !COR_SETS.length) {
     fail('cor-bowl-total', 'COR_SETS did not parse — this check would otherwise pass vacuously'); return;
   }
@@ -738,14 +802,23 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * corrupted correct rows, so ambiguity resolves to unchecked, never to a guess.
  */
 (function rowMath() {
-  const UNCHECKED_CEILING   = 78;  /* single-food rows with no fact that prices them. Only goes DOWN. */
-  const COMPOSITE_CEILING   = 38;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
+  const UNCHECKED_CEILING   = 60;  /* single-food rows with no fact that prices them. Only goes DOWN. */
+  const COMPOSITE_CEILING   = 37;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
   const NEEDS_LABEL_CEILING = 3;   /* rows awaiting a photo of his package. Only goes DOWN. */
   const MISLABELLED_CEILING = 16;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
 
   /* Different foods that share a word — left unchecked until each earns its own fact. */
   const DENY = [['tomato paste', 'tomato'], ['kodiak', 'oats'], ['0%', 'fage 2% greek yogurt'],
-                ['shortcake', 'strawberries'], ['frozen', 'strawberries'], ['powder', 'fruity pebbles']];
+                ['shortcake', 'strawberries'], ['frozen', 'strawberries'], ['powder', 'fruity pebbles'],
+                /* Surfaced Aug 18 2026 once `ea:` let this check price count-based rows for the first
+                   time. The 'biscoff' fact is the Lotus CLASSIC panel — a plain speculoos biscuit with
+                   NO filling — while b5 and b9 both say "de-creamed Biscoff", which only means anything
+                   for the SANDWICH product. So the row states 31.5 cal a cookie and the Classic panel
+                   gives 37.5, and neither number is trustworthy until he says which box he buys.
+                   Per this check's own rule, ambiguity resolves to UNCHECKED, never to a guess — it stays
+                   visible in the unpriceable count instead of being quietly "corrected" 12 cal upward.
+                   ⛔ Do not remove this without his answer; removing it re-enables a wrong match. */
+                ['de-creamed', 'biscoff']];
 
   /* ⛔ NEVER add a row here to make a failure go away. Only when the source genuinely does not exist yet,
      and always with the specific thing that would close it. */
@@ -867,6 +940,105 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
        ' not yet priceable (ceiling ' + UNCHECKED_CEILING + ') \u00b7 ' + composite.length +
        ' composite (ceiling ' + COMPOSITE_CEILING + ') \u2014 every ceiling only ever falls');
 })();
+
+/* ============ [priced] every row's numbers come from a source, or the build stops ==============
+ * Built Aug 18 2026, the enforcement half of the pricing engine in index.html.
+ *
+ * WHAT THE OLD CHECKS COULD NOT SAY. [recipe-totals] proves a sum of guesses equals the stated sum
+ * of those guesses. [row-math] prices a row ONLY when a fuzzy token matcher can link its label to a
+ * fact, and by design resolves every ambiguity to "unchecked" -- which is how 78 rows sat unpriced
+ * while the build printed "all food checks passed". Neither could fail on a row that simply had no
+ * source. This one can, because the row now NAMES its source instead of being matched to one.
+ *
+ * THREE KINDS OF ROW, and the counts are the migration's progress bar:
+ *   PRICED    index 2 is {f,n} / {parts} / {free}. priceRow returns numbers from FOOD_FACTS.
+ *   LEGACY    index 2 is a hand-typed [cal,P,C,F]. Allowed, ratcheted DOWN, never up.
+ *   BROKEN    index 2 is a spec that priceRow cannot resolve -- bad key, or a unit that does not
+ *             convert. ALWAYS FAILS. This is the case the old matcher swallowed silently.
+ *
+ * ⛔ THIS BLOCK MUST STAY ABOVE THE `if (fails)` TAIL. On Aug 18 a guard appended below it printed
+ * FAIL and still exited 0 -- a check that reports failures and lets the build pass is worse than no
+ * check, because it manufactures exactly the confidence it was built to remove.
+ */
+(function priced() {
+
+  const LEGACY_CEILING = 84;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
+
+  const broken = [], legacy = [], pricedRows = [], totalDrift = [];
+  SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {
+    const tag = sl.key + '/' + o.id + (o.vars.length > 1 ? '#' + vi : '');
+    (v.ing || []).forEach(function (row) {
+      const label = String(row[0]).replace(/<[^>]*>/g, '').slice(0, 40);
+      const sp = row[2];
+      if (Array.isArray(sp)) { legacy.push(tag + ' "' + label + '"'); return; }
+      const m = priceRow(row);
+      if (m === null) {
+        broken.push(tag + ' "' + label + '" -> ' +
+          (sp && sp.f ? ('names FOOD_FACTS[' + JSON.stringify(sp.f) + ']' +
+             (FOOD_FACTS[sp.f] ? ' but asks for unit ' + JSON.stringify(sp.u || FOOD_FACTS[sp.f].unit) +
+                                 ' against a fact in ' + JSON.stringify(FOOD_FACTS[sp.f].unit)
+                               : ' which does not exist'))
+                      : 'spec ' + JSON.stringify(sp) + ' is not a shape priceRow understands'));
+        return;
+      }
+      pricedRows.push(tag);
+    });
+    /* the boot-time assignment must equal a fresh computation; if it does not, something mutated
+       v.t after load and the number on his screen is not the sum of the rows under it */
+    const fresh = varTotal(v);
+    if (fresh.join(',') !== (v.t || []).join(','))
+      totalDrift.push(tag + ' displays ' + (v.t || []).join('/') + ' but its rows price to ' + fresh.join('/'));
+  })));
+
+  const bad = [];
+  if (broken.length)
+    bad.push(broken.length + ' row(s) name a source that cannot be resolved: ' + broken.join(' · '));
+  if (totalDrift.length)
+    bad.push(totalDrift.length + ' variant total(s) are not the sum of their rows: ' + totalDrift.join(' · '));
+  if (legacy.length > LEGACY_CEILING)
+    bad.push(legacy.length + ' hand-typed rows, past the ceiling of ' + LEGACY_CEILING +
+             ' - a new row was added carrying its own [cal,P,C,F] instead of naming a food. ' +
+             'Point it at FOOD_FACTS; never raise this ceiling.');
+  if (bad.length) fail('priced', bad.join(' · '));
+  else pass('priced', pricedRows.length + ' rows priced from FOOD_FACTS · ' + legacy.length +
+            ' still hand-typed (ceiling ' + LEGACY_CEILING + ', only ever falls) · 0 broken · ' +
+            'every variant total equals the sum of its rows');
+})();
+
+
+/* ============ [dup-keys] a repeated FOOD_FACTS key silently destroys provenance ============
+ * Aug 18 2026: I added nine staple facts and four of them ALREADY EXISTED. In an object literal the
+ * later definition wins and the earlier one is simply gone — no error, no warning. Object.keys went
+ * from an expected 87 to 83 and the only reason it surfaced at all was [food-doc-parse] noticing its
+ * regex counted more textual definitions than there were live keys. The four I clobbered were the
+ * BETTER entries: the original white rice sat at 3.62 cal/g because short-grain sushi rice is ~358,
+ * a distinction my 3.65 threw away.
+ * A silent overwrite of a sourced number is the exact failure this whole file exists to prevent, so
+ * it gets its own check rather than being caught sideways by a doc-count mismatch.
+ */
+(function dupKeys() {
+  const i = src.indexOf('const FOOD_FACTS'), j = src.indexOf('\n};', i);
+  if (i < 0 || j < 0) { fail('dup-keys', 'could not locate the FOOD_FACTS block'); return; }
+  const blk = src.slice(i, j);
+  const rx = /^\s{2}'([^']+)':\s*\{/gm;
+  const seen = Object.create(null), dups = [];
+  let m;
+  while ((m = rx.exec(blk)) !== null) {
+    if (seen[m[1]]) dups.push(m[1]);
+    seen[m[1]] = (seen[m[1]] || 0) + 1;
+  }
+  const uniq = Object.keys(seen).length;
+  const live = FOOD_FACTS ? Object.keys(FOOD_FACTS).length : -1;
+  if (dups.length)
+    fail('dup-keys', dups.length + ' FOOD_FACTS key(s) defined twice — the LATER one wins and the ' +
+      'earlier provenance is destroyed silently: ' + dups.join(', ') +
+      '. Merge them; never leave two definitions of one food.');
+  else if (live >= 0 && uniq !== live)
+    fail('dup-keys', 'the block declares ' + uniq + ' keys but the object has ' + live +
+      ' — something is shadowing a key in a way this check cannot see.');
+  else pass('dup-keys', uniq + ' FOOD_FACTS keys, each defined exactly once');
+})();
+
 
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }

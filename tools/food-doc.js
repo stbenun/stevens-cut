@@ -58,7 +58,11 @@ function build() {
   /* `sp:[lo,hi]` is OPTIONAL and sits between unit: and cal: — it marks a deliberate brand or
      flavour spread that [row-math] is allowed to accept. Adding it made three facts invisible to
      the earlier version of this regex; [food-doc-parse] caught that on the next run. */
-  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
+  /* `ea:` is optional too and sits in the same gap — it gives the gram weight of one discrete unit so
+     a row written as a COUNT can price off a per-gram fact. Adding it to 'egg' made that one fact
+     invisible here, and [food-doc-parse] caught it on the next run, exactly as it did for sp. Any new
+     optional field must be added to this gap or its fact silently vanishes from FOOD_FACTS.md. */
+  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?(?:ea:[\d.]+,\s*(?:\/\*(?:[^*]|\*(?!\/))*\*\/\s*)?)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
   let m;
   while ((m = rx.exec(ffBlock))) {
     facts.push({ name: m[1], unit: m[2],
