@@ -84,6 +84,8 @@ const SLOTS           = grab('SLOTS');
 const HOWTO           = grab('HOWTO');
 const RECIPES         = grab('RECIPES');
 const SHABBAT_FEAST   = grab('SHABBAT_FEAST');
+const COR_SETS        = grab('COR_SETS');        /* [cor-bowl-total] */
+const COR_OVERRIDE    = grab('COR_OVERRIDE');    /* [cor-bowl-total] */
 
 if (!FOOD_FACTS || !SLOTS) { console.log('\ncould not read the food data at all'); process.exit(1); }
 
@@ -656,6 +658,65 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     fail('jiben-anchor', 'PRO_JIBEN.per is [' + anchor + '] but its four l2 rows sum to [' +
          sum.map(Math.round) + '] — off by [' + off + ']');
   else pass('jiben-anchor', 'PRO_JIBEN.per matches its four l2 ingredient rows');
+})();
+
+/* ============ [cor-bowl-total] a COR spec must cost what the app says the bowl costs ============
+ * Built Aug 18 2026, minutes after he caught "150 g diced apple" in a bowl whose fruit row is 70 g. I had
+ * taken the amount from a code COMMENT instead of reading b1's ingredient rows, and nothing stood between
+ * that inference and his breakfast. The missing check IS the defect; "be more careful" is not a mechanism.
+ *   (A) exact:   a spec naming a fresh-fruit weight must name the weight b1 actually carries.
+ *   (B) ratchet: crunch garnishes appear in no b1 row, so they sit ON TOP of the 545. The existing debt is
+ *                RECORDED, not fixed — changing it is a meal adjustment he has not asked for.
+ * NOTE ON PLACEMENT: this must sit ABOVE the `if (fails)` summary. The first version went below it, so it
+ * printed FAIL and the run still exited 0 — a guard that reports a failure and passes the build.
+ */
+(function corBowlTotal() {
+  const CRUNCH_CEILING = 63;   /* worst known single-combo overage in cal (15 g graham). Only goes DOWN. */
+  const bfSlot = SLOTS.find(s => s.slot === 'Breakfast');
+  const b1 = bfSlot && bfSlot.opts.find(o => o.id === 'b1');
+  if (!b1) { fail('cor-bowl-total', 'no b1 bowl found — the anchor moved'); return; }
+  const v = b1.vars[0];
+  const fruitRow = v.ing.find(r => /berries/i.test(r[0]));
+  if (!fruitRow) { fail('cor-bowl-total', 'b1 has no fruit row to anchor against'); return; }
+  const FRUIT_G = parseFloat(fruitRow[1]);
+  const rowSum = v.ing.reduce((a, r) => a + r[2][0], 0);
+  if (!COR_SETS || !COR_SETS.length) {
+    fail('cor-bowl-total', 'COR_SETS did not parse — this check would otherwise pass vacuously'); return;
+  }
+  const FRESH = /(\d+(?:\.\d+)?)\s*g\s+(?:diced\s+|mixed\s+)?(strawberr\w*|blueberr\w*|berries|apple|banana|peach\w*|pineapple)/gi;
+  const CRUNCH = /(\d+(?:\.\d+)?)\s*g\s+(Nilla|Biscoff|graham|Fruity Pebbles|Cinnamon Toast Crunch|coconut chips|Oreo|raisins)/gi;
+  const PERG = {nilla: 4.7, biscoff: 4.8, graham: 4.2, 'fruity pebbles': 3.9,
+                'cinnamon toast crunch': 4.15, 'coconut chips': 6.1, oreo: 4.8, raisins: 3.0};
+  const specs = [];
+  COR_SETS.forEach(wk => wk.forEach(p => specs.push([p[0], String(p[1]).replace(/&amp;/g, '&')])));
+  if (COR_OVERRIDE) Object.keys(COR_OVERRIDE).forEach(d =>
+    specs.push([d + ' ' + COR_OVERRIDE[d][0], String(COR_OVERRIDE[d][1]).replace(/&amp;/g, '&')]));
+  const fruitBad = [], overs = [];
+  specs.forEach(([nm, spec]) => {
+    let m;
+    FRESH.lastIndex = 0;
+    while ((m = FRESH.exec(spec)))
+      if (Math.abs(parseFloat(m[1]) - FRUIT_G) > 0.5)
+        fruitBad.push(nm + ' names ' + m[1] + ' g ' + m[2] + " — the bowl's fruit row is " + FRUIT_G + ' g');
+    let extra = 0; const bits = [];
+    CRUNCH.lastIndex = 0;
+    while ((m = CRUNCH.exec(spec))) {
+      const per = PERG[m[2].toLowerCase()];
+      if (per) { extra += parseFloat(m[1]) * per; bits.push(m[1] + ' g ' + m[2]); }
+    }
+    if (extra > 0.5) overs.push({nm, cal: Math.round(extra), bits: bits.join(' + ')});
+  });
+  const bad = [];
+  if (rowSum !== v.t[0]) bad.push('b1 rows sum to ' + rowSum + ' but the option states ' + v.t[0]);
+  if (fruitBad.length) bad.push(fruitBad.join(' · '));
+  const worst = overs.reduce((a, o) => Math.max(a, o.cal), 0);
+  if (worst > CRUNCH_CEILING)
+    bad.push('a garnish now costs ' + worst + ' uncounted cal, past the ' + CRUNCH_CEILING + ' ceiling: ' +
+             overs.filter(o => o.cal === worst).map(o => o.nm + ' (' + o.bits + ')').join(', '));
+  if (bad.length) fail('cor-bowl-total', bad.join(' · '));
+  else pass('cor-bowl-total', specs.length + " COR specs: every fresh-fruit weight matches the bowl's " +
+       FRUIT_G + ' g row; ' + overs.length + ' carry an uncounted crunch, worst ' + worst + ' cal (ceiling ' +
+       CRUNCH_CEILING + ') — known debt, his call pending');
 })();
 
 console.log('');
