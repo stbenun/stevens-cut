@@ -1531,10 +1531,10 @@ function runnaWeek(now){
 
 const DAYS = {
  0:{title:'Rest · Short Run · Prep', sub:'Sunday', sch:[['8:00','Minyan'],['8:30','Class'],['AM','RUNNA_SUN'],['Day','Groceries + meal prep — see Prep tab'],['AM','Weigh in → send Claude the week report (Track tab has a copy button)'],['7:15 PM','Arbit']]},
- 1:{title:'Legs — lift ~8:00', sub:'Monday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit'],['8:00 PM','Rabbi B.'],['9:00 PM','Rabbi N.']]},
- 2:{title:'Push — lift ~8:00', sub:'Tuesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit + Rabbi R.'],['8:15 PM','Rabbi B. or Rabbi N.']]},
- 3:{title:'Pull — lift ~8:00', sub:'Wednesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit'],['8:00 PM','Rabbi B.']]},
- 4:{title:'Rest · Long Run', sub:'Thursday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Class'],['9:00','Work'],['6:00 PM','Walk'],['PM','RUNNA_THU'],['7:15 PM','Arbit'],['8:00 PM','Rabbi A.']],
+ 1:{title:'Legs — lift ~8:00', sub:'Monday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit'],['9:00 PM','Rabbi N.']]},
+ 2:{title:'Push — lift ~8:00', sub:'Tuesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit + Rabbi R.'],['8:15 PM','Rabbi N.']]},
+ 3:{title:'Pull — lift ~8:00', sub:'Wednesday', sch:[['6:00','Wake up'],['6:10','Class'],['7:00','Minyan'],['7:35','Leave to gym'],['9:00','Work'],['7:15 PM','Arbit']]},
+ 4:{title:'Rest · Long Run', sub:'Thursday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:45','Class'],['9:00','Work'],['6:00 PM','Walk'],['PM','RUNNA_THU'],['7:15 PM','Arbit']],
     note:'Print or write down Saturday’s grandma card tonight or tomorrow — no phone on Shabbat.'},
  5:{title:'Legs #2 — AM', sub:'Friday', sch:[['6:40','Wake up'],['7:00','Minyan'],['7:30','Pre-lift meal'],['8:00','Leave to gym — Legs #2 ~8:15'],['9:30','Gym done → shower + work'],['10:30','Breakfast'],['1:30','Lunch'],['3:00','🕯️ Shabbat prep — the whole afternoon is free now'],['5:00','Bank'],['7:00','Shul'],['8:00','Shabbat dinner']],
     note:'Skip the 330-cal snack today — it goes into a bigger Shabbat dinner.'},
@@ -3063,6 +3063,12 @@ const weekPick = (arr, isoD) => arr[((weekIdx(isoD)%arr.length)+arr.length)%arr.
    Overrides the rotation for that date ONLY; the 12-week COR_SETS cycle is untouched, so nothing
    downstream shifts and no future week repeats early. Old dates are harmless — they only fire on their day. */
 const COR_OVERRIDE = {
+  /* Aug 18: the 10 g Cinnamon Toast Crunch crunch is not at the office ("i have the protein powder, just
+     not the cereal"), and he asked for a bowl built on his cookie butter extract. Full reasoning in the
+     commit; the short version is that cookie butter on a Cinnamon Roll + Cinnamon Toast bowl is the same
+     flavour three times, so the BASE moves to Apple Pie to give the extract a contrast. The missing 42 cal
+     of cereal come back as 80 g more apple, which lands the bowl within 0.1 cal of 545. */
+  '2026-08-18': ['Dutch Apple Biscoff','Apple Pie COR + Cinnamon Toast Ryse + ½ tsp cookie butter extract — 150 g diced apple (no cereal today)'],
   /* Ryse Milk Chocolate arrived Aug 4 and he wanted it that morning. Cookies n Cream is the quiet partner
      ON PURPOSE: a milk chocolate is mild, so Chocolate Cake COR would bury the flavor he's trying to taste.
      No crunch add-in, so it keeps the clean 545 · 39P · 54C · 22F and the full 32 g almond butter. */
@@ -3871,13 +3877,17 @@ function dayRows(){
     /* Monday had NO snack row at all, yet he logs the snack 4 Mondays out of 5. Dinner runs to
        10:05, so the default place for a dairy Creami is after it — dairyWindow() moves it in front
        of dinner on its own if dinner is meat. */
-    A(1155,'Arbit'); A(1200,'Rabbi B.'); A(1260,'Rabbi N.'); A(1325,'Dinner (Monday runs late) + dials'); A(1370,'Snack'); A(1425,'Lights out — 11:45 is the Monday reality'); }
+    /* Rabbi B. 8:00 removed Aug 18 2026 — that shiur is over for good. Rabbi N. 9:00 stays. */
+    A(1155,'Arbit'); A(1260,'Rabbi N.'); A(1325,'Dinner (Monday runs late) + dials'); A(1370,'Snack'); A(1425,'Lights out — 11:45 is the Monday reality'); }
   if((wd===2||wd===3) && !CAMPUS){ A(360,'Wake + 💧 Ryse stick — drink it before you stand up'); A(370,'Class'); A(420,'Minyan'); A(465,'Yogurt + banana right out of minyan');
     if(lift&&lift<720&&!done){ A(glM,'Leave — sip pre-workout'); A(lift, wd===2?'Lift — Push · log reps live':'Lift — Pull · log reps live'); A(lift+75,'Gym done ~9:30 → shower + work'); }
     A(lift&&lift<720?585:540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1110,'Dinner BEFORE Arbit — classes run late');
-    (wd===2?[[1155,'Arbit + Rabbi R.'],[1215,'Rabbi B. or Rabbi N.']]:[[1155,'Arbit'],[1200,'Rabbi B.']]).forEach(([m,l])=>A(m,l));
+    /* Aug 18 2026: Rabbi B. is over for good. Tue's 8:15 was 'B. or N.' and is now just Rabbi N.;
+       Wed loses its only shiur, so Wednesday evening is Arbit alone. */
+    (wd===2?[[1155,'Arbit + Rabbi R.'],[1215,'Rabbi N.']]:[[1155,'Arbit']]).forEach(([m,l])=>A(m,l));
     A(1290,'Snack + dials'); A(1350,'Bed by 10:30 — recovery night'); }
-  if(wd===4){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080, (isNoRun(isoToday())||!RUNNING_ON)?'Walk':'Walk + Runna run (banner above) · 💧 LMNT or 2 Ryse — long run needs the extra sodium'); A(1155,'Arbit'); A(1200,'Rabbi A.'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1325,'Snack'); A(1350,'Bed by 10:30'); }
+  if(wd===4){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(465,'Class'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch'); A(1080, (isNoRun(isoToday())||!RUNNING_ON)?'Walk':'Walk + Runna run (banner above) · 💧 LMNT or 2 Ryse — long run needs the extra sodium'); /* Rabbi A. 8:00 removed Aug 18 2026 — over for good. Thursday evening is Arbit alone now. */
+  A(1155,'Arbit'); A(1260,'Print the Shabbat workout card'); A(1280,'Dinner + dials'); A(1325,'Snack'); A(1350,'Bed by 10:30'); }
   if(wd===5){ A(400,'Wake + 💧 Ryse stick — drink it before you stand up'); A(420,'Minyan'); A(540,'Work'); A(630,'Breakfast'); A(810,'Lunch');
     if(lift&&!done){ A(lift-45,'Pre-lift meal'); A(glM,'Leave — sip pre-workout'); A(lift,'Lift — Legs #2 · log reps live'); A(lift+75,'Gym done → shower + work'); }
     A(900,'🕯️ Shabbat prep — the afternoon is free now that Legs #2 is in the morning'); A(1020,'Bank'); A(1140,'Shul'); A(1200,'Shabbat dinner — feast + one full pita'); }
@@ -7571,7 +7581,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787062131';
+const BUILD = 'b1787063369';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
