@@ -32,8 +32,18 @@ const PLANTS = [
     from: "['Tuna packet','1',{f:'tuna packet',n:1,u:'each'}]",
     to:   "['Tuna packet','1',{f:'tuna packet',n:70,u:'g'}]" },
 
-  { name: 'a stored t: that disagrees with its own rows',
-    from: 't:[545,36,54,21]', to: 't:[545,36,54,99]' },
+  /* DERIVED, NOT HARD-CODED. This fixture used to quote a literal t:[545,36,54,21] and it went stale
+     TWICE in one session: every time a total legitimately moved, the plant printed "SKIP (anchor gone)"
+     and the suite still read as broadly fine. A fixture that encodes today's numbers cannot survive a
+     file whose numbers are meant to change — and a silently skipping plant is the vacuous pass this
+     whole harness exists to prevent. So: find whatever the first stored total actually is and corrupt
+     its last figure. Correct forever, regardless of what the totals become. */
+  (function () {
+    const m = /t:\[(-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+),(-?[0-9.]+)\]/.exec(orig);
+    const name = 'a stored t: that disagrees with its own rows';
+    if (!m) return { name: name, from: '__NO_STORED_TOTAL_IN_FILE__', to: 'x' };
+    return { name: name, from: m[0], to: 't:[' + [m[1], m[2], m[3], '999'].join(',') + ']' };
+  })(),
 
   { name: 'a migrated row whose spec shape is nonsense',
     from: ROW, to: "['Elev8 COR','25 g',{grams:25}]" },

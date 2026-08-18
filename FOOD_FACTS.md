@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 43 / 64 foods in the meal plan (**67%**)
+## Coverage: 41 / 62 foods in the meal plan (**66%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 83 rows: **33** USDA · **31** label · **17** derived · **2** UNVERIFIED
+Provenance of the 84 rows: **33** USDA · **32** label · **17** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -46,6 +46,7 @@ Provenance of the 83 rows: **33** USDA · **31** label · **17** derived · **2*
 | `hummus` | g | 1.83 | 0.04 | 0.13 | 0.1 | derived | Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub. |
 | `justins classic almond butter` | g | 6.875 | 0.1875 | 0.15625 | 0.59375 | label | Justin's Classic Almond Butter official panel: 32 g squeeze pack = 220 cal / 6 P / 5 C / 19 F -> per gram. The same panel is already cited inside the generic almond-butter entry as its upper bound; this key exists so a row that NAMES the brand is priced as the brand instead of at the 190 low end. His rule stands for the generic key: do not pin it. |
 | `kodiak flapjack` | each | 63 | 4.7 | 9 | 1.3 | derived | Kodiak Buttermilk Power Flapjacks, FROZEN: 3 flapjacks = 190 cal / 14 P -> ~63 cal / 4.7 P each. ⚠️ Kodiak lists 14-16 P per serving across formulations, so this is the low end; re-check against his box. |
+| `kodiak protein oats` | g | 3.8 | 0.1996 | 0.5807 | 0.0807 | label | Q's MEALS.xlsx, verbatim row: 'Kodiak Classic Protein Rolled Oats - 44.6g \| 169.5 cal \| 3.6 F \| 25.9 C \| 8.9 P' -> per gram. Reproduces three separate app rows: 15 g = 57/3.0, 25 g = 95/5.0, 44.6 g = 170/8.9. Kodiak's published figures cover the packets (12 g protein), Power Cups (14 g) and PEAK (20 g) but not this bulk Classic canister, so this is HIS/Q's figure and NOT a label read. Replace it the moment he photographs the container. Distinct from the plain 'oats' key on purpose — conflating them is the error that cost his breakfast 1.6 g of protein. |
 | `kodiak waffle` | each | 220 | 10 | 25 | 9 | derived | Kodiak Thick & Fluffy Buttermilk & Vanilla FROZEN waffles, verified Jul 24 2026: 220 cal EACH (they are thick, 1 per serving). His 2-waffle row = 440/20/50/18. Confirmed correct, not the mix. |
 | `lakanto sugar-free maple syrup` | g | 0.256 | 0 | 0.154 | 0 | label | Lakanto Maple Flavored Syrup (monk fruit + erythritol) label: 2 tbsp / 30 mL = 10 cal / 6 C, syrup density ~1.3 g/mL so ~39 g -> per gram. ⚠️ Caught an internal contradiction: his 15 g row said 4 C while the 60 g row said 1 C — four times the syrup for a quarter of the carbs. 60 g corrected to 15 cal / 9 C. |
 | `light mayo` | g | 2.67 | 0 | 0.067 | 0.267 | label | Hellmann's Light label: 1 tbsp (15 g) = 40 cal / 0 P / 1 C / 4 F -> per gram. Fetched Aug 18 2026. Older panels said 35/3.5; this is the current one. |

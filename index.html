@@ -679,7 +679,7 @@ const SLOTS = [
    {id:'p6', name:'Tuna + Banana', k:[['pareve']], vars:[{ing:[['Tuna packet','1',{f:'tuna packet',n:1,u:'each'}],['Banana','1 med',{f:'banana',n:1,u:'each'}]], t:[175,18,27,1]}]},
  ]},
  {key:'bf', slot:'Breakfast', time:'10:30 AM', b:[540,36,50,21], opts:[
-   {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats','25 g',{f:'oats',n:25}],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',{f:'almond butter',n:32}]], t:[545,36,54,21]}]},
+   {id:'b1', name:'Cream of Rice', k:[['dairy']], vars:[{ing:[['Elev8 COR','25 g',[85,1.5,19,0]],['Oats (Kodiak Classic protein rolled oats)','25 g',{f:'kodiak protein oats',n:25}],['Ryse/RAW protein','1 serving · g by flavor (weights card below)',[140,25,4,2.5]],['Berries','70 g',[35,0.5,8,0]],['Almond butter','32 g',{f:'almond butter',n:32}]], t:[545,38,52,21]}]},
    {id:'b2', name:'Bagel w/ Berries', k:[['dairy']], vars:[{ing:[['Sola everything bagel','1',{f:'sola everything bagel',n:1}],['Philadelphia ⅓-less-fat cream cheese','45 g',{f:'philadelphia cream cheese',n:45}],['Acme Nova lox','130 g',{f:'acme nova lox',n:130}],['Balsamic drizzle','15 g',[30,0,7,0]],['Banana 1 med — or berries 220 g','1',[110,1,27,0]]], t:[540,49,73,19]}]},
    {id:'b3', name:'Kodiak Breakfast', k:[['dairy']], vars:[
      {label:'Waffles', ing:[['Kodiak Thick &amp; Fluffy B&amp;V Power Waffles','2',{f:'kodiak waffle',n:2}],['Fage 2% plain Greek yogurt','1 cup (150 g)',{f:'fage 2% greek yogurt',n:150}],['Lakanto sugar-free maple syrup','60 g',{f:'lakanto sugar-free maple syrup',n:60}]], t:[560,35,64,21]},
@@ -706,8 +706,8 @@ const SLOTS = [
       5→11 g: the trim comes off the yogurt (the biggest single line) and the fat goes back up so the
       bowl stays over the 14 g satiety floor the breakfast guard enforces. */
    {id:'b19', name:'Warm COR + Yogurt Cup — 2 plates', k:[['dairy']], vars:[
-     {label:'Cut day (545)', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','260 g',{f:'fage 2% greek yogurt',n:260}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','11 g',{f:'almond butter',n:11}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[542,57,45,15]},
-     {label:'Two plates, full (710) — feast/refeed day', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',[57,3,9,1]],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',{f:'fage 2% greek yogurt',n:470}],['🥶 Banana','½ med',{f:'banana',n:0.5,u:'med'}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',{f:'almond butter',n:5}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[705,78,63,16]}]},
+     {label:'Cut day (545)', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',{f:'kodiak protein oats',n:15}],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','260 g',{f:'fage 2% greek yogurt',n:260}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','11 g',{f:'almond butter',n:11}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[542,57,45,15]},
+     {label:'Two plates, full (710) — feast/refeed day', ing:[['🔥 Cinnamon Roll COR (or Maple Brown Sugar)','25 g',[85,1.5,19,0]],['🔥 Oats (Kodiak protein oats)','15 g',{f:'kodiak protein oats',n:15}],['🔥 Cinnamon Toast protein','36 g (1 scoop)',[140,25,4,2.5]],['🥶 FAGE 2% Greek yogurt','470 g',{f:'fage 2% greek yogurt',n:470}],['🥶 Banana','½ med',{f:'banana',n:0.5,u:'med'}],['🥶 Berries','25 g',[13,0,3,0]],['🥶 Almond butter (drizzle on the cup)','5 g',{f:'almond butter',n:5}],['Cinnamon + Lakanto (free flavor — no extract needed)','—',{free:1}]], t:[705,78,63,16]}]},
  ]},
  {key:'lu', slot:'Lunch', time:'1:30 PM', b:[575,50,59,15], opts:[
    {id:'l1', name:'Chicken Meal — Sweet Potato', k:[['meat']], vars:[{ing:[['Chicken breast (raw weight · regular cut)','7 oz',[245,44,0,7]],['Sweet potato','205 g',{f:'sweet potato',n:205}],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['String beans','150 g',{f:'string beans',n:150}]], t:[573,51,57,17]}]},
@@ -724,7 +724,7 @@ const SLOTS = [
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[325,33,28,8], opts:[
    {id:'s4', name:'The Brookie', k:[['dairy']], vars:[{ing:[['BROWNIE wet: egg whites 60 mL · pumpkin purée 40 g · Oikos vanilla 40 g · ¼ tsp vanilla — NO Fairlife (the old flood is why it was watery)','bowl 1',[78,12,7,0]],['BROWNIE dry: all-purpose flour 18 g · Lakanto 28 g · Ryse Choc Cookie Blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt','bowl 2',[137,13,20,2]],['COOKIE DOUGH (thick + scoopable, brown-sugar flavor): oat flour 10 g · AP flour 7 g · Ryse vanilla 7 g · Lakanto GOLDEN 14 g · softened butter 3 g · egg white 10 mL · ¼ tsp vanilla · pinch soda + salt','one bowl',[118,9,12,3.5]]], t:[333,34,39,6]}]},
    {id:'s1', name:'Ninja Creami', k:[['dairy']], vars:[{ing:[['Fairlife 0% milk','320 mL',{f:'fairlife 0% milk',n:320}],['Ryse protein','½ scoop',{f:'protein',n:0.5}],['Topping / mix-in (140-cal budget)','1',[140,2,20,6]]], t:[315,32,30,7]}]},
-   {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',[170,9,26,4]],['Oikos Triple Zero vanilla','80.1 g',{f:'oikos triple zero',n:80.1,u:'g'}],['Justin’s Classic almond butter','3.1 g',{f:'justins classic almond butter',n:3.1}],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[331,35,33,8]}]},
+   {id:'s2', name:'Protein Cookie', k:[['dairy']], vars:[{ing:[['Ryse Loaded Protein, Cinnamon Toast','23.4 g',[90,17,2,2]],['Kodiak Classic protein rolled oats','44.6 g',{f:'kodiak protein oats',n:44.6}],['Oikos Triple Zero vanilla','80.1 g',{f:'oikos triple zero',n:80.1,u:'g'}],['Justin’s Classic almond butter','3.1 g',{f:'justins classic almond butter',n:3.1}],['Baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt','—',[2,0,1,0]]], t:[331,34,33,7]}]},
  ]},
  {key:'di', slot:'Dinner', time:'10:00 PM', b:[580,52,58,19], opts:[
    {id:'d1', name:'Burger', k:[['meat']], vars:[{ing:[['93/7 ground beef (raw weight)','6 oz',{f:'93/7 ground beef',n:6,u:'oz'}],['Keto bread','2 slices',{f:'natures own keto bread',n:2}],['Egg','1',{f:'egg',n:1}],['Potatoes','175 g',{f:'potatoes',n:175}],['Sugar-free ketchup','32 g',[20,0,2,0]],['Asparagus','100 g',{f:'asparagus',n:100}]], t:[579,60,58,18]}]},
@@ -2007,6 +2007,17 @@ const FOOD_FACTS = {
 
   /* `ea:` lets a row written as a COUNT price off a per-gram-aware fact; a large egg is 50 g. */
   'egg': {unit:'each', ea:50, cal:72, p:6.3, c:0.4, f:4.8, src:"USDA FDC 171287, egg, whole, raw, fresh: 1 large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. Fetched Aug 18 2026. Confirms the app's 2-egg row at 144/13/1/10 and shows Q's original sheet figure of 80 cal an egg was for a larger grade."},
+  /* ⛔ I BROKE THIS AND HE CAUGHT IT. b1's row said only "Oats" so I priced 25 g off plain USDA oats
+     (3.4 P) and dropped his breakfast protein by 1.6 g. His correction: "the oats are from kodiak so
+     they might actually be 5p." He is right, and Q's own sheet carries BOTH oats separately — plain
+     oats for Breakfast 1 and "Kodiak Classic Protein Rolled Oats" for the Air Fry Cookie — so the two
+     were never the same food and the bare label "Oats" is what let them be conflated.
+     ⚠️ STILL NEEDS HIS PACKAGE. This is derived from Q's spreadsheet line, not read off a canister:
+     kodiakcakes.com lists 12 g protein for the oatmeal packets, 14 g for the Power Cups and 20 g for
+     the PEAK line, and none of those is the bulk Classic canister Q named. The per-gram figure below
+     reproduces the app at 15 g (57/3) and 44.6 g (170/9) as well as the 25 g row, so it is internally
+     consistent across three weights — but ONE PHOTO of the canister would settle it properly. */
+  'kodiak protein oats': {unit:'g', cal:3.8, p:0.1996, c:0.5807, f:0.0807, src:"Q's MEALS.xlsx, verbatim row: 'Kodiak Classic Protein Rolled Oats - 44.6g | 169.5 cal | 3.6 F | 25.9 C | 8.9 P' -> per gram. Reproduces three separate app rows: 15 g = 57/3.0, 25 g = 95/5.0, 44.6 g = 170/8.9. Kodiak's published figures cover the packets (12 g protein), Power Cups (14 g) and PEAK (20 g) but not this bulk Classic canister, so this is HIS/Q's figure and NOT a label read. Replace it the moment he photographs the container. Distinct from the plain 'oats' key on purpose — conflating them is the error that cost his breakfast 1.6 g of protein."},
   'oats':              {unit:'g',           cal:3.79, p:0.135, c:0.674, f:0.069, src:'USDA oats, rolled, dry: 100 g = 379 cal / 13.5 P / 67.4 C / 6.9 F -> per gram. The app prices 25 g at 95 cal, i.e. 3.8 cal/g — already exact. No change.'},
   'white rice dry':    {unit:'g',           cal:3.62, p:0.071, c:0.80,  f:0.007, src:'USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved.'},
   'rice cake':         {unit:'each',        cal:35,   p:0.33,  c:7,     f:0,     src:'HIS figure, stated repeatedly and baked into the row label "Rice cakes (35 cal each)". Plain brown-rice cakes run 35 cal / 7 C, so his number checks out against the category. He always eats 3.'},
@@ -7865,7 +7876,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787076941';
+const BUILD = 'b1787077549';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
