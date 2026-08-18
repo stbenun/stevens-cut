@@ -718,6 +718,7 @@ const SLOTS = [
    {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',[250,37,0,10]],['Rice (dry)','45 g',[163,3,36,0]],['Edamame','85 g',[103,10,8,4]],['Israeli salad — pile it (tomato 150 g · cucumber 150 g · lemon · sumac)','big bowl',[36,1,8,0]],['Hummus — optional 15 g smear (or skip, lean on lemon + sumac)','15 g',[27,1,2,1.5]],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',[0,0,0,0]]], t:[579,52,54,16]}]},
    {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Rice (dry)','40 g',[145,3,32,0]],['Mayo: Hellmann’s Real 8 g (weighed) OR light 20 g · + sriracha 5 g','—',[60,0,1,6]],['Edamame','85 g',[103,10,8,4]],['Cucumber','75 g',[15,0,3,0]],['Soy sauce','15 mL',[5,0,1,0]],['Rice cake, crushed on top','1',[35,0,7,0]]], t:[573,64,52,10]}]},
    {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',[250,37,0,10]],['Egg whites (binder)','15 g',[8,2,0,0]],['Keto bread','2 slices',[70,12,20,1]],['Hummus + sriracha (the schmear)','30 g',[55,1,4,3]],['Potatoes','290 g',[220,6,51,0]],['Pickles','free',[5,0,1,0]],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',[0,0,0,0]]], t:[608,58,76,14]}]},
+   {id:'l10', name:'Spicy Tuna & Avocado', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets, pressed dry','3',[210,51,0,0]],['Sola everything bagel, split + toasted dark','1',[140,15,36,5]],['Mini guac cup — mashed with the vinegar + sriracha as the dressing','1',[100,1,6,8]],['Cucumber, salted and drained','300 g',[45,2,11,0]],['Romaine lettuce, torn as the bed (not mixed)','150 g',[26,2,5,0]],['Tomato, seeded then diced','1 med',[22,1,5,0]],['Celery, small dice','100 g',[16,1,3,0]],['Scallion, sliced','30 g',[10,1,2,0]],['Sriracha 12 g + rice vinegar 15 g','—',[15,0,3,0]]], t:[584,74,71,13]}]},
    {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',[210,51,0,0]],['Mayo: Hellmann’s Real 10 g (weighed) OR light 15 g · + sriracha 5 g + rice vinegar 5 g to stretch','—',[70,0,1,8]],['Mini guac cup','1',[100,1,6,8]],['Rice cakes','5',[175,1,35,0]],['Cucumber, quick-pickled (rice vinegar + pinch Lakanto)','75 g',[15,0,3,0]],['Scallion, sliced','1',[5,0,1,0]],['Everything-bagel seasoning','½ tsp',[0,0,0,0]]], t:[575,53,46,16]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[325,33,28,8], opts:[
@@ -785,6 +786,16 @@ const HOWTO = {
  l6:['Pat the salmon bone-dry with paper towel, then press the rub onto every side (cumin ½ · paprika ½ · turmeric ¼ · garlic ¼ · salt ¼ tsp).','<b>Air fryer 400°F, 12–14 min</b> (best for one portion — crispier edges, no preheat wait). Done = flakes apart with light fork pressure + opaque, not glossy-raw, in the thickest part.','Rice: 55 g dry, rinsed till the water runs clear, + 90 mL water + a pinch of salt. Boil (8/10), then low (3/10), lid on, 12 min, off the heat 5 min. (Bumped from 40g — the old bowl ran ~13g carbs short and felt small.)','Edamame: 85 g + a splash of water, microwave 90 sec from frozen.','Israeli salad — PILE it: 150 g tomato + 150 g cucumber in ¼" dice, lemon + a little sumac + pinch of salt. Veg is ~15 cal/100g, so a big salad is the free volume that fills the bowl.','Build: rice → flaked salmon → edamame + big salad → OPTIONAL 15 g hummus smear (or skip it — lemon + sumac carry the shawarma flavor; hummus is calorie-dense and a macro-friendly amount feels like nothing). <b>OVEN alt (prepping 3–4 at once):</b> 400°F, middle rack, parchment, 12–14 min. <b>Meal-prep:</b> Sunday box the cooked salmon over rice+edamame; day-of splash water + microwave 60–90 sec, add fresh salad then.'],
  l7:['Rice from the batch: ~10 mL water on top, 45–60 sec microwave, fluff.','Sauce: mayo (Hellmann’s Real 8 g weighed, or light 20 g) + sriracha 5 g. Drain the tuna WELL, fold in — that’s spicy tuna, same as the roll.','Build: rice → spicy tuna → edamame + cucumber → soy over → 1 rice cake CRUSHED on top, last. Eat immediately — the crunch dies in minutes.','No rice / no microwave? That’s the Cold Crunch Stacks — its own meal below, zero cooking.'],
  l8:['Sunday: pulse 12 oz skinned salmon in the processor 5–6 taps with 30 g egg whites + 1 tsp garlic + 1 tsp paprika + ½ tsp salt — chunky mince, not paste. (No processor: chop with a knife till it clumps, then mix in whites + spices. Skip the blender.)','Wet hands, 4 patties ~¾" thick, parchment between, fridge (2 days) or freeze.','Day of: nonstick medium-high (7/10), 3 sprays. 3 min untouched → flip once → 3 min. Opaque through = done.','Keto bun + hummus-sriracha schmear (30 g + 3 g) + pickles + crispy-cube potatoes.'],
+ l10:['Cucumber first: dice it, salt it, and leave it in a colander while you do everything else. 300 g is a lot of water and it all ends up in the bowl otherwise.',
+   '<b>Seed the tomato.</b> Halve it, thumb the jelly and seeds out, dice the walls only — this is the difference between a bowl and a puddle.',
+   'Celery and scallion small and uniform. Leave the cucumber a touch bigger so it still reads as crunch.',
+   '<b>Mash the guac with the vinegar and sriracha in the bottom of the bowl first</b>, until it is a dressing rather than lumps. You cannot smooth avocado out once the salad is sitting on it.',
+   'Pat the cucumber properly dry, then turn it through the dressing with the celery, scallion and tomato.',
+   'Fold the tuna in LAST, a few turns with a fork. Worked harder than that it turns to paste.',
+   'Taste before you salt — the tuna and the bagel are both already salty.',
+   'Bagel split and toasted dark. The crust is doing real work against a soft creamy salad, and its sesame/garlic/onion is why this needs no sesame oil.',
+   'Lettuce torn into a bed, salad piled on, bagel halves alongside. Lettuce stays UNDER — dressed lettuce is wilted lettuce in ten minutes.',
+   'Eat it soon after mixing; mashed avocado browns.'],
  l9:['Pickle first: cucumber in thin coins, toss with rice vinegar 15 g (none? lemon juice 15 g or white vinegar 15 g — same job) + a pinch of Lakanto + a pinch of salt. Set aside — it pickles itself while you build.','The sauce, made right in your BIGGEST bowl: mayo (Hellmann’s Real 10 g weighed, or light 15 g) + sriracha 5 g + toasted sesame oil 2 g. Should be a loose creamy drizzle — ONLY if it’s too thick to fold, thin with rice vinegar or water, 2–3 g at a time. Watery sauce = too much liquid or wet tuna.','Drain 3 tuna packets WELL (squeeze the pouch), fold into the sauce with the sliced scallion.','Guac in as dollops (don’t fully mix — you want pockets of it), pickled cucumbers piled in, everything-bagel seasoning over the top.','LAST: break 5 rice cakes into big chip-sized shards. Fold half through the bowl, stand the rest up top like chips. Max-crunch variant: 4 cakes + 1 roasted seaweed snack pack crushed in (~same cals, more volume). Spoon in hand, eat immediately — the crunch fades after ~10 minutes, that’s the show.'],
  s1:['Spin AT eat time, not ahead — pre-spun refreezes icy. Tonight’s cup + topping are on the Today flavors card; the batch recipes live in Prep.','Crumbly after the spin? Splash of Fairlife, re-spin. No machine tonight? Bark: spread the spun cup thin on parchment, freeze, snap.'],
  s2:['Mix everything into one dough — it’ll be sticky; wet hands help.','Form a thick disc on parchment. Air fryer 350°F, 6–8 min: edges set, center still soft (it firms as it cools).','Eat warm. Under-bake beats over-bake, every time.'],
@@ -1823,6 +1834,35 @@ const FIXVAL = Object.fromEntries(FIXPOOL.map(([l,c])=>[l,c]));
    RULE: never type one of these numbers into a plan or a card. Read it from here and compute.
    `unit` is the thing he actually counts at the table. Enforced by tools/check-food.js. */
 const FOOD_FACTS = {
+  /* ---- Added Aug 18 2026 for the Spicy Tuna & Avocado lunch. Every one fetched this session, not
+     recalled: USDA per-100 g for the vegetables, Huy Fong's own label for the sriracha, and HIS label
+     figure for the tuna pouch. ---- */
+  /* ⚠️ HIS OWN LABEL, given verbatim Aug 18 2026: "tuna in water packet- 70 cal 17p per pouch." The
+     fat is not on the figure he gave; water-packed light tuna is ~0.5 g a pouch, so the app rows round
+     it to 0 the way l7 and l9 already do. 70 cal against 17 P is 68 cal of protein, which corroborates
+     ~0 carb and ~0 fat. Do NOT substitute an albacore or oil-packed number — those are 100/20 and much
+     fattier, and the difference across three pouches is 90 cal. */
+  'tuna packet':    {unit:'packet',       cal:70,   p:17,  c:0,    f:0.5, src:'HIS label, stated Aug 18 2026: 70 cal / 17 P per pouch, in water. Fat not stated on his figure; USDA light tuna canned in water drained is ~0.8 g fat per 85 g, so ~0.5 g for a 2.6 oz pouch. The app rows round fat to 0, matching l7/l9.'},
+  /* Mayo, added the same day and for a specific reason: my 'sriracha' entry had made the composite
+     "Mayo ... + sriracha" rows in l7, l8 and l9 register as SOURCED while the mayo — the dominant
+     ingredient in every one of them — was still hand-typed. Sourcing it properly is the honest fix.
+     ⚠️ Hellmann's LIGHT is 40 cal / 4 F per tbsp on the current label, not the 35 / 3.5 still widely
+     quoted from an older panel — I used the stale figure in chat before fetching it. Checked against the
+     existing rows and they hold: l7's composite prices light 20 g + sriracha 5 g at 60 and the real sum
+     is 58; l9's real-mayo 10 g + sriracha + vinegar is 75 against a stated 70. Both inside tolerance. */
+  'mayonnaise':     {unit:'g',            cal:6.92, p:0,   c:0,    f:0.77, src:"Hellmann's Real label: 1 tbsp (13 g) = 90 cal / 0 P / 0 C / 10 F -> per gram. Fetched Aug 18 2026."},
+  'light mayo':     {unit:'g',            cal:2.67, p:0,   c:0.067, f:0.267, src:"Hellmann's Light label: 1 tbsp (15 g) = 40 cal / 0 P / 1 C / 4 F -> per gram. Fetched Aug 18 2026. Older panels said 35/3.5; this is the current one."},
+  'romaine lettuce':{unit:'g',            cal:0.17, p:0.012, c:0.033, f:0.003, src:'USDA romaine, raw: 100 g = 17 cal / 1.2 P / 3.3 C / 0.3 F -> per gram. Fetched Aug 18 2026.'},
+  'celery':         {unit:'g',            cal:0.16, p:0.0069, c:0.0297, f:0.0017, src:'USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026.'},
+  'tomato':         {unit:'g',            cal:0.18, p:0.009, c:0.039, f:0.002, src:'USDA tomatoes, red, ripe, raw, year-round average (FDC 170457): 100 g = 18 cal / 0.9 P / 3.9 C / 0.2 F -> per gram. Fetched Aug 18 2026.'},
+  'scallion':       {unit:'g',            cal:0.32, p:0.0183, c:0.074, f:0.002, src:'USDA onions, spring/scallions, raw, tops and bulb: 100 g = 32 cal / 1.83 P / 7.4 C / 0.2 F -> per gram. Fetched Aug 18 2026.'},
+  /* ⚠️ THIS ENTRY OVER-COUNTS THE COVERAGE RATCHET AND I AM WRITING THAT DOWN RATHER THAN HIDING IT.
+     [macro-provenance] marks an ingredient row sourced when a fact's tokens are a SUBSET of the row's,
+     so the composite rows in l7, l8 and l9 ("Mayo ... + sriracha 5 g") now register as covered even
+     though their MAYO number is still hand-typed and unsourced. Mayo is the next real provenance gap;
+     do not read the coverage percentage as if that row were finished. */
+  'sriracha':       {unit:'g',            cal:1.0,  p:0,   c:0.2,  f:0,   src:'Huy Fong Sriracha label: 1 tsp (5 g) = 5 cal / 1 C -> per gram. Fetched Aug 18 2026.'},
+  'rice vinegar':   {unit:'g',            cal:0.2,  p:0,   c:0.03, f:0,   src:'Unseasoned rice vinegar, published panels: 1 tbsp (15 g) = 0-5 cal, rounded to 3 cal -> per gram. Brand-to-brand it is 0 or 5 depending on label rounding; the low end is used and it is under 5 cal either way. Fetched Aug 18 2026.'},
   /* The Friday-night bread. It had lived only as the prose "his: 190 cal/piece" inside seven feast
      dishes, with no P/C/F anywhere — exactly the kind of per-unit number FOOD_FACTS exists to own,
      and the reason five of those dishes disagreed with each other about what a pita costs.
@@ -7581,7 +7621,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787063369';
+const BUILD = 'b1787064885';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -552,7 +552,9 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * as coverage climbs; never lower it.
  */
 (function macroProvenance() {
-  const FLOOR = 62;                       /* ratchet — only ever goes up */
+  const FLOOR = 70;                       /* ratchet — only ever goes up. 62 -> 70 on Aug 18 2026: nine
+                                             facts added for the tuna-salad lunch (USDA veg, Huy Fong
+                                             sriracha, his tuna-pouch label, both Hellmann's). */
   const need = new Map();
   const slotsBlock = (() => {
     const i = src.indexOf('const SLOTS'); if (i < 0) return '';
