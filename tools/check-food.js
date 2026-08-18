@@ -394,7 +394,7 @@ const ADVICE_ONLY = {
    Aug 6 2026, found by HIM on the Fruity Pebbles bowl, two bugs on one card:
      "Fruity Pebbles cereal, on top"  q=10 g          -> stamped "weigh 30 g" (the protein tub's scoop)
      "Fruity Pebbles protein"         q="½ serving · 15 g" -> stamped the FULL 30 g beside the half
-   PP_G is a substring map, so any label containing a flavour name got the powder's weight whether or
+   PP_G is a substring map, so any label containing a flavor name got the powder's weight whether or
    not the row WAS the powder. Two numbers on one line, and the wrong one is bolded.
 
    This check runs the SHIPPED ppFind/ppTag against every ingredient row rather than a copy of the
@@ -447,7 +447,7 @@ const ADVICE_ONLY = {
        B1 is the number check and B2 is a product check — conflating the two flagged s2 falsely. */
     if (OTHER_PRODUCT.test(String(label)) && String(ppTag(label)) !== '') {
       bad++;
-      fail('scoop-weights', o.id + ' "' + label + '" is not the protein tub, but a flavour name in it ' +
+      fail('scoop-weights', o.id + ' "' + label + '" is not the protein tub, but a flavor name in it ' +
         'still resolves to a scoop weight — PP_NOTPOWDER is not rejecting it.');
     }
   }))));
@@ -802,10 +802,10 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * corrupted correct rows, so ambiguity resolves to unchecked, never to a guess.
  */
 (function rowMath() {
-  const UNCHECKED_CEILING   = 60;  /* single-food rows with no fact that prices them. Only goes DOWN. */
-  const COMPOSITE_CEILING   = 37;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
+  const UNCHECKED_CEILING   = 23;  /* single-food rows with no fact that prices them. Only goes DOWN. */
+  const COMPOSITE_CEILING   = 24;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
   const NEEDS_LABEL_CEILING = 3;   /* rows awaiting a photo of his package. Only goes DOWN. */
-  const MISLABELLED_CEILING = 16;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
+  const MISLABELLED_CEILING = 9;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
 
   /* Different foods that share a word — left unchecked until each earns its own fact. */
   const DENY = [['tomato paste', 'tomato'], ['kodiak', 'oats'], ['0%', 'fage 2% greek yogurt'],
@@ -820,7 +820,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     'Kodiak buttermilk Power Flapjacks (frozen)':
       "the fact's own src says Kodiak runs 14-16 P across formulations and to re-check his box - needs a photo of the package",
     'Chocolate Cookie Blast protein':
-      'this row implies 150 cal a scoop; the four label-verified flavours run 130-140 - needs a photo of the Cookie Blast tub'
+      'this row implies 150 cal a scoop; the four label-verified flavors run 130-140 - needs a photo of the Cookie Blast tub'
   };
 
   const FRAC = {'\u00bd': 0.5, '\u00bc': 0.25, '\u00be': 0.75, '\u2153': 1/3, '\u2154': 2/3, '\u215b': 0.125};
@@ -875,6 +875,15 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
   SLOTS.forEach(slot => (slot.opts || []).forEach(opt => (opt.vars || []).forEach(function (v, vi) {
     (v.ing || []).forEach(function (row) {
       const plain = String(row[0]).replace(/<[^>]*>/g, '');
+      /* ⛔ THIS CHECK IS NOW ONLY FOR HAND-TYPED ROWS. Everything that carries a SPEC is priced and
+         verified by [priced], which reads the row's declared source instead of guessing from its label.
+         Leaving spec rows in here double-counted them and produced a false failure: once the protein
+         rows started naming per-flavor facts, all nine "X protein + 1/2 tsp extract" lines matched a
+         single fact while still containing a ' + ', so they were reported as "escaping the check via a
+         stray +" and pushed the mislabelled count past its ceiling. They were not escaping anything —
+         the extract is zero-calorie and the spec prices the only component that carries any. Fuzzy
+         label matching has no business second-guessing a row that states its own source. */
+      if (!Array.isArray(row[2])) return;
       const tag = slot.key + '/' + opt.id + (opt.vars.length > 1 ? '#' + vi : '') + ' "' + plain.slice(0, 34) + '"';
       if (isComposite(plain)) {
         /* A descriptive ' + ' ('split + toasted dark') exempts a row from checking, which is
@@ -956,7 +965,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  */
 (function priced() {
 
-  const LEGACY_CEILING = 84;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
+  const LEGACY_CEILING = 49;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
 
   const broken = [], legacy = [], pricedRows = [], totalDrift = [];
   SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {

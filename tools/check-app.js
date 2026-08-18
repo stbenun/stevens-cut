@@ -665,7 +665,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else {
     /* ⚠️ NOT `flex:1 1 0`, which is what this asserted at first. A zero basis does stop the name from
        forcing a wrap — and it also loses every fight for space, so at 320px the card rendered
-       "🥣 Death …" and he could not tell which flavour it was. A ch-based basis is the middle ground:
+       "🥣 Death …" and he could not tell which flavor it was. A ch-based basis is the middle ground:
        big enough that the macros wrap away instead of the name vanishing, fixed enough that it never
        depends on the name's own length. Measured by tools/measure.js: 117px → 173px at 320. */
     if (!/flex:\s*1 1 \d+ch/.test(titleRule[1]))
@@ -719,10 +719,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     bad.push('the narrow-screen padding trim is gone — nested cards take 118px of a 320px screen, ' +
              'leaving 202px for name + kosher + four macros');
   const titleBasis = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{\s*flex:1 1 (\d+)ch/);
-  if (!titleBasis) bad.push('the flavour title has no ch-based flex-basis — at 320px it renders as "Death …"');
+  if (!titleBasis) bad.push('the flavor title has no ch-based flex-basis — at 320px it renders as "Death …"');
 
   if (bad.length) fail('meal-row-wrap', bad.join(' · '));
-  else ok('meal-row-wrap', `names carry a real flex-basis (${found.join('/')}ch), flavour title ` +
+  else ok('meal-row-wrap', `names carry a real flex-basis (${found.join('/')}ch), flavor title ` +
           `${titleBasis[1]}ch, narrow-screen padding trimmed`);
 }
 

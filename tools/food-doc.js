@@ -56,7 +56,7 @@ function build() {
      output — a fact it cannot see is missing from both sides and the check still passes.
      check-food.js now cross-checks this count against the live Object.keys(FOOD_FACTS). */
   /* `sp:[lo,hi]` is OPTIONAL and sits between unit: and cal: — it marks a deliberate brand or
-     flavour spread that [row-math] is allowed to accept. Adding it made three facts invisible to
+     flavor spread that [row-math] is allowed to accept. Adding it made three facts invisible to
      the earlier version of this regex; [food-doc-parse] caught that on the next run. */
   /* `ea:` is optional too and sits in the same gap — it gives the gram weight of one discrete unit so
      a row written as a COUNT can price off a per-gram fact. Adding it to 'egg' made that one fact
