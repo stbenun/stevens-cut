@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 24 / 41 foods in the meal plan (**59%**)
+## Coverage: 23 / 35 foods in the meal plan (**66%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 97 rows: **36** USDA · **32** label · **27** derived · **2** UNVERIFIED
+Provenance of the 101 rows: **36** USDA · **34** label · **28** derived · **3** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -37,8 +37,10 @@ Provenance of the 97 rows: **36** USDA · **32** label · **27** derived · **2*
 | `edamame` | g | 1.21 | 0.119 | 0.089 | 0.052 | USDA | USDA edamame, frozen, PREPARED: 100 g = 121 cal / 11.9 P / 8.9 C total (5.2 g fibre, so 3.7 net — an earlier search handed me the NET figure as if it were total) / 5.2 F -> per gram. He confirmed Aug 12 2026 it is just regular frozen edamame, so USDA is the right basis. ⚠️ The app rows ran ~17% high (85 g priced at 120 cal, real 103) and are corrected. |
 | `egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | USDA FDC 171287, egg, whole, raw, fresh: 1 large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. Fetched Aug 18 2026. Confirms the app's 2-egg row at 144/13/1/10 and shows Q's original sheet figure of 80 cal an egg was for a larger grade. |
 | `egg whites` | g | 0.52 | 0.109 | 0.007 | 0.002 | USDA | USDA egg white, raw: 100 g = 52 cal / 10.9 P / 0.73 C / 0.17 F -> per gram. The app prices 100 g at 50 / 10 / 0 / 0 — within 4%, so the rows were already right and were NOT changed. |
+| `elev8 cor` | g | 3.4 | 0.056 | 0.752 | 0 | label | Elev8 Foods Creamy Rice (his Cream of Rice) published panel: 1 serving = 122 cal / 27 C / 2 P / 0 F, serving ~35.9 g -> 3.4 cal/g. Fetched Aug 18 2026. Corroborates his 25 g row exactly: 25 x 3.4 = 85 cal and 25 x 0.752 = 18.8 C against the row's 85/19. It was right, just unsourced. |
 | `eye of round` | oz cooked | 40.5 | 7.7 | 0 | 1 | derived | lean roast beef, 143 cal / 27 P per 100 g |
 | `ezekiel bread` | slice | 80 | 4 | 15 | 0.5 | label | Food For Life Ezekiel 4:9 Sprouted Whole Grain label: 1 slice = 80 cal / 4 P / 15 C total (3 g fiber) / 0.5 F. ⚠️ The app rows use 5 P per slice, so every Ezekiel row overstates protein by 1 g per slice. |
+| `fage 0% greek yogurt` | g | 0.57 | 0.103 | 0.032 | 0 | label | FAGE Total 0% plain, published panel 57 cal / 10.3 P per 100 g -> per gram. Fetched Aug 18 2026. Confirms his 125 g row (70 cal / 13 P) to within a calorie. ⚠️ One retailer listing gives 80 cal / 16 P for a 'container', which works out to a DIFFERENT container size, not a different yogurt -- do not swap this figure for that one. Separate key from the 2% (0.697 cal/g) on purpose; conflating them is already denied in the row matcher. |
 | `fage 2% greek yogurt` | g | 0.697 | 0.0995 | 0.0299 | 0.0199 | label | FAGE Total 2% panel: 7.1 oz container (201 g) = 140 cal / 20 P / 6 C / 4 F -> per gram. Cross-checked against the app: his 400 g row says 282/40/12/8 and this gives 279/39.8/11.9/8.0 — the row was already right. |
 | `fairlife 0% milk` | mL | 0.333 | 0.0542 | 0.025 | 0 | label | Fairlife Fat Free ultra-filtered label: 240 mL = 80 cal / 13 P / 6 C / 0 F -> per mL. Cross-checked: his 320 mL row says 107/17.3 and this gives 106.7/17.3 — exact to the decimal. |
 | `fd strawberries` | g | 3.5 | 0.1 | 0.8 | 0.01 | label | Freeze-dried strawberries published panel: 10 g = 35 cal / 1 P / 8 C (2 g fiber, 5 g sugar) -> per gram. Brand-to-brand variation is small. Batch 5 cup 8 uses 10 g. |
@@ -87,7 +89,9 @@ Provenance of the 97 rows: **36** USDA · **32** label · **27** derived · **2*
 | `salmon sashimi` | piece (20 g) | 42 | 4.1 | 0 | 2.7 | derived | Atlantic farmed, 208 cal / 20.4 P per 100 g raw |
 | `salmon wild` | g | 1.42 | 0.198 | 0 | 0.065 | USDA | USDA salmon, Atlantic, WILD, raw: 100 g = 142 cal / 19.8 P / 6.3 F -> per gram. This is what his rows are currently priced at (1.47 cal/g). |
 | `scallion` | g | 0.32 | 0.0183 | 0.074 | 0.002 | USDA | USDA onions, spring/scallions, raw, tops and bulb: 100 g = 32 cal / 1.83 P / 7.4 C / 0.2 F -> per gram. Fetched Aug 18 2026. |
+| `seaweed packet` | each | 25 | 1 | 1 | 2 | derived | gimMe Organic Roasted Seaweed snack pack (5 g): published ~25-30 cal per package, roughly 1 P / 1 C / 2 F. Fetched Aug 18 2026. His d2 row says 20 cal, so it runs slightly low; 25 is the low end of the published range. Brand assumed from the format -- confirm if he buys a different one. |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
+| `sf ketchup` | g | 0.29 | 0 | 0.071 | 0 | UNVERIFIED | Sugar-free ketchup, 0.29 cal/g. G Hughes Sugar Free and Heinz No Sugar Added both publish 5 cal per tablespoon (~17 g) with essentially all of it carbohydrate. Fetched Aug 18 2026. His 32 g rows had stated 20 cal (0.63 cal/g), so this corrects them to ~9. BRAND NOT CONFIRMED BY HIM -- two national sugar-free ketchups agree on 5 cal a tbsp, but if his bottle is a different formulation this needs replacing. |
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
 | `sliced almonds` | g | 5.79 | 0.212 | 0.216 | 0.499 | USDA | USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1. |
 | `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | derived | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
@@ -109,27 +113,22 @@ Provenance of the 97 rows: **36** USDA · **32** label · **27** derived · **2*
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 | `whole egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | HE BUYS LARGE — confirmed Aug 12 2026. USDA large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. The app rows were priced at 80/7/0/5, i.e. EXTRA-LARGE, so every egg was 8 cal high; corrected. Old note: USDA large egg (50 g) = 72 cal / 6 P / 4.8 F; extra-large (56 g) = 80 / 7 / 5.3, which is exactly what the rows use. Left at 80 because that is the existing basis, but OPEN: which size does he buy? Large would make every egg row 8 cal high. |
 
-## Still to source — 17 foods, most-used first
+## Still to source — 12 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
 | food | times it appears in the plan |
 |---|---:|
 | sf chocolate syrup, drizzled | 2 |
-| elev8 cor | 1 |
 | balsamic drizzle | 1 |
 | sf chocolate chips / cacao nibs | 1 |
 | cereal | 1 |
 | israeli salad | 1 |
 | mayo: hellmann’s real 8 g | 1 |
-| pickles | 1 |
 | mayo: hellmann’s real 10 g | 1 |
 | brownie dry: all-purpose flour 18 g · lakanto 28 g · ryse choc cookie blast 12 g · dark cocoa 8 g · baking soda scant ¼ tsp · baking powder ¼ tsp · salt | 1 |
 | cookie dough | 1 |
 | topping / mix-in | 1 |
 | baking powder ½ tsp · cinnamon ¾ tsp · vanilla ¼ tsp · pinch salt | 1 |
-| sugar-free ketchup | 1 |
-| seaweed packet | 1 |
-| sf ketchup | 1 |
 | chosen foods avocado oil spray | 1 |
 

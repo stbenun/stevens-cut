@@ -802,7 +802,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  * corrupted correct rows, so ambiguity resolves to unchecked, never to a guess.
  */
 (function rowMath() {
-  const UNCHECKED_CEILING   = 23;  /* single-food rows with no fact that prices them. Only goes DOWN. */
+  const UNCHECKED_CEILING   = 12;  /* single-food rows with no fact that prices them. Only goes DOWN. */
   const COMPOSITE_CEILING   = 24;  /* rows naming several foods; must be split to be priceable. Only DOWN. */
   const NEEDS_LABEL_CEILING = 3;   /* rows awaiting a photo of his package. Only goes DOWN. */
   const MISLABELLED_CEILING = 9;  /* rows escaping the check via a descriptive '+'. Only goes DOWN. */
@@ -965,7 +965,7 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
  */
 (function priced() {
 
-  const LEGACY_CEILING = 49;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
+  const LEGACY_CEILING = 38;   /* hand-typed rows still to migrate. ⛔ ONLY EVER GOES DOWN. */
 
   const broken = [], legacy = [], pricedRows = [], totalDrift = [];
   SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {

@@ -10,9 +10,21 @@ const REPO = require("path").join(__dirname, "..");
 const SCRATCH = require("os").tmpdir();
 const orig = fs.readFileSync(path.join(REPO, 'index.html'), 'utf8');
 
-/* the first real ingredient row in b1: Elev8 COR, 25 g, [85,1.5,19,0] */
-const ROW = "['Elev8 COR','25 g',[85,1.5,19,0]]";
-if (orig.indexOf(ROW) < 0) { console.error('SETUP FAIL: anchor row not found'); process.exit(1); }
+/* DERIVED, like the total fixture below and for the same reason. This used to name a specific row
+   ("['Elev8 COR','25 g',[85,1.5,19,0]]") and it broke the moment that row was migrated to name its
+   source — the harness exited "SETUP FAIL" and tested nothing. As the migration finishes, ANY named row
+   will eventually stop existing, so the fixture has to find one instead of knowing one. Takes the first
+   still-hand-typed row it can see; when the last one is migrated there is no legacy path left to test and
+   it says so plainly rather than failing as if something were broken. */
+const ROWM = /\['[^']{1,60}','[^']{0,24}',\[-?[0-9.]+(?:,-?[0-9.]+){3}\]\]/.exec(orig);
+if (!ROWM) {
+  console.log('No hand-typed rows remain — the legacy path this harness exercises is gone.');
+  console.log('That is the goal state, not a failure. Re-point these fixtures at a spec row if you');
+  console.log('want to keep testing the engine, and keep the derived total fixture below.');
+  process.exit(0);
+}
+const ROW = ROWM[0];
+console.log('anchor row (found, not hard-coded): ' + ROW.slice(0, 70));
 
 /* ⛔ FIXTURES GO STALE AND A STALE FIXTURE SKIPS SILENTLY. Three of these plants stopped firing the
    moment their target rows migrated: the old anchors quoted hand-typed arrays like
