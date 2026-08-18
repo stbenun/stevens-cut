@@ -10,6 +10,18 @@ because the reasoning usually still matters. **Never put a food quantity in here
 `FOOD_FACTS` and `SLOTS`, and a number copied into a document is a number that will go stale and get
 recited. Point at where it lives instead.
 
+**⭐⭐ KEEPING IT FED IS MY JOB, NOT HIS.** His instruction, 2026-08-18: *"I'd like you to also ask me if
+you should log it when I say something since I may forget."* So: when he says something that will still
+be true next month, I raise it in one line at the end of the reply — or, when it is unambiguous, log it
+and simply say I did. He should never have to remember to ask for his own decision to be recorded.
+**But not on every message** — a prompt he stops reading protects nothing, which is the same lesson
+`check-food.js` already carries about a guard that fires on right answers. The trigger and the
+counter-examples are written up in `working-with-steven.md` §0, which is canonical for this.
+
+**This is the one file here that rots if neglected**, because no tool can generate it. `STATUS.md` has a
+staleness guard; this has only the habit above. If it ever falls months behind, a future session will
+read a decisions log missing his recent calls and will not know it is missing them.
+
 ---
 
 ## 2026-08-18 — the day the numbers got sourced
@@ -90,3 +102,24 @@ vague key would have hidden a real spread — blackberries are a third leaner th
 - **A guard that can be switched off by adding data is not a guard.** Adding a plain `salmon` key made
   `[swap-math]` match three names on the sushi line instead of two, so it silently stopped checking the
   one line it was written for. The selftest caught it.
+
+---
+
+## 2026-08-18 (same day, later) — how this file gets fed
+
+**Catching his decisions is my job, not his.** *"I'd like you to also ask me if you should log it when I
+say something since I may forget."* Raise it in one line at the end of a reply; log the unambiguous ones
+outright and just say so. Do NOT prompt on every message — a question he stops reading protects nothing.
+Trigger, counter-examples and precedence live in `working-with-steven.md` §0.
+
+**Reading order for a new session, and what NOT to read.** `working-with-steven.md` → this repo's
+`CLAUDE.md` → `STATUS.md` → `DECISIONS.md`. **Not the chat transcripts** — tens of megabytes, and reading
+them recreates the failure he opened with on 2026-08-18: *"you sometimes use memory, sometimes use chat
+history, sometimes use lines in the app... and its messing up everything."* Precedence is explicit:
+behaviour to `working-with-steven.md`, code and product to `CLAUDE.md`, and any current NUMBER to the
+guards over every document.
+
+**A status document without a staleness check will eventually mislead someone with total confidence.**
+`CLAUDE.md`'s onboarding section claimed most ingredient rows were unsourced — true one morning, false
+by that evening, and nothing anywhere said so. Fast-moving facts now live in `STATUS.md`, generated, with
+`[status-doc]` failing the build when it drifts.
