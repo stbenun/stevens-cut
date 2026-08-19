@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 662,036 bytes, 7,961 lines, one file |
-| build | `b1787154513` |
+| app | `index.html`, 662,289 bytes, 7,961 lines, one file |
+| build | `b1787155254` |
 | foods on the price list | 106 |
 | provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
 
@@ -19,7 +19,7 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **216** | 90% of 239 |
+| priced from FOOD_FACTS | **193** | 89% of 216 |
 | deliberately zero (`{free:1}`) | 19 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
@@ -41,39 +41,39 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | meal | | total | vs budget |
 |---|---|---|---:|
 | `bf/b3#0` | Kodiak Breakfast | 560 / 35 / 64 / 21 | +20 cal · |
+| `bf/b5` | Banana Cream Protein Bowl | 560 / 44 / 62 / 17 | +20 cal · |
 | `lu/l10` | Salad+Bagel | 588 / 73 / 70 / 17 | +13 cal |
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
-| `bf/b8` | Piña Colada Bowl | 549 / 59 / 40 / 18 | +9 cal |
-| `bf/b9` | Butterscotch Apple Pie Bowl | 549 / 59 / 42 / 17 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
-| `bf/b7` | Cookies & Cream Bowl | 547 / 58 / 37 / 19 | +7 cal |
-| `bf/b14` | Cinnamon Toast Bowl (protein-powder ba | 546 / 59 / 40 / 18 | +6 cal |
 | `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
 | `bf/b1` | Cream of Rice | 545 / 38 / 52 / 22 | +5 cal |
 | `lu/l4` | Tuna Melt Stack | 580 / 51 / 62 / 17 | +5 cal |
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
-| `bf/b12` | Fruity Pebbles Bowl (protein-powder ba | 544 / 59 / 40 / 18 | +4 cal |
-| `bf/b11` | Chocolate Almond-Butter Bowl | 543 / 59 / 47 / 15 | +3 cal |
+| `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
+| `bf/b18` | Chocolate Cookie Bowl | 543 / 44 / 50 / 20 | +3 cal |
 | `di/d17` | Sweet-Chili Salmon Plate (air fryer) | 583 / 56 / 45 / 20 | +3 cal |
 | `pre/p2` | Rice Cakes + Tuna | 200 / 18 / 27 / 1 | 0 cal |
 | `pre/p6` | Tuna + Banana | 200 / 19 / 33 / 1 | 0 cal |
-| `bf/b10` | Lemon Blueberry Cheesecake Bowl | 539 / 59 / 39 / 18 | -1 cal |
-| `bf/b15` | Vanilla Berry Bowl (protein-powder bas | 539 / 59 / 40 / 17 | -1 cal |
-| `bf/b17` | Apple Pie Bowl (protein-powder base) | 539 / 60 / 47 / 17 | -1 cal |
-| `bf/b18` | Chocolate Cookie Bowl (protein-powder  | 538 / 59 / 39 / 18 | -2 cal |
+| `bf/b8` | Piña Colada Bowl | 540 / 44 / 55 / 18 | 0 cal |
+| `bf/b9` | Butterscotch Apple Pie Bowl | 540 / 43 / 60 / 16 | 0 cal |
+| `bf/b10` | Lemon Blueberry Cheesecake Bowl | 540 / 44 / 58 / 17 | 0 cal |
+| `bf/b16` | Strawberry Shortcake Bowl | 540 / 44 / 57 / 17 | 0 cal |
+| `bf/b17` | Apple Pie Bowl | 540 / 44 / 67 / 16 | 0 cal |
+| `bf/b14` | Cinnamon Toast Bowl | 539 / 45 / 52 / 19 | -1 cal |
+| `bf/b15` | Vanilla Berry Bowl | 539 / 44 / 55 / 18 | -1 cal |
+| `bf/b6` | Strawberry Cheesecake Bowl | 538 / 44 / 60 / 15 | -2 cal |
+| `bf/b11` | Chocolate Almond-Butter Bowl | 538 / 46 / 47 / 21 | -2 cal |
 | `lu/l3` | Spinach Jiben | 573 / 57 / 41 / 22 | -2 cal |
 | `lu/l6` | Salmon Shawarma Bowl | 573 / 53 / 53 / 17 | -2 cal |
 | `di/d15` | Tomato Beef | 578 / 61 / 60 / 18 | -2 cal |
 | `di/d3` | Blackened Salmon Plate | 578 / 54 / 58 / 15 | -2 cal |
-| `bf/b5` | Banana Cream Protein Bowl | 537 / 56 / 46 / 16 | -3 cal |
-| `bf/b6` | Strawberry Cheesecake Bowl | 537 / 60 / 43 / 15 | -3 cal |
+| `bf/b12` | Fruity Pebbles Bowl | 537 / 44 / 54 / 18 | -3 cal |
 | `lu/l2` | Broccoli Jiben | 572 / 55 / 45 / 21 | -3 cal |
 | `bf/b13` | Mint Chip Bowl (protein-powder base) | 536 / 60 / 35 / 20 | -4 cal |
 | `lu/l1r` | Chicken Meal — Rice | 571 / 52 / 56 / 15 | -4 cal |
 | `pre/p3` | Rice Cakes + Yogurt | 195 / 16 / 27 / 0 | -5 cal |
 | `pre/p5` | Yogurt + Banana | 195 / 16 / 33 / 0 | -5 cal |
 | `bf/b2` | Bagel w/ Berries | 535 / 49 / 73 / 20 | -5 cal |
-| `bf/b16` | Strawberry Shortcake Bowl (protein-pow | 534 / 59 / 39 / 17 | -6 cal |
 | `lu/l7` | Spicy Tuna Crunch Bowl | 569 / 65 / 51 / 12 | -6 cal |
 | `di/d2` | Poke Bowl | 573 / 53 / 53 / 17 | -7 cal |
 | `lu/l1` | Chicken Meal — Sweet Potato | 566 / 52 / 57 / 15 | -9 cal |

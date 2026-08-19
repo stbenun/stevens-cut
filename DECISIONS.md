@@ -167,3 +167,30 @@ products he has dropped — **add to it whenever he retires something.**
 he cares about (chocolate and cookie bowls take it stirred through; fruit-forward bowls take it dolloped,
 because stirring muddies them), and b12 through b18 had inherited "method same as b12" and never got the
 line. Added, with each weight read off its own row.
+
+---
+
+## 2026-08-18 (night) — the protein powder comes out of the yogurt bowls
+
+**His question was the right one:** *"if the protein is so high then why do we need the protein powder?"*
+Answer: you don't. 400 g of FAGE alone is 40 P against a 36 g breakfast budget, so the powder's 12.5 P was
+surplus stacked on surplus. It was never a protein source in those bowls — it was a **flavoring that cost
+65 calories**, and 65 cal of flavoring spread through 460 g is exactly what he called mid.
+
+**His call: *"yes on all. dont add oreos on all obviously."*** So the powder and the Fairlife both come out
+of 13 bowls, and the freed ~85 cal goes to each bowl's OWN signature ingredient, not one topping stamped
+across fourteen recipes. The Fairlife went because its only job was making the powder shakeable; with no
+powder there is nothing to shake, and losing the liquid leaves the bowl thicker.
+
+**⛔ THE YOGURT STAYS AT 400 g.** The rebalancer's first answer was to pad these bowls with MORE yogurt —
+b6 went to 490 g — because its rule is "pad with volume" and yogurt is the biggest volume on the card.
+That is backwards: it would have swapped 65 cal of powder for 65 cal of plain base and left him with less
+flavor than he started with. Reverted by hand. **When a bowl is under budget, spend on the topping.**
+
+**b13 Mint Chip keeps its powder, deliberately.** The mint IS the powder and there is no mint extract on
+his shelf. A "Mint Chip Bowl" with no mint in it would be a worse bowl wearing the same name. Its step is
+self-contained now, because it can no longer inherit "method same as b12".
+
+Result: protein went from ~+22 over budget on every bowl to +7-10, calories land within a few either way,
+and the toppings roughly doubled — b7 went from 8 Oreo minis to 13, b12's cereal from 10 g to 30 g.
+Six titles dropped "(protein-powder base)" because it stopped being true.
