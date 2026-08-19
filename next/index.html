@@ -2158,6 +2158,36 @@ const FOOD_FACTS = {
   'turkey breast':  {unit:'oz cooked',    cal:38,   p:8.5, c:0,  f:0.3, src:'roast, 135 cal / 30 P per 100 g'},
   'chicken breast': {unit:'oz cooked',    cal:47,   p:8.8, c:0,  f:1.0, src:'grilled skinless, 165 cal / 31 P per 100 g'},
   'smoked half chicken': {unit:'half bird', cal:620, p:85, c:2, f:29, src:'DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number.'},
+
+  /* ============ HummusFit Buffins — the 11 flavors he actually owns ============
+     HIS ASK, 2026-08-19: "Save the macros and cals for each of the muffins so that we can
+     reference it easier next time." Before this they existed nowhere: the only trace was one
+     off-plan entry from Aug 16 whose muffin came off "the product badge, not a label", and a
+     label photo he had already sent that a past session never wrote down. That is the failure
+     this block closes — he should not have to send a label twice.
+
+     Figures are the per-muffin badges on his own shipment email, cross-checked against the
+     brand's published per-flavor table: 10 of the 11 agree to the digit.
+
+     ⛔ ALL BUFFINS CONTAIN DAIRY. The brand states it flatly: "All muffins currently contain
+     dairy." So a Buffin is a DAIRY item and the meat waits apply to it — do not treat the
+     hummus base as pareve.
+
+     ⛔ NUTS. The brand warns "Some Muffins Contain Nuts, Peanuts, & Tree Nuts. Cross
+     contamination can occur." He is allergic to every nut EXCEPT almonds, so a flavor carrying
+     that badge is not food for him. 'Welcome to the Sno' carries a CONTAINS NUTS mark on his own
+     email and is flagged nut:1 below — [nut-facts] fails the build if any meal row ever names it. */
+  'buffin blueberry':            {unit:'each', cal:370, p:25, c:45, f:10, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Lowest-calorie flavor he owns and tied-lowest carb — the default pick when one has to fit a slot.'},
+  'buffin buff served':          {unit:'each', cal:383, p:26, c:45, f:11, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Highest protein of the eleven.'},
+  'buffin apple pie-ceps':       {unit:'each', cal:401, p:22, c:49, f:13, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge notes an apple-butter filling.'},
+  'buffin buff roll':            {unit:'each', cal:408, p:25, c:50, f:12, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. This is the one behind the Aug 16 off-plan entry, which had estimated it at ~434 by subtraction; the badge says 408.'},
+  'buffin twistbar':             {unit:'each', cal:408, p:22, c:53, f:12, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled.'},
+  'buffin banana cream protein dream': {unit:'each', cal:420, p:24, c:54, f:12, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge prints no fiber figure for this one.'},
+  'buffin cookie butter tres leches':  {unit:'each', cal:422, p:24, c:50, f:14, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled.'},
+  'buffin welcome to the sno':   {unit:'each', cal:424, p:25, c:44, f:12, nut:1, src:'⛔ Badge carries a CONTAINS NUTS mark. He confirmed Aug 19 2026 that he checks the wrappers himself, so this is recorded as the label fact, not a warning at him — nut:1 exists so nothing can put it in a meal silently. Badge Aug 19 2026 reads 44 C where the brand publishes 54 C; unresolved, and moot while it stays uneaten. Brand also marks the flavor as pausing.'},
+  'buffin double chocolate brownie':   {unit:'each', cal:437, p:25, c:55, f:13, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly.'},
+  'buffin cinna blast':          {unit:'each', cal:438, p:25, c:53, f:14, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled.'},
+  'buffin buffcoff':             {unit:'each', cal:438, p:25, c:53, f:14, src:'HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled.'},
 };
 /* ============ PRICING — a row's numbers are LOOKED UP, never stored =============================
    Built Aug 18 2026 on his instruction, verbatim: "Every recipe should be FACT checked when being
@@ -8183,7 +8213,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787172723';
+const BUILD = 'b1787179656';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

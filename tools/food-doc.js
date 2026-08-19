@@ -58,11 +58,15 @@ function build() {
   /* `sp:[lo,hi]` is OPTIONAL and sits between unit: and cal: — it marks a deliberate brand or
      flavor spread that [row-math] is allowed to accept. Adding it made three facts invisible to
      the earlier version of this regex; [food-doc-parse] caught that on the next run. */
+  /* `nut:1` is optional and sits between f: and src:. It flags a food whose LABEL declares nuts,
+     for [nut-facts]. Added Aug 19 2026 with the Buffins, and it made one fact invisible to this
+     regex immediately — [food-doc-parse] caught it on the very next run. That guard has now paid
+     for itself three times on an added field. */
   /* `ea:` is optional too and sits in the same gap — it gives the gram weight of one discrete unit so
      a row written as a COUNT can price off a per-gram fact. Adding it to 'egg' made that one fact
      invisible here, and [food-doc-parse] caught it on the next run, exactly as it did for sp. Any new
      optional field must be added to this gap or its fact silently vanishes from FOOD_FACTS.md. */
-  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?(?:ea:[\d.]+,\s*(?:\/\*(?:[^*]|\*(?!\/))*\*\/\s*)?)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
+  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?(?:ea:[\d.]+,\s*(?:\/\*(?:[^*]|\*(?!\/))*\*\/\s*)?)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*(?:nut:[01],\s*)?src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
   let m;
   while ((m = rx.exec(ffBlock))) {
     facts.push({ name: m[1], unit: m[2],

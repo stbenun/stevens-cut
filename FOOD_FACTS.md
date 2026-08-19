@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 106 rows: **38** label · **36** USDA · **30** derived · **2** UNVERIFIED
+Provenance of the 117 rows: **40** derived · **39** label · **36** USDA · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -27,6 +27,17 @@ Provenance of the 106 rows: **38** label · **36** USDA · **30** derived · **2
 | `blueberries` | g | 0.57 | 0.007 | 0.145 | 0.003 | USDA | USDA raw blueberries, 100 g = 57 cal / 0.7 P / 14.5 C / 0.33 F -> per gram. Cups use 70 g. |
 | `brisket flat` | oz cooked | 70 | 8.2 | 0 | 4 | derived | 248 cal / 29 P per 100 g — his own Southside figure |
 | `broccoli` | g | 0.34 | 0.028 | 0.066 | 0.004 | USDA | USDA broccoli, raw: 100 g = 34 cal / 2.82 P / 6.64 C / 0.37 F -> per gram. App prices 150 g at 50 cal; USDA gives 51. Already right, not changed. |
+| `buffin apple pie-ceps` | each | 401 | 22 | 49 | 13 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge notes an apple-butter filling. |
+| `buffin banana cream protein dream` | each | 420 | 24 | 54 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge prints no fiber figure for this one. |
+| `buffin blueberry` | each | 370 | 25 | 45 | 10 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Lowest-calorie flavor he owns and tied-lowest carb — the default pick when one has to fit a slot. |
+| `buffin buff roll` | each | 408 | 25 | 50 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. This is the one behind the Aug 16 off-plan entry, which had estimated it at ~434 by subtraction; the badge says 408. |
+| `buffin buff served` | each | 383 | 26 | 45 | 11 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Highest protein of the eleven. |
+| `buffin buffcoff` | each | 438 | 25 | 53 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin cinna blast` | each | 438 | 25 | 53 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin cookie butter tres leches` | each | 422 | 24 | 50 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin double chocolate brownie` | each | 437 | 25 | 55 | 13 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. |
+| `buffin twistbar` | each | 408 | 22 | 53 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin welcome to the sno` | each | 424 | 25 | 44 | 12 | label | ⛔ Badge carries a CONTAINS NUTS mark. He confirmed Aug 19 2026 that he checks the wrappers himself, so this is recorded as the label fact, not a warning at him — nut:1 exists so nothing can put it in a meal silently. Badge Aug 19 2026 reads 44 C where the brand publishes 54 C; unresolved, and moot while it stays uneaten. Brand also marks the flavor as pausing. |
 | `butter` | g | 7.17 | 0.0085 | 0.0006 | 0.8111 | USDA | USDA butter, salted: 100 g = 717 cal / 0.85 P / 0.06 C / 81.11 F -> per gram. Fetched Aug 18 2026. DAIRY. Appears only as 3 g in the Brookie's cookie-dough layer. |
 | `celery` | g | 0.16 | 0.0069 | 0.0297 | 0.0017 | USDA | USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026. |
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |

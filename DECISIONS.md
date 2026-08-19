@@ -353,3 +353,53 @@ already-recorded lesson that a guard switched off by adding data is not a guard.
 **STILL OWED, and he has not approved it:** nothing writes these entries. The card reads a "via chat" badge
 that no code sets, so the rule currently works only for what he types in himself. The write path is the
 gist sync, which means me pushing to his live data — raised with him, not built.
+
+---
+
+## 2026-08-19 (evening) — the Buffins get saved, and two of his rules get recorded
+
+**HIS ASK:** *"Save the macros and cals for each of the muffins so that we can reference it easier
+next time."* All eleven HummusFit Buffin flavors he owns are now in `FOOD_FACTS`, priced per muffin.
+
+**Why they were missing is the part worth keeping.** He had already sent the label photo once — he
+said so: *"I sent the photo once."* A past session read it and never wrote it down, so the only trace
+anywhere was one off-plan entry from Aug 16 whose muffin figure came off *"the product badge, not a
+label"*, and which bundled the muffin with two eggs and veg so it could not even be read back. I had
+to back a number out by subtraction and got ~434 for a muffin whose badge says 408. **A photo he sent
+is not a record. Nothing is a record until it is in the repo** — that is the whole premise of this
+project and it failed on a product he bought two weeks ago. He should never send a label twice.
+
+**Provenance is unusually strong here and it is worth saying why:** his shipment badges and the
+brand's published per-flavor table agree to the digit on ten of eleven. The one exception is a flavor
+he should not eat anyway, and it is noted in the entry rather than reconciled.
+
+**⛔ EVERY BUFFIN IS DAIRY.** The brand states it flatly. The hummus base reads pareve and is not —
+so the meat waits apply to a Buffin, and any future session must treat one as a dairy item.
+
+**HIS KASHRUT PRACTICE, stated 2026-08-19:** *"I can eat dairy before meat."* That is the short
+direction, and the app already encodes it as `WAIT_DAIRY_MEAT` — his statement confirms the constant
+rather than changing it. The long direction is unchanged. Recording it because CLAUDE.md requires
+kashrut assumptions to be asked and not inferred, and now this one is his own words rather than a
+guess sitting in a constant.
+
+**HE CHECKS NUT LABELS HIMSELF:** *"I checked for nuts don't worry."* So do not warn him about nut
+content on these — he has read the wrappers. The LABEL FACT still gets recorded: one flavor carries a
+CONTAINS NUTS mark on its own badge, and it is flagged `nut:1`. The distinction matters — the flag is
+not a second opinion on his judgement, it is a stop on anything AUTOMATED (the Final Meal solver, the
+rebalancer, a swap line) reaching for a nut-bearing food on its own. `[nut-facts]` enforces it.
+
+**A new guard, because [nuts] could not see this class at all.** `[nuts]` scans TEXT — it catches
+"pecans" typed into a row or a step. It is blind to a row that names a nut-bearing PRODUCT by a key
+that reads as clean prose. `[nut-facts]` reads the flag on the fact instead, and covers plain rows,
+`{parts}` composites and Creami cup toppings. Two cases added to the food selftest; both watched to
+fail before being trusted.
+
+**And the added field broke the doc parser immediately.** `nut:1` sits between `f:` and `src:`, which
+`food-doc.js` did not expect, so one fact went invisible and `[food-doc-parse]` failed on the very
+next run. That guard has now caught an added-field regression three times. **Worth internalising: any
+new field on a FOOD_FACTS entry is a change to the doc parser too.**
+
+**Also learned the hard way:** `tools/food-doc.js` and `tools/check-food.js` are CRLF files while
+`index.html` is LF-only. An anchor written with `\n` matches NOTHING in a CRLF file, and the failure
+reads exactly like a missing anchor. Patch scripts must normalise for matching and restore the file's
+own convention on write.

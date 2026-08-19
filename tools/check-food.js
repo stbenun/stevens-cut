@@ -1329,6 +1329,37 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [nut-facts] a nut-bearing PRODUCT can hide behind a clean name ============
+ * He is allergic to every nut except almonds. [nuts] above scans TEXT, so it catches "pecans" typed
+ * into a row or a step. It is blind to a row that names a nut-bearing product by a key that says
+ * nothing about nuts — {f:'buffin welcome to the sno'} reads as clean prose and prices fine.
+ * HummusFit warns that "Some Muffins Contain Nuts, Peanuts, & Tree Nuts", and one flavor he owns
+ * carries the nut mark on its own badge, so the flag lives on the FACT and this checks the wiring.
+ * He said Aug 19 2026 that he checks wrappers himself — this is not a second opinion on his
+ * judgement, it is a stop on anything AUTOMATED (solver, rebalancer, swap line) reaching for it.
+ */
+(function nutFacts() {
+  const flagged = Object.keys(FOOD_FACTS).filter(k => FOOD_FACTS[k] && FOOD_FACTS[k].nut);
+  if (!flagged.length) { pass('nut-facts', 'no FOOD_FACTS entry is flagged nut-bearing'); return; }
+  const bad = [];
+  const walk = (where, spec) => {
+    if (!spec || typeof spec !== 'object') return;
+    if (spec.f && flagged.indexOf(spec.f) >= 0) bad.push(where + ' names nut-bearing "' + spec.f + '"');
+    (spec.parts || []).forEach(p => { if (p && flagged.indexOf(p.f) >= 0) bad.push(where + ' part names nut-bearing "' + p.f + '"'); });
+  };
+  SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach((v, vi) =>
+    (v.ing || []).forEach((row, ri) => walk(sl.key + '/' + o.id + '#' + vi + ' row ' + ri, row[2])))));
+  /* Creami cup toppings name FOOD_FACTS keys directly, so they need the same check. */
+  const B = grab('CREAMI_BATCHES') || [];
+  B.forEach(b => (b.cups || []).forEach(c => (c[5] || []).forEach(p => {
+    if (p && flagged.indexOf(p[0]) >= 0) bad.push('creami cup "' + c[0] + '" tops with nut-bearing "' + p[0] + '"');
+  })));
+  if (bad.length) fail('nut-facts', bad.length + ' reference(s) to a nut-bearing food: ' + bad.join(' | '));
+  else pass('nut-facts', flagged.length + ' nut-bearing fact(s) on file (' + flagged.join(', ') +
+            '), none reachable from any meal, variant or Creami topping');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');

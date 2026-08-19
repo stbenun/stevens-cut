@@ -46,6 +46,15 @@ const CASES = [
   /* --- the whey shake prescribed after a BBQ dinner --- */
   { name: 'the dairy shake offered again after a meat meal', check: 'kashrut',
     from: "${ord.o.k==='meat'?EO_PATCH.pMeat:EO_PATCH.p}", to: "${EO_PATCH.p}" },
+  /* --- Aug 19 2026: a nut-bearing PRODUCT can hide behind a name that says nothing about nuts.
+         [nuts] reads text and is blind to {f:'buffin welcome to the sno'}; [nut-facts] reads the flag
+         on the fact. Both directions of the spec shape are planted — a plain row and a {parts} part. */
+  { name: 'a nut-flagged product named by a plain ingredient row', check: 'nut-facts',
+    from: "['Almond butter (for breakfast size)','9 g',{f:'almond butter',n:9}]",
+    to:   "['Almond butter (for breakfast size)','9 g',{f:'buffin welcome to the sno',n:1,u:'each'}]" },
+  { name: 'a nut-flagged product hidden inside a {parts} composite', check: 'nut-facts',
+    from: "{parts:[{f:'tomato',n:150},{f:'cucumber',n:150}]}",
+    to:   "{parts:[{f:'tomato',n:150},{f:'buffin welcome to the sno',n:1}]}" },
   { name: 'a meat venue told to finish with something dairy', check: 'kashrut',
     from: "'Smokey Tacos 2 pc $18 — lighter and cheaper than any plate here.'",
     to:   "'Smokey Tacos 2 pc $18 — finish with a yogurt on the way home.'" },
