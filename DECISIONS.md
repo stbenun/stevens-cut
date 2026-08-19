@@ -194,3 +194,27 @@ self-contained now, because it can no longer inherit "method same as b12".
 Result: protein went from ~+22 over budget on every bowl to +7-10, calories land within a few either way,
 and the toppings roughly doubled — b7 went from 8 Oreo minis to 13, b12's cereal from 10 g to 30 g.
 Six titles dropped "(protein-powder base)" because it stopped being true.
+
+---
+
+## 2026-08-18 (night) — the extract shelf is data now
+
+**He gave the full shelf**, eighteen of them: strawberry, blueberry, banana, almond, lemon, peppermint,
+orange, maple, coconut, raspberry, cookie butter, pumpkin spice, cinnamon spice, coffee, caramel, cake
+batter, velvet cake, vanilla bean paste. Mostly LorAnn plus the vanilla bean paste.
+
+**It had to become DATA, not something I remember.** Converting the bowls off protein powder, I inferred
+which extracts he owned from whatever each old row happened to mention — and on that guess I declared b13
+unconvertible ("no mint extract on the shelf") when he has **PEPPERMINT**, and reached for raspberry on the
+strawberry-shortcake bowl when he owns **STRAWBERRY**. `EXTRACTS` now lives in the app and
+`[extract-shelf]` fails the build if a recipe names a flavoring that is not on it. **An extract is the one
+ingredient class with no weight and no macros, so no other check here can see it** — which is why it needed
+its own. ⛔ Add to EXTRACTS when he buys one, never to make a recipe pass.
+
+**b13 Mint Chip is converted** — peppermint extract, powder and Fairlife out, chips 8 g to 24 g. It kept
+the "(protein-powder base)" name only as long as it kept the powder.
+
+**Four new bowls, four new Creami cups, four new COR combos**, each built on an extract that was sitting
+unused: cookie butter, coffee, orange, pumpkin spice, maple, cake batter. Notes worth keeping — orange
+alone reads like juice and needs vanilla behind it to become creamsicle; maple behind pumpkin spice is what
+makes it read as PIE rather than spiced yogurt; coffee extract is what turns cocoa into mocha.

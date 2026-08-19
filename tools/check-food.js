@@ -1246,6 +1246,49 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [extract-shelf] a recipe may only name a flavoring he actually owns ============
+ * Built 2026-08-18 out of a mistake that cost a whole recipe. Converting 13 yogurt bowls off protein
+ * powder onto extracts, I had to know which extracts he had — and I inferred it from whatever each old
+ * row happened to mention. On that guess I declared b13 unconvertible: "the mint IS the powder and there
+ * is no mint extract on the shelf". He then sent the shelf and PEPPERMINT was on it. The same guess had
+ * me reach for raspberry on the strawberry-shortcake bowl while he owns STRAWBERRY.
+ * A flavoring is the one ingredient class with no weight and no macros, so no other check here can see
+ * it — [priced] cannot price a quarter teaspoon of nothing. Which means the only thing standing between
+ * a recipe and an extract he does not own is this list.
+ * ⛔ Add to EXTRACTS when he BUYS one. Never to make a recipe pass.
+ */
+(function extractShelf() {
+  const EXTRACTS = grab('EXTRACTS');
+  const HOWTO = grab('HOWTO');
+  if (!EXTRACTS || !HOWTO) { fail('extract-shelf', 'could not read EXTRACTS or HOWTO'); return; }
+  const shelf = EXTRACTS.map(e => String(e).toLowerCase());
+  /* flavorings that are not extracts and need no shelf entry */
+  const NOT_AN_EXTRACT = /cocoa|cinnamon\b|lakanto|salt|sriracha|sumac|paprika|cumin|garlic|turmeric|vanilla bean paste/i;
+  const bad = [];
+  const seen = {};
+  Object.keys(HOWTO).forEach(function (id) {
+    const st = HOWTO[id];
+    const text = (Array.isArray(st) ? st : [st]).join('  ').replace(/<[^>]*>/g, ' ');
+    /* any '<word(s)> extract' mention */
+    const rx = /([A-Za-z][A-Za-z ]{2,22}?)\s+extract/g;
+    let m;
+    while ((m = rx.exec(text)) !== null) {
+      const name = m[1].toLowerCase().replace(/^(tsp|tbsp|the|a|of|and|plus|with|\u00bd|\u00bc|\u00be)\s+/g, '').trim();
+      const words = name.split(/\s+/);
+      const tail = words.slice(-2).join(' '), last = words[words.length - 1];
+      if (NOT_AN_EXTRACT.test(name)) continue;
+      const ok = shelf.some(e => e === name || e === tail || e === last || name.indexOf(e) >= 0);
+      if (ok) return_ok();
+      else if (!seen[id + name]) { seen[id + name] = 1; bad.push(id + ' names "' + name + ' extract"'); }
+      function return_ok() { seen[id + name] = 1; }
+    }
+  });
+  if (bad.length) fail('extract-shelf', bad.length + ' recipe(s) name a flavoring that is not on his shelf: ' +
+    bad.join(' · ') + '. Either he owns it and EXTRACTS is out of date, or the recipe is telling him to use something he does not have.');
+  else pass('extract-shelf', 'every extract named in a recipe is on his shelf (' + shelf.length + ' on it)');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');

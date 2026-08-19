@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 662,289 bytes, 7,961 lines, one file |
-| build | `b1787155254` |
+| app | `index.html`, 667,588 bytes, 7,989 lines, one file |
+| build | `b1787155915` |
 | foods on the price list | 106 |
 | provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
 
@@ -19,8 +19,8 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **193** | 89% of 216 |
-| deliberately zero (`{free:1}`) | 19 | spices, rubs, a free garnish |
+| priced from FOOD_FACTS | **209** | 89% of 236 |
+| deliberately zero (`{free:1}`) | 23 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
 
@@ -51,12 +51,14 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
 | `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
 | `bf/b18` | Chocolate Cookie Bowl | 543 / 44 / 50 / 20 | +3 cal |
+| `bf/b23` | Pumpkin Pie Bowl | 543 / 46 / 51 / 19 | +3 cal |
 | `di/d17` | Sweet-Chili Salmon Plate (air fryer) | 583 / 56 / 45 / 20 | +3 cal |
 | `pre/p2` | Rice Cakes + Tuna | 200 / 18 / 27 / 1 | 0 cal |
 | `pre/p6` | Tuna + Banana | 200 / 19 / 33 / 1 | 0 cal |
 | `bf/b8` | Piña Colada Bowl | 540 / 44 / 55 / 18 | 0 cal |
 | `bf/b9` | Butterscotch Apple Pie Bowl | 540 / 43 / 60 / 16 | 0 cal |
 | `bf/b10` | Lemon Blueberry Cheesecake Bowl | 540 / 44 / 58 / 17 | 0 cal |
+| `bf/b13` | Mint Chip Bowl | 540 / 45 / 46 / 24 | 0 cal |
 | `bf/b16` | Strawberry Shortcake Bowl | 540 / 44 / 57 / 17 | 0 cal |
 | `bf/b17` | Apple Pie Bowl | 540 / 44 / 67 / 16 | 0 cal |
 | `bf/b14` | Cinnamon Toast Bowl | 539 / 45 / 52 / 19 | -1 cal |
@@ -68,12 +70,14 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `di/d15` | Tomato Beef | 578 / 61 / 60 / 18 | -2 cal |
 | `di/d3` | Blackened Salmon Plate | 578 / 54 / 58 / 15 | -2 cal |
 | `bf/b12` | Fruity Pebbles Bowl | 537 / 44 / 54 / 18 | -3 cal |
+| `bf/b21` | Mocha Cookie Bowl | 537 / 44 / 55 / 18 | -3 cal |
 | `lu/l2` | Broccoli Jiben | 572 / 55 / 45 / 21 | -3 cal |
-| `bf/b13` | Mint Chip Bowl (protein-powder base) | 536 / 60 / 35 / 20 | -4 cal |
+| `bf/b22` | Orange Creamsicle Bowl | 536 / 43 / 53 / 17 | -4 cal |
 | `lu/l1r` | Chicken Meal — Rice | 571 / 52 / 56 / 15 | -4 cal |
 | `pre/p3` | Rice Cakes + Yogurt | 195 / 16 / 27 / 0 | -5 cal |
 | `pre/p5` | Yogurt + Banana | 195 / 16 / 33 / 0 | -5 cal |
 | `bf/b2` | Bagel w/ Berries | 535 / 49 / 73 / 20 | -5 cal |
+| `bf/b20` | Cookie Butter Bowl | 534 / 44 / 54 / 18 | -6 cal |
 | `lu/l7` | Spicy Tuna Crunch Bowl | 569 / 65 / 51 / 12 | -6 cal |
 | `di/d2` | Poke Bowl | 573 / 53 / 53 / 17 | -7 cal |
 | `lu/l1` | Chicken Meal — Sweet Potato | 566 / 52 / 57 / 15 | -9 cal |
@@ -84,7 +88,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `di/d1` | Burger | 568 / 60 / 58 / 18 | -12 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 
-**0 of 43 variants over budget.**
+**0 of 47 variants over budget.**
 
 ## Waiting on him
 
