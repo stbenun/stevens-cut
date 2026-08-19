@@ -144,3 +144,26 @@ them out. They had simply never been written down.
 **Standing note, not yet acted on:** every FAGE bowl runs ~22 g protein OVER the 36 g breakfast budget.
 That is real surplus, and if he ever wants more room for flavor without losing volume, that is where it
 would come from. Raised once and declined; his call if it comes up again.
+
+---
+
+## 2026-08-18 (evening) — steps must match their rows
+
+**He caught this from a screenshot of his own phone:** *"The amount of oreos is different in 3 places in
+this recipe/meal. fix it and make sure nothing else has issues like this."* Then, when I fixed only that
+class: *"dont just fix the oreo issues. make sure all recipes and steps match up."*
+
+**Twelve steps contradicted their own ingredient rows**, and most went stale THAT DAY when the rebalancer
+moved portions and the prose kept the old figures. `CLAUDE.md` has always required that a step never hold
+its own copy of a quantity; twelve were holding one anyway. Guarded now by `[step-qty]`.
+
+**A step can also name the RIGHT amount of the WRONG product**, which no number check can see. Three did:
+two still described de-creaming Oreo Thins after he moved to whole minis, one still said "de-creamed
+Biscoff" after he switched to the regular Lotus cookie. Each was internally consistent and each told him
+to do something he had explicitly stopped doing. Guarded now by `[retired]`, which carries the list of
+products he has dropped — **add to it whenever he retires something.**
+
+**Seven bowls listed almond butter with no instruction for it.** The dollop-versus-stir distinction is one
+he cares about (chocolate and cookie bowls take it stirred through; fruit-forward bowls take it dolloped,
+because stirring muddies them), and b12 through b18 had inherited "method same as b12" and never got the
+line. Added, with each weight read off its own row.

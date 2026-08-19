@@ -1135,6 +1135,117 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [step-qty] a step must not name a weight its own row contradicts ============
+ * HE CAUGHT THIS ONE, 2026-08-18, from a screenshot of his own phone: "The amount of oreos is
+ * different in 3 places in this recipe/meal." b7's row said 8 Oreo minis while its step said 5
+ * de-creamed Oreo Thins and offered 9 minis as a swap. Three numbers, one ingredient, on a card he was
+ * cooking from.
+ *
+ * CLAUDE.md has always required that "a step never holds its own copy of a quantity" — and eleven steps
+ * were holding one anyway. Most of them went stale THAT DAY, when the rebalancer moved portions to land
+ * the slot budgets and the prose kept the old figures: b5 still said 400 g of yogurt after it was
+ * trimmed to 370, four bowls still named old almond-butter weights, l6 and d16 still named old rice
+ * weights, and b8 quoted a stale TOTAL as well.
+ *
+ * PRECISION MATTERS MORE THAN REACH HERE. A first version flagged 42 and most were noise — it read
+ * "18.5 g" as "5 g", matched "1 tsp vanilla" against the protein row, and treated a per-slice figure as
+ * a total. A checker that noisy gets ignored, which this file already warns about. So: word boundary
+ * before the number, the food word must sit within a few characters of it, units must match, and the
+ * genuinely legitimate shapes are named in ALLOW rather than tolerated by a loose regex.
+ */
+(function stepQty() {
+  const HOWTO = grab('HOWTO');
+  if (!HOWTO) { pass('step-qty', 'no HOWTO block to check'); return; }
+  /* Legitimate by design, each with the reason. ⛔ Only add here for a REAL exemption, never to silence. */
+  const ALLOW = [
+    /Sunday:/i,          /* batch prep: l8 minces 12 oz on Sunday for two 6 oz portions */
+    /variant:/i,         /* l9 offers '4 cakes + 1 seaweed pack' as a labelled swap, not the build */
+    /per slice|apiece|each\b/i
+  ];
+  const STOP = new Set(['the', 'and', 'with', 'into', 'over', 'your',
+    'crushed', 'sliced', 'plain', 'greek', 'size', 'breakfast', 'powder',
+    'whole', 'stirred', 'right', 'weighed', 'frozen', 'fresh', 'cubes',
+    'dolloped', 'optional', 'cinnamon']);
+  const toks = s => String(s).replace(/<[^>]*>/g, ' ').toLowerCase().replace(/[^a-z0-9% ]/g, ' ')
+    .split(/\s+/).filter(w => w.length > 3 && !STOP.has(w));
+  const unitOf = u => { u = String(u || '').toLowerCase(); return u === 'ml' ? 'ml' : (u === 'g' || u === 'oz') ? u : ''; };
+  const bad = [];
+  SLOTS.forEach(sl => sl.opts.forEach(function (o) {
+    const st = HOWTO[o.id];
+    if (!st) return;
+    /* ⛔ Split on a sentence end, NOT on any period — "17.5 g" must not become "17" and "5 g". An earlier
+       version split on [.|] and reported ten bowls as contradicting themselves because every decimal
+       protein weight looked like a stray "5 g". And the version after THAT lost its backslashes passing
+       through a shell, leaving /|s|s|.s+/ — a split on the letter s — which is the escaping trap CLAUDE.md
+       warns about, hit twice in one guard. Written from a file since, never through a heredoc. */
+    const sents = (Array.isArray(st) ? st : [st]).join(' | ').split(/(?=Sunday:)|(?=variant:)|\s\|\s|\.\s+/);
+    (o.vars || []).forEach(v => (v.ing || []).forEach(function (row) {
+      const label = String(row[0]).replace(/<[^>]*>/g, '');
+      /* A {parts} row is SUPPOSED to be broken down in its step — l6's "Israeli salad, 300 g" exists to
+         be cooked as "150 g tomato + 150 g cucumber", and flagging that would be flagging the design. */
+      if (row[2] && row[2].parts) return;
+      const qm = /^\s*([0-9.]+)\s*(g|mL|ml|oz)?\s*$/.exec(String(row[1]));
+      if (!qm) return;
+      const amt = parseFloat(qm[1]), unit = unitOf(qm[2]);
+      const rt = toks(label);
+      if (!rt.length) return;
+      sents.forEach(function (sent) {
+        if (ALLOW.some(r => r.test(sent))) return;
+        const clean = sent.replace(/<[^>]*>/g, '');
+        const rx = /(^|[^0-9.])([0-9]+(?:\.[0-9]+)?)\s*(g|mL|ml|oz)?\s{0,2}([A-Za-z\u2019' + q + '-]{0,22})/g;
+        let m;
+        while ((m = rx.exec(clean)) !== null) {
+          const n = parseFloat(m[2]), u = unitOf(m[3]), word = (m[4] || '').toLowerCase();
+          if (u !== unit) continue;
+          if (!rt.some(w => word.indexOf(w) === 0 || w.indexOf(word) === 0 && word.length > 3)) continue;
+          if (Math.abs(n - amt) < 0.01) continue;
+          if ((v.ing || []).some(function (r2) { var q2 = /^s*([0-9.]+)/.exec(String(r2[1])); return q2 && Math.abs(parseFloat(q2[1]) - n) < 0.01; })) continue;
+          bad.push(o.id + ' "' + label.slice(0, 26) + '" row says ' + String(row[1]) +
+                   ' but a step says ' + n + (u ? ' ' + u : '') + ' ("' + clean.trim().slice(0, 40) + '")');
+        }
+      });
+    }));
+  }));
+  if (bad.length) fail('step-qty', bad.length + ' step(s) name a quantity their own ingredient row contradicts: ' +
+    bad.join(' · ') + '. Fix the STEP to match the row — the row is the source. He reads these while cooking.');
+  else pass('step-qty', 'no step contradicts its own ingredient row');
+})();
+
+
+/* ============ [retired] a product he has dropped must not survive in any recipe text ============
+ * His instruction, 2026-08-18: "dont just fix the oreo issues. make sure all recipes and steps match up."
+ * The number check ([step-qty]) cannot see this class at all — a step can name the RIGHT quantity of the
+ * WRONG product. Three did: b7 and b18 still described de-creaming Oreo Thins after he moved to whole
+ * Oreo minis, and b5 still said "de-creamed Biscoff" after he switched to the regular Lotus cookie. Each
+ * was internally consistent and each told him to do something he had explicitly stopped doing.
+ * A product decision has to propagate into the PROSE, not just the rows.
+ */
+(function retired() {
+  const HOWTO = grab('HOWTO');
+  if (!HOWTO) { pass('retired', 'no HOWTO block to check'); return; }
+  /* ⛔ Add a line here whenever he retires a product. Removing one needs HIS say-so, not convenience. */
+  const GONE = [
+    [/de-?creamed/i,        'he moved to whole cookies -- regular Lotus Biscoff and Oreo MINIS. Nothing gets de-creamed.'],
+    [/oreo thins?/i,        '"Stop using oreo thins. just use the oreo minis i told you about."'],
+    [/\bb19\b/i,            'b19 was deleted entirely, both sizes -- "get rid of b19 in totallity."'],
+    [/SF chocolate syrup/i, 'the syrup is named now: Hershey' + String.fromCharCode(8217) + 's Zero Sugar, off his own label'],
+    [/flavour/i,            'American spelling -- "and its flavor not flavour"']
+  ];
+  const bad = [];
+  Object.keys(HOWTO).forEach(function (id) {
+    const st = HOWTO[id];
+    const text = (Array.isArray(st) ? st : [st]).join('  ').replace(/<[^>]*>/g, ' ');
+    GONE.forEach(function (pair) {
+      const m = pair[0].exec(text);
+      if (m) bad.push(id + ' says "' + m[0] + '" -- ' + pair[1]);
+    });
+  });
+  if (bad.length) fail('retired', bad.length + ' recipe step(s) still name something he dropped: ' +
+    bad.join(' · ') + '. He cooks from these.');
+  else pass('retired', GONE.length + ' retired product(s), none surviving in any recipe step');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
