@@ -51,11 +51,11 @@ a whole card as one string, so a delta in one line excused a conflation in
 another; and its regexes had been written through a Python heredoc that turned
 `\b` into a literal backspace, so a check was silently matching nothing.
 
-## check-offplan.plant.js
+## check-app.plant.js
 
-    node tools/check-offplan.plant.js
+    node tools/check-app.plant.js
 
-Proves `[offplan-topping]` in check-app.js is load-bearing. His rule, 2026-08-19: off-track eating
+Proves the BEHAVIOURAL guards in check-app.js are load-bearing — [offplan-topping] and [buffins]. His rule, 2026-08-19: off-track eating
 that actually matters is paid out of that day's Creami topping, with a note on the flavor card.
 
 Plants the four ways that can rot — the 5 g trim step returning so a 60-cal debt over-cuts the

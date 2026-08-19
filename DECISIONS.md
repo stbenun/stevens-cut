@@ -403,3 +403,45 @@ new field on a FOOD_FACTS entry is a change to the doc parser too.**
 `index.html` is LF-only. An anchor written with `\n` matches NOTHING in a CRLF file, and the failure
 reads exactly like a missing anchor. Patch scripts must normalise for matching and restore the file's
 own convention on write.
+
+---
+
+## 2026-08-19 (night) — Buffin stock, and a harness that was reporting a pass on a dead build
+
+**HIS ASK:** *"Ye track which ones I eat."* He owns one of each, so pricing a Buffin without knowing
+whether he still has one is useless — the app would happily suggest a flavor he ate on Sunday. New
+card under the Creami: closed by default, badge carries how many are LEFT, tap to mark one eaten,
+cheapest first because that is the decision he is actually making.
+
+**The list is DERIVED from `FOOD_FACTS` by key prefix, never retyped.** Add a flavor to the price
+list and it appears on the card. `[buffins]` fails the build if a listed macro stops equalling its
+fact, which is the specific way a card like this rots into a second price list.
+
+**⛔ probe.js was reporting "clean" on a build that did not parse.** My first attempt at the card
+nested a template literal one escaping level wrong, so `index.html` had a syntax error. probe printed
+*"0 renders ... clean — no throws, no error cards, no console errors"* and exited 0, because it only
+ever asked whether the error map was empty. Nothing rendered, so nothing could throw. **It now asserts
+the render count equals days x times x locations x tabs and fails otherwise.** This is the repo's own
+lesson landing on its most-trusted tool: a harness that tests nothing looks exactly like a harness
+that finds nothing. Watched it fail on a deliberately broken build before trusting it.
+
+**A plant that cannot fail is not a plant.** The `[buffins]` ordering case was planted by DELETING the
+sort — and passed, because the facts happen to be written into `FOOD_FACTS` in ascending-calorie order,
+so removing the sort changed nothing. Reversing the sort cannot be a no-op whatever the write order is.
+Same family as the already-recorded fixture lesson, but the trap here was the DATA being accidentally
+in the tested order rather than a fixture naming a row.
+
+**`check-offplan.plant.js` is now `check-app.plant.js`.** It holds plants for the behavioural guards in
+check-app.js — `[offplan-topping]` and `[buffins]` — the way `check-food.selftest.js` does for the food
+guards. The old name stopped describing the file the moment a second guard needed planting.
+
+**Layout: the macro group must never break mid-sequence.** At 320 px the fat value was dropping onto a
+line of its own ("420 · 24P · 54C" then "· 12F"). Pinned the numbers with nowrap and flex-shrink:0 so
+the flavor NAME wraps instead — a wrapped name is readable, a wrapped macro row is not. Scoped inline,
+because `.q` is shared by every meal row and `[meal-row-wrap]` guards those. Measured in Edge at 320
+and 400, not reasoned about.
+
+**Tonight's call, for the record:** he skipped the Creami for a Buffin with a beef dinner. Keto bread
+turned out to be the hinge — it carries real protein per slice, so dropping the whole bun to buy more
+potato puts him UNDER his protein target. One slice off is the balance point. Worth remembering that
+the bread in that burger is a protein row, not just a carb row.

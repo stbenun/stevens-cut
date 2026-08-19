@@ -361,6 +361,17 @@ function main() {
     if (!seen.has(key)) seen.set(key, { ctx: 'async', what: l, n: 0 });
     seen.get(key).n++;
   });
+  /* ⛔ ZERO RENDERS IS A FAILURE, NOT A CLEAN RUN. Reported "clean" on a build whose script had a
+     syntax error — nothing rendered, so nothing could throw. Assert the work actually happened
+     before believing the absence of errors. */
+  const expected = days.length * times.length * locs.length * TABS.length;
+  if (runs !== expected) {
+    console.log('\nFAIL — rendered ' + runs + ' view(s), expected ' + expected +
+                '. Zero or short means the app did not boot (check index.html for a syntax error); ' +
+                'an absence of errors across renders that never ran is not a pass.');
+    process.exitCode = 1;
+    return;
+  }
   if (!seen.size) { console.log('clean — no throws, no error cards, no console errors'); return; }
   console.log(`\n${seen.size} distinct problem(s):\n`);
   [...seen.values()].sort((a, b) => b.n - a.n).forEach(p => {

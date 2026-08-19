@@ -1327,5 +1327,60 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     res.cap + '-cal topping: noise never billed, no cut exceeds its debt, cup specs untouched');
 }
 
+
+/* ---------- buffins — the stock card he asked for, and the thing it must never become ----------
+ * HIS ASK, 2026-08-19: "Ye track which ones I eat." He owns one of each, so a price list without a
+ * count is useless — it would suggest a flavor he ate on Sunday.
+ *
+ * WHAT THIS GUARDS. The card DERIVES its flavors and macros from FOOD_FACTS by key prefix, and the
+ * whole point is that it never becomes a second copy of the price list. So: every buffin fact must
+ * appear, the badge must count what is LEFT rather than what exists, marking one must not delete it
+ * from the list, and the card must start closed like every other section in this app.
+ * The nut-flagged flavor must stay visibly marked — he reads wrappers himself, but the card should
+ * not quietly present it as equivalent to the other ten.
+ */
+{
+  const r = run(`
+    const before = store.get('qpcut.buffins', {});
+    store.set('qpcut.buffins', {});
+    const list = buffinList();
+    const factKeys = Object.keys(FOOD_FACTS).filter(k => k.indexOf('buffin ') === 0);
+    const closed = buffinCardHTML();
+    const first = list.length ? list[0].key : null;
+    store.set('qpcut.buffins', first ? { [first]: '2026-08-19' } : {});
+    const after = buffinCardHTML();
+    const stock = buffinStock();
+    store.set('qpcut.buffins', before);
+    const badge = h => { const m = h.match(/<b>(\\d+)<\\/b> left/); return m ? +m[1] : null; };
+    const lis = h => (h.match(/<li /g) || []).length;
+    return JSON.stringify({
+      facts: factKeys.length, listed: list.length,
+      sorted: list.every((b, i) => i === 0 || list[i-1].cal <= b.cal),
+      macrosMatch: list.every(b => FOOD_FACTS[b.key] && FOOD_FACTS[b.key].cal === b.cal &&
+                                   FOOD_FACTS[b.key].p === b.p && FOOD_FACTS[b.key].c === b.c),
+      badgeClosed: badge(closed), lisClosed: lis(closed),
+      startsClosed: closed.indexOf(' open') === -1,
+      badgeAfter: badge(after), lisAfter: lis(after),
+      nutFacts: factKeys.filter(k => FOOD_FACTS[k].nut).length,
+      nutChips: (closed.match(/nuts<\\/span>/g) || []).length,
+      leftAfter: stock.left.length, goneAfter: stock.gone.length
+    });
+  `);
+  const d = JSON.parse(r);
+  const bad = [];
+  if (d.facts !== d.listed) bad.push(d.facts + ' buffin facts but the card lists ' + d.listed + ' — the list is meant to be derived, so these cannot differ');
+  if (!d.sorted) bad.push('not cheapest-first, which is the ordering the choice actually depends on');
+  if (!d.macrosMatch) bad.push('a listed macro does not equal its FOOD_FACTS entry — the card has become a second copy');
+  if (d.badgeClosed !== d.facts) bad.push('badge reads ' + d.badgeClosed + ' left with nothing eaten, expected ' + d.facts);
+  if (!d.startsClosed) bad.push('card does not start closed');
+  if (d.badgeAfter !== d.facts - 1) bad.push('after eating one the badge reads ' + d.badgeAfter + ', expected ' + (d.facts - 1));
+  if (d.lisAfter !== d.lisClosed) bad.push('marking one REMOVED it from the list (' + d.lisClosed + ' -> ' + d.lisAfter + '); it should stay, greyed, with its date');
+  if (d.leftAfter !== d.facts - 1 || d.goneAfter !== 1) bad.push('stock split wrong: left ' + d.leftAfter + ', gone ' + d.goneAfter);
+  if (d.nutChips !== d.nutFacts) bad.push(d.nutFacts + ' nut-flagged fact(s) but ' + d.nutChips + ' marked on the card');
+  if (bad.length) fail('buffins', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('buffins', d.listed + ' flavors derived from FOOD_FACTS, cheapest first, badge counts what is left, ' +
+    'marking one keeps it listed with its date, ' + d.nutFacts + ' nut-flagged and marked, starts closed');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

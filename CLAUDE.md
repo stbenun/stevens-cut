@@ -110,7 +110,7 @@ NODE_PATH=.work/node_modules node tools/check-app.js        # schedule, rotation
 NODE_PATH=.work/node_modules node tools/probe.js            # renders his real data, every tab/day
 node tools/check-priced.plant.js                            # plants real defects, proves [priced] fires
 node tools/check-food.selftest.js                           # plants real defects across the food guards
-node tools/check-offplan.plant.js                           # plants real defects, proves [offplan-topping] fires
+node tools/check-app.plant.js                               # plants real defects, proves the app-behaviour guards fire
 
 # 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
 node tools/build-next.js                                    # regenerate next/index.html

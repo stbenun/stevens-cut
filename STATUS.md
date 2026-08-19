@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 689,204 bytes, 8,238 lines, one file |
-| build | `b1787179656` |
+| app | `index.html`, 693,571 bytes, 8,305 lines, one file |
+| build | `b1787182951` |
 | foods on the price list | 117 |
 | provenance | 53 label · 36 USDA · 26 derived · 2 unverified |
 
@@ -111,7 +111,7 @@ NODE_PATH=.work/node_modules node tools/check-app.js      # schedule, rotations,
 NODE_PATH=.work/node_modules node tools/probe.js          # renders his real data, every tab/day
 node tools/check-priced.plant.js                          # plants real defects, proves [priced] fires
 node tools/check-food.selftest.js                         # plants real defects across the food guards
-node tools/check-offplan.plant.js                          # plants real defects, proves [offplan-topping] fires
+node tools/check-app.plant.js                              # plants real defects, proves the app-behaviour guards fire
 ```
 
 Do not trust a claim in any document — including this one — over what those five print.
