@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 680,572 bytes, 8,129 lines, one file |
-| build | `b1787160535` |
+| app | `index.html`, 680,321 bytes, 8,129 lines, one file |
+| build | `b1787169279` |
 | foods on the price list | 106 |
 | provenance | 42 label · 36 USDA · 26 derived · 2 unverified |
 
@@ -19,7 +19,7 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **226** | 88% of 257 |
+| priced from FOOD_FACTS | **225** | 88% of 256 |
 | deliberately zero (`{free:1}`) | 27 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
@@ -67,11 +67,11 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b14` | Cinnamon Toast Bowl | 539 / 45 / 52 / 19 | -1 cal |
 | `bf/b15` | Vanilla Berry Bowl | 539 / 44 / 55 / 18 | -1 cal |
 | `bf/b26` | Snickerdoodle Bowl | 539 / 44 / 60 / 15 | -1 cal |
+| `lu/l6` | Salmon Shawarma Bowl | 574 / 53 / 57 / 15 | -1 cal |
 | `di/d1` | Burger | 579 / 60 / 58 / 18 | -1 cal |
 | `bf/b6` | Strawberry Cheesecake Bowl | 538 / 44 / 60 / 15 | -2 cal |
 | `bf/b11` | Chocolate Almond-Butter Bowl | 538 / 46 / 47 / 21 | -2 cal |
 | `lu/l3` | Spinach Jiben | 573 / 57 / 41 / 22 | -2 cal |
-| `lu/l6` | Salmon Shawarma Bowl | 573 / 53 / 53 / 17 | -2 cal |
 | `di/d15` | Tomato Beef | 578 / 61 / 60 / 18 | -2 cal |
 | `bf/b12` | Fruity Pebbles Bowl | 537 / 44 / 54 / 18 | -3 cal |
 | `bf/b21` | Mocha Cookie Bowl | 537 / 44 / 55 / 18 | -3 cal |

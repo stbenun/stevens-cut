@@ -281,3 +281,32 @@ the direction that costs him. Now label-sourced at 0.625 cal/g, which reproduces
 a midpoint, then a basis, without knowing which bottle was his — and recorded it as "brand unconfirmed"
 while still changing his food. A number flagged uncertain should not also be acted on: either ask first, or
 leave what he had. Asking cost one word.
+
+---
+
+## 2026-08-19 — the hummus comes out of the Shawarma Bowl
+
+**Hummus is out of l6.** *"get rid of the hummus."* It had been carried as an optional smear and the
+card already told him to consider skipping it, so this makes the skip the build. Removing it alone would
+have left the bowl further short on carbs than it already was, so the freed calories went into the rice —
+amounts live in `SLOTS` l6, and the cooking water scales with the rice rather than staying at the figure
+the smaller portion needed. Fat was over its slot line and the hummus is where that sat, so this closes
+both at once.
+
+**What made it visible was a stranded sentence, not a wrong number.** The l6 method carried a note saying
+the rice had been *"bumped from"* the exact figure the step already showed. It came from `8697a2a`, which
+raised the rice to answer his "feels small" complaint and pushed the bowl over its slot; `8d9edcb` then
+rolled the portion back to hold the budget and left the explanation behind. So a real complaint of his got
+a fix, the fix got reverted for a good reason, and the only surviving trace was a sentence that no longer
+parsed.
+
+**A stale rationale survives every guard that checks numbers.** `[step-qty]` compares a step's quantity
+against its row and passes when they agree — it has nothing to say about prose explaining a change that no
+longer exists. Worth knowing: the sentences that justify a number are the one thing in this repo with no
+owner and no check.
+
+**Still open, not his call to make:** the lunch budget exists twice and the two copies disagree —
+`SLOT_BUDGET.lu` against the slot's own `b`, differing on calories, protein and carbs, with only one of
+them enforced by `[slot-fit]`. Reading the unenforced one is how a correct lookup produced a wrong figure
+in conversation. Raised with him 2026-08-19; not yet fixed, because changing a budget moves every meal
+judged against it.
