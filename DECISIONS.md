@@ -228,3 +228,29 @@ needs **citrus behind the blueberry** or the fruit reads flat; a snickerdoodle n
 the brown-sugar note and more salt than any other bowl, because it is a salt-and-cinnamon cookie; and
 almond extract plus almond butter is one trick in two parts — the extract is the bitter-almond marzipan
 note, the butter is the body, and neither alone gets there.
+
+---
+
+## 2026-08-18 (night) — Morning Bag
+
+**His ask:** a card at the top of Today for what to pack, titled **Morning Bag**, listing what he needs for
+the day's COR and yogurt bowl, supplements, and lunch, with room to add things **the night before and the
+morning of**. And on supplements: *"just write supplements. dont write each one."*
+
+**It is DERIVED, not authored.** The COR line comes from `corFor()`/`corBuild()` and the bowl line straight
+off `OPTBYID[bowlOfDay(ld)]`'s own rows — the same functions the Food zone below it uses. Writing a second
+packing list would have been the two-copies bug in a new place, and it would have gone stale the first time
+a portion moved. It follows the date picker too, so previewing tomorrow shows tomorrow's bag.
+
+**Two add-lanes, not one**, because he asked to add at two different times and a single box would lose which
+was which. Checks and additions persist **per day** (`qpcut.bag.<iso>`) — a bag packed last night is not
+tomorrow's bag.
+
+**Two bugs caught before it shipped.** The badge read "12" with three items added, because string
+concatenation evaluates left to right and the add-lanes were being built *after* the count had already been
+interpolated — a count that ignores what he added is worse than no count, since he would pack from it. And
+the icons did not match the Food zone's, which reads as a different thing two cards apart.
+
+**Layout was measured, not reasoned about**, per CLAUDE.md: opened in real Edge at 320 and 400 px, every row
+measured, screenshots read. No overflow at either width; a couple of COR rows wrap to two lines at 320 and
+that is graceful, not deformed. The Lunch line was shortened because the long version wrapped.

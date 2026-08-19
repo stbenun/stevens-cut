@@ -2874,12 +2874,10 @@ const CREAMI_BATCHES = [
   ['6 · Chocolate-Covered Strawberry','LD Strawberry Shortcake','chocolate Jell-O 5 g','1 tsp vanilla bean paste','70 g strawberries + FF whip 19 g + SF choc drizzle 15 g + 6 whole mini Oreos (19 g)',[['strawberries',70],['ff whip',19],['sf choc syrup',15],['oreo mini',19.32]]],
   ['7 · Snickerdoodle','Cinnamon Toast','butterscotch Jell-O 5 g','½ tsp caramel + ¾ tsp cinnamon','3 crushed Biscoff (23 g) + FF whip 25 g',[['biscoff',23.25],['ff whip',25]]],
   ['8 · Berry Cereal Milk','Fruity Pebbles','vanilla Jell-O 5 g','¼ tsp lemon','25 g Fruity Pebbles + 12 g freeze-dried strawberries',[['fruity pebbles',25],['fd strawberries',12]]],
- ,
   ['Orange Creamsicle','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp orange + ½ tsp vanilla bean paste','8 crushed Nilla wafers (30 g)',[['nilla wafer',30]]],
   ['Mocha Cookie','Chocolate Cookie Blast','chocolate Jell-O 5 g','½ tsp coffee extract','29 g whole mini Oreos',[['oreo mini',29]]],
   ['Maple Cookie Butter','Cinnamon Toast','butterscotch Jell-O 5 g','½ tsp cookie butter + ¼ tsp maple','29 g crushed Biscoff',[['biscoff',29]]],
-  ['Cake Batter','Vanilla Ice Cream','vanilla Jell-O 5 g','¾ tsp cake batter extract','30 g crushed Nilla wafers',[['nilla wafer',30]]]
- ,
+  ['Cake Batter','Vanilla Ice Cream','vanilla Jell-O 5 g','¾ tsp cake batter extract','30 g crushed Nilla wafers',[['nilla wafer',30]]],
   ['Red Velvet','Vanilla Ice Cream','chocolate Jell-O 5 g','¾ tsp velvet cake extract','30 g crushed Nilla wafers',[['nilla wafer',30]]],
   ['Blueberry Muffin','Blueberry Muffin','vanilla Jell-O 5 g','½ tsp blueberry + ¼ tsp lemon','37 g crushed graham',[['graham cracker',33]]],
   ['Snickerdoodle','Cinnamon Toast','butterscotch Jell-O 5 g','1 tsp cinnamon spice + Golden Lakanto','34 g Cinnamon Toast Crunch',[['cinnamon toast crunch',34]]],
@@ -3188,12 +3186,10 @@ const COR_SETS = [
   ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie — 70 g diced apple + extra cinnamon'],
   ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse — berries'],
   ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse — berries'],
- ,
   ['Orange Cream Roll','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ½ tsp orange + ½ tsp vanilla bean paste, berries'],
   ['Mocha Cake','Chocolate Cake COR + Chocolate Cookie Blast — ½ tsp coffee extract, strawberries'],
   ['Maple Cookie Butter','Cookie Butter COR + Cinnamon Toast Ryse — ¼ tsp maple, berries'],
-  ['Cake Batter Bowl','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ¾ tsp cake batter extract, berries']
- ,
+  ['Cake Batter Bowl','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ¾ tsp cake batter extract, berries'],
   ['Red Velvet','Chocolate Cake COR + Vanilla Ice Cream Ryse — ¾ tsp velvet cake extract, strawberries'],
   ['Blueberry Muffin Top','Blueberry Muffin COR + Lemon Cake Ryse — ½ tsp blueberry + ¼ tsp lemon, blueberries'],
   ['Snickerdoodle','Cinnamon Roll COR + Cinnamon Toast Ryse — 1 tsp cinnamon spice + Golden Lakanto, berries'],
@@ -4124,6 +4120,33 @@ function buyListHTML(){
       </button>`).join('');
   return rows || '<div class="sub">Nothing to buy — grocery list is fully checked and no adds.</div>';
 }
+function wireBag(){
+  const ld = logDate || isoToday();
+  const K = bagKey(ld);
+  const get = () => store.get(K, {done:[], night:[], morn:[]});
+  document.querySelectorAll('[data-bagadd]').forEach(b=>b.addEventListener('click',()=>{
+    const which = b.dataset.bagadd, inp = $('#bag_'+which);
+    const v = inp ? inp.value.trim() : ''; if(!v) return;
+    const st = get(); st[which] = (st[which]||[]).concat([v]);
+    store.set(K, st); render();
+  }));
+  document.querySelectorAll('[data-bagx]').forEach(el=>el.addEventListener('click',e=>{
+    e.stopPropagation();
+    const p = el.dataset.bagx.split(':'), st = get();
+    (st[p[0]]||[]).splice(+p[1],1);
+    /* a removed item must not leave its check behind, or the packed count drifts */
+    st.done = (st.done||[]).filter(x=>x !== p[0]+'|'+p[1]);
+    store.set(K, st); render();
+  }));
+  document.querySelectorAll('[data-bag]').forEach(el=>el.addEventListener('click',e=>{
+    if(e.target.closest('[data-bagx]')) return;
+    const id = el.dataset.bag, st = get();
+    st.done = (st.done||[]).includes(id) ? st.done.filter(x=>x!==id) : (st.done||[]).concat([id]);
+    store.set(K, st); render();
+  }));
+  const rs = document.querySelector('[data-bagreset]');
+  if(rs) rs.addEventListener('click',()=>{ const st=get(); st.done=[]; store.set(K,st); render(); });
+}
 function wireBuy(){
   const add = $('#buyAdd');
   if(add) add.addEventListener('click',()=>{
@@ -4366,6 +4389,80 @@ const DAY_PLAN = {
   ],
  },
 };
+/* ---------- MORNING BAG ----------
+   What to take out the door, derived from the same rotation functions the Food zone uses so the two can
+   never disagree. Per-day storage: a bag packed last night is not tomorrow's bag. */
+function bagKey(ld){ return 'qpcut.bag.' + ld; }
+function bagCard(ld, wd){
+  const st   = store.get(bagKey(ld), {done:[], night:[], morn:[]});
+  const done = new Set(st.done || []);
+
+  /* COR of the day — corBuild gives the parsed parts, so the bag lists what he has to CARRY */
+  const cor  = corFor(ld, wd);
+  const cb   = corBuild(cor[1]);
+  const corItems = ['Elev8 ' + cb.corFlavor + ' COR — 25 g', cb.protein + ' protein — weigh it', 'Oats — 25 g'];
+  if(cb.fruitLabel)  corItems.push(cb.fruitLabel + ' — ' + cb.fruitQty);
+  if(cb.crunchLabel) corItems.push(cb.crunchLabel + ' — ' + cb.crunchQty);
+  if(cb.extracts && cb.extracts.length){ /* capitalise: every other row starts upper-case and 'coconut extract' sat lower */
+    const ex = cb.extracts.join(' + '); corItems.push(ex.charAt(0).toUpperCase() + ex.slice(1)); }
+  corItems.push('Almond butter — ' + (cb.ab ? cb.ab + ' g' : '32 g'));
+
+  /* Yogurt bowl of the day — straight off its own rows, so the weights match the recipe card */
+  const bId  = bowlOfDay(ld);
+  const bowl = bId ? OPTBYID[bId] : null;
+  const bowlItems = bowl ? (bowl.vars[0].ing || [])
+        .filter(r => !/pinch of salt/i.test(String(r[0])))
+        .map(r => String(r[0]).replace(/<[^>]*>/g,'').replace(/\s*\(.*?\)\s*$/,'') + ' — ' + r[1]) : [];
+
+  const groups = [
+    /* same icons the Food zone already uses for these two cards — 🍧 the yogurt bowl, 🥣 the COR bowl.
+       A different icon for the same thing two cards apart reads as a different thing. */
+    ['\u{1F367} ' + (bowl ? bowl.name : 'Yogurt bowl'), bowlItems],
+    ['\u{1F963} ' + cor[0] + ' (COR)', corItems],
+    ['\u{1F48A} Supplements', ['Supplements']],
+    /* short on purpose: the long version wrapped to two lines on his 320 px width, and his rule for the
+       supplements row applies here too \u2014 "just write supplements. dont write each one" */
+    ['\u{1F371} Lunch', ['Lunch \u2014 packed or buying?']]
+  ];
+  const line = (id, txt) =>
+    '<button class="buyitem' + (done.has(id) ? ' done' : '') + '" data-bag="' + esc(id) + '">' +
+      '<span class="box"></span><span class="nm">' + txt + '</span></button>';
+
+  let n = 0, packed = 0;
+  const body = groups.map(g => {
+    const rows = g[1].map((t,i) => { const id = g[0]+'|'+i; n++; if(done.has(id)) packed++; return line(id, esc(t)); }).join('');
+    return '<div class="slotlbl" style="margin-top:10px">' + g[0] + '</div>' + rows;
+  }).join('');
+
+  /* his own additions, kept in two lanes because he asked to add at two different times */
+  const own = (which, label) => {
+    const arr = st[which] || [];
+    return '<div class="slotlbl" style="margin-top:10px">' + label + '</div>'
+      + arr.map((t,i) => {
+          const id = which+'|'+i; n++; if(done.has(id)) packed++;
+          return '<button class="buyitem' + (done.has(id)?' done':'') + '" data-bag="' + esc(id) + '">'
+               + '<span class="box"></span><span class="nm">' + esc(t) + '</span>'
+               + '<span class="q" data-bagx="' + which + ':' + i + '">\u00d7</span></button>';
+        }).join('')
+      + '<div class="formrow" style="gap:6px;margin-top:6px">'
+      + '<input type="text" id="bag_' + which + '" placeholder="Add\u2026" style="flex:1;font-family:var(--body)">'
+      + '<button class="btn" data-bagadd="' + which + '">Add</button></div>';
+  };
+
+  /* \u26D4 BUILD THE ADDED-ITEM SECTIONS BEFORE THE RETURN. own() is what counts his own additions into n and
+     packed, and string concatenation evaluates left to right \u2014 so calling it inside the return, after the
+     badge had already interpolated n, silently left every added item out of the total. Three items in the
+     bag and the badge still said "12". A count that ignores what he added is worse than no count, because
+     he would pack from it. */
+  const ownNight = own('night', '\u{1F319} Added the night before');
+  const ownMorn  = own('morn',  '\u2600\uFE0F Added this morning');
+  return '<div class="card">'
+    + '<details class="opt acc" data-acc="bag"' + (openAcc.has('bag') ? ' open' : '') + '>'
+    + '<summary><b>\u{1F392} Morning Bag</b> <span class="statline">' + packed + '/' + n + ' packed</span></summary>'
+    + body + ownNight + ownMorn
+    + '<div class="formrow" style="margin-top:8px"><button class="btn ghost" data-bagreset="1">Clear checks</button></div>'
+    + '</details></div>';
+}
 function dayPlanCard(ld){
   const p = DAY_PLAN[ld]; if(!p) return '';
   const T = planTarget(ld).t;                 /* [cal,P,C,F] */
@@ -6365,6 +6462,7 @@ function viewToday(){
         plan for today at the top of today." Only renders on a date that HAS one, so it costs
         nothing on an ordinary day. Starts CLOSED with the numbers in its badge, per the
         every-section-starts-closed rule. */''}
+  ${bagCard(ld, wd)}
   ${dayPlanCard(ld)}
   ${nowZone}
   ${order.map(k=>Z[k]).join('\n')}`;
@@ -7699,6 +7797,7 @@ function wireToday(){
     t[+el.dataset.todi].done = !t[+el.dataset.todi].done;
     store.set('qpcut.todos',t); render();
   }));
+  wireBag();
   wireBuy();
 }
 function wirePrep(){
@@ -7982,7 +8081,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787156344';
+const BUILD = 'b1787157882';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -1293,6 +1293,42 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [array-holes] a lone comma is an invisible missing entry ============
+ * Aug 18 2026, self-inflicted twice in one hour. Adding recipes, I inserted ",NEW" immediately before a
+ * closing bracket that already carried a trailing comma, producing "],\n ,\n" — a comma on a line by
+ * itself. In JavaScript that is an array HOLE: COR_SETS[0] reported length 16 with only 15 real entries.
+ *
+ * WHY NOTHING CAUGHT IT. Array.prototype.forEach SKIPS holes, so every loop over the data saw the right
+ * items and reported the right counts. CORPOOL() calls .flat(), which DROPS holes, so the pool came out
+ * clean. All 23 food checks passed, 24 app checks passed, and 210 probe renders were clean. The only
+ * reason I noticed is that I happened to read the raw source while looking for something else.
+ * A defect that every loop and every render agrees to ignore is precisely the kind that surfaces later
+ * as one undefined combo on one date. Comparing .length against the number of entries forEach actually
+ * visits is the only cheap way to see it.
+ */
+(function arrayHoles() {
+  const bad = [];
+  function walk(v, path) {
+    if (Array.isArray(v)) {
+      let seen = 0;
+      v.forEach(function () { seen++; });
+      if (seen !== v.length) bad.push(path + ' declares ' + v.length + ' entries but only ' + seen +
+        ' are real — ' + (v.length - seen) + ' hole(s), almost certainly a stray comma');
+      v.forEach(function (x, i) { walk(x, path + '[' + i + ']'); });
+    } else if (v && typeof v === 'object') {
+      Object.keys(v).forEach(function (k) { walk(v[k], path + '.' + k); });
+    }
+  }
+  [['SLOTS', SLOTS], ['COR_SETS', COR_SETS], ['CREAMI_BATCHES', grab('CREAMI_BATCHES')],
+   ['EXTRACTS', grab('EXTRACTS')],
+    ['PP_G', grab('PP_G')]]
+    .forEach(function (pair) { if (pair[1]) walk(pair[1], pair[0]); });
+  if (bad.length) fail('array-holes', bad.length + ' array(s) contain a hole: ' + bad.join(' · ') +
+    '. forEach skips holes and flat() drops them, so nothing else here can see this.');
+  else pass('array-holes', 'no holes in SLOTS, COR_SETS, CREAMI_BATCHES, EXTRACTS or PP_G');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
