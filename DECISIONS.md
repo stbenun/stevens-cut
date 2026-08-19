@@ -123,3 +123,24 @@ guards over every document.
 `CLAUDE.md`'s onboarding section claimed most ingredient rows were unsourced — true one morning, false
 by that evening, and nothing anywhere said so. Fast-moving facts now live in `STATUS.md`, generated, with
 `[status-doc]` failing the build when it drifts.
+
+---
+
+## 2026-08-18 (evening) — the yogurt bowls stay big
+
+**Volume beats flavor concentration. The 400 g base stays.** He ate b7 and said *"yogurt bowl was mid.
+not a lot of flavor."* I proposed cutting the base to 260 g and nearly doubling the cookie, trading the
+~22 g of surplus protein every bowl carries for mix-ins. He rejected it: *"no i dont like that. i need it
+to fill me still. ill just add salt, lakanto and a bit more extract."* **His reason beats mine** — 400 g
+of yogurt is what makes breakfast hold, and on a cut fullness is worth more than a more intense bowl.
+⛔ Do not re-propose shrinking the yogurt base to fix flavor.
+
+**Flavor gets fixed with the free levers instead: salt, Lakanto, heavier extract.** Now a row on all 13
+FAGE-base bowls so it is on the card, not in a chat. Why it was bland is worth keeping: **13 of the 14
+bowls had no sweetener of any kind** and plain FAGE 2% is tart, and **salt was absent from all 14** —
+the biggest lever there is in sweet dairy. Both cost nothing, so there was never a macro reason to leave
+them out. They had simply never been written down.
+
+**Standing note, not yet acted on:** every FAGE bowl runs ~22 g protein OVER the 36 g breakfast budget.
+That is real surplus, and if he ever wants more room for flavor without losing volume, that is where it
+would come from. Raised once and declined; his call if it comes up again.

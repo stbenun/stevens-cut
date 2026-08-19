@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 660,082 bytes, 7,961 lines, one file |
-| build | `b1787088479` |
+| app | `index.html`, 661,096 bytes, 7,961 lines, one file |
+| build | `b1787153396` |
 | foods on the price list | 106 |
 | provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
 
@@ -19,8 +19,8 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **216** | 96% of 226 |
-| deliberately zero (`{free:1}`) | 6 | spices, rubs, a free garnish |
+| priced from FOOD_FACTS | **216** | 90% of 239 |
+| deliberately zero (`{free:1}`) | 19 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
 

@@ -1102,6 +1102,39 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [dup-rows] the same ingredient must not appear twice in one meal ============
+ * Aug 18 2026: a bulk edit added a free "pinch of salt, Lakanto to taste" row to the yogurt bowls
+ * using indexOf-and-replace in a loop, where the search string was a PREFIX of its own replacement.
+ * The loop never stopped matching. It appended TWENTY copies per bowl, 40 rows in all, and every
+ * single check passed -- because the row prices to zero, so no total moved, no budget shifted and no
+ * spec failed to resolve. The card would have shipped to his phone listing the same line twenty times.
+ *
+ * The lesson generalises past that one bug: a duplicated row is ALWAYS wrong, and when it is
+ * zero-calorie nothing arithmetic can see it. This is the check for that. It also catches the more
+ * dangerous version -- the same food counted twice in a plate he then eats.
+ */
+(function dupRows() {
+  const bad = [];
+  SLOTS.forEach(sl => sl.opts.forEach(o => (o.vars || []).forEach(function (v, vi) {
+    const tag = sl.key + '/' + o.id + (o.vars.length > 1 ? '#' + vi : '');
+    const seen = Object.create(null);
+    (v.ing || []).forEach(function (row) {
+      /* identity is the label PLUS the amount: two different weights of the same food on one card is a
+         legitimate shape (a warm plate and a cold plate can both take almond butter), but the identical
+         line twice never is. */
+      const k = String(row[0]).replace(/<[^>]*>/g, '') + ' @@ ' + String(row[1]);
+      seen[k] = (seen[k] || 0) + 1;
+    });
+    Object.keys(seen).forEach(function (k) {
+      if (seen[k] > 1) bad.push(tag + ' x' + seen[k] + ' "' + k.split(' @@ ')[0].slice(0, 40) + '"');
+    });
+  })));
+  if (bad.length) fail('dup-rows', bad.length + ' meal(s) list an identical ingredient row more than once: ' +
+    bad.join(' · ') + '. A duplicated row is always wrong, and a zero-calorie one is invisible to every other check.');
+  else pass('dup-rows', 'no meal lists the same ingredient row twice');
+})();
+
+
 console.log('');
 if (fails) { console.log(fails + ' CHECK(S) FAILED'); process.exit(1); }
 console.log('all food checks passed');
