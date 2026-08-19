@@ -1210,5 +1210,39 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           ' them on ' + dryChecked + ' upcoming date(s)');
 }
 
+/* ============ [bag-window] the Morning Bag leads only in its two windows ============
+ * His rule: at the TOP 5-10 AM and 9 PM-2 AM, at the bottom the rest of the day.
+ * ⛔ THE NIGHT WINDOW WRAPS PAST MIDNIGHT, which is the whole reason this is guarded. Written the
+ * obvious way — m >= 1260 && m < 120 — it is NEVER true, so the card would silently vanish every single
+ * night and nothing would report an error, because a card that decides not to render looks exactly like
+ * a card that has nothing to say. Both ends of both windows are asserted below, plus the two minutes
+ * either side of each boundary.
+ * It is testable at all because bagAtTop takes an optional minute: nowMin is a scoped const, so the
+ * first attempt to check this stubbed globalThis.nowMin, changed nothing, and cheerfully reported the
+ * card as leading at 1 PM. A time rule that cannot be exercised at a chosen time cannot be verified.
+ */
+{
+  const res = run(`
+    const cases = [[0,'00:00',true],[119,'01:59',true],[120,'02:00',false],[299,'04:59',false],
+      [300,'05:00',true],[450,'07:30',true],[599,'09:59',true],[600,'10:00',false],
+      [780,'13:00',false],[1259,'20:59',false],[1260,'21:00',true],[1439,'23:59',true]];
+    const wrong = cases.filter(c => bagAtTop(false, c[0]) !== c[2]).map(c => c[1]);
+    return { wrong, backfill: bagAtTop(true), n: cases.length,
+             morning: typeof BAG_MORNING !== 'undefined' ? BAG_MORNING : null,
+             night: typeof BAG_NIGHT !== 'undefined' ? BAG_NIGHT : null };
+  `);
+  if (!res) fail('bag-window', 'could not evaluate bagAtTop in the booted app');
+  else if (res.wrong && res.wrong.length)
+    fail('bag-window', res.wrong.length + ' of ' + res.n + ' boundary minute(s) place the Morning Bag wrongly: ' +
+      res.wrong.join(', ') + '. If the night window stopped wrapping past midnight, the card vanishes every night.');
+  else if (!res.backfill)
+    fail('bag-window', 'a previewed or backfilled date does not lead with the bag — opening a specific day IS the packing case');
+  else if (!res.night || res.night[0] <= res.night[1])
+    fail('bag-window', 'BAG_NIGHT no longer wraps past midnight (' + JSON.stringify(res.night) + ') — that is the bug this guard exists for');
+  else ok('bag-window', res.n + ' boundary minutes place the bag correctly; night window wraps ' +
+    res.night[0] + '\u2192' + res.night[1] + ', morning ' + res.morning[0] + '\u2192' + res.morning[1]);
+}
+
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

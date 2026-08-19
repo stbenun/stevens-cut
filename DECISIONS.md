@@ -254,3 +254,18 @@ the icons did not match the Food zone's, which reads as a different thing two ca
 **Layout was measured, not reasoned about**, per CLAUDE.md: opened in real Edge at 320 and 400 px, every row
 measured, screenshots read. No overflow at either width; a couple of COR rows wrap to two lines at 320 and
 that is graceful, not deformed. The Lunch line was shortened because the long version wrapped.
+
+**Morning Bag placement is time-based**, his rule: at the TOP 5–10 AM and 9 PM–2 AM, at the bottom the rest
+of the day — *"just like you have other cards moving"*, which is `zoneOrder()`. A previewed or backfilled
+date always leads with it, because opening a specific day IS the packing case.
+
+**⛔ The night window WRAPS past midnight**, and that is the whole reason it is guarded. Written the obvious
+way — `m >= 1260 && m < 120` — it is never true, so the card would silently disappear every single night
+and nothing would report it, because a card that decides not to render looks exactly like a card with
+nothing to say. `[bag-window]` asserts both ends of both windows plus the minutes either side, and fails
+if `BAG_NIGHT` ever stops wrapping.
+
+It is testable only because `bagAtTop` takes an optional minute. `nowMin` is a scoped const, so the first
+attempt to check these boundaries stubbed `globalThis.nowMin`, changed nothing, and cheerfully reported the
+card as leading at 1 PM. **A time rule that cannot be exercised at a chosen time cannot be verified** —
+worth remembering the next time something depends on the clock.
