@@ -7,10 +7,10 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 680,876 bytes, 8,133 lines, one file |
-| build | `b1787159224` |
+| app | `index.html`, 680,572 bytes, 8,129 lines, one file |
+| build | `b1787160535` |
 | foods on the price list | 106 |
-| provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
+| provenance | 42 label · 36 USDA · 26 derived · 2 unverified |
 
 ## Ingredient rows
 
@@ -46,6 +46,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `lu/l10` | Salad+Bagel | 588 / 73 / 70 / 17 | +13 cal |
 | `bf/b27` | Almond Croissant Bowl | 551 / 45 / 46 / 22 | +11 cal |
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
+| `di/d3` | Blackened Salmon Plate | 589 / 54 / 58 / 15 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
 | `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
 | `bf/b1` | Cream of Rice | 545 / 38 / 52 / 22 | +5 cal |
@@ -66,12 +67,12 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b14` | Cinnamon Toast Bowl | 539 / 45 / 52 / 19 | -1 cal |
 | `bf/b15` | Vanilla Berry Bowl | 539 / 44 / 55 / 18 | -1 cal |
 | `bf/b26` | Snickerdoodle Bowl | 539 / 44 / 60 / 15 | -1 cal |
+| `di/d1` | Burger | 579 / 60 / 58 / 18 | -1 cal |
 | `bf/b6` | Strawberry Cheesecake Bowl | 538 / 44 / 60 / 15 | -2 cal |
 | `bf/b11` | Chocolate Almond-Butter Bowl | 538 / 46 / 47 / 21 | -2 cal |
 | `lu/l3` | Spinach Jiben | 573 / 57 / 41 / 22 | -2 cal |
 | `lu/l6` | Salmon Shawarma Bowl | 573 / 53 / 53 / 17 | -2 cal |
 | `di/d15` | Tomato Beef | 578 / 61 / 60 / 18 | -2 cal |
-| `di/d3` | Blackened Salmon Plate | 578 / 54 / 58 / 15 | -2 cal |
 | `bf/b12` | Fruity Pebbles Bowl | 537 / 44 / 54 / 18 | -3 cal |
 | `bf/b21` | Mocha Cookie Bowl | 537 / 44 / 55 / 18 | -3 cal |
 | `lu/l2` | Broccoli Jiben | 572 / 55 / 45 / 21 | -3 cal |
@@ -88,7 +89,6 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `sn/s1` | Ninja Creami | 315 / 32 / 30 / 7 | -10 cal |
 | `di/d16` | Teriyaki-Glaze Salmon Bowl (fresh · se | 569 / 55 / 51 / 15 | -11 cal |
 | `lu/l8` | Salmon Smash Patties | 563 / 56 / 66 / 14 | -12 cal |
-| `di/d1` | Burger | 568 / 60 / 58 / 18 | -12 cal |
 | `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 
@@ -101,7 +101,6 @@ The only hand-maintained list in this file — nothing can compute what he has n
 - **Balsamic drizzle brand** — b2 carries 30 cal for 15 g with no source. Balsamic GLAZE runs 30-90 cal per 15 g depending on how far it is reduced, so the brand decides it.
 - **Kodiak flapjack box** — b3 variant 2 prices 4 frozen flapjacks at 255 cal from a derived figure. Kodiak publishes 14-16 P across formulations, so the box settles it.
 - **Salmon species** — He confirmed WILD, skin off, sushi-grade from a kosher market. Basis is coho, which matches all six rows to within 1 cal. Sockeye would make the app read ~30 cal HIGH per meal; king ~59 LOW and ~7 g fat LOW, which would push five plates over their fat budget. He is asking at the counter.
-- **SF ketchup bottle** — Priced at 0.29 cal/g from G Hughes and Heinz No Sugar Added, both of which publish 5 cal a tablespoon. His rows had said 20 cal for 32 g; corrected to ~9. If his bottle is a different formulation this needs replacing.
 - **Jiben fat** — l2 and l3 run 6-7 g over their fat budget. It is structural — eggs plus cottage cheese plus mozzarella — so closing it means changing the food, which is his call, not a portion tweak.
 
 ## How to verify all of this yourself

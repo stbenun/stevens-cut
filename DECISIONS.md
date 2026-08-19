@@ -269,3 +269,15 @@ It is testable only because `bagAtTop` takes an optional minute. `nowMin` is a s
 attempt to check these boundaries stubbed `globalThis.nowMin`, changed nothing, and cheerfully reported the
 card as leading at 1 PM. **A time rule that cannot be exercised at a chosen time cannot be verified** —
 worth remembering the next time something depends on the clock.
+
+**SF ketchup is HEINZ**, and his one-word answer reversed a correction I had made in the wrong direction.
+His rows had said 20 cal per 32 g. I found that G Hughes publishes 5 cal a tablespoon, assumed Heinz matched
+it, and "corrected" his rows down to ~9. **Heinz No Sugar Added is 10 cal a tablespoon, not 5** — G Hughes is
+the 5. So the app was right before I touched it, and my fix erred toward UNDER-counting, which on a cut is
+the direction that costs him. Now label-sourced at 0.625 cal/g, which reproduces his long-standing 32 g =
+20 cal / 2 C rows exactly. ⛔ Do not conflate the two brands again; the entry says so.
+
+**The lesson is narrower than "check the brand".** I had TWO brands publishing different numbers and picked
+a midpoint, then a basis, without knowing which bottle was his — and recorded it as "brand unconfirmed"
+while still changing his food. A number flagged uncertain should not also be acted on: either ask first, or
+leave what he had. Asking cost one word.

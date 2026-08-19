@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 106 rows: **37** label · **36** USDA · **30** derived · **3** UNVERIFIED
+Provenance of the 106 rows: **38** label · **36** USDA · **30** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -96,7 +96,7 @@ Provenance of the 106 rows: **37** label · **36** USDA · **30** derived · **3
 | `scallion` | g | 0.32 | 0.0183 | 0.074 | 0.002 | USDA | USDA onions, spring/scallions, raw, tops and bulb: 100 g = 32 cal / 1.83 P / 7.4 C / 0.2 F -> per gram. Fetched Aug 18 2026. |
 | `seaweed packet` | each | 20 | 1 | 1 | 2 | derived | HIS FIGURE, stated Aug 18 2026: \"seaweed is 20.\" I had put 25 off a published gimMe range of 25-30 per 5 g pack; he corrected it and his pack is what he eats. Sheet size and brand vary more than the published range suggests, so his number governs. |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
-| `sf ketchup` | g | 0.29 | 0 | 0.071 | 0 | UNVERIFIED | Sugar-free ketchup, 0.29 cal/g. G Hughes Sugar Free and Heinz No Sugar Added both publish 5 cal per tablespoon (~17 g) with essentially all of it carbohydrate. Fetched Aug 18 2026. His 32 g rows had stated 20 cal (0.63 cal/g), so this corrects them to ~9. BRAND NOT CONFIRMED BY HIM -- two national sugar-free ketchups agree on 5 cal a tbsp, but if his bottle is a different formulation this needs replacing. |
+| `sf ketchup` | g | 0.625 | 0 | 0.0625 | 0 | label | Heinz Tomato Ketchup No Sugar Added — HIS BOTTLE, confirmed by him Aug 18 2026 ('Heinz sf ketchup'). Published panel: 1 tbsp (16 g) = 10 cal / 1 C total (1 g sugars, 0 added) / 0 P / 0 F, 190 mg sodium, sweetened with stevia leaf extract. Per gram 0.625. Two independent sources agree on 10 cal a tablespoon. ⚠️ NOT G Hughes, which is 5 cal a tablespoon — conflating the two is what made me wrongly cut his rows from 20 cal to 9. Serving is listed as 16 g by some sources and 17 g by others; 16 g is used because it reproduces his long-standing 32 g = 20 cal rows exactly. |
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
 | `sliced almonds` | g | 5.79 | 0.212 | 0.216 | 0.499 | USDA | USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1. |
 | `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | derived | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
