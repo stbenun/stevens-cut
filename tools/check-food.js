@@ -1274,6 +1274,10 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     let m;
     while ((m = rx.exec(text)) !== null) {
       const name = m[1].toLowerCase().replace(/^(tsp|tbsp|the|a|of|and|plus|with|\u00bd|\u00bc|\u00be)\s+/g, '').trim();
+      /* Prose legitimately refers to "the extract" without naming one \u2014 b27 explains that "the extract is
+         the bitter-almond marzipan note" and got flagged for it. A bare article is not a flavor claim.
+         Skipping these is safe: a recipe that actually tells him to USE something always names it. */
+      if (!name || /^(the|a|an|this|that|each|its|his|any|no|one|more|same|other)$/.test(name)) continue;
       const words = name.split(/\s+/);
       const tail = words.slice(-2).join(' '), last = words[words.length - 1];
       if (NOT_AN_EXTRACT.test(name)) continue;

@@ -218,3 +218,13 @@ the "(protein-powder base)" name only as long as it kept the powder.
 unused: cookie butter, coffee, orange, pumpkin spice, maple, cake batter. Notes worth keeping — orange
 alone reads like juice and needs vanilla behind it to become creamsicle; maple behind pumpkin spice is what
 makes it read as PIE rather than spiced yogurt; coffee extract is what turns cocoa into mocha.
+
+**All 18 extracts now carry a recipe.** The last four were velvet cake, blueberry, cinnamon spice and
+almond: Red Velvet, Blueberry Muffin, Snickerdoodle and Almond Croissant, each as a bowl, a Creami cup and
+a COR combo. Flavor notes worth keeping, and they are in the steps rather than here:
+red velvet is cocoa plus a sharp dairy tang and **FAGE 2% IS the tang** — it does what buttermilk does in
+the cake, so no coloring and only ~6 g cocoa, because past 8 g it stops being velvet; a blueberry muffin
+needs **citrus behind the blueberry** or the fruit reads flat; a snickerdoodle needs **Golden** Lakanto for
+the brown-sugar note and more salt than any other bowl, because it is a salt-and-cinnamon cookie; and
+almond extract plus almond butter is one trick in two parts — the extract is the bitter-almond marzipan
+note, the butter is the body, and neither alone gets there.

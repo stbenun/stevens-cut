@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 667,588 bytes, 7,989 lines, one file |
-| build | `b1787155915` |
+| app | `index.html`, 672,696 bytes, 8,008 lines, one file |
+| build | `b1787156344` |
 | foods on the price list | 106 |
 | provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
 
@@ -19,8 +19,8 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **209** | 89% of 236 |
-| deliberately zero (`{free:1}`) | 23 | spices, rubs, a free garnish |
+| priced from FOOD_FACTS | **226** | 88% of 257 |
+| deliberately zero (`{free:1}`) | 27 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
 
@@ -42,7 +42,9 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 |---|---|---|---:|
 | `bf/b3#0` | Kodiak Breakfast | 560 / 35 / 64 / 21 | +20 cal · |
 | `bf/b5` | Banana Cream Protein Bowl | 560 / 44 / 62 / 17 | +20 cal · |
+| `bf/b25` | Blueberry Muffin Bowl | 553 / 48 / 58 / 16 | +13 cal |
 | `lu/l10` | Salad+Bagel | 588 / 73 / 70 / 17 | +13 cal |
+| `bf/b27` | Almond Croissant Bowl | 551 / 45 / 46 / 22 | +11 cal |
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
 | `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
@@ -63,6 +65,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b17` | Apple Pie Bowl | 540 / 44 / 67 / 16 | 0 cal |
 | `bf/b14` | Cinnamon Toast Bowl | 539 / 45 / 52 / 19 | -1 cal |
 | `bf/b15` | Vanilla Berry Bowl | 539 / 44 / 55 / 18 | -1 cal |
+| `bf/b26` | Snickerdoodle Bowl | 539 / 44 / 60 / 15 | -1 cal |
 | `bf/b6` | Strawberry Cheesecake Bowl | 538 / 44 / 60 / 15 | -2 cal |
 | `bf/b11` | Chocolate Almond-Butter Bowl | 538 / 46 / 47 / 21 | -2 cal |
 | `lu/l3` | Spinach Jiben | 573 / 57 / 41 / 22 | -2 cal |
@@ -86,9 +89,10 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `di/d16` | Teriyaki-Glaze Salmon Bowl (fresh · se | 569 / 55 / 51 / 15 | -11 cal |
 | `lu/l8` | Salmon Smash Patties | 563 / 56 / 66 / 14 | -12 cal |
 | `di/d1` | Burger | 568 / 60 / 58 / 18 | -12 cal |
+| `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 
-**0 of 47 variants over budget.**
+**0 of 51 variants over budget.**
 
 ## Waiting on him
 
