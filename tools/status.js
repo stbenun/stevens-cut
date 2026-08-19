@@ -171,6 +171,7 @@ function build() {
   L.push('NODE_PATH=.work/node_modules node tools/probe.js          # renders his real data, every tab/day');
   L.push('node tools/check-priced.plant.js                          # plants real defects, proves [priced] fires');
   L.push('node tools/check-food.selftest.js                         # plants real defects across the food guards');
+  L.push('node tools/check-offplan.plant.js                          # plants real defects, proves [offplan-topping] fires');
   L.push('```');
   L.push('');
   L.push('Do not trust a claim in any document — including this one — over what those five print.');

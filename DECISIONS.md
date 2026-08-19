@@ -310,3 +310,46 @@ owner and no check.
 them enforced by `[slot-fit]`. Reading the unenforced one is how a correct lookup produced a wrong figure
 in conversation. Raised with him 2026-08-19; not yet fixed, because changing a budget moves every meal
 judged against it.
+
+---
+
+## 2026-08-19 (later) — off-track eating is paid out of the Creami topping
+
+**HIS RULE, verbatim:** *"whenever i tell you off track eating that actually matters, take the cals from
+Creami Topping that day. I'd want it as a small note added to the creami flavor card that day."*
+
+**This was not a new mechanism — it was a missing default.** The off-plan card already existed, already
+stored per-date entries, and already knew the threshold: anything at or under the noise floor renders as
+"nothing to offset." What it then did was hand him `FIXPOOL` as a row of buttons and ask him to choose how
+to pay for it. That is a prompt standing where a computed answer belongs, which is the thing the app exists
+to remove. The topping is now the till, and the card says what to take off.
+
+**⛔ The deduction is a render-time overlay, never an edit to a cup.** All 36 cups still spec the topping
+allowance and `[creami-topping]` still enforces every one of them. A per-day edit to a cup would make that
+spec unverifiable, which is exactly how the card printed a flat "Topping (140 cal)" on all 36 for months
+before he caught it on the cup that was really 75.
+
+**The cap is the topping, not the cup.** He said take it from the topping, so the base is never touched. A
+day whose off-plan exceeds what the topping holds says so and names the remainder, rather than quietly
+eating into the rest of the snack.
+
+**⛔ Never cut more of the dessert than the debt.** The first version stepped in 5 g and told him to remove
+70 cal of wafer to pay a 60 cal debt. Trimming is 1 g at a time now (he weighs the topping) and a step that
+would overshoot is not taken; a residue under a handful of calories is dropped rather than printed.
+Which row gets cut follows his ranking rule: the row where the cut is the smallest FRACTION, and never the
+whip, because trimming air buys a number without buying a smaller dessert.
+
+**What his celery and pepper settled:** he reported them the same minute he gave the rule, and they come to
+well under the floor. Nothing came off the topping, and the reason is his own standing call that vegetables
+may go UP to pad a plate and never down to trim one. The app's pre-existing floor agreed independently.
+**Worth keeping: "that actually matters" already had a number in the app before he said the words.**
+
+**A guard that reads its threshold from the code under test cannot see that threshold move.** The new
+`[offplan-topping]` check probed at the noise constant and compared against it, so lowering the floor to
+zero moved the test with it and passed clean. The plant harness caught it. The threshold is pinned in the
+check now, and changing the constant fails the build until someone argues for it. Same family as the
+already-recorded lesson that a guard switched off by adding data is not a guard.
+
+**STILL OWED, and he has not approved it:** nothing writes these entries. The card reads a "via chat" badge
+that no code sets, so the rule currently works only for what he types in himself. The write path is the
+gist sync, which means me pushing to his live data — raised with him, not built.

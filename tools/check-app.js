@@ -1244,5 +1244,88 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
 }
 
 
+/* ---------- offplan-topping — off-track calories come out of the topping ----------
+ * HIS RULE, 2026-08-19: "whenever i tell you off track eating that actually matters, take the cals
+ * from Creami Topping that day. I'd want it as a small note added to the creami flavor card that day."
+ *
+ * Three ways this can go wrong, and each is asserted below:
+ *   1. it charges NOISE. The card already called anything at or under OFFPLAN_NOISE "nothing to
+ *      offset"; a rule that quietly starts billing a celery stick for it breaks his own threshold.
+ *   2. it OVERSHOOTS. The first cut of creamiTrim told him to remove 70 cal of wafer to pay a 60 cal
+ *      debt, because it stepped in 5 g. Taking more dessert than the debt is a cost he never agreed to.
+ *   3. it EDITS A CUP. The deduction is a render-time overlay precisely so the 36 cups still spec 140
+ *      and [creami-topping] still enforces them. If a per-day charge ever mutates cup[5], that spec
+ *      stops being checkable — which is how "Topping (140 cal)" printed on every cup for months.
+ * Synthetic dates and a cup found by capacity, not named, so this does not rot when the batch rotates.
+ */
+{
+  const r = run(`
+    const D = '2031-03-05';                     /* far future: cannot collide with his real log */
+    const before = store.get('qpcut.offplan', {});
+    /* find a cup with a real trimmable component rather than naming one — batches rotate */
+    let cup = null;
+    for (const b of CREAMI_BATCHES) for (const c of (b.cups || [])) {
+      const m = creamiTopMac(c);
+      if (m && m[0] > 100 && (c[5] || []).some(p => p[0] !== 'ff whip' && FOOD_FACTS[p[0]])) { cup = c; break; }
+      if (cup) break;
+    }
+    if (!cup) return JSON.stringify({ fatal: 'no cup with a trimmable topping' });
+    const cap = creamiTopMac(cup)[0];
+    const specBefore = JSON.stringify(cup[5]);
+
+    const seen = [];
+    const probeAt = (cal) => {
+      store.set('qpcut.offplan', { [D]: [{ text: 'planted', cal }] });
+      const ch = offplanCharge(D);
+      const note = offplanNote(D, cup);
+      const t = ch.cal ? creamiTrim(cup, ch.cal) : null;
+      const cut = t ? t.cuts.reduce((a, c) => a + c.cal, 0) : 0;
+      seen.push({ cal, charged: ch.cal, note, cut, plain: /No topping/.test(note) });
+    };
+    /* ⛔ ABSOLUTE, not derived from OFFPLAN_NOISE — a probe that reads the threshold it is testing
+       moves with it, and a floor dropped to 0 then passes. The harness caught exactly that. */
+    [5, 20, 39, 41, 60, 90, 120, cap - 1, cap, cap + 50, 900].forEach(probeAt);
+
+    store.set('qpcut.offplan', before);         /* never leave planted data behind */
+    return JSON.stringify({
+      cap, floor: OFFPLAN_NOISE, seen,
+      specUnchanged: JSON.stringify(cup[5]) === specBefore,
+      capStillSpec: Math.abs(creamiTopMac(cup)[0] - cap) < 0.01
+    });
+  `);
+  const res = JSON.parse(r);
+  const bad = [];
+  /* His app has called anything at or under this "nothing to offset" since before the rule existed.
+     Pinned so a change to the constant is a FAILURE that has to be argued for, not a silent pass. */
+  const FLOOR = 40;
+  if (res.fatal) bad.push(res.fatal);
+  else if (res.floor !== FLOOR)
+    bad.push('OFFPLAN_NOISE is ' + res.floor + ', not the ' + FLOOR + ' the off-plan card has always used — ' +
+             'if that is deliberate, change this guard in the same commit and say why');
+  else {
+    for (const s of res.seen) {
+      /* 1. noise is never charged, and never draws a note. FLOOR is pinned here on purpose. */
+      if (s.cal <= FLOOR && (s.charged || s.note))
+        bad.push(s.cal + ' cal is at or under the ' + FLOOR + ' floor but was charged/annotated');
+      /* anything over the floor must say something — silence is the failure his rule exists to fix */
+      if (s.cal > FLOOR && !s.note)
+        bad.push(s.cal + ' cal over the floor produced no note on the flavor card');
+      /* 2. never cut more of the dessert than the debt */
+      if (s.charged && s.cut > s.charged)
+        bad.push(s.cal + ' cal debt cuts ' + s.cut + ' cal of topping — overshoot');
+      /* 3. at or past the topping's capacity it must say the topping is gone, not trim into the cup */
+      if (s.charged >= res.cap && !s.plain)
+        bad.push(s.cal + ' cal exceeds the ' + res.cap + '-cal topping but the note still trims it');
+      if (s.charged && s.charged < res.cap && s.plain)
+        bad.push(s.cal + ' cal fits inside the topping but the note drops it entirely');
+    }
+    if (!res.specUnchanged) bad.push('a per-day charge MUTATED cup[5] — the 140 spec is no longer checkable');
+    if (!res.capStillSpec) bad.push('the cup topping total moved after a charge — the overlay is not read-only');
+  }
+  if (bad.length) fail('offplan-topping', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('offplan-topping', res.seen.length + ' charges across the ' + res.floor + '-cal floor and the ' +
+    res.cap + '-cal topping: noise never billed, no cut exceeds its debt, cup specs untouched');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

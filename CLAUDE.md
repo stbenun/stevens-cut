@@ -104,12 +104,13 @@ clarifying question from him ("just confirming…", "no X?") means **verify**, n
 node tools/food-doc.js                                      # FOOD_FACTS.md
 node tools/status.js                                        # STATUS.md
 
-# 2. the five verifications. Do not skip the last two: they are what prove the guards still bite.
+# 2. the six verifications. Do not skip the last three: they are what prove the guards still bite.
 node tools/check-food.js                                    # food numbers, budgets, provenance, doc freshness
 NODE_PATH=.work/node_modules node tools/check-app.js        # schedule, rotations, name leak
 NODE_PATH=.work/node_modules node tools/probe.js            # renders his real data, every tab/day
 node tools/check-priced.plant.js                            # plants real defects, proves [priced] fires
 node tools/check-food.selftest.js                           # plants real defects across the food guards
+node tools/check-offplan.plant.js                           # plants real defects, proves [offplan-topping] fires
 
 # 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
 node tools/build-next.js                                    # regenerate next/index.html
@@ -118,7 +119,7 @@ git add -A && git commit && git push origin main
 # 4. then PROVE it is live — a push is not a deploy:
 curl -s "https://stbenun.github.io/stevens-cut/index.html?cb=$RANDOM" | grep -o "const BUILD = 'b[0-9]*'"
 ```
-**⛔ RUN THE TWO PLANT HARNESSES, EVERY TIME.** They are the only things that test the TESTS. On
+**⛔ RUN THE THREE PLANT HARNESSES, EVERY TIME.** They are the only things that test the TESTS. On
 2026-08-18 three plant fixtures and two selftest cases quietly stopped firing — each named a specific
 row, and each row got migrated — so they printed `SKIP` or `BROKEN CASE` while the suite still read as
 "all checks passed". A harness that tests nothing looks exactly like a harness that finds nothing.

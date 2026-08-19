@@ -50,3 +50,20 @@ decoration.** Writing this found two genuine holes in the guard: it was testing
 a whole card as one string, so a delta in one line excused a conflation in
 another; and its regexes had been written through a Python heredoc that turned
 `\b` into a literal backspace, so a check was silently matching nothing.
+
+## check-offplan.plant.js
+
+    node tools/check-offplan.plant.js
+
+Proves `[offplan-topping]` in check-app.js is load-bearing. His rule, 2026-08-19: off-track eating
+that actually matters is paid out of that day's Creami topping, with a note on the flavor card.
+
+Plants the four ways that can rot — the 5 g trim step returning so a 60-cal debt over-cuts the
+dessert, the noise floor dropping so a celery stick gets billed, the note going silent while the
+charge still happens, and a per-day charge mutating a cup so the 140 spec stops being checkable —
+and fails if any of them still passes. It restores `index.html` byte-for-byte.
+
+It caught a real hole in the guard on the day it was written: the check probed at `OFFPLAN_NOISE`
+and compared against it, so a floor lowered to 0 moved the test with it and passed. The threshold is
+pinned in the check now. **A guard that reads its threshold from the code under test cannot see that
+threshold move.**
