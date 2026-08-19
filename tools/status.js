@@ -33,7 +33,6 @@ const OPEN = [
   ['Balsamic drizzle brand', 'b2 carries 30 cal for 15 g with no source. Balsamic GLAZE runs 30-90 cal per 15 g depending on how far it is reduced, so the brand decides it.'],
   ['Kodiak flapjack box', 'b3 variant 2 prices 4 frozen flapjacks at 255 cal from a derived figure. Kodiak publishes 14-16 P across formulations, so the box settles it.'],
   ['Salmon species', 'He confirmed WILD, skin off, sushi-grade from a kosher market. Basis is coho, which matches all six rows to within 1 cal. Sockeye would make the app read ~30 cal HIGH per meal; king ~59 LOW and ~7 g fat LOW, which would push five plates over their fat budget. He is asking at the counter.'],
-  ['Chocolate Cookie Blast scoop weight', 'PP_G says 41 g a scoop, the published label says 39.1 g. Per-gram is 5% apart. One weighed scoop settles it.'],
   ['SF ketchup bottle', 'Priced at 0.29 cal/g from G Hughes and Heinz No Sugar Added, both of which publish 5 cal a tablespoon. His rows had said 20 cal for 32 g; corrected to ~9. If his bottle is a different formulation this needs replacing.'],
   ['Jiben fat', 'l2 and l3 run 6-7 g over their fat budget. It is structural — eggs plus cottage cheese plus mozzarella — so closing it means changing the food, which is his call, not a portion tweak.']
 ];

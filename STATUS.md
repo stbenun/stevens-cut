@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 680,181 bytes, 8,127 lines, one file |
-| build | `b1787158821` |
+| app | `index.html`, 680,876 bytes, 8,133 lines, one file |
+| build | `b1787159224` |
 | foods on the price list | 106 |
 | provenance | 41 label · 36 USDA · 26 derived · 3 unverified |
 
@@ -83,8 +83,8 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b20` | Cookie Butter Bowl | 534 / 44 / 54 / 18 | -6 cal |
 | `lu/l7` | Spicy Tuna Crunch Bowl | 569 / 65 / 51 / 12 | -6 cal |
 | `di/d2` | Poke Bowl | 573 / 53 / 53 / 17 | -7 cal |
+| `sn/s4` | The Brookie | 317 / 30 / 38 / 6 | -8 cal |
 | `lu/l1` | Chicken Meal — Sweet Potato | 566 / 52 / 57 / 15 | -9 cal |
-| `sn/s4` | The Brookie | 315 / 30 / 38 / 6 | -10 cal |
 | `sn/s1` | Ninja Creami | 315 / 32 / 30 / 7 | -10 cal |
 | `di/d16` | Teriyaki-Glaze Salmon Bowl (fresh · se | 569 / 55 / 51 / 15 | -11 cal |
 | `lu/l8` | Salmon Smash Patties | 563 / 56 / 66 / 14 | -12 cal |
@@ -101,7 +101,6 @@ The only hand-maintained list in this file — nothing can compute what he has n
 - **Balsamic drizzle brand** — b2 carries 30 cal for 15 g with no source. Balsamic GLAZE runs 30-90 cal per 15 g depending on how far it is reduced, so the brand decides it.
 - **Kodiak flapjack box** — b3 variant 2 prices 4 frozen flapjacks at 255 cal from a derived figure. Kodiak publishes 14-16 P across formulations, so the box settles it.
 - **Salmon species** — He confirmed WILD, skin off, sushi-grade from a kosher market. Basis is coho, which matches all six rows to within 1 cal. Sockeye would make the app read ~30 cal HIGH per meal; king ~59 LOW and ~7 g fat LOW, which would push five plates over their fat budget. He is asking at the counter.
-- **Chocolate Cookie Blast scoop weight** — PP_G says 41 g a scoop, the published label says 39.1 g. Per-gram is 5% apart. One weighed scoop settles it.
 - **SF ketchup bottle** — Priced at 0.29 cal/g from G Hughes and Heinz No Sugar Added, both of which publish 5 cal a tablespoon. His rows had said 20 cal for 32 g; corrected to ~9. If his bottle is a different formulation this needs replacing.
 - **Jiben fat** — l2 and l3 run 6-7 g over their fat budget. It is structural — eggs plus cottage cheese plus mozzarella — so closing it means changing the food, which is his call, not a portion tweak.
 

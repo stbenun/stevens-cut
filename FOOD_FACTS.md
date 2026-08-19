@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 106 rows: **38** label · **36** USDA · **29** derived · **3** UNVERIFIED
+Provenance of the 106 rows: **37** label · **36** USDA · **30** derived · **3** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -31,7 +31,7 @@ Provenance of the 106 rows: **38** label · **36** USDA · **29** derived · **3
 | `celery` | g | 0.16 | 0.0069 | 0.0297 | 0.0017 | USDA | USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026. |
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |
 | `chicken breast raw` | g | 1.2 | 0.225 | 0 | 0.026 | USDA | USDA FDC 171077, chicken breast, boneless skinless, raw: 100 g = 120 cal / 22.5 P / 0 C / 2.6 F -> per gram. Fetched Aug 18 2026. His 7 oz raw row states 245/44/0/7; this gives 238/44.6/0/5.2, so calories were 7 high and fat 1.8 high. |
-| `chocolate cookie blast protein` | g | 3.6585 | 0.6098 | 0.1463 | 0.0854 | label | Per gram, from the app's own half-serving row (20.5 g = 75/12.5/3/1.75) which is exactly half the PP_G scoop weight of 41 g. published RYSE Chocolate Cookie Blast: 1 scoop ~39.1 g = 150 cal / 25 P / 6 C / 3 F. This CONFIRMS the 150 cal a scoop the app row implied -- the old KNOWN_UNSOURCED note doubted it because the other four flavors run 130-140. Per gram published is 3.836 vs the app 3.659, 5% apart, because PP_G says 41 g and the label says 39.1. ⚠️ WEIGH ONE SCOOP OF THIS TUB to settle it. Fetched/derived Aug 18 2026. |
+| `chocolate cookie blast protein` | g | 3.836 | 0.6394 | 0.1535 | 0.0767 | derived | RYSE Loaded Chocolate Cookie Blast published panel: 1 scoop ~39.1 g = 150 cal / 25 P / 6 C / 3 F -> per gram 3.836 / 0.639 / 0.154 / 0.077. Fetched Aug 18 2026. This REPLACES a per-gram figure derived from a 20.5 g half-serving against an assumed 41 g scoop; the label is the better source because it states the serving weight itself. Note this flavor is genuinely the outlier of his tubs at 150 cal a scoop — the others run 130-140 — which is why an older note doubted the app's 150 and was wrong to. |
 | `cinnamon apples` | g | 0.52 | 0.003 | 0.138 | 0.002 | USDA | USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g. |
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
 | `cinnamon toast protein` | g | 3.8889 | 0.6944 | 0.1111 | 0.0694 | derived | Per gram, from the app's own half-serving row (18 g = 70/12.5/2/1.25) which is exactly half the PP_G scoop weight of 36 g. published RYSE Loaded Cinnamon Toast: 1 scoop 33.6 g = 130 cal / 25 P / 3 C / 2.5 F -> 3.869 cal/g against the app row 3.889, 0.5% apart. Scoop weight differs from PP_G 36 g; the per-gram density agrees anyway. Fetched/derived Aug 18 2026. |
