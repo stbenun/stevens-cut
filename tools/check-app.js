@@ -20,7 +20,10 @@
  */
 'use strict';
 const path = require('path');
-const { boot } = require('./probe.js');
+/* SRC comes from probe.js so this file and the booted app can never disagree about WHICH file is
+ * under test. Pass --file <path> to check a copy: that is how check-app.plant.js plants a defect
+ * without ever writing the working tree. */
+const { boot, SRC } = require('./probe.js');
 
 let failed = 0;
 const ok   = (n, m) => console.log(`  ok    [${n}] ${m}`);
@@ -557,7 +560,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
  * Save on change, render on blur. This reads SOURCE, not behaviour — jsdom has no native picker.
  */
 {
-  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const src = require('fs').readFileSync(SRC, 'utf8');
   const ids = [...src.matchAll(/<input[^>]*type="time"[^>]*id="(\w+)"/g)].map(m => m[1]);
   const bad = [];
   if (!ids.length) bad.push('no type="time" inputs found — did the markup change?');
@@ -632,7 +635,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
  * facts that caused it. Cheap, and it fails the moment one is undone.
  */
 {
-  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const src = require('fs').readFileSync(SRC, 'utf8');
   const bad = [];
 
   /* ③ behavioural: same button count either way, so the cluster's width cannot change */
@@ -701,7 +704,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
  * Real geometry lives in tools/measure.js (Edge via puppeteer-core); this only pins the source facts.
  */
 {
-  const src = require('fs').readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const src = require('fs').readFileSync(SRC, 'utf8');
   const bad = [];
   const basis = /<b style="flex:1 1 (\d+)ch;min-width:0">/g;
   const found = [...src.matchAll(basis)].map(m => +m[1]);

@@ -392,6 +392,9 @@ function win_close(inst) {
 
 /* check-app.js drives the same booted engine — one boot implementation, so a guard can never
    pass against a different app than the one the probe renders. */
-module.exports = { boot, renderTab, drain, TABS, APP_JS };
+/* SRC is exported because check-app.js used to resolve index.html a second time, by hand. A tool
+   that plants a defect into a temp copy needs every reader in the process pointed at that copy, and
+   one exported constant is the only way that stays true. --file is the single knob. */
+module.exports = { boot, renderTab, drain, TABS, APP_JS, SRC };
 
 if (require.main === module) main();

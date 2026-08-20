@@ -67,3 +67,27 @@ It caught a real hole in the guard on the day it was written: the check probed a
 and compared against it, so a floor lowered to 0 moved the test with it and passed. The threshold is
 pinned in the check now. **A guard that reads its threshold from the code under test cannot see that
 threshold move.**
+
+## check-srcpath.js
+
+    NODE_PATH=.work/node_modules node tools/check-srcpath.js
+
+Differential proof that `--file` is honoured by `check-app.js`, and that honouring it changes nothing
+else. `check-app.plant.js` depends on this: as of 2026-08-20 it plants defects into a copy in
+os.tmpdir() rather than mutating `index.html`, which is only safe if `--file` actually reaches every
+reader in the process.
+
+**The suite going green cannot establish this.** A `--file` that is silently ignored produces a green
+suite *and* byte-identical output — the plant harness would be testing the real file while reporting
+on a copy, which is the 2026-08-20 corruption at larger scale. So it asserts the negative too: a
+defect planted into a copy must actually FAIL.
+
+Four cases. **A** same input through both code paths must be byte-identical. **B** a defect only the
+booted app can see must fire (`[buffins]`) — proves probe.js reads the copy. **C** a defect only a
+direct `fs` read can see must fire (`[time-picker]`) — proves the three SRC sites read it. Those are
+separate mechanisms and either could be left pointing at the real file. **D** `index.html` byte-identical
+and git-clean throughout.
+
+⚠️ The first version of case C used a plant that **could not fail** — it flipped a `type="time"` input
+to `text`, which changed only the count the guard prints and never its verdict, so it read as "the
+direct reads are still hardcoded" when the plumbing was fine.

@@ -2,40 +2,41 @@
 /* check-app.plant.js — plants real defects for the BEHAVIOURAL guards in check-app.js, the way
  * check-food.selftest.js does for the food guards.
  *
- * ⛔⛔ THIS HARNESS MUTATES THE REAL index.html, AND ON 2026-08-20 THAT COST AN HOUR.
- * It exited with NO OUTPUT AT ALL, so the "time-seeds itself open" plant stayed baked into the
- * working tree. Everything after it ran against a corrupted file: the re-run reported
- * "BROKEN CASE anchor not unique/found" because the anchor had already been consumed, and ~70 probe
- * renders passed against the defect. It nearly went out in a commit.
+ * ⛔ IT NO LONGER TOUCHES index.html. Each defect is planted into a COPY in os.tmpdir() and
+ * check-app.js is pointed at it with --file. That is the pattern the two sibling harnesses already
+ * used — check-priced.plant.js works in os.tmpdir(), check-food.selftest.js passes a temp copy to
+ * check-food.js via argv[2] — and this file was the only one that wrote the working tree.
  *
- * Note what the sibling harnesses do differently: check-priced.plant.js writes into os.tmpdir(), and
- * check-food.selftest.js writes a temp copy and passes the path to check-food.js (which takes one,
- * argv[2]). Neither can damage the working tree. THIS harness cannot use that pattern yet because
- * check-app.js has no path argument and boots through probe.js. Until it does, the four guards below
- * are what stand between a mid-run death and a corrupted repo.
+ * WHY IT CHANGED. On 2026-08-20 this harness exited with no output at all and left its "time-seeds
+ * itself open" plant baked into index.html. ~70 probe renders then passed against the corrupted file
+ * and it nearly went out in a commit. The first fix added a sidecar backup, a startup recovery path
+ * and a restore-after-every-plant. All of that has been DELETED: with nothing mutating the live file
+ * it defended against nothing, and a guard that cannot fire still reads as "all checks passed" —
+ * which is this repo's own recorded lesson about fixtures that quietly stopped testing anything.
  *
- *   1. REFUSE TO RUN if index.html is already dirty. Another session may own it — on 2026-08-20 a
- *      second assistant held four uncommitted files in this repo, and running this then would have
- *      destroyed work in progress. It also stops a leftover plant being mistaken for a clean tree.
- *   2. SIDECAR BACKUP on disk before the first plant, checked for on startup. A finally block does
- *      not run if the process is killed; a file on disk survives that.
- *   3. process.exitCode, NEVER process.exit(). exit() can truncate buffered stdout, which is one way
- *      a run ends up looking silent.
- *   4. git diff --numstat asserted EMPTY at the end, and the byte-exact line printed unconditionally.
+ * WHAT MADE IT POSSIBLE. probe.js already resolved --file; it now also EXPORTS the resolved path, and
+ * check-app.js reads that instead of resolving index.html a second time by hand. Proved by
+ * differential test, not by the suite going green: same input through both code paths gives
+ * byte-identical output, and a defect planted in a temp copy fires through BOTH mechanisms — the
+ * booted app (probe.js, [buffins]) and the direct fs reads (the three SRC sites, [time-picker]).
+ * Those are separate mechanisms and either could have been left pointing at the real file.
+ * ⚠️ The first attempt at that proof used a plant that could not fail — it flipped a type="time" to
+ * "text", which changed only the COUNT the guard prints and never its verdict, and so read as
+ * "the direct reads are still hardcoded" when the plumbing was fine.
  *
- * ⛔ EMPTY OUTPUT IS A CRASH, NOT A PASS. The last line below always prints. If you do not see it,
- * this harness died and you must assume index.html is dirty.
+ * The ONE guard kept from the first fix: refuse to run on a dirty index.html. Nothing here writes it,
+ * so a dirty file means something else did — it is a canary for the next tool that decides to mutate
+ * in place, and it is one git call.
+ *
+ * ⛔ EMPTY OUTPUT IS A CRASH, NOT A PASS. The last line always prints.
  */
 'use strict';
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { execSync } = require('child_process');
 const P = 'index.html';
-const BAK = 'index.html.plantbak';
 
-const gitDirty = () => {
-  try { execSync('git diff --quiet -- ' + P, { stdio: 'ignore' }); return false; }
-  catch (e) { return true; }
-};
 const numstat = () => {
   try { return execSync('git diff --numstat -- ' + P, { encoding: 'utf8' }).trim(); }
   catch (e) { return 'git-error'; }
@@ -81,77 +82,65 @@ const PLANTS = [
 ];
 
 function main() {
-  /* ---- 1a. a leftover sidecar means a previous run died before restoring ---- */
-  if (fs.existsSync(BAK)) {
-    console.log('LEFTOVER BACKUP: ' + BAK + ' exists, so a previous run died mid-plant.');
-    fs.copyFileSync(BAK, P);
-    fs.unlinkSync(BAK);
-    console.log('Restored index.html from the backup and removed it. Verify with git diff, then re-run.');
-    process.exitCode = 1;
-    return;
-  }
-
-  /* ---- 1b. refuse to run over anyone else's uncommitted work ---- */
-  if (gitDirty()) {
+  /* Nothing below writes index.html. A dirty one therefore means another tool or another session
+     did — refuse, and say which, rather than planting against content that is not committed. */
+  if (numstat() !== '') {
     console.log('REFUSING TO RUN — index.html has uncommitted changes:');
     console.log('  git diff --numstat index.html -> ' + numstat());
-    console.log('This harness rewrites index.html in place. If another session owns those changes,');
-    console.log('running now would destroy them. Commit or stash first, then re-run.');
+    console.log('Nothing in this harness writes that file, so something else is holding it. Whoever has');
+    console.log('it dirty owns it until it is committed. Commit or stash, then re-run.');
     process.exitCode = 2;
     return;
   }
 
-  const original = fs.readFileSync(P);
-  const orig = original.toString('utf8');
-  fs.copyFileSync(P, BAK);              /* ---- 2. sidecar, before the first plant ---- */
-
+  const before = fs.readFileSync(P);
+  const orig = before.toString('utf8');
+  const env = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
   let all = true;
-  try {
-    for (const p of PLANTS) {
-      let s = orig, ok = true;
-      for (const e of p.edits) {
-        if (s.split(e.from).length - 1 !== 1) {
-          console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — anchor not unique/found');
-          ok = false; all = false; break;
-        }
-        s = s.replace(e.from, e.to);
-      }
-      if (!ok) continue;
-      if (s === orig) { console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — plant changed nothing'); all = false; continue; }
-      fs.writeFileSync(P, s);
-      let out = '', code = 0;
-      try {
-        out = execSync('node tools/check-app.js', {
-          env: Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' }), encoding: 'utf8' });
-      } catch (e) { code = e.status || 1; out = (e.stdout || '') + (e.stderr || ''); }
-      const rx = new RegExp('FAIL\\s+\\[' + p.guard + '\\]');
-      if (code !== 0 && rx.test(out)) {
-        const line = (out.split('\n').find(l => rx.test(l)) || '').trim();
-        console.log('CAUGHT  [' + p.guard + '] ' + p.name);
-        console.log('        ' + line.slice(0, 150));
-      } else {
-        console.log('NOT CAUGHT  [' + p.guard + '] ' + p.name + '  (exit=' + code + ')');
-        all = false;
-      }
-      fs.writeFileSync(P, original);     /* restore after EVERY plant, not just at the end */
-    }
-  } finally {
-    fs.writeFileSync(P, original);
-  }
 
-  /* ---- 4. prove it, out loud, every time ---- */
-  const same = fs.readFileSync(P).equals(original);
+  PLANTS.forEach(function (p, i) {
+    let s = orig, ok = true;
+    for (const e of p.edits) {
+      if (s.split(e.from).length - 1 !== 1) {
+        console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — anchor not unique/found');
+        ok = false; all = false; break;
+      }
+      s = s.replace(e.from, e.to);
+    }
+    if (!ok) return;
+    if (s === orig) {
+      console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — plant changed nothing');
+      all = false; return;
+    }
+    /* the defect goes in a COPY; the working tree is never written */
+    const tmp = path.join(os.tmpdir(), 'checkapp-plant-' + i + '.html');
+    fs.writeFileSync(tmp, s);
+    let out = '', code = 0;
+    try {
+      out = execSync('node tools/check-app.js --file "' + tmp + '"', { env: env, encoding: 'utf8' });
+    } catch (e) { code = e.status || 1; out = (e.stdout || '') + (e.stderr || ''); }
+    try { fs.unlinkSync(tmp); } catch (e) {}
+    const rx = new RegExp('FAIL\\s+\\[' + p.guard + '\\]');
+    if (code !== 0 && rx.test(out)) {
+      const line = (out.split('\n').find(l => rx.test(l)) || '').trim();
+      console.log('CAUGHT  [' + p.guard + '] ' + p.name);
+      console.log('        ' + line.slice(0, 150));
+    } else {
+      console.log('NOT CAUGHT  [' + p.guard + '] ' + p.name + '  (exit=' + code + ')');
+      all = false;
+    }
+  });
+
+  /* Not restore machinery — an assertion. If a future edit reintroduces an in-place write, this is
+     what says so, and it costs one file read. */
+  const untouched = fs.readFileSync(P).equals(before);
   const ns = numstat();
   console.log('');
-  console.log('file restored byte-exact: ' + same);
-  console.log('git diff --numstat index.html: ' + (ns === '' ? '(empty — clean)' : ns));
-  if (same && ns === '') fs.unlinkSync(BAK);   /* backup goes only once the tree is provably clean */
-  else console.log('KEEPING ' + BAK + ' — the tree is not provably clean, so the backup stays.');
-
-  const good = all && same && ns === '';
+  console.log('index.html never written: ' + untouched + '   git diff --numstat: ' + (ns === '' ? '(empty — clean)' : ns));
+  const good = all && untouched && ns === '';
   console.log(good ? 'ALL PLANTS CAUGHT — the app-behaviour guards are load-bearing'
-                   : 'PLANT HARNESS FOUND A HOLE (or did not restore cleanly)');
-  process.exitCode = good ? 0 : 1;       /* ---- 3. never process.exit() ---- */
+                   : 'PLANT HARNESS FOUND A HOLE (or the working tree moved under it)');
+  process.exitCode = good ? 0 : 1;
 }
 
 main();
