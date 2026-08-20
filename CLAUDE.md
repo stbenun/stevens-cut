@@ -123,6 +123,17 @@ curl -s "https://stbenun.github.io/stevens-cut/index.html?cb=$RANDOM" | grep -o 
 2026-08-18 three plant fixtures and two selftest cases quietly stopped firing — each named a specific
 row, and each row got migrated — so they printed `SKIP` or `BROKEN CASE` while the suite still read as
 "all checks passed". A harness that tests nothing looks exactly like a harness that finds nothing.
+
+**⛔ AND: A PLANT HARNESS THAT DIES MID-RUN LEAVES ITS DEFECT IN `index.html`.** New on 2026-08-20.
+`check-app.plant.js` plants each defect into the real file and restores it at the end; it exited with
+**no output at all**, so the buffins "time-seeds itself open" plant stayed baked into the working tree.
+Everything after it then ran against a corrupted file — the re-run reported `BROKEN CASE  anchor not
+unique/found` (the anchor had been consumed), and ~70 probe renders passed against the defect. It cost
+an hour and nearly went out in a commit. **Two habits fall out of it:** the harness must print
+`file restored byte-exact: true` — **empty output is a crash, not a pass**; and run
+`git diff --numstat index.html` after each plant harness and confirm the number matches your own change.
+Silence from a tool is never evidence that it did its job.
+
 `checkUpdate()` compares the served file's `BUILD` against the running app's. **Unchanged BUILD → the
 updater stays silent and nothing reaches his phone.** Also confirm `wc -c` of the live fetch equals
 local `index.html`; that is the only proof he and I are reading the same file.
