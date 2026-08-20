@@ -82,6 +82,18 @@ suite *and* byte-identical output — the plant harness would be testing the rea
 on a copy, which is the 2026-08-20 corruption at larger scale. So it asserts the negative too: a
 defect planted into a copy must actually FAIL.
 
+**NOT in the mandatory deploy sequence** — his call, 2026-08-20. Four `check-app.js` runs, each booting
+jsdom: the slowest thing here for the rarest regression, and **a slow mandatory suite gets skipped.**
+Run it on a TRIGGER instead — when `tools/probe.js` or `tools/check-app.js` changes.
+
+**The trigger is checked, not remembered.** `--if-touched` asks `git diff --name-only HEAD` and skips in
+about 0.2s when neither file is modified, printing what it looked at:
+
+    NODE_PATH=.work/node_modules node tools/check-srcpath.js --if-touched
+
+A conditional rule whose condition lives only in prose is the buried-rule shape this project keeps
+tripping over — true, on file, and read too late to help. Drop the flag to run it regardless.
+
 Four cases. **A** same input through both code paths must be byte-identical. **B** a defect only the
 booted app can see must fire (`[buffins]`) — proves probe.js reads the copy. **C** a defect only a
 direct `fs` read can see must fire (`[time-picker]`) — proves the three SRC sites read it. Those are

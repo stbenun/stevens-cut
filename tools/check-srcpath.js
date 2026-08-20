@@ -16,13 +16,51 @@
  * text, which changed only the COUNT the guard prints and never its verdict, so it reported
  * "the direct reads are still hardcoded" when the plumbing was fine.
  *
- * Usage: NODE_PATH=.work/node_modules node tools/check-srcpath.js
+ * ⛔ NOT IN THE MANDATORY SEQUENCE — his call, 2026-08-20. It is the slowest thing here (four
+ * check-app.js runs, each booting jsdom) guarding the rarest regression, and **a slow mandatory suite
+ * gets skipped.** Protecting the speed of the sequence everyone actually runs is worth more than
+ * covering a regression that only appears when someone edits two specific files. So it is tied to a
+ * TRIGGER instead of the calendar: run it when `tools/probe.js` or `tools/check-app.js` changes.
+ *
+ * ⛔ AND THE TRIGGER IS CHECKED, NOT REMEMBERED. `--if-touched` asks git whether either file is
+ * modified against HEAD and skips in a second if not. His reasoning: *"make the trigger checkable,
+ * not remembered... a conditional rule with no way to check the condition is the thing you two keep
+ * finding buried in files."* Same shape as the dirty-index canary — read the state, do not trust that
+ * you will remember. A skip says so out loud and names what it checked; silence is never the answer.
+ *
+ * Usage: NODE_PATH=.work/node_modules node tools/check-srcpath.js               # always run
+ *        NODE_PATH=.work/node_modules node tools/check-srcpath.js --if-touched  # run only if needed
  */
 'use strict';
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
+
+function main() {
+
+/* ---- the trigger, asked of git rather than of memory ---- */
+const TRIGGERS = ['tools/probe.js', 'tools/check-app.js'];
+if (process.argv.includes('--if-touched')) {
+  let changed = '';
+  try { changed = execSync('git diff --name-only HEAD', { encoding: 'utf8' }); }
+  catch (e) {
+    console.log('CANNOT CHECK THE TRIGGER — git diff failed. Running anyway; a trigger that cannot be');
+    console.log('read is not a reason to skip.');
+    changed = TRIGGERS.join('\n');
+  }
+  const names = changed.split('\n').map(x => x.trim()).filter(Boolean);
+  const hit = TRIGGERS.filter(t => names.includes(t));
+  if (!hit.length) {
+    console.log('SKIPPED — neither ' + TRIGGERS.join(' nor ') + ' is modified against HEAD.');
+    console.log('  git diff --name-only HEAD -> ' + (names.length ? names.join(', ') : '(nothing)'));
+    console.log('This is the trigger being CHECKED, not assumed. Drop --if-touched to run it regardless.');
+    process.exitCode = 0;
+    return;
+  }
+  console.log('TRIGGERED by: ' + hit.join(', ') + ' — running the differential proof.');
+  console.log('');
+}
 
 const REAL = 'index.html';
 const before = fs.readFileSync(REAL);
@@ -98,4 +136,7 @@ say(untouched && ns === '', 'D. index.html byte-identical and git-clean througho
 console.log('');
 console.log(pass ? 'DIFFERENTIAL PROOF PASSED — --file is honoured by both mechanisms and changes nothing else'
                  : 'DIFFERENTIAL PROOF FAILED');
-process.exitCode = pass ? 0 : 1;
+  process.exitCode = pass ? 0 : 1;
+}
+
+main();

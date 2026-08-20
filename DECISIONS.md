@@ -445,3 +445,51 @@ and 400, not reasoned about.
 turned out to be the hinge — it carries real protein per slice, so dropping the whole bun to buy more
 potato puts him UNDER his protein target. One slice off is the balance point. Worth remembering that
 the bread in that burger is a protein row, not just a carb row.
+
+---
+
+## 2026-08-20 — A verdict is one bit, and it can be wrong in both directions
+
+**Three checks said something untrue in one day.** Two of them cost time. The third was caught before
+it cost anything, and it was caught differently, which is the part worth keeping.
+
+1. `probe.js` printed *"0 renders … clean — no throws, no error cards, no console errors"* and exited 0
+   against an `index.html` that did not parse. Nothing rendered, so nothing could throw. **A vacuous
+   PASS.**
+2. `check-app.plant.js` exited with no output at all and left a planted defect in the working tree.
+   About seventy probe renders then passed against the corrupted file. **Another vacuous PASS**, and it
+   nearly went out in a commit.
+3. `check-srcpath.js` case C reported that `check-app.js` was *"still reading the real file"* when the
+   plumbing was correct. The plant flipped a `type="time"` input to `text`, which moved the COUNT the
+   guard prints from 2 to 1 and never touched its verdict. **A vacuous FAIL** — and the dangerous
+   direction, because the next step was to go edit code that was already right.
+
+**The lesson is not "test your tests" — it is that a pass/fail is a single bit and both values lie.**
+Everyone already distrusts a green check. Nobody distrusts a red one, and a red check from a plant
+that cannot fail looks exactly like a real defect in the thing it points at.
+
+**What actually caught #3 was comparing the two paths over the same input, not reading the verdict.**
+The default run printed `2 time input(s)` and the `--file` run printed `1` — so the mutated copy was
+plainly being read, and the "failure" was the plant. One diff answered a question no amount of staring
+at PASS/FAIL could. **His words on why the acceptance condition was written that way:** *"prove it by
+running both paths over the same input and diffing the results — not by six checks passing… 'the checks
+pass' is the exact signal that would lie to you."* **That is why the condition was diff, not pass.**
+
+**Carry-out, for the next person deciding how to verify a mechanism:** if the question is *"is this
+thing doing what I think it is doing"*, do not ask it for a verdict. Run it two ways over one input and
+compare the output. A verdict tells you what the check concluded; a diff tells you what the code did.
+
+## 2026-08-20 — `check-srcpath.js` runs on a trigger, and the trigger is checked
+
+**His call: it stays OUT of the mandatory deploy sequence.** *"a slow mandatory suite gets skipped.
+protecting the speed of the sequence everyone actually runs is worth more than covering a regression
+that only appears when someone edits those two files. so tie it to the trigger instead of the
+calendar."* It is four `check-app.js` runs, each booting jsdom — the slowest thing here, guarding the
+rarest regression. It runs when `tools/probe.js` or `tools/check-app.js` changes, and otherwise not.
+
+**And the trigger is machine-checked, because a remembered condition is not a condition.** *"make the
+trigger checkable, not remembered… a conditional rule with no way to check the condition is the thing
+you two keep finding buried in files."* `--if-touched` asks `git diff --name-only HEAD` and skips in
+about a fifth of a second when neither file is modified, printing what it looked at. Same shape as the
+dirty-index canary: read the state, do not trust that you will remember. **A conditional rule whose
+condition lives only in prose is the runna gate again** — true, on file, and read too late to help.
