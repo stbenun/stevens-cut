@@ -109,13 +109,14 @@ clarifying question from him ("just confirming…", "no X?") means **verify**, n
 node tools/food-doc.js                                      # FOOD_FACTS.md
 node tools/status.js                                        # STATUS.md
 
-# 2. the six verifications. Do not skip the last three: they are what prove the guards still bite.
+# 2. the seven verifications. Do not skip the three plant harnesses or step 7 — they prove the guards bite.
 node tools/check-food.js                                    # food numbers, budgets, provenance, doc freshness
 NODE_PATH=.work/node_modules node tools/check-app.js        # schedule, rotations, name leak
 NODE_PATH=.work/node_modules node tools/probe.js            # renders his real data, every tab/day
 node tools/check-priced.plant.js                            # plants real defects, proves [priced] fires
 node tools/check-food.selftest.js                           # plants real defects across the food guards
 node tools/check-app.plant.js                               # plants real defects, proves the app-behaviour guards fire
+NODE_PATH=.work/node_modules node tools/check-srcpath.js --if-touched   # proves --file is honoured; asks git, skips in ~0.2s if it can
 
 # 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
 node tools/build-next.js                                    # regenerate next/index.html
@@ -128,6 +129,24 @@ git commit && git push origin main
 # 4. then PROVE it is live — a push is not a deploy:
 curl -s "https://stbenun.github.io/stevens-cut/index.html?cb=$RANDOM" | grep -o "const BUILD = 'b[0-9]*'"
 ```
+**⛔ STEP 7 IS UNCONDITIONAL; THE WORK IT DOES IS NOT.** `check-srcpath.js --if-touched` asks git
+whether `tools/probe.js` or `tools/check-app.js` differs from **`origin/main`** and exits in about a
+fifth of a second if neither does, **saying out loud that it skipped and what it checked** — a silent
+skip is the failure this whole file keeps circling. Otherwise it runs the four-case differential proof
+(~20 s). **`origin/main`, not `HEAD`, and that distinction is the point:** `git diff HEAD` empties the
+moment you commit, so a committed-but-unpushed change to `probe.js` would skip — which is precisely the
+state you are in when you are about to deploy. A stale `origin/main` can only over-trigger, and
+over-triggering is the safe direction. **The line is mandatory so that nobody has to notice their change
+was the kind that needs it** — his reasoning: *"the flag asks git instead of the person."*
+
+**⛔ THE DOC FOLLOWS THE CODE. IT NEVER LEADS IT.** His rule, 2026-08-20, and this very entry is why:
+the trigger change landed first and this paragraph second, deliberately. **The two directions are not
+symmetrical.** A doc that lands first describes behaviour that does not exist — this paragraph claiming
+`origin/main` while the code still said `HEAD` would be a *wrong* doc, read as true and acted on. A doc
+that lands second is merely incomplete for a few minutes, and misleads nobody. **This beats the instinct
+to keep a change in one commit:** two commits in the right order are worth more than one commit that is
+briefly a lie.
+
 **⛔ STAGE BY NAME — `git add -A` IS GONE FROM THIS FILE ON PURPOSE.** Two sessions share this clone.
 That command **already swept another session's uncommitted work into a commit and pushed it** (2026-08-19),
 and on 2026-08-20 it was one keystroke from doing it again to a half-finished harness fix. **A rule saying
