@@ -2145,6 +2145,24 @@ const FOOD_FACTS = {
   'cucumber':          {unit:'g',           cal:0.15, p:0.007, c:0.036, f:0.001, src:'USDA cucumber, with peel, raw: 100 g = 15 cal / 0.65 P / 3.63 C / 0.11 F -> per gram. His 75 g row reads 15 cal; USDA gives 11. Four calories, left alone.'},
   'apple':             {unit:'g',           ea:182, /* its own src: "A medium apple is ~182 g = 95 cal" */ cal:0.52, p:0.003, c:0.138, f:0.002, src:'USDA apples, raw, WITH SKIN: 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram. A medium apple is ~182 g = 95 cal, which is exactly what his row says. Confirmed correct.'},
   'sweet potato':      {unit:'g',           cal:0.86, p:0.016, c:0.20,  f:0.001, src:'USDA sweet potato, raw: 100 g = 86 cal / 1.6 P / 20.1 C / 0.05 F -> per gram. His 225 g row reads 190; USDA gives 194. Within 2%, confirmed correct — and this is the row I wrongly told him would move with the white-potato answer. It does not.'},
+  /* ⚠️ PURPLE IS NOT THE ORANGE FACT, and the gap is big enough to change a plate. Stokes publishes
+     130 cal / 29 C per 4 oz (113 g) = 1.15 cal/g and 0.257 C/g, against USDA orange at 0.86 and 0.20.
+     That is 34% denser per gram — far outside the ±20% a spread is allowed to describe, so it is its
+     own key rather than a variant. Pricing his purple side off the orange fact under-counted a 100 g
+     portion by ~29 cal and ~6 C, and on a night when carbs were the binding constraint that is the
+     difference between landing the day and blowing it.
+     BASIS: Stokes, because that is the purple sold in US supermarkets. If his is Okinawan it differs.
+     ⚠️ Calories and carbs are the published Stokes figures. PROTEIN AND FAT ARE CARRIED OVER from the
+     orange entry — Stokes does not publish them in what I could retrieve. Both are under a gram on a
+     100 g portion, so the error is small, but it is an assumption and not a label. */
+  'purple sweet potato': {unit:'g',    cal:1.15, p:0.018, c:0.257, f:0.001, src:'Stokes Purple sweet potato, published brand figure: 4 oz (113 g) = 130 cal / 29 C, so 1.15 cal/g and 0.257 C/g. Fetched Aug 19 2026. ⚠️ NOT interchangeable with the orange sweet potato key at 0.86 cal/g — purple is 34% denser a gram. Protein and fat carried over from the orange entry because the brand does not publish them; both under 1 g per 100 g portion. Ask him for the bag if a plate ever hinges on them.'},
+  /* ⚠️ HIS ACTUAL LOAF, and it is NOT the keto bread three meals still price against. Photographed
+     Aug 19 2026. The two are a third of a gram of protein apart per slice in the wrong direction:
+     natures own keto bread says 6 P and 10 C a slice, this says 2 P and 14 C. d1, d15 and l8 each use
+     TWO slices, so if he has switched loaves those plates are each 8 g protein LIGHT and 8 g carb
+     HEAVY versus what the app prints. Not migrated, because it is not established that the keto loaf
+     is gone — asked, 2026-08-19. */
+  'schmidt 647 italian': {unit:'slice', ea:27, cal:40, p:2, c:14, f:0.5, src:'Schmidt Old Tyme 647 Italian, HIS LOAF photographed Aug 19 2026: 1 slice (27 g) = 40 cal / 0.5 F / 14 C total with 8 g fiber (6 g net) / 2 P, 135 mg sodium, ~19 slices per 18 oz (510 g) loaf. ⚠️ Do not confuse with natures own keto bread (35 cal / 6 P / 10 C a slice) — same shelf, triple the protein apart.'},
   'hummus':            {unit:'g',           cal:1.83, p:0.04,  c:0.13,  f:0.10,  src:'Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub.'},
   'soy sauce':         {unit:'mL',          cal:0.33, p:0.03,  c:0.05,  f:0,     src:'Category figure for regular soy sauce (~0.5 cal/mL for Kikkoman; low-sodium similar). His rows use 0.33 (15 mL = 5 cal), slightly light but under 3 cal on any row he uses. NOT brand-verified.'},
   'kodiak flapjack':   {unit:'each',        cal:63,   p:4.7,   c:9,     f:1.3,   src:'Kodiak Buttermilk Power Flapjacks, FROZEN: 3 flapjacks = 190 cal / 14 P -> ~63 cal / 4.7 P each. ⚠️ Kodiak lists 14-16 P per serving across formulations, so this is the low end; re-check against his box.'},
@@ -8280,7 +8298,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787182951';
+const BUILD = 'b1787184038';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

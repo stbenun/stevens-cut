@@ -7,10 +7,10 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 693,571 bytes, 8,305 lines, one file |
-| build | `b1787182951` |
-| foods on the price list | 117 |
-| provenance | 53 label · 36 USDA · 26 derived · 2 unverified |
+| app | `index.html`, 695,986 bytes, 8,323 lines, one file |
+| build | `b1787184038` |
+| foods on the price list | 119 |
+| provenance | 54 label · 36 USDA · 27 derived · 2 unverified |
 
 ## Ingredient rows
 
