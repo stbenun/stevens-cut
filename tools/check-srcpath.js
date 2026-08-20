@@ -16,14 +16,22 @@
  * text, which changed only the COUNT the guard prints and never its verdict, so it reported
  * "the direct reads are still hardcoded" when the plumbing was fine.
  *
- * ⛔ NOT IN THE MANDATORY SEQUENCE — his call, 2026-08-20. It is the slowest thing here (four
- * check-app.js runs, each booting jsdom) guarding the rarest regression, and **a slow mandatory suite
- * gets skipped.** Protecting the speed of the sequence everyone actually runs is worth more than
- * covering a regression that only appears when someone edits two specific files. So it is tied to a
- * TRIGGER instead of the calendar: run it when `tools/probe.js` or `tools/check-app.js` changes.
+ * ⛔ STEP 7 OF THE MANDATORY DEPLOY SEQUENCE — his call, 2026-08-20, REVERSING his earlier call that
+ * it stay out. It was excluded because it was slow and a slow mandatory suite gets skipped. Once
+ * `--if-touched` made it exit in ~0.2s when neither file changed, **the cost it was excluded to avoid
+ * no longer existed** — and his reason for moving it in: *"a line sitting after the numbered steps is
+ * a line a session stops before."* The trigger still decides whether the four cases actually run; it
+ * is the LINE that is now unconditional, not the work.
  *
- * ⛔ AND THE TRIGGER IS CHECKED, NOT REMEMBERED. `--if-touched` asks git whether either file is
- * modified against HEAD and skips in a second if not. His reasoning: *"make the trigger checkable,
+ * ⛔ AND THE TRIGGER IS CHECKED, NOT REMEMBERED. `--if-touched` asks git whether either file differs
+ * from **origin/main** and skips in a fifth of a second if not.
+ *
+ * ⛔ AGAINST origin/main, NOT HEAD. `git diff HEAD` goes EMPTY the moment you commit, so a
+ * committed-but-unpushed change to probe.js SKIPPED — and that is exactly the state you are in when
+ * you are about to deploy. The first version of this gate had that bug: it looked correct, it skipped
+ * in the one case the whole trigger exists for, and a skip is silent. `git diff <ref>` compares the
+ * WORKING TREE to that ref, so origin/main covers uncommitted, staged and committed-unpushed in one
+ * call. A stale origin/main can only over-trigger, which is the safe direction. His reasoning: *"make the trigger checkable,
  * not remembered... a conditional rule with no way to check the condition is the thing you two keep
  * finding buried in files."* Same shape as the dirty-index canary — read the state, do not trust that
  * you will remember. A skip says so out loud and names what it checked; silence is never the answer.
@@ -43,17 +51,17 @@ function main() {
 const TRIGGERS = ['tools/probe.js', 'tools/check-app.js'];
 if (process.argv.includes('--if-touched')) {
   let changed = '';
-  try { changed = execSync('git diff --name-only HEAD', { encoding: 'utf8' }); }
+  try { changed = execSync('git diff --name-only origin/main', { encoding: 'utf8' }); }
   catch (e) {
-    console.log('CANNOT CHECK THE TRIGGER — git diff failed. Running anyway; a trigger that cannot be');
+    console.log('CANNOT CHECK THE TRIGGER — git diff against origin/main failed. Running anyway; a trigger that cannot be');
     console.log('read is not a reason to skip.');
     changed = TRIGGERS.join('\n');
   }
   const names = changed.split('\n').map(x => x.trim()).filter(Boolean);
   const hit = TRIGGERS.filter(t => names.includes(t));
   if (!hit.length) {
-    console.log('SKIPPED — neither ' + TRIGGERS.join(' nor ') + ' is modified against HEAD.');
-    console.log('  git diff --name-only HEAD -> ' + (names.length ? names.join(', ') : '(nothing)'));
+    console.log('SKIPPED — neither ' + TRIGGERS.join(' nor ') + ' differs from origin/main.');
+    console.log('  git diff --name-only origin/main -> ' + (names.length ? names.join(', ') : '(nothing)'));
     console.log('This is the trigger being CHECKED, not assumed. Drop --if-touched to run it regardless.');
     process.exitCode = 0;
     return;

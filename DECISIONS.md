@@ -493,3 +493,53 @@ you two keep finding buried in files."* `--if-touched` asks `git diff --name-onl
 about a fifth of a second when neither file is modified, printing what it looked at. Same shape as the
 dirty-index canary: read the state, do not trust that you will remember. **A conditional rule whose
 condition lives only in prose is the runna gate again** — true, on file, and read too late to help.
+
+---
+
+## 2026-08-20 (later) — three corrections to the entries above, all mine
+
+### REVERSED: `check-srcpath.js` is STEP 7 of the mandatory sequence
+
+The entry above records his call that it stay out. **He reversed it the same day and the reasoning is
+worth more than the outcome:** it was excluded because it was slow and *a slow mandatory suite gets
+skipped.* Once `--if-touched` made it exit in about 0.2s when neither trigger file changed, **the cost
+it was excluded to avoid no longer existed.** His words: *"at 0.218s there is no cost left to protect…
+a line sitting after the numbered steps is a line a session stops before."*
+
+**The general shape: when the reason for an exclusion is removed, the exclusion is not still correct.**
+I optimised the tool until the objection was gone and then kept the accommodation built for the
+objection. The trigger still decides whether the four cases RUN — what became unconditional is the
+LINE, not the work.
+
+**And I handed the decision back to him as though it were open.** I wrote "his call whether it joins
+the mandatory sequence" into the handoff after he had already decided it. One hour earlier I had
+written, in this file, that handing back a closed question as an open one is how a settled call gets
+re-litigated. **Writing a lesson down is not the same as being able to apply it** — which is the whole
+reason `LEARNED.md` exists and is read before answers are formed, not after.
+
+### WRONG REF: the trigger compares against `origin/main`, not `HEAD`
+
+The entry above says `--if-touched` asks `git diff --name-only HEAD`. **That was a bug, and it disarmed
+the trigger in the exact case it exists for.** `git diff HEAD` goes EMPTY the moment you commit — so a
+committed-but-unpushed change to `tools/probe.js` SKIPPED, and that is precisely the state you are in
+when you are about to deploy. `git diff <ref>` compares the WORKING TREE to that ref, so `origin/main`
+covers uncommitted, staged and committed-unpushed in one call. A stale `origin/main` can only
+over-trigger, which is the safe direction.
+
+**It looked obviously right, it skipped silently, and the skip printed a sentence naming a comparison
+it was not making.** Fixed in the header, the code and both message strings — his instruction was to fix
+every occurrence rather than the lines he named, because a message that describes the wrong comparison
+is worse than no message.
+
+### A grep answers "is this string present," which is a different question
+
+**Two false negatives in one day, both reported to him as fact.** I grepped `CLAUDE.md` for "Exit 2 is
+the harness working" and got 0 — the phrase was there, wrapped across a line. I grepped
+`working-with-steven.md` for "Earn every question" and found no `LEARNED.md` reference near it, and
+reported §2b as still bare. **The rewrite had DELETED that phrase.** I proved the old text was gone and
+read it as the fix being absent.
+
+**A false "still open" is worse than a false "done" here.** It sends someone to redo finished work and
+reopens a settled call — the failure this file already records twice. **When the question is "does this
+line carry a scope note," read the lines.** Grep finds a string you already expect; it cannot see a
+correct answer phrased differently, and absence of your search term is not absence of the thing.
