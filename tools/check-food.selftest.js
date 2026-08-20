@@ -55,9 +55,13 @@ const CASES = [
   { name: 'a nut-flagged product hidden inside a {parts} composite', check: 'nut-facts',
     from: "{parts:[{f:'tomato',n:150},{f:'cucumber',n:150}]}",
     to:   "{parts:[{f:'tomato',n:150},{f:'buffin welcome to the sno',n:1}]}" },
+  /* ⛔ Anchored on the DISH NAME AND PRICE, not the description. The previous version quoted the whole
+     tacos line verbatim and broke the moment that copy was rewritten (2026-08-20) — it printed
+     BROKEN CASE while the suite still read as fine, which is the staleness this file already warns
+     about. Name + price is what does not churn; the prose around it is edited constantly. */
   { name: 'a meat venue told to finish with something dairy', check: 'kashrut',
-    from: "'Smokey Tacos 2 pc $18 — lighter and cheaper than any plate here.'",
-    to:   "'Smokey Tacos 2 pc $18 — finish with a yogurt on the way home.'" },
+    from: "'Smokey Tacos 2 pc $18",
+    to:   "'Finish with a yogurt on the way home. Smokey Tacos 2 pc $18" },
 ];
 
 let bad = 0;

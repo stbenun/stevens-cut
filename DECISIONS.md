@@ -543,3 +543,56 @@ read it as the fix being absent.
 reopens a settled call — the failure this file already records twice. **When the question is "does this
 line carry a scope note," read the lines.** Grep finds a string you already expect; it cannot see a
 correct answer phrased differently, and absence of your search term is not absence of the thing.
+
+---
+
+## 2026-08-20 — eating out keeps its hand-typed numbers; the orders get fixed
+
+**His call:** *"i dont think we should add them to food facts but fix the orders."* So `EATOUT_ORDER`
+stays inline — `cal:40,p:3,c:5,f:1` on the item — and is NOT migrated onto `{f:key,n:qty}` pricing the
+way `SLOTS` was. Only the four items `[anchors]` names are cross-checked against `FOOD_FACTS`; the rest
+are copies, by decision rather than by neglect. **Write that down so a future session does not "finish"
+a migration he declined.**
+
+### What was actually wrong
+
+**The `bbq` anchor priced two different meats as one number.** *"¼ lb smoked turkey breast OR grilled
+chicken"* for a single figure that was below BOTH: per the app's own facts a quarter pound of turkey is
+152/34 and of chicken is 188/35. The builder orders up to four of them, so the error scaled with the
+portion — at the two it actually recommends it understated by 24 cal and 10 g protein. Anchor is turkey
+alone now, at the turkey figure; chicken is a swap priced at +9 cal per oz cooked.
+
+**Southside's five swaps had no numbers at all** — *"the leanest main on this menu", "lighter and
+cheaper", "leaner than the brisket"*. Comparatives, on the venue he actually goes to. They now carry the
+meat density straight out of `FOOD_FACTS`: turkey 38 cal/oz cooked against brisket at 70, roast beef
+about 40. **Not sandwich totals** — the meat weight is not pinned and the breads are not on file, so a
+total would be two stacked guesses. The density is the number the choice turns on, and the gap is named
+in the line instead of hidden by an adjective. Two picked up real content: the White Russian is grilled
+turkey breast, which the app never said, and the Smokey Tacos claim of "lighter" is marked UNVERIFIED
+because nothing on file supports it.
+
+### ⚠️ And a correction to my own audit, before it gets quoted
+
+**I reported the `restdairy` anchor as "a blend of two fish" with numbers internally inconsistent with
+the salmon fact. That was wrong.** Its 340/42/0/18 reconciles exactly as 8 oz of branzino
+(220/45.4/0/4.5, sourced 2026-08-20) plus one tablespoon of grill oil (119/0/0/13.5) — to the calorie
+and to the gram of fat. **The figures were right the whole time.**
+
+The real defect was narrower: salmon was offered at the branzino price. Same portion and same oil, salmon
+is about 450/49/27 — **110 cal and 9 g fat more.** So the anchor keeps its numbers and salmon became a
+priced swap. **The lesson is the one from this morning, in the other direction:** I had a hypothesis
+("these numbers look like salmon"), the arithmetic disagreed with it, and I only found that out by doing
+the subtraction. A plausible reading of a number is not a reading of it.
+
+### The guard shaped the wording, and the wording brought two lines under the guard
+
+`[swap-math]` only checks a swap line that names exactly TWO `FOOD_FACTS` keys OF THE SAME UNIT, and
+then the stated `+N cal` must equal the PER-UNIT difference. That is why Southside's five were invisible
+to it — they name one food or none. **A guard can validate a wrong number; it cannot see a missing one.**
+The turkey/chicken lines therefore state "+9 cal per oz cooked" (47 − 38) with the quarter-pound figure
+after it, not "+36", which the guard would have rejected. Checked lines went from 1 to 3.
+
+**Still open, and flagged rather than fixed:** `southside` computes to 650 against a 580 dinner budget
+and says so in an `over` field — the half chicken alone is 620. There is no `[slot-fit]` equivalent for
+eating out, so nothing fails the build on it, where a recipe 26 cal over is a hard failure. Carbs also
+run 9–51 g under at every venue, by design: the starch is advisory and is dropped when it does not fit.

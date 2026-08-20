@@ -2367,16 +2367,17 @@ const EATOUT_ORDER = {
  bbq:{
   k:'meat',
   base:[{n:'Pickles + vinegar slaw',cal:30,p:1,c:5,f:0,sp:'pickles and vinegar slaw'}],
-  anchor:{n:'¼ lb smoked turkey breast or grilled chicken (sliced)',cal:140,p:29,c:0,f:2,min:1,max:4,
+  anchor:{n:'¼ lb smoked turkey breast (sliced)',cal:152,p:34,c:0,f:1,min:1,max:4,
           sp:'% quarter-pound# of smoked turkey breast'},
   carb:{n:'Side of rice',cal:200,p:4,c:44,f:1,min:1,max:3,sp:'% side# of rice'},
-  swaps:['Sliced brisket FLAT, ¼ lb ≈280 cal · 33 P · 16 F — 140 cal and 14 g fat more than the turkey for 4 g more protein. Bad trade on a cut.',
+  swaps:['Grilled chicken instead of the turkey breast: <b>+9 cal</b> per oz cooked, so +36 cal on a ¼ lb, for about the same protein. Turkey is the leaner buy and it is why the anchor is turkey.',
+         'Sliced brisket FLAT, ¼ lb ≈280 cal · 33 P · 16 F — 140 cal and 14 g fat more than the turkey for 4 g more protein. Bad trade on a cut.',
    'Smoked wings, 6 pc ≈330 cal · 30 P · 22 F — smoked not fried, so they are allowed, but they cost 2× the turkey in fat.',
    'Laffa or baguette instead of rice ≈250 cal · 48 C — same job, 50 cal more.',
    'Grilled vegetables ≈70 cal — the free-est real side on any BBQ menu.'],
   never:'Burnt ends · short ribs · dino ribs · lamb riblets · anything fried · a basket of fries. Burnt ends are the single fattiest item on a BBQ menu and usually the best seller.',
   free:'Pickles · vinegar slaw · raw onion · mustard · hot sauce.',
-  more:'Still hungry? Another ¼ lb of turkey breast = 140 cal, 29 P. Not more rice, not bread.'},
+  more:'Still hungry? Another ¼ lb of turkey breast = 152 cal, 34 P. Not more rice, not bread.'},
 
  restmeat:{
   k:'meat',
@@ -2395,11 +2396,12 @@ const EATOUT_ORDER = {
  restdairy:{
   k:'dairy',
   base:[{n:'Salad, dressing on the side',cal:120,p:4,c:10,f:7,sp:'a salad, dressing on the side'}],
-  anchor:{n:'Grilled branzino or salmon entrée',cal:340,p:42,c:0,f:18,min:1,max:1,
+  anchor:{n:'Grilled branzino entrée (8 oz, grill oil counted)',cal:340,p:42,c:0,f:18,min:1,max:1,
           sp:'the grilled branzino'},
   carb:{n:'Pasta, marinara — TEACUP portion (share a full plate)',cal:180,p:6,c:34,f:2,min:1,max:3,
         sp:'% small side# of pasta with marinara'},
-  swaps:['Baked ziti / vodka / alfredo instead of marinara: 2–3× the fat. Marinara is the only sauce that fits.',
+  swaps:['Grilled salmon instead of the branzino: about +110 cal and +9 g fat at the same 8 oz. The fat is omega-3 so it is not a bad buy — but it is the whole margin between this venue landing and going over.',
+         'Baked ziti / vodka / alfredo instead of marinara: 2–3× the fat. Marinara is the only sauce that fits.',
    'Two shared pizza slices instead of the pasta ≈570 cal — that is your whole starch budget and then some.',
    'Minestrone ≈110 cal · 5 P as a starter — claim it, it blunts the bread basket.'],
   never:'🚨 ANAPHYLACTIC — peanut · hazelnut · pistachio · cashew and every other nut EXCEPT almond. ASK about: pesto (pine nuts), Nutella/hazelnut spreads, candied-nut salads, biscotti, baklava, mortadella (pistachio). Ask for separate serving spoons and about the shared fryer. Carry your EpiPen. — Then: fried starters · cheese-forward mains · cream sauces.',
@@ -2417,12 +2419,12 @@ const EATOUT_ORDER = {
   anchor:{n:'Smoked Half Chicken $24 — pull the skin off the thigh and leg, keep the breast skin',
           cal:620,p:85,c:2,f:29,min:1,max:1,sp:'the smoked half chicken'},
   carb:{n:'Mexican Rice $7',cal:220,p:5,c:42,f:4,min:1,max:3,sp:'% side# of Mexican rice'},
-  swaps:['Smoked Turkey Breast on Rye $22 — the leanest main on this menu. Worth it on a day that is already fat-heavy, and the bread brings carbs the smoked meat does not.',
+  swaps:['Smoked Turkey Breast on Rye $22 — turkey breast is the leanest meat here at <b>38 cal/oz cooked</b>, against brisket at 70: nearly half, ounce for ounce. Worth it on a day already fat-heavy, and the rye brings carbs the smoked meats do not. ⚠️ No total: the meat weight is not pinned and the rye is not on file — ask the counter for the meat weight once and this becomes a real number.',
    'Smoked wings, 6 pc $8 ≈330 cal · 30 P · 22 F — smoked, not fried, so they are allowed. They do NOT fit alongside the order above: drop a rice side first, or skip them. 12 pc $14 is never a fit.',
-   'Smokey Tacos 2 pc $18 — lighter and cheaper than any plate here.',
-   'Grilled Chicken Sandwich $20 — the menu calls it the healthy route and it is not wrong.',
-   'Carolina Gold $25, roast beef on a panini’d baguette — leaner than the brisket or pastrami sandwiches and it carries its own carbs, so order it INSTEAD of a rice side, never with two.',
-   'White Russian $23 — fine, but Russian dressing on the side, not on the sandwich.'],
+   'Smokey Tacos 2 pc $18 — cheaper than any plate here, but ⚠️ <b>"lighter" is unverified</b>: what is in them is not on file, so nothing here supports it. Ask what the filling is before treating it as the lean pick.',
+   'Grilled Chicken Sandwich $20 — the menu calls it the healthy route and it is not wrong, but chicken breast is <b>+9 cal</b> per oz cooked over the turkey breast, so the rye sandwich is the leaner of the two. Same caveat: portion not pinned.',
+   'Carolina Gold $25, roast beef on a panini’d baguette — the roast beef runs about <b>40 cal/oz cooked</b> against brisket at 70, so "leaner" is real and it is most of the difference. Carries its own carbs: order it INSTEAD of a rice side, never with two.',
+   'White Russian $23 — this is <b>grilled turkey breast</b>, the same 38 cal/oz meat as the rye sandwich, so it is one of the two lean picks and not a splurge. Russian dressing on the side, not on it — that is where the sandwich is won or lost.'],
   never:'Burnt Ends (their best seller and the fattiest thing on the menu) · Lamb Riblets (the menu itself says “fatty”) · Dino Ribs · Short Bone Ribs · Prime Rib Plate $65 · Meat Lovers Platter $130 (serves 3–4, six fatty meats) · anything fried.',
   free:'Pickles · cole slaw · sugar-free red cabbage slaw — eat as much of these as you want.',
   more:'Still hungry? Ask for extra slaw, not another meat. And note the clock: this is a MEAT meal, so no dairy for 6 hours — the Creami moves to tomorrow. Decide that before you go, not after. Closed Fri + Sat, Sun opens 2 PM. 315 Cedar Bridge Ave, ~25 min from Deal.'},
@@ -8318,7 +8320,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787239943';
+const BUILD = 'b1787254957';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
