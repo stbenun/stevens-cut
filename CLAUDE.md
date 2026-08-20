@@ -9,13 +9,18 @@ messing up everything."* More sources did not make decisions better, it made the
 
 | # | read | what it is for |
 |---|---|---|
-| 1 | `working-with-steven.md` (his memory dir) | **How to work with him.** Canonical for behaviour. |
+| 0 | `C:\code\Arnold_Assistant\LEARNED.md` | **His corrections, as he gives them.** Newest by construction, so it outranks every behavioural file below. Read in full, every session, no scope. |
+| 1 | `working-with-steven.md` (his memory dir) | **How to work with him.** The rules as understood 2026-08-18 — `LEARNED.md` has narrowed two of them since. |
 | 2 | **this file** | Code and product rules, the deploy sequence, and the gotchas that have cost hours. |
 | 3 | `STATUS.md` | **Where the project actually is.** GENERATED — trust it over any prose, including mine. |
 | 4 | `DECISIONS.md` | His standing calls and why. Append-only. |
 
-**Precedence, so two documents can never both claim to win:** on how to *behave*,
-`working-with-steven.md` wins. On code, data shape, product spec and deploy, **this file** wins. On any
+⛔ **His memory folder is Arnold's to write as of 2026-08-20.** This session keeps `journal.md` and
+`open-questions.md`; anything else it wants recorded goes into `open-questions.md` for Arnold to file.
+Finding things is still this session's job — filing them is not.
+
+**Precedence, so two documents can never both claim to win:** on how to *behave*, **`LEARNED.md` wins,
+then** `working-with-steven.md`. On code, data shape, product spec and deploy, **this file** wins. On any
 current *number or count*, `STATUS.md` and the guards win over both — and if prose here disagrees with
 what `node tools/check-food.js` prints, **the prose is the thing that is wrong.**
 
@@ -114,11 +119,23 @@ node tools/check-app.plant.js                               # plants real defect
 
 # 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
 node tools/build-next.js                                    # regenerate next/index.html
-git add -A && git commit && git push origin main
+
+# ⛔ STAGE BY NAME. There is no `git add -A` here and there must never be one again — see below.
+git status --short                                          # ANY modified file that is not yours is THEIRS. Stop.
+git add index.html next/index.html STATUS.md FOOD_FACTS.md  # + every other file YOU edited, spelled out
+git commit && git push origin main
 
 # 4. then PROVE it is live — a push is not a deploy:
 curl -s "https://stbenun.github.io/stevens-cut/index.html?cb=$RANDOM" | grep -o "const BUILD = 'b[0-9]*'"
 ```
+**⛔ STAGE BY NAME — `git add -A` IS GONE FROM THIS FILE ON PURPOSE.** Two sessions share this clone.
+That command **already swept another session's uncommitted work into a commit and pushed it** (2026-08-19),
+and on 2026-08-20 it was one keystroke from doing it again to a half-finished harness fix. **A rule saying
+"don't take other people's files" cannot survive next to a documented command that takes every file** — so
+the command is removed rather than annotated. Stage the paths you edited, spelled out. If `git status`
+shows something modified that you did not modify, **it belongs to the other session and it is not yours to
+commit** — a dirty file is owned by whoever made it dirty, until they commit it.
+
 **⛔ RUN THE THREE PLANT HARNESSES, EVERY TIME.** They are the only things that test the TESTS. On
 2026-08-18 three plant fixtures and two selftest cases quietly stopped firing — each named a specific
 row, and each row got migrated — so they printed `SKIP` or `BROKEN CASE` while the suite still read as
@@ -133,6 +150,26 @@ an hour and nearly went out in a commit. **Two habits fall out of it:** the harn
 `file restored byte-exact: true` — **empty output is a crash, not a pass**; and run
 `git diff --numstat index.html` after each plant harness and confirm the number matches your own change.
 Silence from a tool is never evidence that it did its job.
+
+**That harness no longer mutates `index.html` at all** (2026-08-20, commit `734b83b`).
+`check-app.plant.js` now plants each defect into a copy in `os.tmpdir()` and points `check-app.js` at
+it with `--file` — the pattern `check-priced.plant.js` and `check-food.selftest.js` already used.
+`probe.js` exports the resolved path and `check-app.js` reads that rather than resolving `index.html`
+a second time by hand. **The sidecar, the `index.html.plantbak` and the restore machinery are gone,
+deliberately:** with nothing writing the live file they defended against nothing, and a guard that
+cannot fire still reads as "all checks passed."
+
+**What is kept is the dirty-index refusal, and it is now a canary rather than a shield.** Nothing in
+that harness writes `index.html`, so a dirty one means something else did. **Exit 2 is the harness
+working, not the harness broken.**
+
+⛔ **And the rule above still stands for the class, not the file:** `git diff --numstat index.html`
+after anything that plants. The proof that `--file` is honoured is `tools/check-srcpath.js`, and it
+exists because **the suite going green cannot establish it** — a `--file` that is silently ignored
+gives a green suite *and* byte-identical output, and the harness would then be testing the real file
+while reporting on a copy. That is the same failure one level up. It asserts the negative too: a
+defect planted into a copy must actually FAIL, through both the booted app and the direct `fs` reads,
+which are separate mechanisms and were tested separately.
 
 `checkUpdate()` compares the served file's `BUILD` against the running app's. **Unchanged BUILD → the
 updater stays silent and nothing reaches his phone.** Also confirm `wc -c` of the live fetch equals
@@ -217,6 +254,15 @@ For the current coverage, the rows that remain, and what each is waiting on: **`
   preview instead of asserting it works.**
 - **Two sessions can share this clone.** `git fetch && git log --oneline HEAD..origin/main` before
   editing, and again before committing. Never force-push.
+- **⛔ A DIRTY FILE IS OWNED BY WHOEVER MADE IT DIRTY, UNTIL IT IS COMMITTED.** His rule, 2026-08-20.
+  `git status` names the owner — **run it before you edit anything**, and if a file is already modified,
+  it is not yours. The claim expires on its own the moment that session commits, which is what makes
+  this better than an agreement between sessions: it is a fact either of you can read, not a promise.
+  **The corollary: never let a change ride.** An uncommitted file left sitting caused both collisions on
+  2026-08-20 — a concurrent session's edit swept into another's commit, and a plant harness's planted
+  defect left in the tree that nearly shipped. **A docs-only change is not an exception. Commit it the
+  same day.** (His memory folder is not in git and has no dirty flag to read, so it uses a named owner
+  instead — Arnold. Two mechanisms, two situations; do not apply either to the other's territory.)
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks
   anchor matching in the checks.
 - **⛔ Never write `index.html` from Python's text mode.** `io.open(p,'w')` on Windows rewrites every
