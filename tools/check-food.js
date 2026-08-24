@@ -392,8 +392,30 @@ const ADVICE_ONLY = {
     const b = EATOUT_ORDER[v.basis];
     if (!b) { bad++; fail('venue-basis', venue + " declares basis '" + v.basis + "' which is not a venue"); return; }
     cmp(venue, 'base[0]', (v.base || [])[0], (b.base || [])[0]);
-    cmp(venue, 'anchor', v.anchor, b.anchor);
-    cmp(venue, 'carb', v.carb, b.carb);
+    /* A pool venue has no top-level anchor/carb — each DISH names which basis item it is priced from,
+       so the binding survives the move to a pool. 'anchor/2' is an appetizer-sized portion of the same
+       plate and must be exactly half, which is what makes that assumption checkable rather than a
+       number someone typed. Untagged dishes are venue-specific and are not bound to anything. */
+    if (v.pool) {
+      v.pool.forEach(d => {
+        if (!d.of) return;
+        const half = d.of.endsWith('/2');
+        const src2 = b[d.of.replace('/2', '')];
+        if (!src2) { bad++; fail('venue-basis', venue + ' dish \u2018' + d.n.slice(0, 40) + "\u2019 declares of:'" + d.of + "' but the basis has no such item"); return; }
+        ['cal', 'p', 'c', 'f'].forEach(k => {
+          checked++;
+          const want = half ? Math.round(src2[k] / 2) : src2[k];
+          if (Math.abs(d[k] - want) > 0.5) {
+            bad++;
+            fail('venue-basis', venue + ' dish \u2018' + d.n.slice(0, 40) + '\u2019 ' + k + ' = ' + d[k] +
+                 ' but its basis (' + d.of + ') gives ' + want);
+          }
+        });
+      });
+    } else {
+      cmp(venue, 'anchor', v.anchor, b.anchor);
+      cmp(venue, 'carb', v.carb, b.carb);
+    }
     /* the venue-specific half must NOT be inherited wholesale, or the card is just a rename of the
        generic one and the nut list would not be about this kitchen. */
     if (v.never && b.never && v.never === b.never) {
@@ -519,22 +541,28 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     }
   });
 
-  /* (b) the meat patch must actually be pareve, and the render must choose it */
-  if (!EO_PATCH || !EO_PATCH.pMeat) {
-    bad++; fail('kashrut', 'EO_PATCH.pMeat is missing — there is no pareve protein to offer after a meat meal.');
-  } else if (DAIRY_TERM.test(EO_PATCH.pMeat.replace(NEGATED, ''))) {
-    bad++; fail('kashrut', 'EO_PATCH.pMeat names a dairy item: "' + EO_PATCH.pMeat + '"');
+  /* (b) ⛔ THE CARD PRESCRIBES NOTHING TO EAT AFTER THE MEAL. This clause used to require the render
+         to branch on k==='meat' before picking a protein patch, because on Aug 6 2026 it offered a whey
+         shake after a BBQ meal on a card that said “no dairy for 6 hours” three lines lower, and he
+         caught it. On 2026-08-24 he removed the patch entirely: “i wanna spend the calories i have, on
+         dinner, not on a protein shake... fix this for every order.”
+         So the invariant moved, and it is STRICTLY STRONGER: a shake that is never offered cannot be
+         offered after meat. Checking for the absence needs no branch to be correct.
+         The shortfall itself is still shown on the card — what is banned is prescribing a fix for it. */
+  if (EO_PATCH) {
+    bad++; fail('kashrut', 'EO_PATCH is back — the card has an at-home patch table again. He removed it ' +
+      'on 2026-08-24: the order IS the meal, and a shortfall is a fact about the venue, not a chore.');
   }
-  if (!/k===['"]meat['"]\s*\?\s*EO_PATCH\.pMeat/.test(src)) {
-    bad++; fail('kashrut', 'the card does not branch on the venue being meat before choosing the protein ' +
-      'patch — a meat meal would be offered the dairy shake again.');
+  if (/EO_PATCH\s*\.\s*[a-z]/i.test(src)) {
+    bad++; fail('kashrut', 'the eat-out card references an at-home patch again — nothing may be ' +
+      'prescribed to eat after the meal, whatever the venue.');
   }
-
   /* (c) nothing a MEAT venue says may prescribe dairy */
   Object.entries(EATOUT_ORDER).forEach(([key, v]) => {
     if (v.k !== 'meat') return;
     const lines = [].concat(v.swaps || [], v.more || [], v.free || [], v.never || [],
-      (v.base || []).map(x => x.n), v.anchor ? [v.anchor.n] : [], v.carb ? [v.carb.n] : []);
+      (v.base || []).map(x => x.n), (v.pool || []).map(x => x.n),
+      v.anchor ? [v.anchor.n] : [], v.carb ? [v.carb.n] : []);
     lines.forEach(line => String(line).split(/(?<=[.!?])\s+|\s+·\s+/).forEach(part => {
       if (DAIRY_TERM.test(part) && !NEGATED.test(part)) {
         bad++; fail('kashrut', key + ' is a MEAT venue but prescribes dairy:\n          "' + part.trim().slice(0, 120) + '"');

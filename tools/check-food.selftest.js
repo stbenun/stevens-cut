@@ -15,8 +15,8 @@ const CASES = [
   /* A venue may rename its basis's dish; it may never re-price it. Teva is the dairy-restaurant
      card with Teva's dishes on it, so the arithmetic has to stay one number in one place. */
   { name: 'a venue re-prices the plate it declared a basis for', check: 'venue-basis',
-    from: "string beans and tomatoes (8 oz, grill oil counted)',cal:340",
-    to:   "string beans and tomatoes (8 oz, grill oil counted)',cal:300" },
+    from: "of:'anchor',cal:340,p:42,c:0,f:18,max:1,keep:1",
+    to:   "of:'anchor',cal:300,p:42,c:0,f:18,max:1,keep:1" },
   { name: 'a venue declares a basis that does not exist', check: 'venue-basis',
     from: "k:'dairy', basis:'restdairy',", to: "k:'dairy', basis:'nosuchvenue'," },
   { name: 'the real "+5 cal" salmon swap line', check: 'swap-math',
@@ -51,8 +51,8 @@ const CASES = [
   { name: 'a trailing "cereal" no longer rejecting the tub match', check: 'scoop-weights',
     from: "if(PP_NOTPOWDER.test(s.slice(i + e[0].length, i + e[0].length + 30))) continue;", to: "if(false) continue;" },
   /* --- the whey shake prescribed after a BBQ dinner --- */
-  { name: 'the dairy shake offered again after a meat meal', check: 'kashrut',
-    from: "${ord.o.k==='meat'?EO_PATCH.pMeat:EO_PATCH.p}", to: "${EO_PATCH.p}" },
+  { name: 'an at-home patch is prescribed after the meal again', check: 'kashrut',
+    from: 'Nothing to make up at home.', to: 'At home after: ${EO_PATCH.p}' },
   /* --- Aug 19 2026: a nut-bearing PRODUCT can hide behind a name that says nothing about nuts.
          [nuts] reads text and is blind to {f:'buffin welcome to the sno'}; [nut-facts] reads the flag
          on the fact. Both directions of the spec shape are planted — a plain row and a {parts} part. */

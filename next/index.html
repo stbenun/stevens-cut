@@ -2438,18 +2438,34 @@ const EATOUT_ORDER = {
      is not usable while a waiter is standing there. */
   teva:{
    k:'dairy', basis:'restdairy',
-   base:[{n:'Chopped Salad — mixed greens, parmigiano reggiano, chick peas, red wine vinaigrette ON THE SIDE',cal:120,p:4,c:10,f:7,
+   base:[{n:'Chopped Salad — mixed greens, parmigiano reggiano, chick peas, red wine vinaigrette ON THE SIDE',of:'base',cal:120,p:4,c:10,f:7,
           sp:'the chopped salad, dressing on the side'}],
-   anchor:{n:'Branzino — Mediterranean sea bass, string beans and tomatoes (8 oz, grill oil counted)',cal:340,p:42,c:0,f:18,min:1,max:1,
-           sp:'the branzino'},
-   carb:{n:'Spaghetti Pomodoro — fresh tomato sauce, basil. TEACUP portion or share a plate',cal:180,p:6,c:34,f:2,min:1,max:3,
-         sp:'% small side# of the spaghetti pomodoro'},
-   swaps:['Grouper Primavera brings its own carb — carnaroli rice, peas, asparagus, zucchini. Order it INSTEAD of the branzino AND the pasta, never alongside both.',
-    'Black Sea Bass (purple cauliflower puree) and Red Snapper al limone are the other two lean, nut-free mains. Dover Sole is fine too.',
-    'Grilled salmon instead of the branzino: about +110 cal and +9 g fat at the same 8 oz. Omega-3 fat, so not a bad buy — but it is the whole margin at this venue.',
-    'Zuppa di Pasta e Fagioli as a starter blunts the focaccia basket, but it is a PASTA soup — it competes with the spaghetti, it does not add to it.',
-    'Sogliola Almondine is almonds, which are his one allowed nut, so it is not a danger — it is just a butter-and-nut preparation, so it costs more fat than the branzino.',
-    'Cacio e Pepe · Chiocciole Vodka · Baked Tagliolini (bechamel) · Gnocchi alla Sorrentina: 2–3× the fat of pomodoro. Pomodoro is the only sauce that fits.'],
+   /* ⛔ A POOL, NOT AN ANCHOR + A MULTIPLIER. His report, 2026-08-24: “what does it mean when it says 2
+      Spaghetti Pomodoros? im obviously not ordering 2 of them... make me a real order.”
+      The old model could only spend a bigger budget by ordering more of ONE dish, so banking a meal
+      turned a plate of pasta into three plates of pasta. A person orders DIFFERENT dishes. Every entry
+      here is max 1 and the solver picks a combination.
+      `of:` binds each dish to the restdairy basis so these stay one number in one place — see
+      [venue-basis]. 'anchor/2' is an appetizer-sized portion of the same grilled fish, priced as half
+      the 8 oz entrée.
+      ⚠️ THE TUNA CARPACCIO IS THE ONE SOFT NUMBER IN THIS VENUE. Teva publishes no nutrition and no
+      portion weight, so half-the-entrée is a stated assumption, not a measurement. It is labelled on
+      the row itself rather than hidden here. One answer from him about the plate size closes it. */
+   pool:[
+    {n:'Branzino — Mediterranean sea bass, string beans and tomatoes (8 oz, grill oil counted)',of:'anchor',cal:340,p:42,c:0,f:18,max:1,keep:1,
+     sp:'the branzino'},
+    {n:'Spaghetti Pomodoro — fresh tomato sauce, basil. Teacup portion, or share a plate',of:'carb',cal:180,p:6,c:34,f:2,max:1,
+     sp:'a small side of the spaghetti pomodoro'},
+    {n:'Carpaccio di Tonno — ⚠️ appetizer portion ASSUMED at half the 8 oz entrée; ask once and this becomes real',of:'anchor/2',cal:170,p:21,c:0,f:9,max:1,
+     sp:'the tuna carpaccio'}],
+   /* His instruction, 2026-08-24: “write it simpler and clearer... tell me what i could get and instead
+      of what.” Prose swaps with their reasoning are for a venue he is deciding ABOUT; at a table with a
+      waiter he needs the substitution and nothing else. {instead, get} renders as one line each. */
+   swaps:[{instead:'the branzino', get:'Black Sea Bass, Red Snapper al limone, or Dover Sole'},
+    {instead:'the tuna carpaccio', get:'Fish &amp; Chips — grilled bluefin tuna'},
+    {instead:'the spaghetti pomodoro', get:'Grouper Primavera — it brings its own rice, so drop the pasta'},
+    {instead:'any cream or cheese pasta', get:'the spaghetti pomodoro — the others run 2–3× the fat'},
+    {instead:'the chopped salad', get:'Tomato Salad, Israeli Salad, or Fennel &amp; Citrus'}],
    never:'🚨 ANAPHYLACTIC, AND THIS MENU IS FULL OF IT. Say it to the server BEFORE ordering, ask about shared prep surfaces and the fryer, carry your EpiPen. ⛔ NAMED DISHES TO REFUSE: Bruschetta (walnuts) · Cavolfiore (hazelnuts) · Cucumber &amp; Zucchini Salad (pine nuts) · Ravioli (hazelnuts) · Pesto Tagliolini, Tomato Flatbread and Burrata e Pomodorini (pesto = pine nuts) · Dubai Sundae (pistachio) · American Dream (peanut) · Mixed Grill Platter (its “almond pesto trapanese” is almond-based, which is allowed, but trapanese often carries pine nuts too — not worth the gamble). ⚠️ ASK whether the Spaghetti Pomodoro is finished with pesto; plenty of kitchens do. ✅ Almond is fine: Red Beets Salad and Sogliola Almondine are not a danger. — Then, off-plan regardless: Olive Fritte · onion rings · fries (fried) · the cream and cheese-forward pastas.',
    free:'Undressed greens · lemon · grilled vegetables · olives.',
    more:'Dairy venue, so the clock runs the EASY way tonight: dairy after dairy has no wait at all, and the Creami stays on for the same evening — it is a MEAT dinner that would push it to tomorrow. 3rd floor of DSN Beach Club, 123 Ocean Ave N, Deal. Reservations recommended. BYOB, mevushal. 20% gratuity added automatically for parties of four or more.'},
@@ -2475,15 +2491,16 @@ const EATOUT_ORDER = {
   free:'Pickles · cole slaw · sugar-free red cabbage slaw — eat as much of these as you want.',
   more:'Still hungry? Ask for extra slaw, not another meat. And note the clock: this is a MEAT meal, so no dairy for 6 hours — the Creami moves to tomorrow. Decide that before you go, not after. Closed Fri + Sat, Sun opens 2 PM. 315 Cedar Bridge Ave, ~25 min from Deal.'},
 };
-/* protein / carb patches — used when the order lands short. Both are things he owns. */
-const EO_PATCH = {
- /* DAIRY. Only ever offered after a dairy or pareve meal. */
- p:'Fairlife 0% 240 mL + 1 scoop Ryse ≈230 cal · 45 P',
- /* PAREVE, for after a MEAT meal. The whey shake was being prescribed after BBQ on a card
-    that says "no dairy for 6 h" three lines further down -- he caught it Aug 6 2026. */
- pMeat:'2 tuna packets ≈140 cal · 34 P — pareve, because you are 6 hours out from dairy',
- /* pareve either way */
- c:'1 banana ≈105 cal · 27 C  (or 3 rice cakes ≈105 cal · 22 C)'};
+/* ⛔ THE AT-HOME PATCH TABLE WAS DELETED 2026-08-24. It held a whey shake, a pareve tuna fallback and
+   a banana, and the card printed one whenever an order landed short — “30 g protein short — at home
+   after: …”. His rule: “if im going out for dinner, i wanna spend the calories i have, on dinner, not
+   on a protein shake... fix this for every order.”
+   It is DELETED rather than left unused, because a table nothing reads still looks like behaviour and
+   the next person wires it back up. The shortfall is still printed; what is gone is the chore.
+   Worth keeping the history: that table once offered a dairy shake after a BBQ meal, on a card saying
+   “no dairy for 6 hours” three lines lower — he caught it Aug 6 2026, and the fix was a branch on the
+   venue being meat. Removing the prescription outright is the stronger version of that fix, and
+   [kashrut] in check-food.js now enforces the absence instead of the branch. */
 
 /* He reads the `say` line out loud at the counter, so counts are words, not digits. */
 const NUMW = ['','one','two','three','four','five','six','seven','eight','nine','ten',
@@ -2498,6 +2515,55 @@ function eatoutOrder(key, bud){
   const o = EATOUT_ORDER[key];
   if(!o) return null;
   const rows = (o.base||[]).map(it=>({...it, q:1}));
+  /* ⛔ POOL VENUES COMPOSE, THEY DO NOT MULTIPLY. See the note on EATOUT_ORDER.teva: the anchor+carb
+     model below could only spend a bigger budget by repeating one dish, which is not an order anyone
+     places. Here every dish is capped at its own `max` (default 1) and the solver picks the
+     COMBINATION that best closes the gap.
+     Scoring: protein and carbs earn credit only up to what is still SHORT — a dish cannot score for
+     overshooting — and fat costs half a point per unit of budget it blows. That weighting is what
+     stops it from stacking two fish mains and returning 10 g of carbs, and what lets it take a lean
+     appetizer that runs the fat slightly over, which is the real cost of eating out. */
+  if(o.pool && o.pool.length){
+    /* ⛔ EXHAUSTIVE, NOT GREEDY, AND THE MAIN IS PINNED. A greedy pass took the cheap pasta first and
+       then had no calories left for the branzino — it returned a 470-cal plate with 31 P against a 580
+       budget and called it done. The pool is small enough to score every combination, so it does.
+       `keep:1` pins the dish that IS the reason he is at this restaurant, the way anchor min:1 did.
+       Protein is weighted 1.5× carbs because that is the macro the cut is protecting, credit is capped
+       at what is actually SHORT so overshooting earns nothing, and fat over budget costs half a point
+       per unit — enough to stop it stacking two mains, not so much that it refuses the real cost of
+       eating out. Calories stay a hard ceiling: this must never tell him to overeat. */
+    const cand = o.pool.map(d=>({...d, q:0}));
+    const kept = cand.filter(d=>d.keep), flex = cand.filter(d=>!d.keep);
+    kept.forEach(d=>{ d.q = 1; });
+    const baseTot = (o.base||[]).reduce((a,x)=>({cal:a.cal+x.cal,p:a.p+x.p,c:a.c+x.c,f:a.f+x.f}),{cal:0,p:0,c:0,f:0});
+    const add = (a,d,n)=>({cal:a.cal+d.cal*n, p:a.p+d.p*n, c:a.c+d.c*n, f:a.f+d.f*n});
+    let start = baseTot; kept.forEach(d=>{ start = add(start,d,1); });
+    const score = t => 1.5*Math.min(t.p,bud.p)/Math.max(bud.p,1)
+                     + Math.min(t.c,bud.c)/Math.max(bud.c,1)
+                     - 0.5*Math.max(0,t.f-bud.f)/Math.max(bud.f,1);
+    let bestQ = flex.map(()=>0), bestT = start, bestS = start.cal<=bud.cal ? score(start) : -Infinity;
+    const walk = (i, q, t)=>{
+      if(i === flex.length){
+        if(t.cal <= bud.cal){ const sc = score(t); if(sc > bestS){ bestS = sc; bestT = t; bestQ = q.slice(); } }
+        return;
+      }
+      for(let n=0; n<=(flex[i].max||1); n++){
+        const t2 = add(t, flex[i], n);
+        if(t2.cal > bud.cal) break;               /* more of this dish only gets heavier */
+        q[i]=n; walk(i+1, q, t2);
+      }
+      q[i]=0;
+    };
+    walk(0, flex.map(()=>0), start);
+    flex.forEach((d,i)=>{ d.q = bestQ[i]; });
+    const picked = (o.base||[]).map(it=>({...it,q:1})).concat(cand.filter(d=>d.q>0));
+    const say = picked.map(r=>r.sp).filter(Boolean);
+    return {rows:picked, tot:bestT, o,
+            say: say.length>1 ? say.slice(0,-1).join(', ') + ', and ' + say[say.length-1] : (say[0]||''),
+            shortP: Math.max(0, Math.round(bud.p - bestT.p)),
+            shortC: Math.max(0, Math.round(bud.c - bestT.c)),
+            over:   Math.max(0, Math.round(bestT.cal - bud.cal))};
+  }
   const A = o.anchor ? {...o.anchor, q:0} : null;
   const C = o.carb   ? {...o.carb,   q:0} : null;
   if(A) rows.push(A);
@@ -6618,16 +6684,30 @@ function viewToday(){
     <div class="sub" style="margin-top:2px;opacity:.65">Lands ${Math.round(ord.tot.c)} C · ${Math.round(ord.tot.f)} F against ${bud.c} C · ${bud.f} F. Restaurant portions vary — treat every number as ±15%.</div>
     <div class="note" style="margin-top:8px">🗣 <b>Say this:</b> “${ord.say}.” That’s the whole order — nothing else.</div>
     ${ord.over?`<div class="note" style="margin-top:8px;border-color:var(--warn)">⚠️ <b>Over by ${ord.over} cal.</b> That is already the smallest real order at ${v.name} — there is nothing smaller to buy. Bank another meal (tap Clear and re-pick) or choose a different venue.</div>`:''}
-    ${ord.shortP>=15?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortP} g protein short</b> — at home after: ${ord.o.k==='meat'?EO_PATCH.pMeat:EO_PATCH.p}</div>`:''}
-    ${ord.shortC>=25?`<div class="note" style="margin-top:6px">➕ <b>${ord.shortC} g carbs short</b> — at home: ${EO_PATCH.c}</div>`:''}
-    <div class="slotlbl" style="margin-top:12px">🚫 Do not order</div>
-    <div class="sub" style="margin-top:2px">${ord.o.never}</div>
-    <div class="slotlbl" style="margin-top:10px">✅ Free — eat as much as you want</div>
+    ${/* ⛔ NO AT-HOME PATCH. His rule, 2026-08-24: “if im going out for dinner, i wanna spend the
+         calories i have, on dinner, not on a protein shake. dont make it that i have to have a protein
+         shake or banana or something to fill macros before the dinner... fix this for every order.”
+         EO_PATCH used to print “30 g protein short — at home after: Fairlife + Ryse”. The shortfall is
+         still worth SEEING, so it is still printed — what is gone is the instruction to eat at home to
+         close it. The order is the meal. If a venue cannot fill the bank, that is a fact about the
+         venue, not a chore to finish in his kitchen. */''}
+    ${(ord.shortP>=15||ord.shortC>=25)?`<div class="note" style="margin-top:6px">⬇ Lands <b>${ord.shortP} g protein</b> and <b>${ord.shortC} g carbs</b> under the bank — that is the most this menu fits. Nothing to make up at home.</div>`:''}
+    ${/* ⛔ `never` AND `more` ARE NOT RENDERED. His call, 2026-08-24, pointing at both blocks: “you
+         dont need to write this.” They were two paragraphs of prose on a card he reads at a table.
+         THE DATA STAYS, and it is not decoration: nothing nut-bearing is allowed into `pool`, so the
+         safety now lives in WHAT THE ORDER CONTAINS rather than in a warning he scrolls past. A
+         paragraph he has learned to skip protects him less than an order that cannot contain a nut.
+         [venue-basis] still reads `never` to prove a named venue's warnings are its own. */''}    <div class="slotlbl" style="margin-top:10px">✅ Free — eat as much as you want</div>
     <div class="sub" style="margin-top:2px">${ord.o.free}</div>
-    ${ord.o.more?`<div class="sub" style="margin-top:8px">${ord.o.more}</div>`:''}
     ${ord.o.scale?`<div class="note" style="margin-top:8px">⚖️ ${ord.o.scale}</div>`:''}
-    <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🔁 Swaps that still work (with the cost of each)</summary>
-      <ul class="sched" style="margin-top:6px">${(ord.o.swaps||[]).map(x=>`<li><span class="t">→</span><span>${x}</span></li>`).join('')}</ul>
+    <details style="margin-top:10px"><summary class="sub" style="cursor:pointer">🔁 Swaps</summary>
+      ${/* Two shapes on purpose. A {instead,get} swap renders as one flat line — his instruction,
+           2026-08-24: “tell me what i could get and instead of what.” A string swap still renders as
+           prose, because a venue he is deciding ABOUT (Southside's cal/oz comparisons) needs the
+           reasoning; a venue he is SITTING IN needs the substitution and nothing else. */''}
+      <ul class="sched" style="margin-top:6px">${(ord.o.swaps||[]).map(x=> x && x.instead
+        ? `<li><span class="t">→</span><span>Instead of <b>${x.instead}</b>: ${x.get}</span></li>`
+        : `<li><span class="t">→</span><span>${x}</span></li>`).join('')}</ul>
     </details>`
       : `<div class="note" style="margin-top:8px">ℹ️ <b>Generic guidance — this one has no fixed menu, so the list below does NOT change with the budget above.</b> Use the budget as the ceiling and portion by eye.</div>
     <ul class="sched" style="margin-top:8px">${(v.rules||[]).map((r,i)=>`<li><span class="t">${i+1}</span><span>${r}</span></li>`).join('')}</ul>`;
@@ -8505,7 +8585,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787607033';
+const BUILD = 'b1787608420';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 716,186 bytes, 8,530 lines, one file |
-| build | `b1787607033` |
+| app | `index.html`, 722,367 bytes, 8,610 lines, one file |
+| build | `b1787608420` |
 | foods on the price list | 120 |
 | provenance | 55 label · 36 USDA · 27 derived · 2 unverified |
 
