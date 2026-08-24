@@ -1574,18 +1574,35 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         });
       });
 
-      /* (c) two cups in one batch must not share a name — ratings are keyed by the readable name */
-      const seen = {};
-      (b.cups||[]).forEach(c => {
-        const k = String(c[0]).split('\u00b7').pop().trim().toLowerCase();
-        if(seen[k]) bad.push(b.name + ' has two cups both called ' + k + ' — a rating on one hits the other');
-        seen[k] = 1;
-      });
 
       /* (d) and nothing in a batch may be empty or missing its topping spec */
       if(!(b.cups||[]).length) bad.push(b.name + ' has no cups');
       (b.cups||[]).forEach(c => { if(!String(c[4]||'').trim()) bad.push(b.name + ' / ' + c[0] + ' has no topping'); });
     });
+    /* (c) TWO CUPS SHARING A NAME MUST BE THE SAME CUP. Checked across ALL batches, not within one,
+           because the rating key is global: rateBtns('creami:' + name with any 'N · ' prefix stripped).
+           A 👍 is therefore attached to the NAME, and his ratings are what decide which cups get kept.
+           ⛔ The first version of this clause only looked inside a single batch, and a plant proved it
+           too narrow: once Batch 5 was split the two Snickerdoodles sat in different batches and the
+           collision was invisible to it while remaining completely real.
+           It is deliberately not 'names must be unique'. Creamsicle and Banana Pudding appear in two
+           batches as byte-identical recipes, which is a legitimate repeat and shares a rating
+           correctly. What is a defect is one name meaning two different cups. */
+    const byName = {};
+    CREAMI_BATCHES.forEach(b => (b.cups||[]).forEach(c => {
+      const k = String(c[0]).split('\u00b7').pop().trim().toLowerCase();
+      const sig = [c[1], c[2], c[3], c[4]].join(' | ');
+      (byName[k] = byName[k] || []).push({batch: b.name, sig});
+    }));
+    Object.keys(byName).forEach(k => {
+      const rows = byName[k];
+      if(rows.length < 2) return;
+      checks++;
+      if(new Set(rows.map(r2 => r2.sig)).size > 1)
+        bad.push(rows.length + ' different cups are all called \u2018' + k + '\u2019 (' +
+                 rows.map(r2 => r2.batch).join(', ') + ') — one rating covers them all');
+    });
+
     if(!checks) bad.push('no shop-list claim could be checked — this guard is running vacuous');
     return {bad, checks, batches: CREAMI_BATCHES.length,
             sizes: CREAMI_BATCHES.map(b => b.cups.length).join('/')};
