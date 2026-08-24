@@ -363,6 +363,48 @@ const ADVICE_ONLY = {
     Object.keys(ADVICE_ONLY).length + ' advice-only, by name)');
 })();
 
+/* ============ 8b. a venue that declares a basis must MATCH that basis ============
+   Teva is the concrete case of the generic 'Restaurant Dairy' card: same class of kitchen, so its
+   plate arithmetic is restdairy's arithmetic. Copying those numbers into the new venue would be two
+   copies of one figure, which is how they drift — the failure this repo keeps paying for. So the
+   venue declares `basis:'restdairy'` and this check binds them.
+   What a basis does NOT cover, deliberately: the item NAMES, the swaps, the nut list and the
+   logistics are venue-specific and must differ. Only cal/p/c/f are bound.
+   Adding a venue with a basis costs nothing; adding one WITHOUT a basis is still fine — this only
+   fires when a venue claims to follow another and then does not. */
+(function venueBasis() {
+  if (!EATOUT_ORDER) return;
+  let checked = 0, bad = 0;
+  const cmp = (venue, label, a, b) => {
+    if (!a && !b) return;
+    if (!a || !b) { bad++; fail('venue-basis', venue + ' ' + label + ' exists on one side of the basis and not the other'); return; }
+    ['cal', 'p', 'c', 'f'].forEach(k => {
+      checked++;
+      if (a[k] !== b[k]) {
+        bad++;
+        fail('venue-basis', venue + ' ' + label + '.' + k + ' = ' + a[k] + ' but its basis has ' + b[k] +
+             ' — a venue that declares a basis may rename the dish, never re-price it');
+      }
+    });
+  };
+  Object.entries(EATOUT_ORDER).forEach(([venue, v]) => {
+    if (!v.basis) return;
+    const b = EATOUT_ORDER[v.basis];
+    if (!b) { bad++; fail('venue-basis', venue + " declares basis '" + v.basis + "' which is not a venue"); return; }
+    cmp(venue, 'base[0]', (v.base || [])[0], (b.base || [])[0]);
+    cmp(venue, 'anchor', v.anchor, b.anchor);
+    cmp(venue, 'carb', v.carb, b.carb);
+    /* the venue-specific half must NOT be inherited wholesale, or the card is just a rename of the
+       generic one and the nut list would not be about this kitchen. */
+    if (v.never && b.never && v.never === b.never) {
+      bad++; fail('venue-basis', venue + " copies its basis's `never` verbatim — the whole reason a named venue exists is that its warnings name ITS dishes");
+    }
+  });
+  const n = Object.values(EATOUT_ORDER).filter(v => v.basis).length;
+  if (!bad) pass('venue-basis', n + ' venue(s) declare a basis; ' + checked +
+    ' plate figure(s) bound to it, warnings kept venue-specific');
+})();
+
 /* ============ 9. an advice-only venue may not quote a meal-level macro ============
    The static list cannot know the budget, so any portion/meal total inside it is a number that
    will contradict the header sooner or later -- which is exactly how "Lands ~1,100-1,300 cal"

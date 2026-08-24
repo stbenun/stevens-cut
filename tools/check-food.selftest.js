@@ -12,6 +12,13 @@ const GUARD = path.join(__dirname, 'check-food.js');
 const base = fs.readFileSync(SRC, 'utf8');
 
 const CASES = [
+  /* A venue may rename its basis's dish; it may never re-price it. Teva is the dairy-restaurant
+     card with Teva's dishes on it, so the arithmetic has to stay one number in one place. */
+  { name: 'a venue re-prices the plate it declared a basis for', check: 'venue-basis',
+    from: "string beans and tomatoes (8 oz, grill oil counted)',cal:340",
+    to:   "string beans and tomatoes (8 oz, grill oil counted)',cal:300" },
+  { name: 'a venue declares a basis that does not exist', check: 'venue-basis',
+    from: "k:'dairy', basis:'restdairy',", to: "k:'dairy', basis:'nosuchvenue'," },
   { name: 'the real "+5 cal" salmon swap line', check: 'swap-math',
     from: '+20 cal and +2.6 g fat per piece', to: '+5 cal and +1 g fat per piece' },
   /* Anchor every case on PERMANENT app content, never on a dated EVENTS card. The first version of
