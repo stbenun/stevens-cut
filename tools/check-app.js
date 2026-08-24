@@ -1458,20 +1458,45 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       });
     });
 
-    /* (f) HIS RULE: different amounts must cost different amounts. Defect ②. Two specs naming the
-           same food in different quantities that come out identical IS the flat number returning. */
-    const byFood = {};
+    /* (f) HIS RULE, and the version that actually tests it. Defect ②.
+           ⛔ THE FIRST VERSION OF THIS CLAUSE WAS VACUOUS and a plant proved it: it re-derived the
+           price from the stated quantity and compared THAT to itself, never once looking at what the
+           card charged. Pinning corBuild to a flat amount left it passing.
+           It also cannot be written as \u2018different amounts must give different output\u2019 \u2014 8 g Biscoff and
+           one 7.75 g Biscoff cookie are a fifth of a gram apart and collapse to the same rounded row,
+           which is correct behaviour, not a defect.
+           So: recover what corBuild ACTUALLY charged, from the almond butter it gave back, and hold it
+           against the spec's own stated amount. AB is solved to the nearest half gram, so the tolerance
+           is one such step. */
+    const abRowG = (OPTBYID['b1'].vars[0].ing.find(r => /almond butter/i.test(String(r[0])))||[])[2];
+    const abBaseG = (abRowG && abRowG.n) || 0;
+    const abCal = FOOD_FACTS['almond butter'].cal;
+    const TOL = 0.5 * abCal;   /* one rounding step of the almond-butter solve */
+    let checkedCharges = 0;
     combos.filter(c => c.b.crunch).forEach(c => {
       const q = String(c.b.crunchQty).trim();
       const grams = q.slice(-1).toLowerCase() === 'g';
-      const m = priceRow([null, null, {f: c.b.crunchFF, n: parseFloat(q), u: grams ? 'g' : 'each'}]);
-      (byFood[c.b.crunchFF] = byFood[c.b.crunchFF] || []).push({q, cal: m ? Math.round(m[0] * 100) / 100 : null});
+      const want = priceRow([null, null, {f: c.b.crunchFF, n: parseFloat(q), u: grams ? 'g' : 'each'}]);
+      if(!want) return;   /* clause (c) owns the unpriceable case */
+      const charged = (abBaseG - c.b.ab) * abCal;
+      checkedCharges++;
+      if(Math.abs(charged - want[0]) > TOL)
+        bad.push(c.n + ': the card charges ' + Math.round(charged) + ' cal for \u2018' + q + ' ' +
+                 c.b.crunchLabel + '\u2019 but that amount prices at ' + Math.round(want[0]) + ' cal');
     });
-    Object.keys(byFood).forEach(k => {
-      const qs = new Set(byFood[k].map(x => x.q)), cs = new Set(byFood[k].map(x => x.cal));
-      if(qs.size > 1 && cs.size === 1)
-        bad.push(k + ': ' + qs.size + ' different amounts (' + [...qs].join(', ') + ') all cost ' +
-                 [...cs][0] + ' cal — that is one flat number again');
+    if(!checkedCharges) bad.push('no topping charge could be checked — clause (f) is vacuous');
+
+    /* (f2) A QUANTIFIED add-in must never end up as an unpriced extra. Defect ③ again, and this is
+           the clause that finally catches it whatever the key says. Once the parser stopped letting a
+           stray topping clobber the fruit, a wrong COR_CRUNCH key sent \u201c12 g Fruity Pebbles\u201d to the
+           extras list instead \u2014 still uncounted, just somewhere else, and (d2) no longer saw it.
+           If his spec says HOW MUCH of something, that something has to be priced. An extra with no
+           stated amount (\u201cextra almond butter\u201d, \u201cGolden Lakanto\u201d) is a different case and is allowed. */
+    combos.forEach(c => {
+      (c.b.extras || []).forEach(x => {
+        if('0123456789'.split('').some(d => String(x).indexOf(d) >= 0))
+          bad.push(c.n + ': \u2018' + x + '\u2019 states an amount but is not priced into the bowl');
+      });
     });
 
     /* (g) and the plate still has to fit, the same 25-cal tolerance [slot-fit] uses. */
@@ -1481,7 +1506,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     });
 
     const withCrunch = combos.filter(c => c.b.crunch).length;
-    return {bad, n: combos.length, withCrunch, foods: Object.keys(byFood).length, b1: b1t.join('/'),
+    return {bad, n: combos.length, withCrunch, foods: new Set(combos.filter(c => c.b.crunch).map(c => c.b.crunchFF)).size, charges: checkedCharges, b1: b1t.join('/'),
             cals: [Math.min(...combos.map(c => c.b.mac[0])), Math.max(...combos.map(c => c.b.mac[0]))]};
   `);
   if (r.bad.length) fail('cor-crunch', r.bad.length + ' fault(s): ' + r.bad.join(' | '));
