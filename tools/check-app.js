@@ -1603,6 +1603,30 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
                  rows.map(r2 => r2.batch).join(', ') + ') — one rating covers them all');
     });
 
+    /* (f) HIS RULE, 2026-08-24: “i only want one batch to show in the creami batch tab. it should just
+           show the 8 for the current batch.” Counted on the RENDERED markup rather than on the data,
+           because the regression is a second cup list creeping onto the card — and that has now
+           happened twice. It arrived the first time as 8 cups appended to Batch 5, and the second time
+           as my own fix, which put the NEXT batch's recipes behind a closed accordion on the same card.
+           Both times the card carried 16 cup recipes. Closed is not absent.
+           The switch control is checked in the same breath, because the cheapest way to satisfy this
+           clause would be to delete the control along with the list — and that reinstates the dead-end
+           this card just came out of, where the pointer could only move by finishing every cup. */
+    const ph = viewPrep();
+    const pi = ph.indexOf('id="p-creami"'), pj = ph.indexOf('id="p-cor"');
+    const psec = (pi >= 0 && pj > pi) ? ph.slice(pi, pj) : '';
+    if(!psec) bad.push('could not find the creami section in the rendered prep view — clause (f) is blind');
+    else {
+      checks++;
+      const rendered = (psec.match(/class="opt"><div class="head"/g) || []).length;
+      const curCups = creamiState().batch.cups.length;
+      if(rendered !== curCups)
+        bad.push('the creami card renders ' + rendered + ' cups but the current batch has ' + curCups +
+                 ' — one batch on that card, and only one');
+      if(psec.indexOf('id="cbNext"') < 0)
+        bad.push('the creami card has no switch-to-next control — the pointer can only move by finishing every cup');
+    }
+
     if(!checks) bad.push('no shop-list claim could be checked — this guard is running vacuous');
     return {bad, checks, batches: CREAMI_BATCHES.length,
             sizes: CREAMI_BATCHES.map(b => b.cups.length).join('/')};

@@ -7128,14 +7128,16 @@ function viewPrep(){
     <div class="formrow">${cb.started
       ? `<button class="btn ghost" id="cbReset">Remade THIS batch today (reset counter)</button>`
       : `<button class="btn" id="cbStart">Made them — start counting</button>`}</div>
-    ${/* Starts CLOSED like every other section. It is here so the pointer can follow what is actually
-         in the freezer instead of what he happened to finish. */''}
-    <details class="opt acc" data-acc="creaminext"${openAcc.has('creaminext')?' open':''}>
-      <summary><b>Next up: ${nextBatch.name}</b> ${tchip(nextBatch.cups.length+' cups')}</summary>
-      <div class="sub" style="margin-top:6px">Made these instead? Start it here. The counter should follow what is in the freezer, not what you finished.</div>
-      ${cupHTML(nextBatch.cups)}
-      <div class="formrow"><button class="btn" id="cbNext">Made them — start ${nextBatch.name}</button></div>
-    </details>
+    ${/* ⛔ ONE BATCH ON THIS CARD, AND ONLY ONE. His call, 2026-08-24: “i only want one batch to show in
+         the creami batch tab. it should just show the 8 for the current batch.” The first version of
+         this fix put the NEXT batch's cups here behind a closed accordion, which still meant 16 cup
+         recipes lived on one card — the thing he had reported in the first place.
+         The CONTROL stays and the cup list does not. Without the control the pointer can only move by
+         finishing every cup of the current batch, which is the dead-branch bug this card just had: he
+         prepped a new batch early and the app had no way to be told. Tapping it makes that batch
+         current, and its 8 cups replace the 8 above — so the recipes are never more than one tap away
+         and there is still only ever one batch on screen. */''}
+    <div class="formrow"><button class="btn ghost" id="cbNext">Made ${nextBatch.name} — switch to it</button></div>
     ${/* ⛔ THESE WERE HARD-CODED AT 2,560 mL / 320 g / 4 SCOOPS — 8 cups' worth — and stayed that way
          while Batch 5 was carrying 16. Shopping this line for a 16-cup card leaves him half short.
          Derived from the cup count now, off the per-cup amounts stated two paragraphs up. */''}
@@ -8472,7 +8474,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787589491';
+const BUILD = 'b1787606219';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -133,6 +133,14 @@ const PLANTS = [
   /* (e) the dead-control class. `const done = false` is what made the next-batch branch unreachable,
      so the pointer could only ever advance by finishing every cup — and he prepped a new batch with
      three cups of the old one still notionally left. Reads exactly like working code. */
+  /* (f) a second cup list creeps back onto the card. This is the exact shape of my own first fix:
+     the next batch's recipes rendered on the same card, which put 16 cup recipes back in front of him
+     — the thing he had reported. Planted as a plain render so it is not hidden behind an accordion;
+     the clause counts cups, and closed would not have saved it either. */
+  { guard: 'creami-shop', name: "the next batch's cups render on the current batch's card again",
+    edits: [{ from: "    <div class=\"formrow\"><button class=\"btn ghost\" id=\"cbNext\">Made ${nextBatch.name} — switch to it</button></div>",
+              to:   "    ${cupHTML(nextBatch.cups)}<div class=\"formrow\"><button class=\"btn ghost\" id=\"cbNext\">Made ${nextBatch.name} — switch to it</button></div>" }] },
+
   { guard: 'creami-shop', name: 'the next-batch branch goes back behind a constant-false guard',
     edits: [{ from: "    const nextBatch = cs.next;",
               to:   "    const nextBatch = cs.next; const done = false;" }] }
