@@ -778,9 +778,19 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
     bad.push('a garnish now costs ' + worst + ' uncounted cal, past the ' + CRUNCH_CEILING + ' ceiling: ' +
              overs.filter(o => o.cal === worst).map(o => o.nm + ' (' + o.bits + ')').join(', '));
   if (bad.length) fail('cor-bowl-total', bad.join(' · '));
+  /* ⛔ READ WHICH SURFACE THIS SENTENCE IS ABOUT BEFORE QUOTING IT. It scans the SPEC TEXT against
+     b1's static ingredient rows, and those rows are fixed at 32 g almond butter. It says nothing about
+     the Today COR card, which since 2026-08-24 prices every topping through priceRow and pays for it by
+     cutting the almond butter — those cards land 544–546 cal, and [cor-crunch] in check-app.js is what
+     proves it. The old wording here (‘uncounted crunch — known debt, his call pending’) got read as ‘his
+     breakfast runs over’, which was wrong about the card and is exactly the re-derivation this repo keeps
+     paying for. What is still genuinely open is narrower: the b1 RECIPE row reads a flat 32 g on a day
+     whose card says less. Also note PERG below is a fourth hand-typed copy of per-gram macros, kept only
+     to size a ceiling — it is not what the app charges him. */
   else pass('cor-bowl-total', specs.length + " COR specs: every fresh-fruit weight matches the bowl's " +
-       FRUIT_G + ' g row; ' + overs.length + ' carry an uncounted crunch, worst ' + worst + ' cal (ceiling ' +
-       CRUNCH_CEILING + ') — known debt, his call pending');
+       FRUIT_G + ' g row; ' + overs.length + " name a gram-stated crunch that b1's static rows do not " +
+       'carry, worst ' + worst + ' cal (ceiling ' + CRUNCH_CEILING + ") — the Today card prices these " +
+       "and pays with almond butter; the b1 recipe row's flat 32 g is the part still open");
 })();
 
 /* ============ [row-math] every ingredient row recomputed from its source ============

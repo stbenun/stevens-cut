@@ -1963,6 +1963,7 @@ const FOOD_FACTS = {
   'biscoff':        {unit:'g',             ea:7.75, /* its own src: "7.75 g per cookie" */ cal:4.84, p:0.065, c:0.742, f:0.194, src:'lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups.'},
   'fruity pebbles': {unit:'g',             cal:3.89, p:0.028, c:0.861, f:0.056, src:'Post Fruity Pebbles label: 1 cup (36 g) = 140 cal / 1 P / 31 C / 2 F -> per gram. 3 cups.'},
   'cinnamon toast crunch': {unit:'g',      cal:4.15, p:0.049, c:0.805, f:0.098, src:'General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups.'},
+  'raisins':        {unit:'g',             ea:1, /* Sun-Maid does not state a per-raisin weight and he weighs these anyway; ea is a placeholder so a COUNTED raisin row fails loudly rather than pricing wrong. Every COR spec states GRAMS. */ cal:3.0,  p:0.025, c:0.775, f:0,     src:'Sun-Maid Natural California Raisins label: 40 g (about 1/4 cup) = 120 cal / 1 P / 31 C / 0 F -> per gram. ⚠️ WEIGH 15 g — the bag’s own serving is 40 g, so a poured “serving” is nearly three times what a COR spec calls for. Moved here 2026-08-24 from a comment on COR_CRUNCH, where it was a hand-typed macro no guard could see.'},
   'graham cracker': {unit:'g',             ea:15.5, /* its own src: "31 g (8 crackers / 2 full sheets) = 130 cal", so 15.5 g a sheet */ cal:4.19, p:0.065, c:0.774, f:0.097, src:'Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g.'},
   'sliced almonds': {unit:'g',             cal:5.79, p:0.212, c:0.216, f:0.499, src:'USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1.'},
   'sf pudding mix': {unit:'g',             cal:2.90, p:0.10,  c:0.70,  f:0,     src:'Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C.'},
@@ -1982,7 +1983,7 @@ const FOOD_FACTS = {
      (cream taken as ~50/50 fat and sugar by calories) from the whole-cookie label.
      ⏳ ONE WEIGHING CALIBRATES THIS: if he scrapes 5 Thins and tells me the gram weight, the real
      cream fraction falls straight out and this stops being an estimate. Until then it is flagged. */
-  'oreo thin wafer':{unit:'g',             cal:4.78, p:0.044, c:0.752, f:0.168, src:'DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM.'},
+  'oreo thin wafer':{unit:'g',             ea:5.65, /* from this fact's OWN derivation below, not a second guess — it rides on the same unconfirmed 22% cream fraction and dies with it */ cal:4.78, p:0.044, c:0.752, f:0.168, src:'DERIVED, not a label: Oreo Thins whole (4 cookies / 29 g = 140 cal / 1 P / 21 C / 6 F) minus an assumed 22% cream fraction. A de-creamed Thin ~= 5.65 g / 27 cal / 0.25 P / 4.25 C / 0.95 F, so 5 of them ~= 135 cal vs 175 whole. NEEDS ONE WEIGH-IN TO CONFIRM.'},
   /* Fresh fruit + freeze-dried, from USDA / published panels. He never has to photograph produce —
      these are commodities and his grams are already specified in the cups. Added Aug 11 2026 so that
      every Creami topping can be COMPUTED; the cups that use fruit were the last uncovered ones. */
@@ -3201,11 +3202,25 @@ function rateBtns(key){
   return `<div class="rate"><span class="lbl">rate</span>${one('up','👍')}${one('mid','😐')}${one('down','👎')}</div>`;
 }
 
-/* Exact build for a COR combo. b1 base = 25 g COR + 25 g oats + 1 scoop protein + 70 g berries + 32 g almond
-   butter = 545/39/54/22. A quantified crunch add-in trades cal-for-cal against the almond butter, so corBuild
-   returns the exact AB grams + the real macro split (which shifts — more carb, less fat — with a crunch). */
-const COR_CRUNCH = [['coconut chips',[45,0,3,4]],['Cinnamon Toast Crunch',[40,0.5,8,1]],['Fruity Pebbles on top',[40,0.5,8,0.5]],['Nilla',[42,0,8,1.5]],['Oreo',[50,0,8,2]],['Biscoff',[38,0.5,5,1.5]],['raisins',[45,0.4,11.6,0]],['graham',[63,1,11.6,1.5]]];  /* Sun-Maid label: 40 g = 120 cal · 0F · 31C · 1P → 15 g = 45 · 11.6C. WEIGH 15 g — the bag's own serving is 40 g.
-   Honey Maid label: 31 g (2 crackers) = 130 cal · 2P · 24C · 3F → 15 g = 63 · 1P · 11.6C · 1.5F. 15 g is about one full cracker sheet — weigh it, don't count it. */
+/* Exact build for a COR combo: b1's rows plus a quantified crunch add-in, which trades cal-for-cal
+   against the almond butter. corBuild returns the exact AB grams and the real macro split (which
+   shifts — more carb, less fat — with a crunch).
+   ⛔ NOTHING IN THIS BLOCK CARRIES A NUMBER ANY MORE, and that is the whole point of the rewrite.
+   It used to hold three hand-typed copies, all of them snapshots of b1 taken before its rows were
+   re-priced: a per-gram almond-butter array, a `baseNoAB` total, and ONE flat [cal,P,C,F] per topping.
+   The first two had drifted, so all 92 combo cards read 1 P and 2 C ABOVE the bowl the engine prices
+   — calories looked right, which is why it survived. The third meant “3 Nilla wafers” and “12 g Nilla”
+   were charged the same 42 cal regardless of the amount his own spec told him to use.
+   His call, 2026-08-24: “there should def not be one flat number for all toppings.”
+   So a topping now NAMES its FOOD_FACTS key and nothing else; the quantity comes from the spec text
+   and priceRow() prices it — the same engine every ingredient row on every card already goes through. */
+const COR_CRUNCH = [['coconut chips','bare coconut chips'],['Cinnamon Toast Crunch','cinnamon toast crunch'],['Fruity Pebbles','fruity pebbles'],['Nilla','nilla wafer'],['Oreo','oreo thin'],['Biscoff','biscoff'],['raisins','raisins'],['graham','graham cracker']];
+/* ⛔ 'Fruity Pebbles', NOT 'Fruity Pebbles on top' — the longer key is what broke Double Fruity Cereal
+   Milk. Its spec reads “70 g strawberries + 12 g Fruity Pebbles”, the key could not match it, so the
+   pebbles fell through to the FRUIT branch: the card dropped his 70 g strawberries, told him to eat
+   12 g of cereal in their place, and charged him for neither. The shorter key is why the crunch scan
+   below is scoped to the ADD-IN segments and never the whole spec — 'Fruity Pebbles Ryse' sits in the
+   protein slot of that same combo, and a whole-spec scan would read the protein as a topping. */
 const corKeyRe = k => new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
 const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
 /* Yogurt bowl of the day. ONE resolver, used by both the Food-zone card and the breakfast log picker,
@@ -3222,25 +3237,50 @@ function bowlOfDay(isoD){
   return ids[doy % ids.length];
 }
 function corBuild(spec){
-  const ABP=[5.9375,0.21875,0.21875,0.53125], baseNoAB=[355,32,47,5]; /* b1 minus its 32 g almond butter */
+  /* base and almond butter both come off b1's OWN rows through the engine — see the COR_CRUNCH note
+     above for the stale copies this replaced. b1 is read live so re-pricing a row can never again
+     leave these cards behind. */
+  const b1v   = OPTBYID['b1'].vars[0];
+  const abRow = (b1v.ing||[]).find(r=>/almond butter/i.test(String(r[0])));
+  const abF   = FOOD_FACTS['almond butter'];
+  const ABP   = [abF.cal, abF.p||0, abF.c||0, abF.f||0];
+  const abBase= (abRow && abRow[2] && abRow[2].n) || 0;
+  let baseNoAB=[0,0,0,0];
+  for(const r of (b1v.ing||[])){ if(r===abRow) continue; const m=priceRow(r); if(m) baseNoAB=baseNoAB.map((x,i)=>x+m[i]); }
   /* parse "<CORflavor> COR + <Protein>[ + <extract>] — <fruit>[ + <crunch>][ + <spice>]" into clean parts */
   const seg = spec.split(' — ');
   const left = seg[0], addins = seg.slice(1).join(' — ');
   const corFlavor = left.split(' COR')[0].trim();
   const lp = left.slice(left.indexOf(' COR')+4).replace(/^\s*\+\s*/,'').split(' + ').map(x=>x.trim()).filter(Boolean);
   const protein = lp[0]||'', extracts = lp.slice(1);
-  let fruitLabel='Berries', fruitQty='70 g', crunchLabel='', crunchQty='';
+  let fruitLabel='Berries', fruitQty='70 g', crunchLabel='', crunchQty='', crunchSeg='', crunchKey=null;
   const spices=[];
   (addins? addins.split(' + ').map(x=>x.trim()).filter(Boolean):[]).forEach(e=>{
     if(/extract$/i.test(e)) extracts.push(e);
-    else if(COR_CRUNCH.some(([k])=>corKeyRe(k).test(e))){ const m=e.match(/^(\d+\s*g?)\s+(.*)$/); crunchQty=m?m[1]:''; crunchLabel=cap(m?m[2]:e); }
+    else if(COR_CRUNCH.some(([k])=>corKeyRe(k).test(e))){
+      const m=e.match(/^(\d+(?:\.\d+)?\s*g?)\s+(.*)$/); crunchQty=m?m[1]:''; crunchLabel=cap(m?m[2]:e);
+      crunchSeg=e; crunchKey=(COR_CRUNCH.find(([k])=>corKeyRe(k).test(e))||[])[0]||null;
+    }
     else if(/cinnamon/i.test(e)) spices.push('Cinnamon');
-    else { const m=e.match(/^(\d+\s*g?)\s+(.*)$/); if(m){ fruitQty=m[1]; fruitLabel=cap(m[2]); } else { fruitLabel=cap(e); fruitQty='70 g'; } }
+    else { const m=e.match(/^(\d+(?:\.\d+)?\s*g?)\s+(.*)$/); if(m){ fruitQty=m[1]; fruitLabel=cap(m[2]); } else { fruitLabel=cap(e); fruitQty='70 g'; } }
   });
-  const c = COR_CRUNCH.find(([k])=> corKeyRe(k).test(spec));
-  let ab=32, mac=[545,39,54,22];
-  if(c){ const cm=c[1]; ab=Math.round((190-cm[0])/ABP[0]*2)/2; mac=[0,1,2,3].map(i=> Math.round(baseNoAB[i] + ab*ABP[i] + cm[i])); }
-  return {ab, mac, crunch:c?c[0]:null, corFlavor, protein, extracts, fruitLabel, fruitQty, crunchLabel, crunchQty, spice:spices[0]||''};
+  /* the topping priced from the amount his own spec states, through the shared engine. Grams price
+     straight; a COUNT (“3 Nilla wafers”, “2 de-creamed Oreo thins”) prices off the fact's `ea:`, and
+     ffScale refuses a count against a fact that does not state what one unit weighs — so an
+     unpriceable topping comes back null here instead of quietly costing nothing. */
+  let cm=null, crunchFF=null, crunchUnpriced=false;
+  if(crunchKey){
+    crunchFF = (COR_CRUNCH.find(([k])=>k===crunchKey)||[])[1] || null;
+    /* a de-creamed Thin is a DIFFERENT food from a whole one — most of the fat is in the filling */
+    if(crunchFF==='oreo thin' && /de-?creamed/i.test(crunchSeg)) crunchFF='oreo thin wafer';
+    const qn = parseFloat(crunchQty);
+    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:qn, u:/g\s*$/i.test(crunchQty)?'g':'each'}]);
+    if(!cm) crunchUnpriced = true;   /* [cor-crunch] fails the build on this; never priced as free */
+  }
+  let ab=abBase;
+  if(cm) ab = Math.round((abBase*ABP[0] - cm[0])/ABP[0]*2)/2;
+  const mac = [0,1,2,3].map(i=> Math.round(baseNoAB[i] + ab*ABP[i] + (cm?cm[i]:0)));
+  return {ab, mac, crunch:crunchKey, crunchFF, crunchUnpriced, corFlavor, protein, extracts, fruitLabel, fruitQty, crunchLabel, crunchQty, spice:spices[0]||''};
 }
 
 const COR_SETS = [
@@ -8357,7 +8397,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787583254';
+const BUILD = 'b1787585413';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

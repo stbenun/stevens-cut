@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 119 rows: **42** derived · **39** label · **36** USDA · **2** UNVERIFIED
+Provenance of the 120 rows: **42** derived · **40** label · **36** USDA · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -99,6 +99,7 @@ Provenance of the 119 rows: **42** derived · **39** label · **36** USDA · **2
 | `protein` | scoop | 137 | 25 | 4 | 2.7 | label | Ryse Loaded / RAW, per 1 scoop. Label-verified flavors in PP_G comments: Milk Chocolate 37 g = 140/25/4/3 (Aug 4), Jet-Puffed Marshmallow 35 g = 130/25/3/2.5 (Aug 6), Jet-Puffed Birthday Cake 34.8 g = 130/25/4/2.5 (Aug 6), Blueberry Muffin 34.9 g = 140/25/4/2.5 (Jul 27). Macros per scoop barely vary; the GRAM WEIGHT does (30-41 g) and PP_G is the source for that. Always weigh from the ziplock. |
 | `pumpkin puree` | g | 0.34 | 0.011 | 0.081 | 0.003 | USDA | USDA pumpkin, canned, without salt: 100 g = 34 cal / 1.1 P / 8.1 C / 0.28 F -> per gram. Fetched Aug 18 2026. Some sources give ~41 for sweetened pie filling — that is a DIFFERENT product; this is plain puree. |
 | `purple sweet potato` | g | 1.15 | 0.018 | 0.257 | 0.001 | derived | Stokes Purple sweet potato, published brand figure: 4 oz (113 g) = 130 cal / 29 C, so 1.15 cal/g and 0.257 C/g. Fetched Aug 19 2026. ⚠️ NOT interchangeable with the orange sweet potato key at 0.86 cal/g — purple is 34% denser a gram. Protein and fat carried over from the orange entry because the brand does not publish them; both under 1 g per 100 g portion. Ask him for the bag if a plate ever hinges on them. |
+| `raisins` | g | 3 | 0.025 | 0.775 | 0 | label | Sun-Maid Natural California Raisins label: 40 g (about 1/4 cup) = 120 cal / 1 P / 31 C / 0 F -> per gram. ⚠️ WEIGH 15 g — the bag’s own serving is 40 g, so a poured “serving” is nearly three times what a COR spec calls for. Moved here 2026-08-24 from a comment on COR_CRUNCH, where it was a hand-typed macro no guard could see. |
 | `raspberries` | g | 0.52 | 0.012 | 0.1194 | 0.0065 | USDA | USDA raspberries, raw: 100 g = 52 cal / 1.2 P / 11.94 C / 0.65 F -> per gram. Fetched Aug 18 2026. Unsweetened frozen is the same food and uses this key; frozen IN SYRUP is ~103 cal per 100 g and is NOT this. |
 | `rice cake` | each | 35 | 0.33 | 7 | 0 | label | HIS figure, stated repeatedly and baked into the row label "Rice cakes (35 cal each)". Plain brown-rice cakes run 35 cal / 7 C, so his number checks out against the category. He always eats 3. |
 | `rice vinegar` | g | 0.2 | 0 | 0.03 | 0 | label | Unseasoned rice vinegar, published panels: 1 tbsp (15 g) = 0-5 cal, rounded to 3 cal -> per gram. Brand-to-brand it is 0 or 5 depending on label rounding; the low end is used and it is under 5 cal either way. Fetched Aug 18 2026. |

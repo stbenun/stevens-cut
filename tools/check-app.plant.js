@@ -79,6 +79,30 @@ const PLANTS = [
     edits: [{ from: "(openAcc.has(\"buffins\") ? \" open\" : \"\")", to: "\" open\"" }] },
   { guard: 'buffins', name: 'the nut-flagged flavor loses its mark',
     edits: [{ from: "         + (b.nut ? \" <span class='chip notetag'>nuts</span>\" : \"\")", to: "         + \"\"" }] }
+,
+
+  /* ---- [cor-crunch]: the three real defects of 2026-08-24, planted verbatim ---- */
+  /* ⛔ Defect ①. This is the exact literal that was sitting in corBuild — a copy of b1 taken before
+     its rows were re-priced. It is worth planting the REAL stale value rather than an obviously silly
+     one: it is only 1 P and 2 C off and the calorie total still lands on 545, so it is a plant a weak
+     guard passes. If clause (b) ever stops comparing against the engine, this case is what notices. */
+  { guard: 'cor-crunch', name: "corBuild goes back to its own stale copy of b1's base",
+    edits: [{ from: "  for(const r of (b1v.ing||[])){ if(r===abRow) continue; const m=priceRow(r); if(m) baseNoAB=baseNoAB.map((x,i)=>x+m[i]); }",
+              to:   "  baseNoAB=[355,32,47,5];" }] },
+
+  /* Defect ②, the one he actually named: the stated amount stops mattering. Pinning n to 3 leaves
+     every topping PRICEABLE, so clauses (a) and (c) stay silent and only (f) can catch it. That is
+     deliberate — (f) is his rule and it needs a case that isolates it from the others. */
+  { guard: 'cor-crunch', name: 'the topping ignores the spec and charges one flat amount again',
+    edits: [{ from: "    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:qn, u:/g\\s*$/i.test(crunchQty)?'g':'each'}]);",
+              to:   "    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:3, u:'each'}]);" }] },
+
+  /* Defect ③, byte-for-byte the key that shipped: 'Fruity Pebbles on top' cannot match the spec
+     “12 g Fruity Pebbles”, so the pebbles fall through to the fruit branch and his 70 g of
+     strawberries vanish off the card. Caught by (d) on the output and (e) on the input. */
+  { guard: 'cor-crunch', name: 'the pebbles key gets long again and the topping lands in the fruit slot',
+    edits: [{ from: "['Fruity Pebbles','fruity pebbles']",
+              to:   "['Fruity Pebbles on top','fruity pebbles']" }] }
 ];
 
 function main() {

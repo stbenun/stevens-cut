@@ -1385,5 +1385,97 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'marking one keeps it listed with its date, ' + d.nutFacts + ' nut-flagged and marked, starts closed');
 }
 
+
+/* ---------- cor-crunch — a COR topping is priced from the amount his spec states ----------
+ * Three defects on 2026-08-24, all in code that no guard had ever looked at, found because he asked
+ * “there's still COR bowls that dont follow the correct macros???”
+ *   ① corBuild carried its own copy of b1's base and of almond butter's per-gram macros. Both were
+ *     snapshots taken before b1's rows were re-priced, so all 92 combo cards read 1 P and 2 C above
+ *     the bowl the engine actually prices. The CALORIES matched, which is why it lived for weeks — a
+ *     wrong number that agrees with the headline figure is invisible.
+ *   ② COR_CRUNCH held one flat [cal,P,C,F] per topping, so “3 Nilla wafers” and “12 g Nilla” were
+ *     charged identically. His call: “there should def not be one flat number for all toppings.”
+ *   ③ The key 'Fruity Pebbles on top' could not match the spec “12 g Fruity Pebbles”, so the pebbles
+ *     fell through to the FRUIT branch: Double Fruity Cereal Milk dropped his 70 g strawberries from
+ *     the card, told him to eat cereal instead, and charged him for neither.
+ * Every clause below is one of those three, plus the vacuity check that stops this whole guard from
+ * passing because it found nothing to look at.
+ */
+{
+  const r = run(`
+    const bad = [], keys = COR_CRUNCH.map(c => c[0]);
+    const combos = [];
+    COR_SETS.forEach(s => s.forEach(([n, sp]) => combos.push({n, sp, b: corBuild(sp)})));
+    if(!combos.length) bad.push('no COR combos found — this guard is running vacuous');
+
+    /* (a) a topping names a fact and nothing else. A number here is the bug coming back. */
+    COR_CRUNCH.forEach(([k, ff]) => {
+      if(Array.isArray(ff)) bad.push('COR_CRUNCH \\'' + k + '\\' carries hand-typed macros again');
+      else if(!FOOD_FACTS[ff]) bad.push('COR_CRUNCH \\'' + k + '\\' names missing fact ' + ff);
+    });
+
+    /* (b) the base must BE b1 as the engine prices it, never a copy of it. Defect ①. */
+    const b1t = OPTBYID['b1'].vars[0].t;
+    const plain = combos.filter(c => !c.b.crunch);
+    if(!plain.length) bad.push('no crunch-free combo exists to compare against b1 — clause (b) is vacuous');
+    plain.forEach(c => {
+      if(c.b.mac.join('/') !== b1t.join('/'))
+        bad.push(c.n + ' with no topping is ' + c.b.mac.join('/') + ' but the engine prices b1 at ' + b1t.join('/'));
+    });
+
+    /* (c) a topping that cannot be priced must never render as free. */
+    combos.forEach(c => {
+      if(c.b.crunchUnpriced) bad.push(c.n + ': topping \\'' + c.b.crunchLabel + '\\' could not be priced');
+    });
+
+    /* (d) a topping must never end up in the fruit slot. Defect ③, checked on the OUTPUT. */
+    combos.forEach(c => {
+      keys.forEach(k => {
+        if(corKeyRe(k).test(c.b.fruitLabel))
+          bad.push(c.n + ': \\'' + c.b.fruitLabel + '\\' is a topping sitting in the fruit slot');
+      });
+    });
+
+    /* (e) ...and defect ③ again, checked on the INPUT: any add-in naming a topping must be matched
+           as one. (d) alone would miss a topping that fell through to the spice branch instead. */
+    combos.forEach(c => {
+      const parts = c.sp.split(' — ').slice(1).join(' — ');
+      (parts ? parts.split(' + ') : []).map(x => x.trim()).filter(Boolean).forEach(e => {
+        if(keys.some(k => corKeyRe(k).test(e)) && !c.b.crunch)
+          bad.push(c.n + ': add-in \\'' + e + '\\' names a topping but none was matched');
+      });
+    });
+
+    /* (f) HIS RULE: different amounts must cost different amounts. Defect ②. Two specs naming the
+           same food in different quantities that come out identical IS the flat number returning. */
+    const byFood = {};
+    combos.filter(c => c.b.crunch).forEach(c => {
+      const q = String(c.b.crunchQty).trim();
+      const grams = q.slice(-1).toLowerCase() === 'g';
+      const m = priceRow([null, null, {f: c.b.crunchFF, n: parseFloat(q), u: grams ? 'g' : 'each'}]);
+      (byFood[c.b.crunchFF] = byFood[c.b.crunchFF] || []).push({q, cal: m ? Math.round(m[0] * 100) / 100 : null});
+    });
+    Object.keys(byFood).forEach(k => {
+      const qs = new Set(byFood[k].map(x => x.q)), cs = new Set(byFood[k].map(x => x.cal));
+      if(qs.size > 1 && cs.size === 1)
+        bad.push(k + ': ' + qs.size + ' different amounts (' + [...qs].join(', ') + ') all cost ' +
+                 [...cs][0] + ' cal — that is one flat number again');
+    });
+
+    /* (g) and the plate still has to fit, the same 25-cal tolerance [slot-fit] uses. */
+    const bud = SLOT_BUDGET.bf[0];
+    combos.forEach(c => {
+      if(c.b.mac[0] > bud + 25) bad.push(c.n + ' is ' + (c.b.mac[0] - bud) + ' cal over the breakfast budget');
+    });
+
+    const withCrunch = combos.filter(c => c.b.crunch).length;
+    return {bad, n: combos.length, withCrunch, foods: Object.keys(byFood).length, b1: b1t.join('/'),
+            cals: [Math.min(...combos.map(c => c.b.mac[0])), Math.max(...combos.map(c => c.b.mac[0]))]};
+  `);
+  if (r.bad.length) fail('cor-crunch', r.bad.length + ' fault(s): ' + r.bad.join(' | '));
+  else ok('cor-crunch', r.n + ' combos, ' + r.withCrunch + ' with a topping across ' + r.foods +
+    ' foods, each priced from its own stated amount; the ' + (r.n - r.withCrunch) +
+    ' plain ones equal the engine\u2019s b1 (' + r.b1 + '); all land ' + r.cals[0] + '\u2013' + r.cals[1] + ' cal');
+}
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
