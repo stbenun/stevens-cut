@@ -487,6 +487,20 @@
        border-top:1px solid var(--line);z-index:10;
        transform:translateZ(0);will-change:transform;
        padding-bottom:env(safe-area-inset-bottom,0)}
+  /* ---- KEYBOARD: the tab bar must get out of the way ----
+     He reported it 2026-08-20 with a screenshot: start typing in the add-item box and the tab bar
+     appears in the MIDDLE of the screen, over the content, while the keyboard sits below it.
+     WHY: position:fixed anchors to the LAYOUT viewport, not the visible one. iOS opens the keyboard by
+     shrinking the VISUAL viewport and scrolling to the focused field; the layout viewport does not
+     change, so the bar stays pinned to where the old bottom was and visually detaches mid-screen. The
+     translateZ(0) + will-change promotion above makes it worse, not better — a promoted layer does not
+     reflow with the visual viewport at all. That promotion was added for a different complaint (drift
+     during momentum scrolling) and is left alone here.
+     FIX: while a text field has focus, the bar is hidden. Deterministic — no geometry to compute and
+     nothing to drift — and it is the right behaviour anyway, since a tab bar floating over the content
+     is worse than no tab bar while he is typing one line. */
+  body.kbdopen nav.tabs{display:none}
+  body.kbdopen .zonebar{display:none}
   nav.tabs .row{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
   .tab{position:relative;background:none;border:none;color:var(--faint);
        display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px}
@@ -8070,6 +8084,27 @@ function wirePrep(){
   $('#gReset').addEventListener('click',()=>{ store.set('qpcut.grocery',[]); render(); });
   wireBuy();
 }
+/* ---------- keyboard-open detection ----------
+   Drives body.kbdopen, which hides the fixed tab bar (see the CSS note on nav.tabs).
+   Bound ONCE at startup on document, not per-render: render() replaces the whole view on every keystroke
+   that changes state, so per-element listeners would be re-attached constantly and any element that
+   survived a render would keep a stale one.
+   ⛔ THE SAFETY NET MATTERS. If focusout never fires — he backgrounds the app mid-type, or iOS dismisses
+   the keyboard without blurring — the bar would stay hidden with no way back. visualViewport tells us the
+   keyboard is really gone: when the visible height comes back to within 100px of the window height, the
+   class comes off regardless of what focus thinks. */
+function kbdWatch(){
+  const TYPEY = el => !!el && (el.tagName === 'TEXTAREA' ||
+    (el.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|range|color|file)$/i.test(el.type || 'text')));
+  const set = on => document.body.classList.toggle('kbdopen', !!on);
+  document.addEventListener('focusin',  e => { if(TYPEY(e.target)) set(true); });
+  document.addEventListener('focusout', e => { if(TYPEY(e.target)) setTimeout(()=>{ if(!TYPEY(document.activeElement)) set(false); }, 60); });
+  const vv = window.visualViewport;
+  if(vv) vv.addEventListener('resize', () => {
+    if(vv.height >= window.innerHeight - 100) set(false);
+    else if(TYPEY(document.activeElement)) set(true);
+  });
+}
 function beep(){
   try{
     const ac = AC || new (window.AudioContext||window.webkitAudioContext)();
@@ -8242,6 +8277,8 @@ function wireTrack(){
     drawPhotos();
   });
 }
+/* one-time: watch for the on-screen keyboard so the fixed tab bar can get out of the way */
+kbdWatch();
 render();
 /* register the push service worker on boot (harmless where unsupported / not served) */
 if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
@@ -8321,7 +8358,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787254957';
+const BUILD = 'b1787583254';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

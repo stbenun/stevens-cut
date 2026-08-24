@@ -596,3 +596,29 @@ after it, not "+36", which the guard would have rejected. Checked lines went fro
 and says so in an `over` field — the half chicken alone is 620. There is no `[slot-fit]` equivalent for
 eating out, so nothing fails the build on it, where a recipe 26 cal over is a hard failure. Carbs also
 run 9–51 g under at every venue, by design: the starch is advisory and is dropped when it does not fit.
+
+---
+
+## 2026-08-20 — the tab bar gets out of the way while he types
+
+**He reported it with a screenshot:** *"this happens on my phone a lot. ill start typing and the tab from
+the bottom comes up. fix it."* The bar was floating in the MIDDLE of the screen, over the content, with the
+keyboard below it.
+
+**Cause:** `nav.tabs` is `position:fixed; bottom:0`, which anchors to the **layout** viewport. iOS opens the
+keyboard by shrinking the **visual** viewport and scrolling to the focused field — the layout viewport never
+changes, so the bar stays pinned where the old bottom was and visually detaches. The `translateZ(0)` +
+`will-change:transform` promotion on that rule makes it worse, not better: a promoted layer does not reflow
+with the visual viewport at all. That promotion was added for a *different* complaint (drift during
+momentum scrolling) and is deliberately left in place.
+
+**Fix: hide the bar (and the zone subnav) while a text field has focus.** Deterministic — no geometry to
+compute, nothing to drift — and it is the better behaviour regardless, since a bar floating over the content
+is worse than no bar for the seconds he is typing one line. Checkboxes, buttons, radios, ranges and file
+inputs deliberately do NOT trigger it; the app is full of checkboxes.
+
+**⚠️ VERIFIED ONLY IN PART, and worth knowing why.** The logic is tested — nine focus cases, both CSS rules
+present. The VISUAL result is not, and could not be here: headless Edge has no on-screen keyboard and its
+visual viewport never shrinks, so the bug is not reproducible on this machine by any tool available. If it
+still misbehaves on his phone, the next lever is dropping the `backdrop-filter` blur and the layer
+promotion, which removes the cause rather than working around it.
