@@ -1436,6 +1436,18 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       });
     });
 
+    /* (d2) ⛔ THE CLAUSE THAT ACTUALLY CATCHES DEFECT ③, and the reason it is separate from (d).
+           (d) and (e) both match using COR_CRUNCH's OWN keys, so if a KEY is wrong they are wrong
+           the same way and see nothing — plant 3 walked straight through both. This one knows
+           nothing about COR_CRUNCH: whatever ends up in the fruit slot has to be a fruit. Same
+           vocabulary [cor-bowl-total] uses for fresh fruit in check-food.js. */
+    const FRUITWORDS = ['berr', 'strawberr', 'blueberr', 'raspberr', 'apple', 'banana',
+                        'peach', 'pineapple', 'mango', 'cherr'];
+    combos.forEach(c => {
+      const fl = String(c.b.fruitLabel || '').toLowerCase();
+      if(!FRUITWORDS.some(w => fl.indexOf(w) >= 0))
+        bad.push(c.n + ': the fruit slot holds \u2018' + c.b.fruitLabel + '\u2019, which is not a fruit');
+    });
     /* (e) ...and defect ③ again, checked on the INPUT: any add-in naming a topping must be matched
            as one. (d) alone would miss a topping that fell through to the spice branch instead. */
     combos.forEach(c => {

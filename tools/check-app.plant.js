@@ -92,10 +92,14 @@ const PLANTS = [
 
   /* Defect ②, the one he actually named: the stated amount stops mattering. Pinning n to 3 leaves
      every topping PRICEABLE, so clauses (a) and (c) stay silent and only (f) can catch it. That is
-     deliberate — (f) is his rule and it needs a case that isolates it from the others. */
+     deliberate — (f) is his rule and it needs a case that isolates it from the others.
+     ⚠️ n:3 u:'g', NOT u:'each'. The first version of this plant used a COUNT, and a per-gram fact
+     with no ea: cannot price a count — so it tripped (c) 'could not be priced' and never exercised
+     (f) at all. It looked caught. Grams resolve against every one of these facts, so every amount
+     prices and (f) is the only clause left that can object. */
   { guard: 'cor-crunch', name: 'the topping ignores the spec and charges one flat amount again',
     edits: [{ from: "    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:qn, u:/g\\s*$/i.test(crunchQty)?'g':'each'}]);",
-              to:   "    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:3, u:'each'}]);" }] },
+              to:   "    if(crunchFF && isFinite(qn) && qn>0) cm = priceRow([null,null,{f:crunchFF, n:3, u:'g'}]);" }] },
 
   /* Defect ③, byte-for-byte the key that shipped: 'Fruity Pebbles on top' cannot match the spec
      “12 g Fruity Pebbles”, so the pebbles fall through to the fruit branch and his 70 g of

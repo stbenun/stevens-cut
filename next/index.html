@@ -3255,15 +3255,39 @@ function corBuild(spec){
   const lp = left.slice(left.indexOf(' COR')+4).replace(/^\s*\+\s*/,'').split(' + ').map(x=>x.trim()).filter(Boolean);
   const protein = lp[0]||'', extracts = lp.slice(1);
   let fruitLabel='Berries', fruitQty='70 g', crunchLabel='', crunchQty='', crunchSeg='', crunchKey=null;
-  const spices=[];
-  (addins? addins.split(' + ').map(x=>x.trim()).filter(Boolean):[]).forEach(e=>{
+  const spices=[], extras=[];
+  /* ⛔ A SPEC USES TWO SEPARATORS, NOT ONE. ' + ' joins add-ins, but a trailing fruit is often
+     attached with a COMMA — “¾ tsp almond, berries”. The parser only knew about ' + ', so the whole
+     string landed in the fruit slot and 8 of 92 cards rendered a row reading “½ tsp vanilla bean
+     paste, berries — 70 g”. Almond Croissant was worse: a second add-in then overwrote it and his
+     berries disappeared from the card entirely.
+     The comma is only split when what FOLLOWS it is a fruit. “1 Biscoff, crushed” is one item with a
+     preparation note and splitting that would invent an ingredient called ‘crushed’. */
+  const FRUITW = /(berr|strawberr|blueberr|raspberr|apple|banana|peach|pineapple|mango|cherr)/i;
+  const DOSE   = /^[¼½¾⅓⅔\d][^ ]*\s*(tsp|tbsp|ml|drops?)\b/i;
+  const QTY    = /^(\d+(?:\.\d+)?\s*g?)\s+(.*)$/;
+  const segs = [];
+  (addins ? addins.split(' + ').map(x=>x.trim()).filter(Boolean) : []).forEach(e=>{
+    const m = e.match(/^(.+?),\s*([a-z ]*(?:berries|strawberries|blueberries|raspberries|apple|banana|peaches|peach|pineapple|mango|cherries))\s*$/i);
+    if(m){ segs.push(m[1].trim()); segs.push(m[2].trim()); } else segs.push(e);
+  });
+  segs.forEach(e=>{
+    /* order matters: 'Cinnamon Toast Crunch' is a TOPPING and must be tested before the cinnamon
+       spice branch, or it would be filed as a pinch of spice and never priced. */
     if(/extract$/i.test(e)) extracts.push(e);
     else if(COR_CRUNCH.some(([k])=>corKeyRe(k).test(e))){
-      const m=e.match(/^(\d+(?:\.\d+)?\s*g?)\s+(.*)$/); crunchQty=m?m[1]:''; crunchLabel=cap(m?m[2]:e);
+      const q=e.match(QTY); crunchQty=q?q[1]:''; crunchLabel=cap(q?q[2]:e);
       crunchSeg=e; crunchKey=(COR_CRUNCH.find(([k])=>corKeyRe(k).test(e))||[])[0]||null;
     }
     else if(/cinnamon/i.test(e)) spices.push('Cinnamon');
-    else { const m=e.match(/^(\d+(?:\.\d+)?\s*g?)\s+(.*)$/); if(m){ fruitQty=m[1]; fruitLabel=cap(m[2]); } else { fruitLabel=cap(e); fruitQty='70 g'; } }
+    /* a flavouring that states a dose but not the word 'extract' — “¾ tsp almond”, “¼ tsp maple”.
+       These used to fall through to the fruit slot and be overwritten or rendered as 70 g of syrup. */
+    else if(DOSE.test(e)) extracts.push(e);
+    else if(FRUITW.test(e)){ const q=e.match(QTY); if(q){ fruitQty=q[1]; fruitLabel=cap(q[2]); } else fruitLabel=cap(e); }
+    /* anything left is a real instruction he wrote (“extra almond butter”, “Golden Lakanto”). It gets
+       its own row rather than silently replacing the fruit. ⚠️ It carries NO quantity, because none
+       was ever stated and inventing one here is the exact failure this repo keeps recording. */
+    else extras.push(cap(e));
   });
   /* the topping priced from the amount his own spec states, through the shared engine. Grams price
      straight; a COUNT (“3 Nilla wafers”, “2 de-creamed Oreo thins”) prices off the fact's `ea:`, and
@@ -3281,7 +3305,7 @@ function corBuild(spec){
   let ab=abBase;
   if(cm) ab = Math.round((abBase*ABP[0] - cm[0])/ABP[0]*2)/2;
   const mac = [0,1,2,3].map(i=> Math.round(baseNoAB[i] + ab*ABP[i] + (cm?cm[i]:0)));
-  return {ab, mac, crunch:crunchKey, crunchFF, crunchUnpriced, corFlavor, protein, extracts, fruitLabel, fruitQty, crunchLabel, crunchQty, spice:spices[0]||''};
+  return {ab, mac, crunch:crunchKey, crunchFF, crunchUnpriced, corFlavor, protein, extracts, fruitLabel, fruitQty, crunchLabel, crunchQty, spice:spices[0]||'', extras};
 }
 
 const COR_SETS = [
@@ -4670,6 +4694,8 @@ function bagCard(ld, wd){
   if(cb.extracts && cb.extracts.length){ /* capitalise: every other row starts upper-case and 'coconut extract' sat lower */
     const ex = cb.extracts.join(' + '); corItems.push(ex.charAt(0).toUpperCase() + ex.slice(1)); }
   corItems.push('Almond butter — ' + (cb.ab ? cb.ab + ' g' : '32 g'));
+  /* the same non-flavouring add-ins, so the bag matches the card. No quantity invented here either. */
+  (cb.extras||[]).forEach(x=> corItems.push(x + (/lakanto|sweeten|stevia|monk ?fruit|salt|spice/i.test(x) ? '' : ' — amount not set')));
 
   /* Yogurt bowl of the day — straight off its own rows, so the weights match the recipe card */
   const bId  = bowlOfDay(ld);
@@ -6271,6 +6297,16 @@ function viewToday(){
           return `<li><span>${cap(m?m[2]:x)}</span><span class="q">${m?m[1]:'splash'}</span></li>`;
         }).join('')}
         ${corB.spice?`<li><span>${corB.spice}</span><span class="q">to taste</span></li>`:''}
+        ${/* An add-in he wrote that is not a flavouring, a topping or a spice — “extra almond butter”,
+             “Golden Lakanto”. These used to overwrite the FRUIT row and vanish his berries off the card.
+             ⛔ A calorie-bearing one gets NO invented quantity. His spec never stated an amount, and a
+             plausible-looking gram figure here would be indistinguishable from a sourced one on a card
+             he cooks from. It renders marked instead, so the gap is visible and he can close it. */''}
+        ${(corB.extras||[]).map(x=>{
+          const free = /lakanto|sweeten|stevia|monk ?fruit|salt|spice/i.test(x);
+          return `<li><span>${x}${free?'':' <span class="chip notetag">amount not set</span>'}</span>`
+               + `<span class="q">${free?'to taste':'\u2014'}</span></li>`;
+        }).join('')}
       </ul>
     </details>
   </div>
@@ -8398,7 +8434,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787585413';
+const BUILD = 'b1787585869';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
