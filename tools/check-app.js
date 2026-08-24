@@ -1514,5 +1514,95 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     ' foods, each priced from its own stated amount; the ' + (r.n - r.withCrunch) +
     ' plain ones equal the engine\u2019s b1 (' + r.b1 + '); all land ' + r.cals[0] + '\u2013' + r.cals[1] + ' cal');
 }
+
+/* ---------- creami-shop — a batch's shopping list must not contradict its own cups ----------
+ * His report, 2026-08-24: “theres an issue with the creami batch tab in prep. its showing 16 flavors.”
+ * Batch 5 had a second set of 8 cups APPENDED to it instead of becoming its own batch. Three things
+ * were already visible in the data and nothing was looking at any of them:
+ *   ① the footer's shopping amounts were hard-coded 8-cup quantities on a 16-cup card;
+ *   ② Batch 5's shop list says “no Nilla wafers and no Vanilla Ice Cream powder this round — that is
+ *     the point”, while four of the appended cups are built on exactly those two. He prepped six of
+ *     them on Aug 23; three needed 30 g of crushed Nilla wafers each. Shopping that card leaves him
+ *     without the topping for half the batch.
+ *   ③ two different cups were both named 'Snickerdoodle', and flavour ratings are keyed by the
+ *     readable name, so a 👍 on one landed on the other.
+ * Clause (d) covers the dead-control class that let it persist: advancing the batch pointer had been
+ * wired to a branch guarded by `const done = false`, so it was unreachable code.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const TOKENS = ['nilla','oreo','biscoff','graham','cinnamon toast crunch','fruity pebbles',
+                    'coconut','sliced almond','fiber one','blueberr','strawberr','pineapple','whip'];
+    let checks = 0;
+    CREAMI_BATCHES.forEach(b => {
+      const shopText = (b.shop||[]).map(r2 => r2.join(' ')).join(' | ').toLowerCase();
+      /* ⛔ A STANDING STAPLE COUNTS AS AVAILABLE. The first version of this clause did not know about
+         STAPLES and flagged Nilla wafers and Biscoff on a batch that legitimately omits them — he
+         always has both. A guard that has to be argued with on real data gets switched off. */
+      const stapleText = (typeof STAPLES !== 'undefined' ? STAPLES : []).join(' | ').toLowerCase();
+      const have = t => shopText.indexOf(t) >= 0 || stapleText.indexOf(t) >= 0;
+      /* ...and a batch whose list says it is already made is a RECORD of a batch, not a list to shop.
+         Batch 4 was made Jul 23 and its 'shop' array is two lines of history. */
+      const alreadyMade = shopText.indexOf('already made') >= 0;
+
+      /* (a) every topping a cup names has to be on the batch's own shopping list */
+      (b.cups||[]).forEach(c => {
+        if(alreadyMade) return;
+        const top = String(c[4]||'').toLowerCase();
+        TOKENS.forEach(t => {
+          if(top.indexOf(t) >= 0){
+            checks++;
+            if(!have(t))
+              bad.push(b.name + ' / ' + c[0] + ' needs ' + t + ' — not on its shop list and not a staple');
+          }
+        });
+      });
+
+      /* (b) ...and the NEGATIVE claims, which is the shape that actually shipped. A row saying a thing
+             is not needed this round is a promise about every cup in the batch. */
+      (b.shop||[]).forEach(r2 => {
+        const row = r2.join(' ').toLowerCase();
+        if(row.indexOf('not needed') < 0 && row.indexOf('no ') < 0) return;
+        TOKENS.forEach(t => {
+          if(row.indexOf('no ' + t) < 0 && !(row.indexOf('not needed') >= 0 && row.indexOf(t) >= 0)) return;
+          checks++;
+          (b.cups||[]).forEach(c => {
+            if(String(c[4]||'').toLowerCase().indexOf(t) >= 0)
+              bad.push(b.name + ' says ' + t + ' is not needed, but ' + c[0] + ' is topped with it');
+          });
+        });
+      });
+
+      /* (c) two cups in one batch must not share a name — ratings are keyed by the readable name */
+      const seen = {};
+      (b.cups||[]).forEach(c => {
+        const k = String(c[0]).split('\u00b7').pop().trim().toLowerCase();
+        if(seen[k]) bad.push(b.name + ' has two cups both called ' + k + ' — a rating on one hits the other');
+        seen[k] = 1;
+      });
+
+      /* (d) and nothing in a batch may be empty or missing its topping spec */
+      if(!(b.cups||[]).length) bad.push(b.name + ' has no cups');
+      (b.cups||[]).forEach(c => { if(!String(c[4]||'').trim()) bad.push(b.name + ' / ' + c[0] + ' has no topping'); });
+    });
+    if(!checks) bad.push('no shop-list claim could be checked — this guard is running vacuous');
+    return {bad, checks, batches: CREAMI_BATCHES.length,
+            sizes: CREAMI_BATCHES.map(b => b.cups.length).join('/')};
+  `);
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const bad2 = r.bad.slice();
+  /* (e) the dead-control class, checked on the SOURCE. `const done = false` made the whole next-batch
+         branch unreachable, so a batch he made EARLY could never be recorded. A constant-false guard
+         on a branch is the tell, and it reads exactly like working code. */
+  if (/const\s+done\s*=\s*(false|0)\s*;/.test(src))
+    bad2.push('the creami next-batch branch is guarded by a constant again — that is dead code');
+  if (src.indexOf('id="cbNext"') < 0)
+    bad2.push('no cbNext control in the markup — the batch pointer cannot be advanced by hand');
+  if (bad2.length) fail('creami-shop', bad2.length + ' fault(s): ' + bad2.join(' | '));
+  else ok('creami-shop', r.batches + ' batches (' + r.sizes + ' cups), ' + r.checks +
+    ' shop-list claims checked against the cups that rely on them; no duplicate cup names, ' +
+    'next-batch control reachable');
+}
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

@@ -106,7 +106,36 @@ const PLANTS = [
      strawberries vanish off the card. Caught by (d) on the output and (e) on the input. */
   { guard: 'cor-crunch', name: 'the pebbles key gets long again and the topping lands in the fruit slot',
     edits: [{ from: "['Fruity Pebbles','fruity pebbles']",
-              to:   "['Fruity Pebbles on top','fruity pebbles']" }] }
+              to:   "['Fruity Pebbles on top','fruity pebbles']" }] },
+
+  /* ---- [creami-shop]: the Batch 5 defects of 2026-08-24, one plant per clause ---- */
+  /* (b) the contradiction that actually shipped, in the cleanest form: a batch declares a topping
+     unnecessary while its own cups are built on it. Batch 5 really did say “no Nilla wafers ... that is
+     the point” with four Nilla-topped cups appended to it, and he prepped three of them. Planted on
+     Batch 6 instead of Batch 5 so it touches ONE shop row and disturbs no cup's component list — a
+     plant that also trips [creami-topping] would not tell us which guard was load-bearing. */
+  { guard: 'creami-shop', name: 'a batch calls a topping unnecessary while its own cups are built on it',
+    edits: [{ from: "['⚠️ NEEDS Nilla wafers + Vanilla Ice Cream powder','the exact opposite of Batch 5 — which is why these were split apart'],",
+              to:   "['❌ NOT needed','no Nilla wafers this round']," }] },
+
+  /* (a) a topping on no shop list and not a staple. Batch 1's coconut chips were missing for months
+     and Batch 1 is the batch AFTER Batch 6, so it was next in line to bite. */
+  { guard: 'creami-shop', name: 'a non-staple topping goes missing from the shop list again',
+    edits: [{ from: "['Toasted coconut chips','8 g (cup 5) — NOT a staple, and the list omitted it until 2026-08-24'],",
+              to:   "" }] },
+
+  /* (c) two cups in one batch sharing a readable name. Flavour ratings key off that name, so his 👍
+     on one was landing on the other — and the ratings are what decides which cups get kept. */
+  { guard: 'creami-shop', name: 'two cups in one batch share a name again, so ratings collide',
+    edits: [{ from: "['Snickerdoodle Crunch','Cinnamon Toast'",
+              to:   "['Snickerdoodle','Cinnamon Toast'" }] },
+
+  /* (e) the dead-control class. `const done = false` is what made the next-batch branch unreachable,
+     so the pointer could only ever advance by finishing every cup — and he prepped a new batch with
+     three cups of the old one still notionally left. Reads exactly like working code. */
+  { guard: 'creami-shop', name: 'the next-batch branch goes back behind a constant-false guard',
+    edits: [{ from: "    const nextBatch = cs.next;",
+              to:   "    const nextBatch = cs.next; const done = false;" }] }
 ];
 
 function main() {

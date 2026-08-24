@@ -2856,6 +2856,7 @@ const CREAMI_BATCHES = [
    ['Cinnamon Toast Crunch','33 g'],['Fruity Pebbles','30 g'],
    ['Fiber One cinnamon bar','1'],['Blueberries (cup 4)','70 g'],
    ['Apple (cup 5)','1'],['Fresh pineapple (cup 6)','150 g'],
+     ['Toasted coconut chips','8 g (cup 5) — NOT a staple, and the list omitted it until 2026-08-24'],
    ['FF whipped cream','1 can'],['Lakanto 320 g · extracts · xanthan · SF choc syrup','check stock'],
   ], cups:[
   ['1 · Strawberry Shortcake Sundae','LD Strawberry Shortcake','vanilla cheesecake Jell-O 5 g','1 tsp vanilla bean paste','7 crushed Nilla wafers (26 g) + FF whip 17 g',[['nilla wafer',26.25],['ff whip',17]]],
@@ -2893,8 +2894,9 @@ const CREAMI_BATCHES = [
    ['SF Jell-O — chocolate','1 cup'],
    ['SF Jell-O — butterscotch','2 cups’ worth'],
    ['Nilla wafers','~15'],['Oreo Thins','5'],['Biscoff','3'],
-   ['Fruity Pebbles','30 g'],['Cereal of choice','33 g'],['Fiber One cinnamon bar','½'],
+   ['Fruity Pebbles','30 g'],['Cereal for cup 8','30 g Cinnamon Toast Crunch — ⚠️ MY PICK, NOT HIS. The cup said “33 g cereal of choice”; I chose this and it is question 13 in open-questions. The row now names what the cup names, so the two cannot disagree while the choice is still open.'],['Fiber One cinnamon bar','½'],
    ['Strawberries (cup 5)','70 g'],['Apple (cup 2)','1'],['Fresh pineapple (cup 3)','150 g'],
+     ['Toasted coconut chips','8 g (cup 3) — NOT a staple, and the list omitted it until 2026-08-24'],
    ['FF whipped cream','1 can'],['Lakanto · extracts','check stock'],
   ], cups:[
   ['1 · Grasshopper Pie','Mint Chip Ice Cream','chocolate Jell-O 5 g','peppermint (if bought)','9 whole mini Oreos (29 g) + FF whip 5 g',[['oreo mini',29],['ff whip',5]]],
@@ -2915,7 +2917,7 @@ const CREAMI_BATCHES = [
   ['3 · Butterscotch','Transparent Labs unflavored','butterscotch Jell-O 5 g','½ tsp caramel','3 crushed Biscoff (23 g) + FF whip 25 g',[['biscoff',23.25],['ff whip',25]]],
   ['4 · Cake Batter','Vanilla Ice Cream','vanilla cheesecake Jell-O 5 g','1 tsp cake batter extract','FF whip 17 g + 7 crushed Nilla wafers (26 g)',[['ff whip',17],['nilla wafer',26.25]]],
  ]},
- {name:'Batch 5 — new directions', shop:[
+  {name:'Batch 5 — new directions', shop:[
    ['Fairlife 0% for the batch','2 big bottles (2,560 mL)'],
    ['SF Jell-O — chocolate','3 cups’ worth'],
    ['SF Jell-O — vanilla cheesecake','2 cups’ worth'],
@@ -2941,15 +2943,39 @@ const CREAMI_BATCHES = [
   ['6 · Chocolate-Covered Strawberry','LD Strawberry Shortcake','chocolate Jell-O 5 g','1 tsp vanilla bean paste','70 g strawberries + FF whip 19 g + SF choc drizzle 15 g + 6 whole mini Oreos (19 g)',[['strawberries',70],['ff whip',19],['sf choc syrup',15],['oreo mini',19.32]]],
   ['7 · Snickerdoodle','Cinnamon Toast','butterscotch Jell-O 5 g','½ tsp caramel + ¾ tsp cinnamon','3 crushed Biscoff (23 g) + FF whip 25 g',[['biscoff',23.25],['ff whip',25]]],
   ['8 · Berry Cereal Milk','Fruity Pebbles','vanilla Jell-O 5 g','¼ tsp lemon','25 g Fruity Pebbles + 12 g freeze-dried strawberries',[['fruity pebbles',25],['fd strawberries',12]]],
+  ]},
+  /* ⛔ SPLIT OUT OF BATCH 5 ON 2026-08-24, on his report: “theres an issue with the creami batch tab in
+     prep. its showing 16 flavors.” Batch 5 had had a second set of 8 cups APPENDED to it rather than
+     made into its own batch, so one card asked him to prep 16 while every other batch is 8.
+     The seam was visible three ways: cups 1-8 carry a ‘N · ’ number prefix and 9-16 do not; the footer's
+     shopping amounts (2,560 mL Fairlife, 320 g Lakanto) are 8 cups' worth; and Batch 5's own shop list
+     says “no Nilla wafers and no Vanilla Ice Cream powder this round — that is the point” while four of
+     the appended cups are built on exactly those two. Shopping Batch 5's card for these cups leaves him
+     without the topping for three of them. [creami-shop] now fails the build on that contradiction.
+     He confirmed the size: “8 — I stopped at 6.” He prepped cups 1-6 of this batch on 2026-08-23. */
+  {name:'Batch 6', shop:[
+   ['Fairlife 0% for the batch','2 big bottles (2,560 mL)'],
+   ['SF Jell-O — vanilla','4 cups’ worth'],
+   ['SF Jell-O — chocolate','2 cups’ worth'],
+   ['SF Jell-O — butterscotch','2 cups’ worth'],
+   ['Nilla wafers','120 g total (~32 wafers) — cups 1, 4, 5, 8'],
+   ['Mini Oreos','29 g — cup 2'],
+   ['Biscoff','29 g (~4 cookies) — cup 3'],
+   ['Graham crackers','37 g (~2½ sheets) — cup 6'],
+   ['Cinnamon Toast Crunch','34 g — cup 7'],
+   ['Lakanto 320 g · Golden Lakanto · extracts','check stock'],
+   ['Extracts this batch','orange · vanilla bean paste · coffee · cookie butter · maple · cake batter · velvet cake · blueberry · lemon · cinnamon · almond'],
+   ['⚠️ NEEDS Nilla wafers + Vanilla Ice Cream powder','the exact opposite of Batch 5 — which is why these were split apart'],
+  ], cups:[
   ['Orange Creamsicle','Vanilla Ice Cream','vanilla Jell-O 5 g','½ tsp orange + ½ tsp vanilla bean paste','8 crushed Nilla wafers (30 g)',[['nilla wafer',30]]],
   ['Mocha Cookie','Chocolate Cookie Blast','chocolate Jell-O 5 g','½ tsp coffee extract','29 g whole mini Oreos',[['oreo mini',29]]],
   ['Maple Cookie Butter','Cinnamon Toast','butterscotch Jell-O 5 g','½ tsp cookie butter + ¼ tsp maple','29 g crushed Biscoff',[['biscoff',29]]],
   ['Cake Batter','Vanilla Ice Cream','vanilla Jell-O 5 g','¾ tsp cake batter extract','30 g crushed Nilla wafers',[['nilla wafer',30]]],
   ['Red Velvet','Vanilla Ice Cream','chocolate Jell-O 5 g','¾ tsp velvet cake extract','30 g crushed Nilla wafers',[['nilla wafer',30]]],
   ['Blueberry Muffin','Blueberry Muffin','vanilla Jell-O 5 g','½ tsp blueberry + ¼ tsp lemon','37 g crushed graham',[['graham cracker',33]]],
-  ['Snickerdoodle','Cinnamon Toast','butterscotch Jell-O 5 g','1 tsp cinnamon spice + Golden Lakanto','34 g Cinnamon Toast Crunch',[['cinnamon toast crunch',34]]],
+  ['Snickerdoodle Crunch','Cinnamon Toast','butterscotch Jell-O 5 g','1 tsp cinnamon spice + Golden Lakanto','34 g Cinnamon Toast Crunch',[['cinnamon toast crunch',34]]],
   ['Almond Croissant','Vanilla Ice Cream','vanilla Jell-O 5 g','¾ tsp almond + ½ tsp vanilla bean paste','30 g crushed Nilla wafers',[['nilla wafer',30]]]
- ]},
+  ]},
 ];
 /* weekly recipe sets — full recipes, spice amounts scale with the menu.
    s = scale source: 'chix' = all chicken meals, 'l1' = sweet-potato chicken meals, null = per portion */
@@ -7075,7 +7101,12 @@ function viewPrep(){
     const cb = cs, batches = CREAMI_BATCHES, batch = cs.batch;
     const eatenN = cs.used;
     const left = Math.max(0, batch.cups.length - eatenN);
-    const done = false;          /* rolled over automatically; a finished batch is never "current" */
+    /* ⛔ `const done = false` USED TO LIVE HERE, WHICH MADE THE WHOLE next-batch BRANCH DEAD CODE.
+       Auto-rollover replaced the button but the branch was left behind, so the only way to reach the
+       next batch was to eat every cup of this one. He prepped a new batch on 2026-08-23 with 3 cups of
+       the old one still notionally unfinished and the app had no way to be told. Same shape as the
+       Batch 4 bug in the comment on creamiState(), inverted: there a required action had only a
+       conditional trigger, here it had none left at all. The control below is now always reachable. */
     const nextBatch = cs.next;
     const cupHTML = cups => cups.map(([n,p,th,ex,top])=>`
       <div class="opt"><div class="head"><b>${n}</b></div>
@@ -7092,17 +7123,24 @@ function viewPrep(){
   <details class="card acc" data-acc="creami"${openAcc.has('creami')?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">${batch.name}</h3> ${tchip(cb.started?`${left}/${batch.cups.length} in the freezer`:'tap to open')}</summary>
     <div class="sub" style="margin-top:8px">Every cup: <b>320 mL Fairlife FF · 40 g Lakanto · ½ scoop protein · thickener · extract</b> → blend, lid, freeze 24 h. ≈210 cal / 32 P before topping; topping budget = the plan’s <b>140-cal mix-in</b>, added after the spin (all amounts sized to 140). Re-spin with a splash of Fairlife if crumbly. Counter runs off your Ninja Creami snack logs on Today. <b>Spin at eat time, not ahead</b> — a pre-spun cup refreezes icy. No machine that night (Shabbat, travel)? Spin it before, keep it in the freezer ≤ 2 h and eat it soft-ish, or make bark: spread the spun cup thin on parchment, freeze, snap into pieces — bark stays good for days.</div>
-    ${done ? `
-      <div class="note">🎉 ${batch.name} finished — <b>${nextBatch.name}</b> is up. Recipes below; hit the button once you’ve made them.</div>
+    ${cupHTML(batch.cups)}
+    <div class="formrow">${cb.started
+      ? `<button class="btn ghost" id="cbReset">Remade THIS batch today (reset counter)</button>`
+      : `<button class="btn" id="cbStart">Made them — start counting</button>`}</div>
+    ${/* Starts CLOSED like every other section. It is here so the pointer can follow what is actually
+         in the freezer instead of what he happened to finish. */''}
+    <details class="opt acc" data-acc="creaminext"${openAcc.has('creaminext')?' open':''}>
+      <summary><b>Next up: ${nextBatch.name}</b> ${tchip(nextBatch.cups.length+' cups')}</summary>
+      <div class="sub" style="margin-top:6px">Made these instead? Start it here. The counter should follow what is in the freezer, not what you finished.</div>
       ${cupHTML(nextBatch.cups)}
       <div class="formrow"><button class="btn" id="cbNext">Made them — start ${nextBatch.name}</button></div>
-    ` : `
-      ${cupHTML(batch.cups)}
-      <div class="formrow">${cb.started
-        ? `<button class="btn ghost" id="cbReset">Remade this batch today (reset counter)</button>`
-        : `<button class="btn" id="cbStart">Made them — start counting</button>`}</div>
-    `}
-    <div class="sub" style="margin-top:10px">Batch needs: ~2,560 mL Fairlife (2 big bottles) · 320 g Lakanto · 4 scoops total protein. Tell Claude the winners — he rewrites the queued batches.</div>
+    </details>
+    ${/* ⛔ THESE WERE HARD-CODED AT 2,560 mL / 320 g / 4 SCOOPS — 8 cups' worth — and stayed that way
+         while Batch 5 was carrying 16. Shopping this line for a 16-cup card leaves him half short.
+         Derived from the cup count now, off the per-cup amounts stated two paragraphs up. */''}
+    ${(()=>{ const n=batch.cups.length, ml=n*320, bot=ml/1280, g=n*40, sc=n/2;
+       const trim=x=>String(Math.round(x*10)/10).replace(/\.0$/,'');
+       return `<div class="sub" style="margin-top:10px">Batch needs (${n} cups): ~${ml.toLocaleString()} mL Fairlife (${trim(bot)} big bottle${bot===1?'':'s'}) · ${g} g Lakanto · ${trim(sc)} scoops total protein. Tell Claude the winners — he rewrites the queued batches.</div>`; })()}
   </details>
   </section>`;
   })()}
@@ -8433,7 +8471,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787585869';
+const BUILD = 'b1787589232';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
