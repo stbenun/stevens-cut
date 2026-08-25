@@ -138,8 +138,8 @@ const PLANTS = [
      fact — so no pricing check could ever have caught it. It is a defect in what he reads, and this
      is the only clause that looks at it. */
   { guard: 'cor-crunch', name: 'one COR topping goes back to being measured two ways',
-    edits: [{ from: '+ banana extract — berries + 12 g Nilla',
-              to:   '+ banana extract — berries + 3 Nilla wafers' }] },
+    edits: [{ from: 'Coconut Cream Pie COR + Vanilla Ice Cream Ryse + banana extract — berries + 12 g Nilla',
+              to:   'Coconut Cream Pie COR + Vanilla Ice Cream Ryse + banana extract — berries + 3 Nilla wafers' }] },
 
   /* (f) a second cup list creeps back onto the card. This is the exact shape of my own first fix:
      the next batch's recipes rendered on the same card, which put 16 cup recipes back in front of him
