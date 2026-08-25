@@ -1499,6 +1499,35 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       });
     });
 
+    /* (f3) ONE FOOD, ONE UNIT. His report, 2026-08-25: “in the cor flavors, i just found one that says
+           Biscoff- 8g and one that says biscoff crushed- 1. could we not have things like this happen.”
+           Two specs named the same food and measured it two different ways — grams in one place, a
+           count in another. The macros were never wrong, because both resolve through the same fact,
+           so nothing in the pricing could have caught it. It is a defect in what he READS: he weighs
+           to the gram, and a card that sometimes says 8 g and sometimes says 1 makes him stop and
+           work out whether they are the same thing.
+           ⛔ THE RULE IS NOT “EVERYTHING IN GRAMS”. A count is the honest unit when the gram weight is
+           not confirmed — the de-creamed Oreo thins are counted precisely because what one weighs is
+           still derived off an assumed cream fraction and is open in the register. Converting those to
+           grams would hard-code an unverified number into a card he cooks from. So: whichever unit a
+           food uses, it uses THAT ONE EVERYWHERE. */
+    const unitOf = {}; let unitChecks = 0;
+    combos.filter(c => c.b.crunch).forEach(c => {
+      const q = String(c.b.crunchQty).trim();
+      const u = q.slice(-1).toLowerCase() === 'g' ? 'grams' : 'a count';
+      (unitOf[c.b.crunchFF] = unitOf[c.b.crunchFF] || []).push({u, q, label: c.b.crunchLabel, name: c.n});
+    });
+    Object.keys(unitOf).forEach(ff => {
+      const rows = unitOf[ff], units = new Set(rows.map(r => r.u));
+      unitChecks++;
+      if(units.size > 1){
+        const eg = [...units].map(u => { const r = rows.find(x => x.u === u); return '\u201c' + r.q + ' ' + r.label + '\u201d (' + r.name + ')'; });
+        bad.push(ff + ' is measured two ways across the COR specs: ' + eg.join(' vs ') +
+                 ' \u2014 one food, one unit');
+      }
+    });
+    if(!unitChecks) bad.push("no COR topping unit could be checked — clause (f3) is vacuous");
+
     /* (g) and the plate still has to fit, the same 25-cal tolerance [slot-fit] uses. */
     const bud = SLOT_BUDGET.bf[0];
     combos.forEach(c => {

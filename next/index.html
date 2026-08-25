@@ -3483,8 +3483,8 @@ const COR_SETS = [
      filler and caramel, his only 👎 (Salted Caramel Cheesecake). Keeps the Chocolate Cake base, and
      finally puts Jet-Puffed Birthday Cake to work; its sprinkles are in the powder. */
   ['Confetti Fudge','Chocolate Cake COR + Jet-Puffed Birthday Cake Ryse — strawberries'],
-  ['Banana Cream Pie','Coconut Cream Pie COR + Vanilla Ice Cream Ryse + banana extract — berries + 3 Nilla wafers'],
-  ['Snickerdoodle','Cinnamon Roll COR + Cinnamon Toast Ryse — berries + 3 Nilla wafers + extra cinnamon'],
+  ['Banana Cream Pie','Coconut Cream Pie COR + Vanilla Ice Cream Ryse + banana extract — berries + 12 g Nilla'],
+  ['Snickerdoodle','Cinnamon Roll COR + Cinnamon Toast Ryse — berries + 12 g Nilla + extra cinnamon'],
   ['Fruity Cereal Milk','Fruity Cereal COR + Vanilla Ice Cream Ryse — strawberries'],
   /* ⭐ HIS OWN COMBO, and he rated it 👍 unprompted (Aug 10 2026: "i did panettone and chocolate cookie
      blast cuz you took too long. i like this flavor.").
@@ -3492,12 +3492,12 @@ const COR_SETS = [
      orange extract — which he had rated 😐. Same COR base, different protein, opposite verdict: that is
      a clean same-base A/B saying the 😐 was the VANILLA, not the Panettone. Vanilla filler 18 → 16. */
   ['Chocolate Chip Panettone','Panettone COR + Chocolate Cookie Blast — berries'],
-  ['Salted Caramel Cheesecake','Salted Caramel COR + Vanilla Ice Cream Ryse — strawberries + 3 Nilla wafers'],
+  ['Salted Caramel Cheesecake','Salted Caramel COR + Vanilla Ice Cream Ryse — strawberries + 12 g Nilla'],
   ['Peaches n Cream','Georgia Peach COR + Vanilla Ice Cream Ryse — berries'],
  ],
  [
   ['Fudge Overload','Chocolate Cake COR + Chocolate Cookie Blast — strawberries + 2 de-creamed Oreo thins'],
-  ['Blueberry Cheesecake','Blueberry Muffin COR + Vanilla Ice Cream Ryse — blueberries + 3 Nilla wafers'],
+  ['Blueberry Cheesecake','Blueberry Muffin COR + Vanilla Ice Cream Ryse — blueberries + 12 g Nilla'],
   ['Maple Cinnamon Roll','Maple &amp; Brown Sugar COR + Cinnamon Toast Ryse — berries'],
   ['Peach Marshmallow','Georgia Peach COR + Jet-Puffed Marshmallow — 70 g strawberries'],
   ['Biscoff n Cream','Cookie Butter COR + Vanilla Ice Cream Ryse — 2 de-creamed Oreo thins'],
@@ -3527,14 +3527,14 @@ const COR_SETS = [
   ['Strawberry Cheesecake','Cookies n Cream COR + LD Strawberry Shortcake — 70 g strawberries + 12 g Nilla'],
   ['Cinnamon Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse — 15 g raisins + extra cinnamon'],
   ['Biscoff Milk Chocolate','Cookie Butter COR + Milk Chocolate — berries + 8 g Biscoff'],
-  ['Cookie Butter Toast','Cookie Butter COR + Cinnamon Toast Ryse — 1 Biscoff, crushed'],
+  ['Cookie Butter Toast','Cookie Butter COR + Cinnamon Toast Ryse — 8 g Biscoff, crushed'],
   ['Blueberry Lemon','Blueberry Muffin COR + Lemon Cake — blueberries'],
   ['Chocolate Chip Cookie','Cookies n Cream COR + Chocolate Cookie Blast — 2 de-creamed Oreo thins'],
  ],
  [
   ['Chocolate Mint','Chocolate Cake COR + Mint Chip Ice Cream — strawberries'],
   ['Banana Bread','Maple &amp; Brown Sugar COR + Cinnamon Toast Ryse + banana extract — berries'],
-  ['Blueberry Lemon Cheesecake','Blueberry Muffin COR + Lemon Cake — blueberries + 3 Nilla wafers'],
+  ['Blueberry Lemon Cheesecake','Blueberry Muffin COR + Lemon Cake — blueberries + 12 g Nilla'],
   ['Toasted Coconut','Coconut Cream Pie COR + Vanilla Ice Cream Ryse + coconut extract — 8 g coconut chips'],
   ['Apple Cinnamon Roll','Apple Pie COR + Cinnamon Toast Ryse — 70 g diced apple'],
   ['Strawberry Cinnamon Roll','Cinnamon Roll COR + LD Strawberry Shortcake — 70 g strawberries'],
@@ -3545,7 +3545,7 @@ const COR_SETS = [
   ['Very Berry','Blueberry Muffin COR + LD Strawberry Shortcake — mixed berries'],
   ['Cinnamon Vanilla','Cinnamon Roll COR + Vanilla Ice Cream Ryse — berries'],
   ['Cereal Marshmallow Treat','Fruity Cereal COR + Jet-Puffed Marshmallow — 70 g strawberries + 12 g Nilla'],
-  ['Cookie Butter Cookie','Cookie Butter COR + Milk Chocolate Ryse — 1 Biscoff, crushed'],
+  ['Cookie Butter Cookie','Cookie Butter COR + Milk Chocolate Ryse — 8 g Biscoff, crushed'],
   ['Carrot Cake Latte','Carrot Cake COR + Vanilla Ice Cream Ryse — 15 g raisins'],
   ['Mint Cookies','Cookies n Cream COR + Mint Chip Ice Cream — 2 de-creamed Oreo thins'],
  ],
@@ -8585,7 +8585,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787608420';
+const BUILD = 'b1787669255';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -133,6 +133,14 @@ const PLANTS = [
   /* (e) the dead-control class. `const done = false` is what made the next-batch branch unreachable,
      so the pointer could only ever advance by finishing every cup — and he prepped a new batch with
      three cups of the old one still notionally left. Reads exactly like working code. */
+  /* (f3) the same food measured two ways again. His find, 2026-08-25: one spec said Biscoff 8 g and
+     another said 1 Biscoff crushed. The MACROS were fine either way — both resolve through the same
+     fact — so no pricing check could ever have caught it. It is a defect in what he reads, and this
+     is the only clause that looks at it. */
+  { guard: 'cor-crunch', name: 'one COR topping goes back to being measured two ways',
+    edits: [{ from: '+ banana extract — berries + 12 g Nilla',
+              to:   '+ banana extract — berries + 3 Nilla wafers' }] },
+
   /* (f) a second cup list creeps back onto the card. This is the exact shape of my own first fix:
      the next batch's recipes rendered on the same card, which put 16 cup recipes back in front of him
      — the thing he had reported. Planted as a plain render so it is not hidden behind an accordion;
