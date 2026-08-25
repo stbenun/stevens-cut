@@ -1735,5 +1735,59 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('progression-rule', r.n + ' verdict cases match Q\u2019s rules: set 1 is a feeler on straight ' +
     'ranges and counts on ladders, one working set at the top is a jump, 3 × 12 goes up at 15 not 12');
 }
+
+/* ---------- eat-time — a logged meal time that cannot be true is refused, not reasoned from ----------
+ * 2026-08-25: he ate breakfast at 11:45 AM, the AM/PM segment was on PM, 23:45 was stored, and nothing
+ * objected. The engine then did its job — pushed lunch as late as the rules allow, hit the collision
+ * clamp against dinner and printed “Next: eat around 5:45 PM” with a reason attached. He asked why
+ * lunch was at 5:45. The bug is not the mis-tap; it is that garbage produced a confident answer.
+ * ⚠️ The FALSE POSITIVE this guard mostly exists to prevent: his Creami snack comes AFTER dinner on
+ * most days. dayMealOrder() knows that and the fixed SLOT_SEQ does not, so an order check written
+ * against the constant would have fired on his normal routine every single night.
+ */
+{
+  const r = run(`
+    const bad = [], D = '2026-07-01', T = isoToday();
+    const clear = () => ['pre','bf','lu','sn','di'].forEach(k => setEatTime(D, k, null));
+    const keep = eatTimes(T)['bf'] || null;
+    clear();
+    const order = dayMealOrder();
+    if(!order || order.length < 3) bad.push('dayMealOrder() gave nothing usable — the order check would fall back to a constant');
+    if(order.indexOf('di') > order.indexOf('sn')) bad.push('the day order puts dinner AFTER snack — that is the fixed SLOT_SEQ, not his actual day');
+
+    setEatTime(D, 'lu', '13:30');
+    if(!eatTimeConflict(D, 'bf', '16:00')) bad.push('a breakfast logged after a logged lunch was accepted');
+    if(eatTimeConflict(D, 'bf', '11:00'))  bad.push('a normal breakfast before lunch was flagged');
+    clear();
+
+    /* HIS ROUTINE: the Creami lands after dinner and must never be flagged */
+    setEatTime(D, 'di', '18:30');
+    if(eatTimeConflict(D, 'sn', '21:30')) bad.push('a snack after dinner was flagged — that is his normal Creami timing');
+    clear();
+    setEatTime(D, 'sn', '21:30');
+    if(!eatTimeConflict(D, 'di', '22:00')) bad.push('a dinner logged after the snack was accepted');
+    clear();
+
+    /* the check that catches what he actually hit */
+    const future = String(Math.floor((nowMin()+120)/60)).padStart(2,'0') + ':00';
+    const past   = String(Math.floor(Math.max(0, nowMin()-120)/60)).padStart(2,'0') + ':00';
+    const f = eatTimeConflict(T, 'bf', future);
+    if(!f || f.kind !== 'future') bad.push('a meal stamped two hours from now was accepted — this is the AM/PM case');
+    if(eatTimeConflict(T, 'bf', past)) bad.push('a meal stamped two hours ago was flagged');
+    /* a PAST day must not get the future check at all — backfilling is normal */
+    if(eatTimeConflict(D, 'bf', '23:45')) bad.push('backfilling a past day tripped the future check');
+    clear();
+    if(keep) setEatTime(T, 'bf', keep);
+    return {bad, order: order.join('>')};
+  `);
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const bad2 = r.bad.slice();
+  /* and the card must WITHHOLD the suggestion, not print it beside the warning */
+  if (!/const sug = conflict \? null : nextEatSuggestion/.test(src))
+    bad2.push('the card no longer withholds the next-meal time when the logged time is impossible');
+  if (bad2.length) fail('eat-time', bad2.length + ' fault(s): ' + bad2.join(' | '));
+  else ok('eat-time', 'impossible logged times are refused (future stamp + out of order against ' +
+    'the DAY order ' + r.order + '), backfilling still works, and the next-meal time is withheld rather than computed');
+}
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

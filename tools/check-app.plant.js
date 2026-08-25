@@ -133,6 +133,27 @@ const PLANTS = [
   /* (e) the dead-control class. `const done = false` is what made the next-batch branch unreachable,
      so the pointer could only ever advance by finishing every cup — and he prepped a new batch with
      three cups of the old one still notionally left. Reads exactly like working code. */
+  /* ---- [eat-time]: the AM/PM case, and the false positive that nearly shipped with the fix ---- */
+  /* The impossible time is accepted again, so the engine reasons from it and prints a confident
+     next-meal time. This is exactly what produced “Next: eat around 5:45 PM” off a breakfast
+     logged at 11:45 PM. */
+  { guard: 'eat-time', name: 'a meal stamped in the future is accepted again',
+    edits: [{ from: "  if(ld === isoToday() && mine > nowMin())",
+              to:   "  if(false && ld === isoToday() && mine > nowMin())" }] },
+
+  /* ⛔ THE MORE IMPORTANT ONE. The order check goes back to the fixed SLOT_SEQ, which lists the snack
+     BEFORE dinner. His Creami lands after dinner on most days, so this would flag his normal routine
+     every single night — a guard he would have to argue with, which is a guard that gets switched off.
+     dayMealOrder() is the app's own answer for the day and it puts dinner first. */
+  { guard: 'eat-time', name: 'the order check goes back to the fixed slot list, flagging his nightly Creami',
+    edits: [{ from: "  const order = (typeof dayMealOrder === 'function' && dayMealOrder().length) ? dayMealOrder() : SLOT_SEQ;",
+              to:   "  const order = SLOT_SEQ;" }] },
+
+  /* And the card prints a next-meal time beside the warning instead of withholding it. */
+  { guard: 'eat-time', name: 'the card computes a next-meal time from a time it just called impossible',
+    edits: [{ from: "        const sug = conflict ? null : nextEatSuggestion(ld);",
+              to:   "        const sug = nextEatSuggestion(ld);" }] },
+
   /* ---- [progression-rule]: one plant per rule his coach gave on 2026-08-25 ---- */
   /* The feeler stops being a feeler — this is the OLD behaviour, and against his own log it held him
      at the same weight 12 times where Q would have moved him up. Signature was 12/12/11. */
