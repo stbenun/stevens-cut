@@ -1499,34 +1499,35 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       });
     });
 
-    /* (f3) ONE FOOD, ONE UNIT. His report, 2026-08-25: “in the cor flavors, i just found one that says
-           Biscoff- 8g and one that says biscoff crushed- 1. could we not have things like this happen.”
-           Two specs named the same food and measured it two different ways — grams in one place, a
-           count in another. The macros were never wrong, because both resolve through the same fact,
-           so nothing in the pricing could have caught it. It is a defect in what he READS: he weighs
-           to the gram, and a card that sometimes says 8 g and sometimes says 1 makes him stop and
-           work out whether they are the same thing.
-           ⛔ THE RULE IS NOT “EVERYTHING IN GRAMS”. A count is the honest unit when the gram weight is
-           not confirmed — the de-creamed Oreo thins are counted precisely because what one weighs is
-           still derived off an assumed cream fraction and is open in the register. Converting those to
-           grams would hard-code an unverified number into a card he cooks from. So: whichever unit a
-           food uses, it uses THAT ONE EVERYWHERE. */
-    const unitOf = {}; let unitChecks = 0;
+    /* (f3) EVERY TOPPING STATES A WEIGHT.
+           ⛔ THIS CLAUSE WAS WRONG THE FIRST TIME AND HE CORRECTED IT. It was written as “one food, one
+           unit”, which is consistency for its own sake — and consistency would have been satisfied by
+           making EVERYTHING a count, which is strictly worse. His rule, 2026-08-25:
+             “i dont care about things matching up. i just care that every recipe is factually correct
+              and follows the correct macros and calories and provides that best measurements for taste.”
+           So the invariant is not agreement between two rows. It is that a quantity he cooks from is a
+           real MEASUREMENT. The defect in “1 Biscoff, crushed” was never that it disagreed with “8 g”
+           somewhere else — it is that one cookie is not an amount. He weighs to the gram.
+           ⚠️ AND IT DOES NOT LICENSE TIDYING. Fruity Pebbles is 12 g in one combo and 10 g in another;
+           that is two recipes wanting two amounts, and normalising them would be exactly the cosmetic
+           change he just ruled out. Amounts are a TASTE call and his. Only the unit is checkable here. */
+    const COUNT_OK = {
+      /* Counted only because the weight is genuinely unknown, never for convenience. Each entry names
+         what would close it, so the list cannot quietly become the way things are done. */
+      'oreo thin wafer': 'a de-creamed Thin is still derived off an assumed 22% cream fraction — ' +
+                         'open-questions #11, one weigh-in of 5 closes it'
+    };
+    let gramChecks = 0; const stillCounted = {};
     combos.filter(c => c.b.crunch).forEach(c => {
       const q = String(c.b.crunchQty).trim();
-      const u = q.slice(-1).toLowerCase() === 'g' ? 'grams' : 'a count';
-      (unitOf[c.b.crunchFF] = unitOf[c.b.crunchFF] || []).push({u, q, label: c.b.crunchLabel, name: c.n});
+      if(q.slice(-1).toLowerCase() === 'g'){ gramChecks++; return; }
+      if(COUNT_OK[c.b.crunchFF]){ stillCounted[c.b.crunchFF] = COUNT_OK[c.b.crunchFF]; return; }
+      bad.push(c.n + ': \u2018' + q + ' ' + c.b.crunchLabel + '\u2019 is a count, not a measurement — ' +
+               'he weighs to the gram, and ' + c.b.crunchFF + ' has a known weight');
     });
-    Object.keys(unitOf).forEach(ff => {
-      const rows = unitOf[ff], units = new Set(rows.map(r => r.u));
-      unitChecks++;
-      if(units.size > 1){
-        const eg = [...units].map(u => { const r = rows.find(x => x.u === u); return '\u201c' + r.q + ' ' + r.label + '\u201d (' + r.name + ')'; });
-        bad.push(ff + ' is measured two ways across the COR specs: ' + eg.join(' vs ') +
-                 ' \u2014 one food, one unit');
-      }
-    });
-    if(!unitChecks) bad.push("no COR topping unit could be checked — clause (f3) is vacuous");
+    if(!gramChecks) bad.push('no COR topping weight could be checked — clause (f3) is vacuous');
+    const countedNote = Object.keys(stillCounted).length
+      ? Object.entries(stillCounted).map(([k, why]) => k + ' (' + why + ')').join('; ') : '';
 
     /* (g) and the plate still has to fit, the same 25-cal tolerance [slot-fit] uses. */
     const bud = SLOT_BUDGET.bf[0];
@@ -1536,11 +1537,12 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
 
     const withCrunch = combos.filter(c => c.b.crunch).length;
     return {bad, n: combos.length, withCrunch, foods: new Set(combos.filter(c => c.b.crunch).map(c => c.b.crunchFF)).size, charges: checkedCharges, b1: b1t.join('/'),
+            counted: countedNote,
             cals: [Math.min(...combos.map(c => c.b.mac[0])), Math.max(...combos.map(c => c.b.mac[0]))]};
   `);
   if (r.bad.length) fail('cor-crunch', r.bad.length + ' fault(s): ' + r.bad.join(' | '));
   else ok('cor-crunch', r.n + ' combos, ' + r.withCrunch + ' with a topping across ' + r.foods +
-    ' foods, each priced from its own stated amount; the ' + (r.n - r.withCrunch) +
+    ' foods, each priced from its own stated amount, every one stated as a weight' + (r.counted?' except '+r.counted:'') + '; the ' + (r.n - r.withCrunch) +
     ' plain ones equal the engine\u2019s b1 (' + r.b1 + '); all land ' + r.cals[0] + '\u2013' + r.cals[1] + ' cal');
 }
 
