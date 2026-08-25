@@ -133,6 +133,23 @@ const PLANTS = [
   /* (e) the dead-control class. `const done = false` is what made the next-batch branch unreachable,
      so the pointer could only ever advance by finishing every cup — and he prepped a new batch with
      three cups of the old one still notionally left. Reads exactly like working code. */
+  /* ---- [progression-rule]: one plant per rule his coach gave on 2026-08-25 ---- */
+  /* The feeler stops being a feeler — this is the OLD behaviour, and against his own log it held him
+     at the same weight 12 times where Q would have moved him up. Signature was 12/12/11. */
+  { guard: 'progression-rule', name: 'set 1 counts again on a straight range, so the feeler can block a jump',
+    edits: [{ from: '  const judged = t.sets > 1 ? rs.slice(1) : rs;',
+              to:   '  const judged = rs;' }] },
+
+  /* Back to needing EVERY set at the top. Q: "increase ANY time you're hitting 12". */
+  { guard: 'progression-rule', name: 'the jump waits for every set again instead of any working set',
+    edits: [{ from: '  if(judged.some(v=>v>=top)) return ' + String.fromCharCode(39) + 'up' + String.fromCharCode(39) + ';',
+              to:   '  if(judged.every(v=>v>=top)) return ' + String.fromCharCode(39) + 'up' + String.fromCharCode(39) + ';' }] },
+
+  /* 3 x 12 collapses back to a 12-12 range, so doing the prescription exactly reads as GO UP — which
+     is what fired 4 times on his shrugs and abductors before Q answered. */
+  { guard: 'progression-rule', name: 'a 3 x 12 goes back to jumping at 12 instead of 15',
+    edits: [{ from: 'hi:nums[0], upAt:15,', to: 'hi:nums[0],' }] },
+
   /* (f3) a topping stated as a count again. His find, 2026-08-25: one spec said Biscoff 8 g and
      another said 1 Biscoff crushed. The MACROS were fine either way — both resolve through the same
      fact — so no pricing check could ever have caught it. It is a defect in what he reads, and this

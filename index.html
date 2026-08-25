@@ -879,7 +879,15 @@ function parseTargets(r){
   if(nums.length>=3 || (nums.length===2 && nums[0]>nums[1]))
     return {sets, per:nums, type:'ladder'};
   if(nums.length===2) return {sets, lo:nums[0], hi:nums[1], type:'range'};
-  return {sets, lo:nums[0], hi:nums[0], type:'range'};
+  /* ⛔ A SINGLE NUMBER IS A PRESCRIPTION, NOT A RANGE. This used to return lo=hi=12, so the range logic
+     below read a clean 12/12/12 — doing exactly what was asked — as GO UP, and it fired 4 times on his
+     shrugs and abductors. Q, 2026-08-25: “As for 3x12… I wouldn't be going any higher than 15 but
+     ideally around 12 to failure.” So the target stays 12 and the jump comes at 15.
+     `upAt` is HIS number for a 12-rep prescription. A fixed scheme at any other target has no answer
+     from him, so it carries no upAt and [lift-progression] fails rather than assuming 15 generalises. */
+  return nums[0]===12
+    ? {sets, lo:nums[0], hi:nums[0], upAt:15, type:'range', fixed:true}
+    : {sets, lo:nums[0], hi:nums[0], type:'range', fixed:true};
 }
 function verdict(reps, t){
   if(!t) return null;
@@ -887,8 +895,21 @@ function verdict(reps, t){
   if(rs.filter(v=>v!=null).length < t.sets) return null;
   if(t.type==='ladder')
     return rs.every((v,i)=>v >= (t.per[i]!=null?t.per[i]:t.per[t.per.length-1])) ? 'up' : 'hold';
-  if(rs.every(v=>v>=t.hi)) return 'up';
-  if(rs.every(v=>v<t.lo)) return 'down';
+  /* ⛔ SET 1 IS A FEELER, AND ONE SET AT THE TOP IS ENOUGH. Both from Q, 2026-08-25:
+       “I'd personally increase ANY time you're hitting 12… go up and if you hit 8 with the new weight…
+        continue with it til you get 12 eventually… then increase again.”
+       “Yes, set 1 is typically a feeler. I hit 10-12 but likely can do 15…. Then choose a more
+        appropriate weight for set 2 and 3 to push for PRS.”
+     The old rule needed EVERY set at the top, including the feeler. Against his own log that held him
+     at the same weight 12 times where Q would have moved him up — the signature was 12/12/11, set 3
+     one rep short, on stiff-leg deadlift and hip thrusts among others.
+     ⚠️ Ladders are deliberately NOT treated this way, above: Q said the 10-8-6 sets are “all 3 HARD
+     sets vs the 1st being a feeler”, with the warm-ups happening before the first counted set. So a
+     ladder judges every set and a straight range does not. Same coach, two rules, on purpose. */
+  const judged = t.sets > 1 ? rs.slice(1) : rs;
+  const top = t.upAt || t.hi;
+  if(judged.some(v=>v>=top)) return 'up';
+  if(judged.every(v=>v<t.lo)) return 'down';
   return 'hold';
 }
 /* maps each program line (by day + index) to its PR row ids, per location */
@@ -7291,7 +7312,7 @@ function viewTrain(){
   const prs = store.get('qpcut.prs',{});
   const prset = store.get('qpcut.prset',{});
   const prView = `
-    <p class="rules">The system: <b>double progression with an effort check.</b> Same weight every set (ladders climb their boxes) → end each set with 1–2 reps in the tank → when every set hits the top target, the app prescribes the exact next jump. Weight changes happen BETWEEN sessions, never mid-exercise (one exception: the app tells you when set 1 is wildly off). One guidance line per exercise — it’s a target before you start, a set-call mid-session, a verdict when you’re done. They never disagree.</p>
+    <p class="rules">The system: <b>progressive overload, judged on sets 2 and 3.</b> Set 1 is a FEELER — a weight you could get about 15 with, stopped around 10–12. Then go heavier for sets 2 and 3 and take those close to failure. <b>Any time a working set hits the top of the range, the weight goes up next session</b> — you do not wait for all three. On the new weight you may only get 8; stay there until it climbs back to the top, then go up again. Ladders (10-8-6) are different: warm up first, then all three are hard sets. Straight 3 × 12: aim for 12 to failure, and if you are getting 15 the weight is too light. Weight changes happen BETWEEN sessions, never mid-exercise (one exception: the app tells you when set 1 is wildly off). One guidance line per exercise — it’s a target before you start, a set-call mid-session, a verdict when you’re done. They never disagree.</p>
     <details class="card acc" data-acc="pr-help"${openAcc.has('pr-help')?' open':''}>
       <summary><h3 style="display:inline;font-size:16px">📖 The playbook — calibration &amp; how the loop runs</h3></summary>
       <ul class="sched" style="margin-top:8px">
@@ -8584,7 +8605,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787670952';
+const BUILD = 'b1787673159';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

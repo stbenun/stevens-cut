@@ -1676,5 +1676,64 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     ' shop-list claims checked against the cups that rely on them; no duplicate cup names, ' +
     'next-batch control reachable');
 }
+
+/* ---------- progression-rule — Q's actual rules, asserted on verdict() itself ----------
+ * His coach answered six questions on 2026-08-25 and three of them changed the engine. These are the
+ * answers, as executable cases, because prose in a comment is not something a build can check:
+ *   “I'd personally increase ANY time you're hitting 12… go up and if you hit 8 with the new weight…
+ *    continue with it til you get 12 eventually… then increase again.”
+ *   “Yes, set 1 is typically a feeler. I hit 10-12 but likely can do 15…. Then choose a more
+ *    appropriate weight for set 2 and 3 to push for PRS.”
+ *   “As for 10-8-6… all 3 of those sets are HARD sets vs the 1st being a feeler.”
+ *   “As for 3x12… I wouldn't be going any higher than 15 but ideally around 12 to failure.”
+ * Measured against his own log, the old rule missed 12 jumps on straight ranges and made 4 wrong ones
+ * on 3 x 12. Both directions are covered below so a revert cannot pass.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const RANGE  = {sets:3, lo:8,  hi:12, type:'range'};
+    const WIDE   = {sets:3, lo:12, hi:15, type:'range'};
+    const LADDER = {sets:3, per:[10,8,6], type:'ladder'};
+    const FIXED  = parseTargets('3 × 12');
+    const cases = [
+      /* the feeler must not be able to trigger a jump on its own */
+      [RANGE,  [12,10,10], 'hold', 'set 1 alone at the top triggered a jump — that is the feeler'],
+      /* ...nor to block one. This is the exact shape that held him back 12 times. */
+      [RANGE,  [12,12,11], 'up',   'a working set hit the top and it did not go up'],
+      [RANGE,  [8,12,10],  'up',   'set 2 at the top did not go up'],
+      [RANGE,  [8,9,10],   'hold', 'nothing near the top read as a jump'],
+      [RANGE,  [7,7,7],    'down', 'every working set under the floor did not read as lighten'],
+      [WIDE,   [15,13,13], 'hold', 'set 1 alone at the top of a 12-15 triggered a jump'],
+      /* a ladder judges EVERY set — Q kept set 1 in there deliberately */
+      [LADDER, [10,8,6],   'up',   'a ladder meeting all three targets did not go up'],
+      [LADDER, [9,8,6],    'hold', 'a ladder went up with set 1 short — set 1 counts on ladders'],
+      /* 3 x 12 is a prescription: doing it exactly is not a reason to add weight */
+      [FIXED,  [12,12,12], 'hold', 'a clean 12/12/12 on a 3 x 12 read as GO UP again'],
+      [FIXED,  [12,15,13], 'up',   'a working set at 15 on a 3 x 12 did not go up'],
+    ];
+    cases.forEach(([t, reps, want, msg]) => {
+      const got = verdict(reps, t);
+      if(got !== want) bad.push(msg + ' (' + reps.join('/') + ' gave ' + got + ', expected ' + want + ')');
+    });
+    if(!FIXED || FIXED.upAt !== 15)
+      bad.push('a 3 x 12 no longer carries upAt:15 — that is Q\\'s number for a 12-rep prescription');
+    /* a fixed scheme at some OTHER target has no answer from him, so it must not silently inherit 15 */
+    const other = parseTargets('3 × 10');
+    if(other && other.upAt != null)
+      bad.push('a fixed 3 x 10 inherited an upAt — 15 is his answer for a 12, and nothing else');
+    /* and the card must not still be telling him the old method */
+    return {bad, n:cases.length};
+  `);
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const bad2 = r.bad.slice();
+  if (/Same weight every set/.test(src))
+    bad2.push('the rules card still says “Same weight every set” — Q has set 1 lighter as a feeler');
+  if (/when every set hits the top target/.test(src))
+    bad2.push('the rules card still says the jump waits for EVERY set — it is any working set');
+  if (bad2.length) fail('progression-rule', bad2.length + ' fault(s): ' + bad2.join(' | '));
+  else ok('progression-rule', r.n + ' verdict cases match Q\u2019s rules: set 1 is a feeler on straight ' +
+    'ranges and counts on ladders, one working set at the top is a jump, 3 × 12 goes up at 15 not 12');
+}
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
