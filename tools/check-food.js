@@ -363,6 +363,38 @@ const ADVICE_ONLY = {
     Object.keys(ADVICE_ONLY).length + ' advice-only, by name)');
 })();
 
+/* ============ 7c. an extract on a card names itself and its dose ============
+   Every yogurt bowl carried the SAME row: "Pinch of salt, Lakanto to taste, extract on the heavy
+   side", quantity "—". Which extract and how much lived only in the method underneath, so the card
+   he actually shops and measures from said neither. b6 was worse: its ¼ tsp lemon was in the method
+   and had no row at all.
+   This is the same rule as the topping units — "a quantity has to be a measurement" — applied to the
+   one place it had not been. His standard, 2026-08-25: "every recipe is factually correct and
+   follows the correct macros and calories and provides that best measurements for taste."
+   A free row may still carry "—" when there is genuinely nothing to weigh (salt, Lakanto to taste).
+   What may not is a row that NAMES an extract. */
+(function extractDose() {
+  const EXTRACTS = grab('EXTRACTS');
+  if (!EXTRACTS || !SLOTS) return;
+  const names = EXTRACTS.map(e => String(e).toLowerCase());
+  let checked = 0; const bad = [];
+  SLOTS.forEach(sl => sl.opts.forEach(o => o.vars.forEach(v => (v.ing || []).forEach(r => {
+    const nm = String(r[0] || '').replace(/<[^>]*>/g, '');
+    const low = nm.toLowerCase();
+    const isExtract = /\bextract\b/.test(low) || names.some(e => low === e || low === e + ' extract');
+    if (!isExtract) return;
+    checked++;
+    const q = String(r[1] || '').trim();
+    if (!q || q === '—' || q === '-')
+      bad.push(o.id + ' \u201c' + nm.slice(0, 46) + '\u201d has no dose — an extract row must say how much');
+    if (/heavy side|to taste|splash/i.test(low))
+      bad.push(o.id + ' \u201c' + nm.slice(0, 46) + '\u201d describes the amount instead of stating it');
+  }))));
+  if (!checked) { fail('extract-dose', 'no extract row found on any card — this check is running vacuous'); return; }
+  if (bad.length) fail('extract-dose', bad.length + ' row(s): ' + bad.join(' · '));
+  else pass('extract-dose', checked + ' extract row(s) across the cards, every one naming itself and its dose');
+})();
+
 /* ============ 7b. every extract on the shelf is actually used ============
    His ask, 2026-08-25: "id like you to use all the extracts and to add an extract to flavors you
    think could use it." Six were sitting on the shelf unused — strawberry, peppermint, raspberry,

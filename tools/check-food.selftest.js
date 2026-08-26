@@ -12,6 +12,10 @@ const GUARD = path.join(__dirname, 'check-food.js');
 const base = fs.readFileSync(SRC, 'utf8');
 
 const CASES = [
+  /* the vague row comes back on one bowl — this is verbatim what all 21 of them used to say */
+  { name: 'an extract row goes back to describing the amount instead of stating it', check: 'extract-dose',
+    from: "['Pinch of salt + Lakanto, to taste','—',{free:1}],['Banana extract','½ tsp',{free:1}]",
+    to:   "['Pinch of salt, Lakanto to taste, extract on the heavy side','—',{free:1}]" },
   /* An extract loses its only combo and goes back to sitting in the cupboard. Raspberry is the right
      one to plant on: Very Berry is its ONLY home, so removing it orphans the bottle outright. */
   { name: 'an extract is left on the shelf with no combo calling for it', check: 'extract-used',
