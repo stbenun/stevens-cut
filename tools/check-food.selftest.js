@@ -12,6 +12,10 @@ const GUARD = path.join(__dirname, 'check-food.js');
 const base = fs.readFileSync(SRC, 'utf8');
 
 const CASES = [
+  /* An extract loses its only combo and goes back to sitting in the cupboard. Raspberry is the right
+     one to plant on: Very Berry is its ONLY home, so removing it orphans the bottle outright. */
+  { name: 'an extract is left on the shelf with no combo calling for it', check: 'extract-used',
+    from: '— ½ tsp raspberry extract, mixed berries', to: '— mixed berries' },
   /* A venue may rename its basis's dish; it may never re-price it. Teva is the dairy-restaurant
      card with Teva's dishes on it, so the arithmetic has to stay one number in one place. */
   { name: 'a venue re-prices the plate it declared a basis for', check: 'venue-basis',

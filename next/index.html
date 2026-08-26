@@ -3460,7 +3460,7 @@ const COR_SETS = [
   ['Biscoff Bowl','Cookie Butter COR + Cinnamon Toast Ryse — berries'],
   ['Double Apple Pie','Apple Pie COR + RAW Grandma’s Apple Pie — 70 g diced apple + extra cinnamon'],
   ['Pancake Breakfast','Maple &amp; Brown Sugar COR + Vanilla Ice Cream Ryse — berries'],
-  ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse — berries'],
+  ['Carrot Cake','Carrot Cake COR + Cinnamon Toast Ryse — ½ tsp pumpkin spice, berries'],
   ['Orange Cream Roll','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ½ tsp orange + ½ tsp vanilla bean paste, berries'],
   ['Mocha Cake','Chocolate Cake COR + Chocolate Cookie Blast — ½ tsp coffee extract, strawberries'],
   ['Maple Cookie Butter','Cookie Butter COR + Cinnamon Toast Ryse — ¼ tsp maple, berries'],
@@ -3471,18 +3471,18 @@ const COR_SETS = [
   ['Almond Croissant','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ¾ tsp almond, berries + extra almond butter']
  ],
  [
-  ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream — berries'],
+  ['Grasshopper Bowl','Cookies n Cream COR + Mint Chip Ice Cream — ½ tsp peppermint extract, berries'],
   ['Double Blueberry Muffin','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries'],
   ['Confetti Cheesecake','Cookies n Cream COR + Jet-Puffed Birthday Cake — 70 g strawberries + 12 g Nilla'],
-  ['Cookies on Cookies','Cookies n Cream COR + Vanilla Ice Cream Ryse — berries'],
+  ['Cookies on Cookies','Cookies n Cream COR + Vanilla Ice Cream Ryse — ½ tsp cookie butter extract, berries'],
   ['Maple Apple Pie','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — 70 g diced apple'],
   ['Peach Strawberry Shortcake','Georgia Peach COR + LD Strawberry Shortcake — 70 g strawberries'],
   ['Double Fruity Cereal Milk','Fruity Cereal COR + Fruity Pebbles Ryse — 70 g strawberries + 12 g Fruity Pebbles'],
  ],
  [
-  ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — strawberries'],
+  ['Chocolate-Covered Strawberry','Chocolate Cake COR + LD Strawberry Shortcake — ½ tsp strawberry extract, strawberries'],
   ['Carrot Cake Cheesecake','Carrot Cake COR + Vanilla Ice Cream Ryse — berries'],
-  ['Peach Lemonade','Georgia Peach COR + Lemon Cake — blueberries'],
+  ['Peach Lemonade','Georgia Peach COR + Lemon Cake — ¼ tsp lemon extract, blueberries'],
   ['Cookie Butter Crunch','Cookie Butter COR + Cinnamon Toast Ryse — berries'],
   ['Apple Fritter','Apple Pie COR + Cinnamon Toast Ryse — 70 g diced apple + extra cinnamon'],
   ['Mint Chocolate','Chocolate Cake COR + Mint Chip Ice Cream — berries'],
@@ -3530,7 +3530,7 @@ const COR_SETS = [
   ['Double Blueberry','Blueberry Muffin COR + Blueberry Muffin Ryse — blueberries'],
   ['Cinnamon Apple','Cinnamon Roll COR + RAW Grandma’s Apple Pie — 70 g diced apple'],
   ['Blueberry S’more','Blueberry Muffin COR + Jet-Puffed Marshmallow — blueberries + 15 g graham'],
-  ['Cookie Dough','Cookies n Cream COR + Milk Chocolate Ryse + cake-batter extract — 12 g Oreo'],
+  ['Cookie Dough','Cookies n Cream COR + Milk Chocolate Ryse + cake batter extract — 12 g Oreo'],
   ['Lemon Cheesecake','Cookies n Cream COR + Lemon Cake — blueberries + 12 g Nilla'],
   ['Panettone Bowl','Panettone COR + Cinnamon Toast Ryse — 15 g raisins + extra cinnamon'],
  ],
@@ -3539,7 +3539,7 @@ const COR_SETS = [
   ['Banana Pudding','Cookie Butter COR + Jet-Puffed Birthday Cake + banana extract — berries + 12 g Nilla'],
   ['Cinnamon Toast Crunch','Cinnamon Roll COR + Cinnamon Toast Ryse — 10 g Cinnamon Toast Crunch + extra cinnamon'],
   ['Coconut Cream Pie','Coconut Cream Pie COR + Vanilla Ice Cream Ryse + coconut extract — 8 g coconut chips'],
-  ['Double Stuffed','Cookies n Cream COR + Transparent Labs unflavored — 2 de-creamed Oreo thins'],
+  ['Double Stuffed','Cookies n Cream COR + Transparent Labs unflavored — ½ tsp vanilla bean paste + 2 de-creamed Oreo thins'],
   ['Peach Cobbler','Georgia Peach COR + Cinnamon Toast Ryse — berries + extra cinnamon'],
   ['Maple Apple Bowl','Maple &amp; Brown Sugar COR + RAW Grandma’s Apple Pie — 70 g diced apple'],
  ],
@@ -3563,8 +3563,8 @@ const COR_SETS = [
  ],
  [
   ['Chocolate Caramel','Chocolate Cake COR + Chocolate Cookie Blast + caramel extract — strawberries'],
-  ['Very Berry','Blueberry Muffin COR + LD Strawberry Shortcake — mixed berries'],
-  ['Cinnamon Vanilla','Cinnamon Roll COR + Vanilla Ice Cream Ryse — berries'],
+  ['Very Berry','Blueberry Muffin COR + LD Strawberry Shortcake — ½ tsp raspberry extract, mixed berries'],
+  ['Cinnamon Vanilla','Cinnamon Roll COR + Vanilla Ice Cream Ryse — ½ tsp vanilla bean paste, berries'],
   ['Cereal Marshmallow Treat','Fruity Cereal COR + Jet-Puffed Marshmallow — 70 g strawberries + 12 g Nilla'],
   ['Cookie Butter Cookie','Cookie Butter COR + Milk Chocolate Ryse — 8 g Biscoff, crushed'],
   ['Carrot Cake Latte','Carrot Cake COR + Vanilla Ice Cream Ryse — 15 g raisins'],
@@ -8661,7 +8661,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787678125';
+const BUILD = 'b1787756146';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

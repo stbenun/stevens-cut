@@ -363,6 +363,27 @@ const ADVICE_ONLY = {
     Object.keys(ADVICE_ONLY).length + ' advice-only, by name)');
 })();
 
+/* ============ 7b. every extract on the shelf is actually used ============
+   His ask, 2026-08-25: "id like you to use all the extracts and to add an extract to flavors you
+   think could use it." Six were sitting on the shelf unused — strawberry, peppermint, raspberry,
+   cookie butter, pumpkin spice — and nothing would ever have said so.
+   [extract-shelf] already checks the other direction: no recipe may name an extract he does not own.
+   This is the mirror, and both are needed. One stops him being sent for something he has not got;
+   this one stops a bottle sitting in the cupboard forever because no card ever calls for it.
+   ⚠️ MATCHED AS A PLAIN SUBSTRING OF THE SPEC TEXT, deliberately. corBuild normalises "1 tsp cinnamon
+   spice" down to a spice called "Cinnamon", so a check written against the PARSED output reports
+   cinnamon spice as unused when Snickerdoodle uses it. The raw spec is the honest place to look. */
+(function extractUsed() {
+  const EXTRACTS = grab('EXTRACTS');
+  if (!EXTRACTS || !COR_SETS) return;
+  const hay = COR_SETS.map(w => w.map(p => String(p[1])).join(' | ')).join(' | ').toLowerCase();
+  const unused = EXTRACTS.filter(e => hay.indexOf(String(e).toLowerCase()) < 0);
+  if (unused.length)
+    fail('extract-used', unused.length + ' extract(s) on the shelf that no COR combo calls for: ' +
+         unused.join(' · ') + ' — either give each one a combo or take it off the shelf');
+  else pass('extract-used', 'all ' + EXTRACTS.length + ' shelf extracts are called for by at least one COR combo');
+})();
+
 /* ============ 8b. a venue that declares a basis must MATCH that basis ============
    Teva is the concrete case of the generic 'Restaurant Dairy' card: same class of kitchen, so its
    plate arithmetic is restdairy's arithmetic. Copying those numbers into the new venue would be two
