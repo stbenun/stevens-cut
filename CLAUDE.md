@@ -9,18 +9,18 @@ messing up everything."* More sources did not make decisions better, it made the
 
 | # | read | what it is for |
 |---|---|---|
-| 0 | `C:\code\Arnold_Assistant\LEARNED.md` | **His corrections, as he gives them.** Newest by construction, so it outranks every behavioural file below. Read in full, every session, no scope. |
-| 1 | `working-with-steven.md` (his memory dir) | **How to work with him.** The rules as understood 2026-08-18 — `LEARNED.md` has narrowed two of them since. |
-| 2 | **this file** | Code and product rules, the deploy sequence, and the gotchas that have cost hours. |
-| 3 | `STATUS.md` | **Where the project actually is.** GENERATED — trust it over any prose, including mine. |
-| 4 | `DECISIONS.md` | His standing calls and why. Append-only. |
+| 0 | `working-with-steven.md` (his memory dir) | **How to work with him.** The rules as understood 2026-08-18. |
+| 1 | **this file** | Code and product rules, the deploy sequence, and the gotchas that have cost hours. |
+| 2 | `STATUS.md` | **Where the project actually is.** GENERATED — trust it over any prose, including mine. |
+| 3 | `DECISIONS.md` | His standing calls and why. Append-only. |
 
-⛔ **His memory folder is Arnold's to write as of 2026-08-20.** This session keeps `journal.md` and
-`open-questions.md`; anything else it wants recorded goes into `open-questions.md` for Arnold to file.
-Finding things is still this session's job — filing them is not.
+⛔ **His memory folder is this session's to write, as of 2026-08-26.** The separate
+assistant that owned it from 2026-08-20 has been retired. Nothing queues for an external
+filer any more: record what needs recording directly, rather than parking it in
+`open-questions.md` for a reader that is not there.
 
-**Precedence, so two documents can never both claim to win:** on how to *behave*, **`LEARNED.md` wins,
-then** `working-with-steven.md`. On code, data shape, product spec and deploy, **this file** wins. On any
+**Precedence, so two documents can never both claim to win:** on how to *behave*,
+**`working-with-steven.md` wins**. On code, data shape, product spec and deploy, **this file** wins. On any
 current *number or count*, `STATUS.md` and the guards win over both — and if prose here disagrees with
 what `node tools/check-food.js` prints, **the prose is the thing that is wrong.**
 
@@ -280,8 +280,8 @@ For the current coverage, the rows that remain, and what each is waiting on: **`
   **The corollary: never let a change ride.** An uncommitted file left sitting caused both collisions on
   2026-08-20 — a concurrent session's edit swept into another's commit, and a plant harness's planted
   defect left in the tree that nearly shipped. **A docs-only change is not an exception. Commit it the
-  same day.** (His memory folder is not in git and has no dirty flag to read, so it uses a named owner
-  instead — Arnold. Two mechanisms, two situations; do not apply either to the other's territory.)
+  same day.** (His memory folder is not in git and has no dirty flag to read, so it relies on a single
+  named owner instead. Two mechanisms, two situations; do not apply either to the other's territory.)
 - `git config core.autocrlf false` in a fresh clone, or CRLF makes every file look modified and breaks
   anchor matching in the checks.
 - **⛔ Never write `index.html` from Python's text mode.** `io.open(p,'w')` on Windows rewrites every
