@@ -7,10 +7,10 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 731,553 bytes, 8,692 lines, one file |
-| build | `b1787758873` |
-| foods on the price list | 120 |
-| provenance | 55 label · 36 USDA · 27 derived · 2 unverified |
+| app | `index.html`, 748,904 bytes, 8,991 lines, one file |
+| build | `b1787932185` |
+| foods on the price list | 121 |
+| provenance | 56 label · 36 USDA · 27 derived · 2 unverified |
 
 ## Ingredient rows
 
@@ -42,6 +42,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 |---|---|---|---:|
 | `bf/b3#0` | Kodiak Breakfast | 560 / 35 / 64 / 21 | +20 cal · |
 | `bf/b5` | Banana Cream Protein Bowl | 560 / 44 / 62 / 17 | +20 cal · |
+| `di/d1` | Burger | 594 / 55 / 62 / 19 | +14 cal |
 | `bf/b25` | Blueberry Muffin Bowl | 553 / 48 / 58 / 16 | +13 cal |
 | `lu/l10` | Salad+Bagel | 588 / 73 / 70 / 17 | +13 cal |
 | `bf/b27` | Almond Croissant Bowl | 551 / 45 / 46 / 22 | +11 cal |
@@ -49,12 +50,14 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `di/d3` | Blackened Salmon Plate | 589 / 54 / 58 / 15 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
 | `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
+| `di/d15` | Tomato Beef | 586 / 56 / 62 / 19 | +6 cal |
 | `bf/b1` | Cream of Rice | 545 / 38 / 52 / 22 | +5 cal |
 | `lu/l4` | Tuna Melt Stack | 580 / 51 / 62 / 17 | +5 cal |
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
 | `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
 | `bf/b18` | Chocolate Cookie Bowl | 543 / 44 / 50 / 20 | +3 cal |
 | `bf/b23` | Pumpkin Pie Bowl | 543 / 46 / 51 / 19 | +3 cal |
+| `lu/l8` | Salmon Smash Patties | 578 / 51 / 70 / 14 | +3 cal |
 | `di/d17` | Sweet-Chili Salmon Plate (air fryer) | 583 / 56 / 45 / 20 | +3 cal |
 | `pre/p2` | Rice Cakes + Tuna | 200 / 18 / 27 / 1 | 0 cal |
 | `pre/p6` | Tuna + Banana | 200 / 19 / 33 / 1 | 0 cal |
@@ -68,11 +71,9 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b15` | Vanilla Berry Bowl | 539 / 44 / 55 / 18 | -1 cal |
 | `bf/b26` | Snickerdoodle Bowl | 539 / 44 / 60 / 15 | -1 cal |
 | `lu/l6` | Salmon Shawarma Bowl | 574 / 53 / 57 / 15 | -1 cal |
-| `di/d1` | Burger | 579 / 60 / 58 / 18 | -1 cal |
 | `bf/b6` | Strawberry Cheesecake Bowl | 538 / 44 / 60 / 15 | -2 cal |
 | `bf/b11` | Chocolate Almond-Butter Bowl | 538 / 46 / 47 / 21 | -2 cal |
 | `lu/l3` | Spinach Jiben | 573 / 57 / 41 / 22 | -2 cal |
-| `di/d15` | Tomato Beef | 578 / 61 / 60 / 18 | -2 cal |
 | `bf/b12` | Fruity Pebbles Bowl | 537 / 44 / 54 / 18 | -3 cal |
 | `bf/b21` | Mocha Cookie Bowl | 537 / 44 / 55 / 18 | -3 cal |
 | `lu/l2` | Broccoli Jiben | 572 / 55 / 45 / 21 | -3 cal |
@@ -88,7 +89,6 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `lu/l1` | Chicken Meal — Sweet Potato | 566 / 52 / 57 / 15 | -9 cal |
 | `sn/s1` | Ninja Creami | 315 / 32 / 30 / 7 | -10 cal |
 | `di/d16` | Teriyaki-Glaze Salmon Bowl (fresh · se | 569 / 55 / 51 / 15 | -11 cal |
-| `lu/l8` | Salmon Smash Patties | 563 / 56 / 66 / 14 | -12 cal |
 | `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 

@@ -61,8 +61,10 @@ const PLANTS = [
     from: ROW, to: "['Elev8 COR','25 g',{grams:25}]" },
 
   { name: 'a portion silently changed without its quantity label following',
-    from: "['Potatoes','175 g',{f:'potatoes',n:175}]",
-    to:   "['Potatoes','175 g',{f:'potatoes',n:260}]" },
+    /* re-anchored Aug 27 2026: d1's potato moved 175 -> 220 g when the keto bun was restored, and this
+       plant skipped silently. Anchored to d3 now, the one potato row no slot-fit pressure touches. */
+    from: "['Potatoes','250 g',{f:'potatoes',n:250}]",
+    to:   "['Potatoes','250 g',{f:'potatoes',n:335}]" },
 ];
 
 let allGood = true;
