@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 2 / 4 foods in the meal plan (**50%**)
+## Coverage: 97 / 130 foods in the meal plan (**75%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 121 rows: **42** derived · **41** label · **36** USDA · **2** UNVERIFIED
+Provenance of the 121 rows: **56** label · **36** USDA · **27** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -25,24 +25,24 @@ Provenance of the 121 rows: **42** derived · **41** label · **36** USDA · **2
 | `biscoff` | g | 4.84 | 0.065 | 0.742 | 0.194 | label | lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups. |
 | `blackberries` | g | 0.43 | 0.0139 | 0.0961 | 0.0049 | USDA | USDA blackberries, raw: 100 g = 43 cal / 1.39 P / 9.61 C / 0.49 F -> per gram. Fetched Aug 18 2026. The leanest of his berries — a third fewer calories than raw blueberries for the same weight, so the best berry per gram if he wants volume. |
 | `blueberries` | g | 0.57 | 0.007 | 0.145 | 0.003 | USDA | USDA raw blueberries, 100 g = 57 cal / 0.7 P / 14.5 C / 0.33 F -> per gram. Cups use 70 g. |
-| `brisket flat` | oz cooked | 70 | 8.2 | 0 | 4 | derived | 248 cal / 29 P per 100 g — his own Southside figure |
+| `brisket flat` | oz cooked | 70 | 8.2 | 0 | 4 | label | 248 cal / 29 P per 100 g — his own Southside figure |
 | `broccoli` | g | 0.34 | 0.028 | 0.066 | 0.004 | USDA | USDA broccoli, raw: 100 g = 34 cal / 2.82 P / 6.64 C / 0.37 F -> per gram. App prices 150 g at 50 cal; USDA gives 51. Already right, not changed. |
-| `buffin apple pie-ceps` | each | 401 | 22 | 49 | 13 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge notes an apple-butter filling. |
-| `buffin banana cream protein dream` | each | 420 | 24 | 54 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge prints no fiber figure for this one. |
-| `buffin blueberry` | each | 370 | 25 | 45 | 10 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Lowest-calorie flavor he owns and tied-lowest carb — the default pick when one has to fit a slot. |
-| `buffin buff roll` | each | 408 | 25 | 50 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. This is the one behind the Aug 16 off-plan entry, which had estimated it at ~434 by subtraction; the badge says 408. |
-| `buffin buff served` | each | 383 | 26 | 45 | 11 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Highest protein of the eleven. |
-| `buffin buffcoff` | each | 438 | 25 | 53 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
-| `buffin cinna blast` | each | 438 | 25 | 53 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
-| `buffin cookie butter tres leches` | each | 422 | 24 | 50 | 14 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
-| `buffin double chocolate brownie` | each | 437 | 25 | 55 | 13 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. |
-| `buffin twistbar` | each | 408 | 22 | 53 | 12 | derived | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin apple pie-ceps` | each | 401 | 22 | 49 | 13 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge notes an apple-butter filling. |
+| `buffin banana cream protein dream` | each | 420 | 24 | 54 | 12 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Badge prints no fiber figure for this one. |
+| `buffin blueberry` | each | 370 | 25 | 45 | 10 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Lowest-calorie flavor he owns and tied-lowest carb — the default pick when one has to fit a slot. |
+| `buffin buff roll` | each | 408 | 25 | 50 | 12 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. This is the one behind the Aug 16 off-plan entry, which had estimated it at ~434 by subtraction; the badge says 408. |
+| `buffin buff served` | each | 383 | 26 | 45 | 11 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Highest protein of the eleven. |
+| `buffin buffcoff` | each | 438 | 25 | 53 | 14 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin cinna blast` | each | 438 | 25 | 53 | 14 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin cookie butter tres leches` | each | 422 | 24 | 50 | 14 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
+| `buffin double chocolate brownie` | each | 437 | 25 | 55 | 13 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. |
+| `buffin twistbar` | each | 408 | 22 | 53 | 12 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
 | `buffin welcome to the sno` | each | 424 | 25 | 44 | 12 | label | ⛔ Badge carries a CONTAINS NUTS mark. He confirmed Aug 19 2026 that he checks the wrappers himself, so this is recorded as the label fact, not a warning at him — nut:1 exists so nothing can put it in a meal silently. Badge Aug 19 2026 reads 44 C where the brand publishes 54 C; unresolved, and moot while it stays uneaten. Brand also marks the flavor as pausing. |
 | `butter` | g | 7.17 | 0.0085 | 0.0006 | 0.8111 | USDA | USDA butter, salted: 100 g = 717 cal / 0.85 P / 0.06 C / 81.11 F -> per gram. Fetched Aug 18 2026. DAIRY. Appears only as 3 g in the Brookie's cookie-dough layer. |
 | `celery` | g | 0.16 | 0.0069 | 0.0297 | 0.0017 | USDA | USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026. |
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |
 | `chicken breast raw` | g | 1.2 | 0.225 | 0 | 0.026 | USDA | USDA FDC 171077, chicken breast, boneless skinless, raw: 100 g = 120 cal / 22.5 P / 0 C / 2.6 F -> per gram. Fetched Aug 18 2026. His 7 oz raw row states 245/44/0/7; this gives 238/44.6/0/5.2, so calories were 7 high and fat 1.8 high. |
-| `chocolate cookie blast protein` | g | 3.836 | 0.6394 | 0.1535 | 0.0767 | derived | RYSE Loaded Chocolate Cookie Blast published panel: 1 scoop ~39.1 g = 150 cal / 25 P / 6 C / 3 F -> per gram 3.836 / 0.639 / 0.154 / 0.077. Fetched Aug 18 2026. This REPLACES a per-gram figure derived from a 20.5 g half-serving against an assumed 41 g scoop; the label is the better source because it states the serving weight itself. Note this flavor is genuinely the outlier of his tubs at 150 cal a scoop — the others run 130-140 — which is why an older note doubted the app's 150 and was wrong to. |
+| `chocolate cookie blast protein` | g | 3.836 | 0.6394 | 0.1535 | 0.0767 | label | RYSE Loaded Chocolate Cookie Blast published panel: 1 scoop ~39.1 g = 150 cal / 25 P / 6 C / 3 F -> per gram 3.836 / 0.639 / 0.154 / 0.077. Fetched Aug 18 2026. This REPLACES a per-gram figure derived from a 20.5 g half-serving against an assumed 41 g scoop; the label is the better source because it states the serving weight itself. Note this flavor is genuinely the outlier of his tubs at 150 cal a scoop — the others run 130-140 — which is why an older note doubted the app's 150 and was wrong to. |
 | `cinnamon apples` | g | 0.52 | 0.003 | 0.138 | 0.002 | USDA | USDA raw apple with skin, 100 g = 52 cal / 0.26 P / 13.8 C / 0.17 F -> per gram; the cinnamon and the warming add nothing. Cups use 100 g. |
 | `cinnamon toast crunch` | g | 4.15 | 0.049 | 0.805 | 0.098 | label | General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups. |
 | `cinnamon toast protein` | g | 3.8889 | 0.6944 | 0.1111 | 0.0694 | derived | Per gram, from the app's own half-serving row (18 g = 70/12.5/2/1.25) which is exactly half the PP_G scoop weight of 36 g. published RYSE Loaded Cinnamon Toast: 1 scoop 33.6 g = 130 cal / 25 P / 3 C / 2.5 F -> 3.869 cal/g against the app row 3.889, 0.5% apart. Scoop weight differs from PP_G 36 g; the per-gram density agrees anyway. Fetched/derived Aug 18 2026. |
@@ -71,7 +71,7 @@ Provenance of the 121 rows: **42** derived · **41** label · **36** USDA · **2
 | `justins classic almond butter` | g | 6.875 | 0.1875 | 0.15625 | 0.59375 | label | Justin's Classic Almond Butter official panel: 32 g squeeze pack = 220 cal / 6 P / 5 C / 19 F -> per gram. The same panel is already cited inside the generic almond-butter entry as its upper bound; this key exists so a row that NAMES the brand is priced as the brand instead of at the 190 low end. His rule stands for the generic key: do not pin it. |
 | `keto bun` | each | 50 | 6 | 16 | 1.5 | label | Keto Culture Baking hamburger bun, label he sent Aug 27 2026: 1 bun (43 g) = 50 cal / 1.5 F (0 sat) / 16 C total (15 g fibre, 1 g net) / 6 P, 125 mg sodium, 8 per bag. This is the product Q's sheet priced — Q's row reads 50 / 2 F / 16 C / 6 P, half a gram of fat apart. ⚠️ The image was a search result showing this brand's panel, not his own bag photographed; re-pin if he switches brands. Distinct from 'natures own keto bread' (per slice): d1, d15 and l8 had each substituted 2 slices for 1 bun, +20 cal, and on d1 that substitution is the entire reason its potato was cut 220 g to 175 g on Aug 18 2026. |
 | `kodiak flapjack` | each | 63 | 4.7 | 9 | 1.3 | derived | Kodiak Buttermilk Power Flapjacks, FROZEN: 3 flapjacks = 190 cal / 14 P -> ~63 cal / 4.7 P each. ⚠️ Kodiak lists 14-16 P per serving across formulations, so this is the low end; re-check against his box. |
-| `kodiak protein oats` | g | 3.8 | 0.2 | 0.58 | 0.08 | derived | Kodiak Cakes Protein Oats canister, HIS OWN LABEL photographed Aug 18 2026: serving 1/2 cup (50 g) = 190 cal / 4 F (1 sat) / 29 C (5 fiber, 1 sugar) / 10 P, about 9 servings per container. Ingredients are 100% whole grain rolled oats, pea protein concentrate and whey protein crisps -- which is why it is not plain oats. Per gram: 3.8 cal / 0.2 P / 0.58 C / 0.08 F. This REPLACES a figure derived from Q's spreadsheet, and the label confirms that derivation to three decimals, so his 5 P at 25 g was right all along and my 3.4 P (plain USDA oats) was the error. Kodiak's packets/Power Cups/PEAK figures do not apply to this canister. |
+| `kodiak protein oats` | g | 3.8 | 0.2 | 0.58 | 0.08 | label | Kodiak Cakes Protein Oats canister, HIS OWN LABEL photographed Aug 18 2026: serving 1/2 cup (50 g) = 190 cal / 4 F (1 sat) / 29 C (5 fiber, 1 sugar) / 10 P, about 9 servings per container. Ingredients are 100% whole grain rolled oats, pea protein concentrate and whey protein crisps -- which is why it is not plain oats. Per gram: 3.8 cal / 0.2 P / 0.58 C / 0.08 F. This REPLACES a figure derived from Q's spreadsheet, and the label confirms that derivation to three decimals, so his 5 P at 25 g was right all along and my 3.4 P (plain USDA oats) was the error. Kodiak's packets/Power Cups/PEAK figures do not apply to this canister. |
 | `kodiak waffle` | each | 220 | 10 | 25 | 9 | derived | Kodiak Thick & Fluffy Buttermilk & Vanilla FROZEN waffles, verified Jul 24 2026: 220 cal EACH (they are thick, 1 per serving). His 2-waffle row = 440/20/50/18. Confirmed correct, not the mix. |
 | `lakanto sugar-free maple syrup` | g | 0.256 | 0 | 0.154 | 0 | label | Lakanto Maple Flavored Syrup (monk fruit + erythritol) label: 2 tbsp / 30 mL = 10 cal / 6 C, syrup density ~1.3 g/mL so ~39 g -> per gram. ⚠️ Caught an internal contradiction: his 15 g row said 4 C while the 60 g row said 1 C — four times the syrup for a quarter of the carbs. 60 g corrected to 15 cal / 9 C. |
 | `lakanto sweetener` | g | 0 | 0 | 0 | 0 | label | Lakanto Monkfruit Sweetener (classic and Golden), published as 0 calories per serving — erythritol plus monk fruit extract, which US labelling rounds to zero. Distinct from 'lakanto sugar-free maple syrup' (0.256 cal/g), a different product that his rows also use. Recorded Aug 18 2026. |
@@ -108,13 +108,13 @@ Provenance of the 121 rows: **42** derived · **41** label · **36** USDA · **2
 | `salmon` | g | 1.46 | 0.216 | 0 | 0.059 | USDA | USDA 'Fish, salmon, coho, wild, raw': 100 g = 146 cal / 21.6 P / 0 C / 5.9 F -> per gram. Fetched Aug 18 2026. Spread covers the purchasable wild Pacific species: sockeye 130 cal/100 g at the low end, chinook/king 179 at the high. Wild Atlantic (142) is excluded on purpose — it cannot legally be sold in the US. Rows are in ounces and convert via the engine; all weights RAW, skin off, per his answer. |
 | `salmon sashimi` | piece (20 g) | 42 | 4.1 | 0 | 2.7 | derived | Atlantic farmed, 208 cal / 20.4 P per 100 g raw |
 | `scallion` | g | 0.32 | 0.0183 | 0.074 | 0.002 | USDA | USDA onions, spring/scallions, raw, tops and bulb: 100 g = 32 cal / 1.83 P / 7.4 C / 0.2 F -> per gram. Fetched Aug 18 2026. |
-| `schmidt 647 italian` | slice | 40 | 2 | 14 | 0.5 | derived | Schmidt Old Tyme 647 Italian, HIS LOAF photographed Aug 19 2026: 1 slice (27 g) = 40 cal / 0.5 F / 14 C total with 8 g fiber (6 g net) / 2 P, 135 mg sodium, ~19 slices per 18 oz (510 g) loaf. ⚠️ Do not confuse with natures own keto bread (35 cal / 6 P / 10 C a slice) — same shelf, triple the protein apart. |
+| `schmidt 647 italian` | slice | 40 | 2 | 14 | 0.5 | label | Schmidt Old Tyme 647 Italian, HIS LOAF photographed Aug 19 2026: 1 slice (27 g) = 40 cal / 0.5 F / 14 C total with 8 g fiber (6 g net) / 2 P, 135 mg sodium, ~19 slices per 18 oz (510 g) loaf. ⚠️ Do not confuse with natures own keto bread (35 cal / 6 P / 10 C a slice) — same shelf, triple the protein apart. |
 | `seaweed packet` | each | 20 | 1 | 1 | 2 | derived | HIS FIGURE, stated Aug 18 2026: \"seaweed is 20.\" I had put 25 off a published gimMe range of 25-30 per 5 g pack; he corrected it and his pack is what he eats. Sheet size and brand vary more than the published range suggests, so his number governs. |
 | `sf choc syrup` | g | 0.33 | 0 | 0.13 | 0 | derived | matches the 15 g = 5 cal / 2 C row already used in b7 + b11, so the salvage/Creami toppings agree with the yogurt bowls |
 | `sf ketchup` | g | 0.625 | 0 | 0.0625 | 0 | label | Heinz Tomato Ketchup No Sugar Added — HIS BOTTLE, confirmed by him Aug 18 2026 ('Heinz sf ketchup'). Published panel: 1 tbsp (16 g) = 10 cal / 1 C total (1 g sugars, 0 added) / 0 P / 0 F, 190 mg sodium, sweetened with stevia leaf extract. Per gram 0.625. Two independent sources agree on 10 cal a tablespoon. ⚠️ NOT G Hughes, which is 5 cal a tablespoon — conflating the two is what made me wrongly cut his rows from 20 cal to 9. Serving is listed as 16 g by some sources and 17 g by others; 16 g is used because it reproduces his long-standing 32 g = 20 cal rows exactly. |
 | `sf pudding mix` | g | 2.9 | 0.1 | 0.7 | 0 | derived | Jell-O Sugar Free Fat Free instant: vanilla 1/4 pkg (7 g) = 20 cal, chocolate 1/4 pkg (10 g) = 30 cal / 1 P / 7 C -> ~2.9 cal per gram, essentially all modified starch. Cups use 5 g = ~14 cal / 3.5 C. |
 | `sliced almonds` | g | 5.79 | 0.212 | 0.216 | 0.499 | USDA | USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1. |
-| `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | derived | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
+| `smoked half chicken` | half bird | 620 | 85 | 2 | 29 | label | DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number. |
 | `smucker sf jelly` | g | 0.59 | 0 | 0.294 | 0 | label | Smucker's Sugar Free jam label: 1 tbsp (17 g) = 10 cal / 5 C total (3 net) -> per gram. His 32 g row reads 20/0/10/0; this gives 18.8/9.4. Already right, not changed. |
 | `sola everything bagel` | each | 140 | 15 | 36 | 5 | label | Sola everything bagel label, verified Jul 24 2026: 140 cal / 15 P / 36 C (24 g fibre) / 5 F. I had doubted these numbers as too high in protein and fibre and was WRONG — Sola genuinely is a high-protein high-fibre bagel. Flagging beat correcting. |
 | `soy sauce` | mL | 0.33 | 0.03 | 0.05 | 0 | derived | Category figure for regular soy sauce (~0.5 cal/mL for Kikkoman; low-sodium similar). His rows use 0.33 (15 mL = 5 cal), slightly light but under 3 cal on any row he uses. NOT brand-verified. |
@@ -133,12 +133,43 @@ Provenance of the 121 rows: **42** derived · **41** label · **36** USDA · **2
 | `vanilla ice cream protein` | g | 3.7143 | 0.7143 | 0.0857 | 0.0714 | derived | Per gram, from the app's own half-serving row (17.5 g = 65/12.5/1.5/1.25) which is exactly half the PP_G scoop weight of 35 g. published RYSE Loaded Vanilla Ice Cream: 25 P a scoop, ~35 g, 130 cal -> 3.714 cal/g, EXACT match to the app row. Fetched/derived Aug 18 2026. |
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 
-## Still to source — 2 foods, most-used first
+## Still to source — 33 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
 | food | times it appears in the plan |
 |---|---:|
+| pinch of salt + lakanto, to taste | 22 |
+| vanilla bean paste | 5 |
+| berries | 4 |
+| lemon extract | 3 |
+| almond extract | 3 |
+| rice | 3 |
+| orange extract | 2 |
+| cinnamon | 2 |
+| glaze | 2 |
 | balsamic drizzle | 1 |
+| coconut extract | 1 |
+| toasted coconut chips | 1 |
+| caramel extract | 1 |
+| peppermint extract | 1 |
+| cereal | 1 |
+| coffee extract | 1 |
+| pumpkin spice extract | 1 |
+| maple extract | 1 |
+| pumpkin purée | 1 |
+| velvet cake extract | 1 |
+| cinnamon spice extract | 1 |
+| israeli salad, piled | 1 |
+| shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt | 1 |
+| pickles | 1 |
+| patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper | 1 |
+| everything-bagel seasoning | 1 |
+| brownie wet | 1 |
+| brownie dry | 1 |
+| cookie dough, thick and scoopable, brown-sugar flavor | 1 |
 | topping / mix-in | 1 |
+| baking powder ½ tsp, cinnamon ¾ tsp, vanilla ¼ tsp, pinch salt | 1 |
+| rub: paprika ½ tsp · garlic ¼ tsp · salt ¼ tsp · pinch cayenne | 1 |
+| almond-chili drizzle | 1 |
 

@@ -2829,10 +2829,18 @@ function runCoaching(){
    row is now name + dose, with a timing word ONLY where the timing is itself the change. Magnesium
    and Allegra went 'off' at the same time: neither is a daily dose (one is a prohibition, the other
    as-needed - he had never once checked it), and both were padding the x/N denominator so a perfect
-   day could not read 4/4. Reasons live in memory and in this comment, NOT in the row labels. */
+   day could not read 4/4. Reasons live in memory and in this comment, NOT in the row labels.
+   Aug 28 2026: the HYDRATION STICK goes 'off' HERE, and only here. His words: "both the stack and
+   hydration make me log my hydration stick." It was a tap target in two cards at once, writing two
+   unrelated keys (qpcut.supps.<date> by index, qpcut.drinks.<date> by name) with neither aware of the
+   other - and they disagreed, this row implying one a day against the two his own schedules carry.
+   The DRINKS row is the one that survives, because it is load-bearing: it contributes 14 oz to the
+   hydration total, so deleting it there would silently under-count his water. This row is a bare
+   checkbox with nothing downstream. Slot 6 is kept and flagged rather than removed, per the frozen-
+   index rule above; SUPPS_ON falls 5 -> 4 so a perfect day still reads N/N. */
 const SUPPS = [
  ['Creatine — 10 g · 8 capsules','8 PM'],['Lion’s mane','daily'],['Ryse Pump Caps','pre-lift','off'],
- ['Multivitamin','daily'],['Vitamin D3','daily','off'],['Fish oil','dinner'],['Ryse hydration stick','on waking'],
+ ['Multivitamin','daily'],['Vitamin D3','daily','off'],['Fish oil','dinner'],['Ryse hydration stick','on waking','off'],
  ['Magnesium','paused','off'],['Allegra','as needed','off'],
 ];
 const SUPPS_ON = SUPPS.filter(x=>!x[2]).length;
@@ -3950,57 +3958,6 @@ function hydrTarget(ld){
   oz = Math.min(oz, 192);                          // sane ceiling ~1.5 gal
   return {oz, base:HYDR_BASE, why, fast:false};
 }
-/* ---------- recovery gate (Jul 31 2026) ----------
-   Two objective rules, both driven by data he already collects on the Venu 3:
-     1. slept under 5.5 h            -> DELOAD today (2 sets/exercise, nothing to failure, no PRs)
-     2. HRV 7-day avg under his baseline floor for 3+ straight days -> deload WEEK + 5 days at maintenance
-   Sleep is read from the Track log (qpcut.weights .sl). HRV he types off the watch each morning.
-   Replaces the old self-reported "energy dial <=2 for 5 days" tripwire, which fired too late. */
-const HRV_BASE_DEFAULT = 78;
-function hrvBase(){ const v = +store.get('qpcut.hrvbase', HRV_BASE_DEFAULT); return v>0? v : HRV_BASE_DEFAULT; }
-function sleepFor(isoD){
-  const r = (store.get('qpcut.weights',[])||[]).find(x=> x && x.d===isoD);
-  return (r && r.sl!=null && r.sl!=='') ? +r.sl : null;
-}
-function recoveryGate(ld){
-  const isoD = ld || isoToday();
-  const base = hrvBase();
-  const sl = sleepFor(isoD);
-  const hv = store.get('qpcut.hrv.'+dkey(isoD), null);
-  const out = {sl, hv, base, deload:false, streak:0, why:[]};
-  if(sl!=null && sl < 5.5){
-    out.deload = true;
-    out.why.push(`Slept ${sl} h \u2014 under 5.5. <b>Today: 2 sets per exercise, nothing to failure, no PR attempts.</b>`);
-  }
-  let streak = 0;
-  for(let i=0;i<14;i++){
-    const d = new Date(isoD+'T12:00:00'); d.setDate(d.getDate()-i);
-    const v = store.get('qpcut.hrv.'+dkey(iso(d)), null);
-    if(v==null){ if(i===0) continue; break; }
-    if(+v < base) streak++; else break;
-  }
-  out.streak = streak;
-  /* Margin, not the raw number. Garmin's baseline floor CLIMBS as his long-run HRV improves, so a
-     falling average against a rising floor closes the gap from both ends: Jul 24 sat at +24 ms, Aug 3
-     at +5 with a HIGHER absolute HRV than the Jul 14 trough. The bare "above your floor" line hid
-     exactly the thing this gate exists to catch. */
-  const d7 = new Date(isoD+'T12:00:00'); d7.setDate(d7.getDate()-7);
-  const prev = store.get('qpcut.hrv.'+dkey(iso(d7)), null);
-  out.margin = hv!=null? +(+hv - base).toFixed(1) : null;
-  out.prev = prev!=null? +prev : null;
-  out.delta = (hv!=null && prev!=null)? +(+hv - +prev).toFixed(1) : null;
-  if(streak>=3) out.why.push(`HRV 7-day avg under ${base} ms for <b>${streak} days straight</b> \u2014 take a deload week and eat at maintenance for 5 days.`);
-  else if(hv!=null && +hv < base) out.why.push(`HRV ${hv} ms is under your ${base} ms floor. ${3-streak} more day${3-streak===1?'':'s'} triggers a deload week.`);
-  if(hv!=null && +hv >= base){
-    const trend = out.delta==null? '' : (out.delta<0? ` \u2014 down <b>${Math.abs(out.delta)} ms</b> from ${out.prev} a week ago`
-                 : (out.delta>0? ` \u2014 up ${out.delta} ms from ${out.prev} a week ago` : ' \u2014 flat on the week'));
-    out.why.push(`HRV ${hv} ms, <b>${out.margin} ms</b> over your ${base} ms floor${trend}.`);
-    if(out.margin<=6) out.why.push(`\u26a0 Tight margin. Your floor RISES as your long-run HRV improves, so a shrinking gap means recovery is lagging <b>your own new normal</b> \u2014 it does not mean your HRV is bad. Fix bedtime before you touch the program: the lifts stay as written until the gate actually fires.`);
-    else if(out.delta!=null && out.delta<=-8) out.why.push(`The average is sliding fast but you're still ${out.margin} ms clear. Train as programmed and get the bedtime back.`);
-    else out.why.push('Train as programmed.');
-  }
-  return out;
-}
 /* ---------- bloodwork (Jul 31 2026) ----------
    Storage: ONE KEY PER DRAW, qpcut.lab.<dkey> = {marker:value}, plus qpcut.labdates as the index.
    Deliberately not one monolithic key: qpcut.weights / qpcut.eaten / qpcut.offplan each hold every
@@ -4051,23 +4008,6 @@ function labGate(){
   return {latest, prevK, rows, fired: rows.some(r=>r.fired && r.kind==='TRIPWIRE')};
 }
 /* Rythm's export is: marker,value,unit,reference_range,status,time — paste it whole. */
-/* The cut start date. Lives here because garminSummary() splits his weekly resting-HR series into
-   pre-cut vs on-cut; it was defined next to labImport() and got swept out with it in f73b9cb,
-   which left two live references and a ReferenceError on every Recovery-gate render. */
-const CUT_START = '2026-05-11';
-function garminSummary(){
-  const G = store.get('qpcut.garmin', {});
-  const out = {rhrNow:null, rhrPre:null, sleep:[]};
-  const rhr = Object.entries(G.rhr||{}).sort((a,b)=>a[0]<b[0]?-1:1);
-  if(rhr.length){
-    out.rhrNow = rhr[rhr.length-1][1];
-    const pre = rhr.filter(([d])=>d < CUT_START).map(([,v])=>v);
-    if(pre.length>=8) out.rhrPre = +(pre.reduce((a,b)=>a+b,0)/pre.length).toFixed(1);
-  }
-  out.sleep = Object.entries(G.sleep||{}).sort((a,b)=>a[0]<b[0]?-1:1).slice(-4)
-    .map(([d,v])=>Object.assign({d}, v));
-  return out;
-}
 function menuWeekDates(){ /* Sun-Sat containing today */
   const now = new Date(); const sun = new Date(now); sun.setDate(now.getDate()-now.getDay());
   return Array.from({length:7},(_,i)=>{ const d=new Date(sun); d.setDate(sun.getDate()+i); return iso(d); });
@@ -5871,9 +5811,6 @@ function nextAction(){
   if(m>=1200 && !sup.includes(0)) return {label:'💊 Creatine — 8 capsules', jump:'z-log', acc:'log-stack'};
   /* He exports Garmin every Monday morning and sends the files to Claude in chat. Weekly actions need a trigger too — that is the whole
      lesson of the hydration stick sitting at 57% because its only trigger was a lift. */
-  const gLast = (store.get('qpcut.garmin',{})||{}).last;
-  const gStale = !gLast || (new Date(t+'T12:00:00') - new Date(gLast+'T12:00:00'))/864e5 >= 5;
-  if(wd===1 && m>=420 && m<840 && gStale) return {label:'⌚ Send Claude this week’s Garmin export', jump:'z-log', acc:'log-recov'};
   return null;
 }
 function nudgeInfo(){
@@ -6547,7 +6484,6 @@ function viewToday(){
   const eaten = store.get('qpcut.eaten',{});
   const todayEaten = eaten[ld]||{};
   const dl = store.get('qpcut.dials.'+dkey(ld), {});
-  const rg = recoveryGate(ld);
 
   /* ---- NOW zone ---- */
   const nowZone = `
@@ -6645,25 +6581,22 @@ function viewToday(){
     const woTag = (liftMin!=null && !backfill) ? wo.tag.replace(/·\s*\d{1,2}:\d{2}\s*[AP]M/i, '· '+fmtMin(liftMin)) : wo.tag;
     let timingHTML = '';
     if(!backfill && !liftDone && leave && wd!==6){
-        const mins = leaveMin, lift = liftMin;
-        const inMinyan = t => wd>=1 && wd<=5 && t>=420 && t<465;
-        const meal = lift-45, caps = lift-25;
-        /* roll-up: summary shows the leave time (still editable there); tap to see the pre-workout timeline.
-           ⛔ Was `openAcc.has(...) || (nm>=mins-60 && nm<=lift)` — a time window that re-opened this card
-           on EVERY render inside the pre-lift hours, so closing it did nothing until the window passed.
-           Closed by default now, like everything else (his Aug 10 2026 rule; see seedOpenAcc). */
-        const openGym = openAcc.has('gymtiming');
+        /* Aug 28 2026 — THE PRE-WORKOUT TIMELINE IS GONE. His words: "i dont need the card that
+           tells me when to take pre workout snack and drink." It printed two rows: the pre-workout
+           meal time and when to start sipping.
+           ⛔ WHAT STAYS, AND WHY IT HAD TO: the leave-time input. It is not decoration on this card,
+           it is the ONLY place qpcut.gymleave is set, and that value drives gymLeaveMin() -> the lift
+           window in zoneOrder(), the generated day rows, the lift card's own tag and the zonebar.
+           Deleting the card wholesale would have taken his gym clock with it. So the accordion
+           collapses to the one control that earns its place: a row with the time in it.
+           `caps` and inMinyan() went with the timeline — nothing else read them. */
         timingHTML = `
-  <details class="card acc" data-acc="gymtiming" style="margin-bottom:10px"${openGym?' open':''}>
-    <summary><span style="display:flex;align-items:center;gap:8px;width:100%">
-      <b style="flex:1;min-width:0">🚗 Leaving for the gym</b>
-      <input type="time" id="gymLeave" value="${leave}" style="font-size:15px;padding:5px 7px;flex-shrink:0" onclick="event.stopPropagation()"></span></summary>
-    <ul class="sched" style="margin-top:8px">
-      <li><span class="t">${inMinyan(meal)?'7:45 AM':fmtMin(meal)}</span><span>🍌 Pre-workout meal${wd>=1&&wd<=3?' — Yogurt + Banana':''}${inMinyan(meal)?' · right out of minyan':''}</span></li>
-      <li><span class="t">${fmtMin(mins)}</span><span>${mins>=900?'🥤 EAA only on the way — NO caffeinated pre-workout after 3 PM (it steals tonight’s sleep)':'🥤 Start sipping pre-workout on the way'}</span></li>
-    </ul>
-    <div class="sub" style="margin-top:6px">Assumes lifting starts ~15 min after you leave. Saved for every ${['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][wd]}. Calendar pings stay at the usual times — when today shifts, this card is the truth.</div>
-  </details>`;
+  <div class="card" data-acc="gymtiming" style="margin-bottom:10px">
+    <div class="mrow" style="margin:0">
+      <span class="nm">🚗 Leaving for the gym</span>
+      <input type="time" id="gymLeave" value="${leave}" style="font-size:15px;padding:5px 7px;flex-shrink:0">
+    </div>
+  </div>`;
     }
     const seshRow = backfill? '' : `
     <div class="timer-row" style="margin-top:4px">
@@ -6975,24 +6908,6 @@ function viewToday(){
           <span class="box">${done.includes(i)?'✓':''}</span>
           <span class="nm">${n}</span><span class="when">${w}</span>
         </button>`).join('')}
-      </div>
-    </details>
-    <details class="acc innerrow" data-acc="log-recov"${openAcc.has('log-recov')?' open':''}>
-      <summary><span>🫀 Recovery gate</span><span class="statline">${rg.deload?'⚠ deload today':(rg.streak>=3?'⚠ deload week':(rg.hv!=null?'ok':'–'))}</span></summary>
-      <div id="recovCard">
-        <div class="mrow"><span class="nm">HRV 7-day avg <small style="opacity:.6">(from Garmin)</small></span>
-          <span>${rg.hv!=null?`<b>${rg.hv}</b> ms`:'<small style="opacity:.6">send me your export</small>'}</span></div>
-        <div class="mrow"><span class="nm">Your baseline floor</span><span><b>${rg.base}</b> ms</span></div>
-        <div class="sub" style="margin-top:2px;opacity:.6">Garmin raises this floor as your HRV improves, so judge the MARGIN over it, never the raw number.</div>
-        <div class="mrow"><span class="nm">Slept</span><span>${rg.sl!=null?rg.sl+' h':'— log it in Track'}</span></div>
-        ${rg.why.map(w=>`<div class="sub" style="margin-top:8px">${w}</div>`).join('')}
-        <div class="sub" style="margin-top:8px;opacity:.65">Under 5.5 h → deload today. HRV under your floor 3 days running → deload week + 5 days at maintenance.</div>
-        ${(()=>{ const gs = garminSummary(); if(gs.rhrNow==null && !gs.sleep.length) return '';
-          return `<ul class="sched" style="margin-top:8px">
-          ${gs.rhrNow!=null?`<li><span class="t">${gs.rhrNow}</span><span>resting HR${gs.rhrPre!=null?` · pre-cut baseline was <b>${gs.rhrPre}</b> over ${'' }${Object.keys((store.get('qpcut.garmin',{}).rhr)||{}).filter(d=>d<CUT_START).length} weeks`:''}</span></li>`:''}
-          ${gs.sleep.map(w=>`<li><span class="t">${w.h}h</span><span>week to ${w.d.slice(5).replace('-','/')} · bed ${w.bed||'—'} · wake ${w.wake||'—'}</span></li>`).join('')}
-        </ul>
-        <div class="sub" style="margin-top:6px;opacity:.65">Resting HR comes from the Garmin export you send Claude — he writes it in, along with the HRV average and the hours slept. Bedtime is the only variable that moves; your wake time is fixed by minyan.</div>`; })()}
       </div>
     </details>
   </div>

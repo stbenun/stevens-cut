@@ -78,7 +78,17 @@ function build() {
   /* what the meal plan actually needs */
   const slotsBlock = slice(src, 'const SLOTS', '\n];') || '';
   const need = new Map();
-  const irx = /\['([^']+)','([^']*)',\[[\d.]+,[\d.]+,[\d.]+,[\d.]+\]\]/g;
+  /* THIS METRIC DIED WHEN THE MIGRATION IT MEASURED SUCCEEDED. The pattern here used to match
+     the LEGACY row shape only - a third element that is an array of four numbers - because when
+     it was written most rows carried hand-typed macros. After the Aug 18 2026 migration only FOUR
+     legacy rows remain, so this collected four foods and the header printed
+     "Coverage: 2 / 4 foods in the meal plan (50%)" against a plan of 121 foods and 284 rows.
+     It read as a real number and it was nonsense. It now matches ANY third element - a priced
+     {f:...}, a {parts:...} composite, a {free:1} or a legacy array - so it counts every food the
+     plan actually names. Fixed 2026-08-28.
+     The lesson is this repo's own, one level up: a fixture that names today's SHAPE stops testing
+     the moment the shape changes, and goes on printing a number the entire time. */
+  const irx = /\['([^']+)','([^']*)',[\[{]/g;
   while ((m = irx.exec(slotsBlock))) {
     const raw = m[1].replace(/<[^>]*>/g, '');
     const key = foodKey(raw);
@@ -106,16 +116,10 @@ function build() {
   const todo = [...need.entries()].filter(([k]) => !isCovered(k)).sort((a, b) => b[1] - a[1]);
   const pct = need.size ? Math.round(100 * (need.size - todo.length) / need.size) : 0;
 
-  /* classify provenance honestly — a src that says "not a label photo" is NOT label-sourced,
-     which is a mistake my own earlier summary made out loud. Order matters here. */
-  const tag = s => {
-    const t = s.toLowerCase();
-    if (/not (yet )?confirmed|neither is a label|derived, not a label|needs one weigh/.test(t)) return 'UNVERIFIED';
-    if (/^derived|derived from|matches the/.test(t)) return 'derived';
-    if (/label|panel|lotusbiscoff/.test(t)) return 'label';
-    if (/usda/.test(t)) return 'USDA';
-    return 'derived';
-  };
+  /* Provenance comes from tools/provenance.js - the ONE copy. This file and status.js each
+     used to carry their own classifier over the same prose, in a different order, and the two
+     generated docs disagreed about 15 of the 121 foods. See that file for which order won. */
+  const tag = s => { const t = require('./provenance.js').tag(s); return t === 'unverified' ? 'UNVERIFIED' : t; };
 
   const esc = s => s.replace(/\|/g, '\\|');
   const L = [];

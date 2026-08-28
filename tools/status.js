@@ -79,13 +79,9 @@ function build() {
   const ceil = n => { const m = new RegExp(n + '\\s*=\\s*(\\d+)').exec(cf); return m ? m[1] : '?'; };
 
   /* ---- provenance mix ---- */
-  const tag = s => {
-    const t = String(s || '').toLowerCase();
-    if (/not (yet )?confirmed|neither is a label|derived, not a label|needs one weigh|brand unconfirmed|brand not confirmed/.test(t)) return 'unverified';
-    if (/his label|his own|photographed|label|panel/.test(t)) return 'label';
-    if (/usda/.test(t)) return 'USDA';
-    return 'derived';
-  };
+  /* One copy, shared with food-doc.js. These two used to disagree about 15 foods because each
+     carried its own classifier, testing in a different order. See tools/provenance.js. */
+  const tag = require('./provenance.js').tag;
   const prov = {};
   Object.keys(FOOD_FACTS).forEach(k => { const t = tag(FOOD_FACTS[k].src); prov[t] = (prov[t] || 0) + 1; });
 
