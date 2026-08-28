@@ -2131,6 +2131,21 @@ const FOOD_FACTS = {
   'spinach':           {unit:'g',           cal:0.23, p:0.029, c:0.037, f:0.004, src:'USDA spinach, raw: 100 g = 23 cal / 2.9 P / 3.7 C / 0.4 F -> per gram. App prices 150 g at 35 cal; USDA gives 34.5. Already right, not changed.'},
   'asparagus':         {unit:'g',           cal:0.20, p:0.022, c:0.039, f:0.001, src:'USDA asparagus, raw: 100 g = 20 cal / 2.2 P / 3.88 C TOTAL (2.1 g fibre, so 1.78 net) / 0.12 F -> per gram. App prices 100 g at 20/2/4/0 — exact. Not changed.'},
   'string beans':      {unit:'g',           cal:0.31, p:0.018, c:0.070, f:0.002, src:'USDA beans, snap, green, raw: 100 g = 31 cal / 1.83 P / 6.97 C / 0.22 F -> per gram.'},
+  /* ===== Added 2026-08-28 to make the SHABBAT FEAST priceable at all. Every feast dish carried a
+     hand-typed macro line and not one of its 55 ingredient rows was priced, because four of the foods
+     it uses were simply not on this list. That is also why "big bowl" survived in the feast and
+     nowhere else - nothing could check it. All four fetched from the USDA FoodData Central API this
+     session; each src names its FDC id so the figure can be re-checked.
+     ⛔ TWO FOODS DELIBERATELY NOT ADDED, because they already exist under another name and a second
+     key would be the two-copies bug: the feast's "Green beans" is `string beans` above (identical
+     USDA snap-bean figure), and its "Ground chicken breast" is `chicken breast raw` - grinding breast
+     meat does not change its composition, and USDA publishes no separate ground-breast entry (its
+     "Chicken, ground, raw" is 8.1 g fat against breast's 2.6, so using it would have overstated the
+     kafta's fat by a third). ===== */
+  'lentils dry':       {unit:'g',           cal:3.52, p:0.246, c:0.634, f:0.0106, src:'USDA FDC 172420, "Lentils, raw": 100 g = 352 cal / 24.6 P / 63.4 C (10.7 g fibre) / 1.06 F -> per gram. Fetched Aug 28 2026. DRY weight, like the rice rows - the feast mejadra states 28 g dry.'},
+  'onion':             {unit:'g',           cal:0.40, p:0.011, c:0.0934, f:0.001, src:'USDA FDC 170000, "Onions, raw": 100 g = 40 cal / 1.1 P / 9.34 C (1.7 g fibre) / 0.1 F -> per gram. Fetched Aug 28 2026. Yellow/white cooking onion, not the sweet variety (FDC 170008, 32 cal) - the feast recipes grate or slice a standard onion.'},
+  'chickpeas canned':  {unit:'g',           cal:1.39, p:0.0705, c:0.225, f:0.0277, src:'USDA FDC 173800, "Chickpeas (garbanzo beans, bengal gram), mature seeds, canned, drained solids": 100 g = 139 cal / 7.05 P / 22.5 C (6.4 g fibre) / 2.77 F -> per gram. Fetched Aug 28 2026. CANNED AND DRAINED on purpose - the Djaj recipe uses them straight from the tin, and dry chickpeas are roughly 2.5x this by weight.'},
+  'tart cherries':     {unit:'g',           cal:0.46, p:0.0092, c:0.11, f:0.0044, src:'USDA FDC 171718, "Cherries, sour, red, frozen, unsweetened": 100 g = 46 cal / 0.92 P / 11.0 C (1.6 g fibre) / 0.44 F -> per gram. Fetched Aug 28 2026. Frozen unsweetened, which is what the Kebab Karaz row states; sweetened or canned-in-syrup cherries are not this number.'},
   /* ===== These four were label-verified on Jul 24 2026 and two of them were CORRECTED then, which
      is why they read low: the lox row had been overstated at 145 cal and the cream cheese at 120.
      Recording the provenance now so the numbers stop being unsourced. ===== */
