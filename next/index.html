@@ -2715,30 +2715,82 @@ const DRAFT_SLOT_MEALS = {
  di:{t:'Dinner · target 585 · 54P · 58C · 19F', lanes:{dairy:[DI_LANES.dairy], meat:[DI_LANES.meat], pareve:[DI_LANES.pareve]}},
 };
 
+/* ⚠ THIS BLOCK SITS ABOVE SHABBAT_FEAST ON PURPOSE, not below it. push-reminders.js carries its
+   OWN grab(): it takes everything from the array declaration to the next top-level const or
+   function, then trims to the LAST "]" or "}" it can find. Put a comment underneath the array
+   that mentions [priced] or [slot-fit] and that last "]" lands inside the prose, the block is
+   truncated mid-comment, and every morning push dies with "Unexpected token ';'". That is
+   exactly what happened on 2026-08-28 and it is the third ad-hoc extractor in this repo to be
+   broken by an anchor moving. Keep prose with brackets in it away from the far side of that array. */
+/* ============ dishMac — a dish's macro line is COMPUTED, never typed ============
+   Found 2026-08-28, by Arnold reading the feast card against its own rows, and it is the exact bug
+   this app forbids everywhere else: SHABBAT_FEAST, DRAFT_SLOT_MEALS and DI_LANES each carried a
+   hand-typed mac:'≈965 · 88P · 97C · 22F' next to the rows it was supposed to describe. 25 of them.
+   Two copies of one number, and nothing bound them.
+
+   WHY NO GUARD CAUGHT IT FOR MONTHS: [priced], [row-math] and [slot-fit] all iterate SLOTS, and
+   these three are separate top-level arrays. check-food.js loads SHABBAT_FEAST but only ever used it
+   to scan ingredient text for nuts. 65 guards can pass green while a whole structure sits outside
+   every one of them. [feast-priced] below now walks it.
+
+   WHAT THE TYPED NUMBERS ACTUALLY GOT WRONG, and it was not what it first looked like: the feast
+   rows summed 66-99 cal SHORT of the card because the Israeli salad row carried no spec, so every
+   row-sum silently dropped the salad. Sourcing those five rows moved the gap from -112 to -14 on the
+   worst dish. The typed claims were roughly right. THE REAL DEFECT WAS ELSEWHERE: with the salad
+   counted, all seven feast dishes are over the 915 snack+dinner budget by 32-73 cal, and [slot-fit]
+   hard-fails anything past +25 everywhere it is pointed. It had simply never been pointed here.
+
+   A dish whose rows are ALL sourced prints the computed figure. One with any unsourced row prints
+   its typed line with the shortfall named out loud, because a silent partial sum is how this got
+   missed in the first place. */
+function dishPrice(d){
+  const rows = (d && d.ing) || [];
+  const sum = [0,0,0,0]; let unsourced = 0;
+  rows.forEach(function(r){
+    /* priceRow returns [0,0,0,0] — NOT null — for a row with no spec at all, so testing its return
+       makes an unsourced row look priced at zero. Test the spec itself. Same trap caught [feast-fit]
+       under-reporting on its very first run. */
+    const sp = r[2];
+    if(!(sp && typeof sp === 'object' && !Array.isArray(sp))){ unsourced++; return; }
+    const m = priceRow(r);
+    if(m){ for(let i=0;i<4;i++) sum[i] += m[i]; }
+  });
+  return {t: sum.map(function(x){ return Math.round(x); }), unsourced: unsourced};
+}
+function dishMac(d){
+  if(!d) return '';
+  const q = dishPrice(d);
+  /* NEVER fall back to the typed mac: it is the thing that was wrong. Show what the sourced rows
+     actually come to and say plainly what is missing, so the gap is visible instead of papered over. */
+  if(q.unsourced) return q.t[0] + '+ · ' + q.t[1] + 'P · ' + q.t[2] + 'C · ' + q.t[3] + 'F' +
+    ' <span style="color:var(--danger)">⚠ plus ' + q.unsourced + ' row' + (q.unsourced>1?'s':'') +
+    ' with no weight set — the real total is higher</span>';
+  return q.t[0] + ' · ' + q.t[1] + 'P · ' + q.t[2] + 'C · ' + q.t[3] + 'F';
+}
 /* Shabbat feast — one make-ahead dish (Thu night / Fri afternoon, 20–30 min active)
    covering snack + dinner budgets: ~915 cal · ~85P · ~90C · ~25F. Rotates Sundays. */
 const SHABBAT_FEAST = [
  {n:'Za’atar Chicken & Potato Tray', cook:'thu', other:'Reheat covered at 325°F for ~15 min before candle-lighting, or serve it room temp — this tray genuinely loses nothing either way. Nothing to chop.', when:'cook THURSDAY night — reheats covered with zero loss', mac:'≈925 · 86P · 104C · 14F (oil cut · incl. 1 FULL pita, 190 cal)',
-  ing:[['Chicken breast — REGULAR cut (raw)','12 oz'],['Baby potatoes (raw)','350 g'],['Green beans','200 g'],['Chosen Foods avocado oil spray','a few sprays (~10 cal — not the 12 g pour; you run low-fat)'],['Za’atar','2 tsp'],['Sumac','1 tsp'],['Garlic powder','1 tsp'],['Salt','¾ tsp'],['Lemon','½'],['Pita (his: 190 cal)','1 FULL — Hamotzi on the pita, nothing else']],
-  st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken — hit it with a few sprays of oil, add all the spices, and toss with your hands until everything is coated (no 12 g pour — the spray + spices carry it).','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
+  ing:[['Chicken breast — REGULAR cut (raw)','12 oz',{f:'chicken breast raw',n:12,u:'oz'}],['Baby potatoes (raw)','310 g',{f:'potatoes',n:310}],['Green beans','200 g',{f:'string beans',n:200}],['Chosen Foods avocado oil spray','1 g (~5 sprays)',{f:'avocado oil spray',n:1}],['Za’atar','2 tsp',{free:1}],['Sumac','1 tsp',{free:1}],['Garlic powder','1 tsp',{free:1}],['Salt','¾ tsp',{free:1}],['Lemon','½',{free:1}],['Pita (his: 190 cal)','1 FULL — Hamotzi on the pita, nothing else',{f:'pita',n:1}]],
+  st:['Oven to 425°F, middle rack. Line your biggest sheet pan with parchment.','Cut the baby potatoes in half. In a big bowl: potatoes, green beans, chicken — hit it with a few sprays of oil, add all the spices, and toss with your hands until everything is coated (no glug of oil — the spray + spices carry it).','Onto the ONE tray: chicken pieces in the middle, potatoes cut-side-down around them, beans scattered on top.','Bake 22–25 min. Done = 165°F in the thickest chicken piece (or cut in — no pink) and the potato cut-sides are golden.','Squeeze the ½ lemon over the whole tray the moment it comes out.','Cool, fridge. Friday: reheat covered in the oven before candle-lighting, or serve room temp. Total active time ~15 min.']},
  {n:'Friday Tomato Beef & Mejadra', cook:'thu', other:'Cut the cucumber-tomato salad fresh today. Reheat the beef and mejadra covered with a splash of water on low. The reserved charred onions go on top AFTER the reheat so they stay crisp.', when:'cook THURSDAY night — genuinely better on day two', mac:'≈990 · 85P · 99C · 26F (incl. 1 FULL pita)',
-  ing:[['93/7 ground beef (raw)','12 oz'],['Rice (dry)','30 g'],['Lentils (dry)','28 g'],['Onion, sliced','80 g'],['Tomato paste','33 g'],['Allspice','1 tsp'],['Cinnamon','½ tsp'],['Salt','¾ tsp'],['Cucumber-tomato salad, lemon only','big bowl'],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else']],
+  ing:[['93/7 ground beef (raw)','12 oz',{f:'93/7 ground beef',n:12,u:'oz'}],['Rice (dry)','22 g',{f:'white rice dry',n:22}],['Lentils (dry)','20 g',{f:'lentils dry',n:20}],['Onion, sliced','80 g',{f:'onion',n:80}],['Tomato paste','33 g',{f:'tomato paste',n:33}],['Allspice','1 tsp',{free:1}],['Cinnamon','½ tsp',{free:1}],['Salt','¾ tsp',{free:1}],['Cucumber-tomato salad, lemon only','big bowl'],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else',{f:'pita',n:1}]],
   st:['Pot 1 (the mejadra): lentils into boiling water, 10 min. Then add the rice + ¾ tsp salt, turn to low (3/10), lid on, 12 more min. Kill the heat and leave the lid on — it finishes itself.','Pot 2, while that cooks: empty DRY pot on high (8/10), 2-min preheat. Onion slices in, spread flat, untouched 2 min, then stirred another 2–3 — you want real dark-brown edges (that’s "charred," and it’s the flavor of the dish). Take HALF the onions out and set aside for topping.','Same pot, medium-high (7/10): beef in with the remaining onions. Crumble small, 4–5 min to zero pink.','Spices in, 30 seconds. Tomato paste + ½ cup water, stir until dissolved, then LOW (2/10) for 10 min until thick.','Assemble: mejadra on the platter, beef over it, the reserved charred onions on top. Reheats beautifully — honestly better on day two. Active time ~25 min.']},
  {n:'Shawarma Chicken Platter', cook:'fri', other:'No cooking tonight. Optional 3-min job: mix the rub and coat the breasts now so they dry-brine overnight — the salt in the rub works in your favour and tomorrow you go straight to the pan.', when:'Thursday works · BEST fresh Friday ~5:15 after the gym', mac:'≈965 · 88P · 97C · 22F (incl. 1 FULL pita · big salad)',
-  ing:[['Chicken breast — REGULAR cut (raw), sliced into strips AFTER it cooks','12 oz'],['Rice (dry)','45 g'],['Shawarma rub: cumin 1 tsp · paprika 1 tsp · turmeric ½ tsp · coriander ½ tsp · garlic ½ tsp · salt ¾ tsp','—'],['Hummus (weighed)','50 g'],['Israeli salad','tomato 250 g · cucumber 250 g · red onion 40 g'],['Salad dressing: ½ lemon · ½ tsp sumac · ¼ tsp salt · black pepper (no oil — the hummus has the fat)','—'],['Pickles','free'],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else']],
-  st:['Stir the shawarma rub together. Pat the chicken dry with paper towels, coat every side, and let it sit while the rice cooks.','Rice: 70 g dry, rinsed until the water runs clearish, + 105 mL water + pinch of salt. Boil, then low (3/10) with the lid on, 12 min, then off the heat 5 min — don’t peek.','Grill pan on high (8/10), preheated 3 full min, 3 sprays. Thin cutlets down: 2½–3 min per side, flip ONCE — don’t walk away, thin chicken goes from perfect to dry in a minute. 165°F / no pink = done.','Rest the chicken 5 min, then slice into shawarma strips ACROSS the grain — look at the direction the fibers run and cut perpendicular.','Salad (make it FRIDAY, not Thursday — it weeps water overnight): dice tomato, cucumber, and onion to ¼" — small and uniform, that’s the dish. Salt, then lemon, toss, then the sumac over the top LAST so it stays bright.','Platter: rice as the base, chicken on top, the 50 g hummus schmeared in a wide stripe along the side, salad + pickles alongside. Active time ~20 min.']},
+  ing:[['Chicken breast — REGULAR cut (raw), sliced into strips AFTER it cooks','12 oz',{f:'chicken breast raw',n:12,u:'oz'}],['Rice (dry)','45 g',{f:'white rice dry',n:45}],['Shawarma rub: cumin 1 tsp · paprika 1 tsp · turmeric ½ tsp · coriander ½ tsp · garlic ½ tsp · salt ¾ tsp','—',{free:1}],['Hummus (weighed)','30 g',{f:'hummus',n:30}],['Israeli salad','tomato 250 g · cucumber 250 g · red onion 40 g',{parts:[{f:'tomato',n:250},{f:'cucumber',n:250},{f:'onion',n:40}]}],['Salad dressing: ½ lemon · ½ tsp sumac · ¼ tsp salt · black pepper (no oil — the hummus has the fat)','—',{free:1}],['Pickles','free',{free:1}],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else',{f:'pita',n:1}]],
+  st:['Stir the shawarma rub together. Pat the chicken dry with paper towels, coat every side, and let it sit while the rice cooks.','Rice: 45 g dry, rinsed until the water runs clearish, + 70 mL water + pinch of salt. Boil, then low (3/10) with the lid on, 12 min, then off the heat 5 min — don’t peek.','Grill pan on high (8/10), preheated 3 full min, 3 sprays. Thin cutlets down: 2½–3 min per side, flip ONCE — don’t walk away, thin chicken goes from perfect to dry in a minute. 165°F / no pink = done.','Rest the chicken 5 min, then slice into shawarma strips ACROSS the grain — look at the direction the fibers run and cut perpendicular.','Salad (make it FRIDAY, not Thursday — it weeps water overnight): dice tomato, cucumber, and onion to ¼" — small and uniform, that’s the dish. Salt, then lemon, toss, then the sumac over the top LAST so it stays bright.','Platter: rice as the base, chicken on top, the 50 g hummus schmeared in a wide stripe along the side, salad + pickles alongside. Active time ~20 min.']},
  {n:'Grilled Chicken Shishlik Platter', cook:'fri', other:'Cube the chicken and get it into the marinade tonight — the recipe wants overnight, not 20 minutes. That is the entire Thursday job.', when:'BEST fresh Friday after the gym · or grill Thursday night and reheat', mac:'≈935 · 87P · 106C · 14F (incl. 1 FULL pita)',
-  ing:[['Chicken breast — REGULAR cut (raw), cut in 1½" cubes','11 oz'],['Marinade: ½ lemon · garlic 1 tsp · paprika 1 tsp · cumin ½ tsp · salt ¾ tsp · avocado oil spray','—'],['Rice (dry)','65 g'],['Hummus (weighed)','50 g'],['Israeli salad — lemon, sumac','tomato 200 g · cucumber 200 g · red onion 30 g'],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else']],
-  st:['Cube the chicken, toss with the marinade, let it sit 20 min (or overnight in the fridge — better).','Thread onto skewers, or just spread the cubes flat on a foil-lined tray.','Grill pan or BBQ on high (8/10), preheated 3 min, 3 sprays. 3–4 min a side, turning once or twice, until 165°F / no pink — ~10–12 min. Don’t crowd them or they steam instead of char.','Rice: 65 g dry, rinsed, + ~100 mL water + pinch salt. Boil → low (3/10) lid on 12 min → off the heat 5 min, don’t peek.','Salad Friday (dice small + uniform, salt, then lemon, sumac last). Platter: rice down, skewers on top, hummus schmeared along the side, salad + pita alongside. Active ~15 min.']},
+  ing:[['Chicken breast — REGULAR cut (raw), cut in 1½" cubes','11 oz',{f:'chicken breast raw',n:11,u:'oz'}],['Marinade: ½ lemon · garlic 1 tsp · paprika 1 tsp · cumin ½ tsp · salt ¾ tsp · avocado oil spray','—',{free:1}],['Rice (dry)','50 g',{f:'white rice dry',n:50}],['Hummus (weighed)','50 g',{f:'hummus',n:50}],['Israeli salad — lemon, sumac','tomato 200 g · cucumber 200 g · red onion 30 g',{parts:[{f:'tomato',n:200},{f:'cucumber',n:200},{f:'onion',n:30}]}],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else',{f:'pita',n:1}]],
+  st:['Cube the chicken, toss with the marinade, let it sit 20 min (or overnight in the fridge — better).','Thread onto skewers, or just spread the cubes flat on a foil-lined tray.','Grill pan or BBQ on high (8/10), preheated 3 min, 3 sprays. 3–4 min a side, turning once or twice, until 165°F / no pink — ~10–12 min. Don’t crowd them or they steam instead of char.','Rice: 50 g dry, rinsed, + ~80 mL water + pinch salt. Boil → low (3/10) lid on 12 min → off the heat 5 min, don’t peek.','Salad Friday (dice small + uniform, salt, then lemon, sumac last). Platter: rice down, skewers on top, hummus schmeared along the side, salad + pita alongside. Active ~15 min.']},
  /* Kafta, as amended Thu Jul 30 2026: he had no fresh parsley and no allspice, so the card now carries
     what he actually cooks — scallion greens for the parsley, and the allspice rebuilt as cinnamon +
     clove + pepper (the extra 1/2 tsp cinnamon folded into the listed 3/4 tsp). Canonical original, if a
     future week has the full spice rack: parsley a handful, and allspice 1 tsp with cinnamon at 1/4 tsp. */
  {n:'BBQ Kafta Kebabs + Rice', cook:'thu', other:'Dice the Israeli salad fresh today. Reheat the kebabs covered with a splash of water so the ground meat does not dry out — that is why you pulled them at 160°F last night and not past it.', when:'cook THURSDAY night — reheats great · Friday dinner is served off the warmer either way, so bank the time', mac:'≈965 · 86P · 101C · 22F (beef + lean chicken mix · incl. 1 FULL pita)',
-  ing:[['93/7 ground beef (raw)','8 oz'],['Ground chicken breast (raw)','4 oz'],['Onion, grated + squeezed dry','60 g'],['Scallions, green parts only, sliced thin','2 stalks'],['Kafta spice: cumin ½ tsp · cinnamon ¾ tsp · ground cloves ⅛ tsp · black pepper ½ tsp · salt ¾ tsp','—'],['Rice (dry)','60 g'],['Israeli salad — lemon, sumac','tomato 200 g · cucumber 200 g'],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else']],
+  ing:[['93/7 ground beef (raw)','8 oz',{f:'93/7 ground beef',n:8,u:'oz'}],['Ground chicken breast (raw)','4 oz',{f:'chicken breast raw',n:4,u:'oz'}],['Onion, grated + squeezed dry','60 g',{f:'onion',n:60}],['Scallions, green parts only, sliced thin','2 stalks',{f:'scallion',n:2,u:'each'}],['Kafta spice: cumin ½ tsp · cinnamon ¾ tsp · ground cloves ⅛ tsp · black pepper ½ tsp · salt ¾ tsp','—',{free:1}],['Rice (dry)','40 g',{f:'white rice dry',n:40}],['Israeli salad — lemon, sumac','tomato 200 g · cucumber 200 g',{parts:[{f:'tomato',n:200},{f:'cucumber',n:200}]}],['Pita (his: 190 cal/piece)','1 FULL — Hamotzi on the pita, nothing else',{f:'pita',n:1}]],
   st:['Mix beef + chicken + grated onion + scallion + all the spice with your hands until JUST combined — don’t over-work it or the kebabs turn rubbery.','Wet your hands, shape into 6 fat cigars about two fingers wide.','Grill pan or broiler on high (8/10), preheated 3 min, 3 sprays. 4 min, turn, 4 more — dark char outside, 160°F / no pink inside. ~10 min.','Rice: 60 g dry, rinsed, + ~95 mL water + pinch salt. Boil → low (3/10) lid on 12 min → off 5 min.','Salad Friday (small dice, salt, lemon, sumac last). Plate: rice, kebabs on top, salad + pita alongside. Active ~15 min.']},
  {n:'Syrian Spiced Chicken & Rice (Djaj w Riz)', cook:'thu', other:'Dice the Israeli salad fresh today \u2014 tomato 250 g · cucumber 250 g · red onion 40 g, \u00bc" dice, salt then lemon then sumac LAST. Reheat covered with a splash of water on low so the rice re-steams instead of drying out. Highest-carb dish in the rotation: the salad is free volume (\u2248100 cal), the pita is what costs you.', when:'cook THURSDAY night — genuinely better day two', mac:'≈985 · 94P · 121C · 15F (lean · incl. 1 FULL pita + the full 540 g salad)',
-  ing:[['Chicken breast — REGULAR cut (raw)','12 oz'],['Rice (dry)','50 g'],['Onion, sliced thin','60 g'],['Chickpeas (canned, drained)','60 g'],['Baharat (SY 7-spice): allspice ½ tsp · cinnamon ¼ tsp · cumin ½ tsp · coriander ½ tsp · black pepper · pinch clove','—'],['Salt','¾ tsp'],['Israeli salad — lemon, sumac, salt','tomato 250 g · cucumber 250 g · red onion 40 g'],['Pita (his: 190 cal/piece)','1 FULL — say Hamotzi on it; the rice is already down to 50 g to pay for it']],
+  ing:[['Chicken breast — REGULAR cut (raw)','12 oz',{f:'chicken breast raw',n:12,u:'oz'}],['Rice (dry)','38 g',{f:'white rice dry',n:38}],['Onion, sliced thin','60 g',{f:'onion',n:60}],['Chickpeas (canned, drained)','42 g',{f:'chickpeas canned',n:42}],['Baharat (SY 7-spice): allspice ½ tsp · cinnamon ¼ tsp · cumin ½ tsp · coriander ½ tsp · black pepper · pinch clove','—',{free:1}],['Salt','¾ tsp',{free:1}],['Israeli salad — lemon, sumac, salt','tomato 250 g · cucumber 250 g · red onion 40 g',{parts:[{f:'tomato',n:250},{f:'cucumber',n:250},{f:'onion',n:40}]}],['Pita (his: 190 cal/piece)','1 FULL — say Hamotzi on it; the rice is already down to 50 g to pay for it',{f:'pita',n:1}]],
   st:['Pat the chicken dry, rub with half the baharat + ¼ tsp salt.','Sprayed pot on medium-high (7/10), 3 min preheat. Sear the chicken 3 min a side just to color it (not cook through), set aside.','Same pot: onion in, 3 min to soften. Add rice + chickpeas + the rest of the baharat + ½ tsp salt, stir 1 min to toast the rice.','Add 115 mL water, lay the chicken back on top, lid on, low (3/10) 15 min, then off the heat 5 min — don’t lift the lid. Chicken to 165°F / no pink.','Fluff, chicken over the spiced rice, salad + pita alongside. Reheats beautifully. Active ~15 min.']},
   /* Dish 7, added Aug 6 2026 because the rotation had run out: six dishes meant weekIdx 6 was about
      to serve the Za'atar tray a second time, and he notices repeats and says so. APPENDED AT THE END
@@ -2750,7 +2802,7 @@ const SHABBAT_FEAST = [
      The traditional garnish is left off deliberately — not safe for him. */
   {n:'Kebab Karaz — Sour-Cherry Meatballs', cook:'thu', other:'Dice the Israeli salad fresh today — tomato 250 g · cucumber 250 g · red onion 40 g, ¼" dice, salt then lemon then sumac LAST. Reheat covered on low with a splash of water: the sauce tightens in the fridge and needs loosening, not more heat. This is the one dish in the rotation that is genuinely BETTER reheated — the cherries keep going into the meat overnight.', when:'cook THURSDAY night — better on day two, and it is the only dish here that actually improves',
     mac:'≈980 · 88P · 113C · 19F (beef + lean chicken mix · incl. 1 FULL pita + the full 540 g salad)',
-    ing:[['93/7 ground beef (raw)','8 oz'],['Ground chicken breast (raw)','4 oz'],['Onion, grated + squeezed BONE dry','50 g'],['Frozen unsweetened tart cherries, thawed','150 g'],['Tomato paste','25 g'],['Lakanto Golden','8 g'],['Lemon','½'],['Aleppo spice: allspice ½ tsp · cinnamon ½ tsp · cumin ¼ tsp · black pepper ½ tsp · salt ¾ tsp','—'],['Rice (dry)','30 g'],['Israeli salad — lemon, sumac, salt','tomato 250 g · cucumber 250 g · red onion 40 g'],['Pita (his: 190 cal/piece)','1 FULL — say Hamotzi on it. The pita carries the starch here, so the rice is only 30 g']],
+    ing:[['93/7 ground beef (raw)','8 oz',{f:'93/7 ground beef',n:8,u:'oz'}],['Ground chicken breast (raw)','4 oz',{f:'chicken breast raw',n:4,u:'oz'}],['Onion, grated + squeezed BONE dry','50 g',{f:'onion',n:50}],['Frozen unsweetened tart cherries, thawed','105 g',{f:'tart cherries',n:105}],['Tomato paste','25 g',{f:'tomato paste',n:25}],['Lakanto Golden','8 g',{f:'lakanto sweetener',n:8}],['Lemon','½',{free:1}],['Aleppo spice: allspice ½ tsp · cinnamon ½ tsp · cumin ¼ tsp · black pepper ½ tsp · salt ¾ tsp','—',{free:1}],['Rice (dry)','18 g',{f:'white rice dry',n:18}],['Israeli salad — lemon, sumac, salt','tomato 250 g · cucumber 250 g · red onion 40 g',{parts:[{f:'tomato',n:250},{f:'cucumber',n:250},{f:'onion',n:40}]}],['Pita (his: 190 cal/piece)','1 FULL — say Hamotzi on it. The pita carries the starch here, so the rice is only 30 g',{f:'pita',n:1}]],
     st:['Mix the beef, ground chicken, grated onion and the spice. <b>Squeeze the onion bone dry first</b> — wet onion is why meatballs collapse in a sauce. Work it about 60 seconds, until the mix turns tacky and holds a thumbprint, then stop; past that it goes rubbery.','Roll 14–16 balls, about 1 inch across. Wet hands make this fast and stop the mix sticking.','Sprayed pan on medium-high (7/10). Brown the meatballs on two sides only, ~4 min total — they are not cooking through here, they finish in the sauce.','Sauce goes into the same pan, straight onto the fond: cherries, tomato paste, 150 mL water, the Lakanto, and a squeeze of the lemon. Scrape the brown bits up. Simmer 5 min, crushing about half the cherries against the side of the pan.','<b>Taste the sauce before the meatballs go back in.</b> It should read SOUR first, sweet second — that is the whole dish. Correct with lemon before you reach for more Lakanto: sweet is easy to add and impossible to take out.','Meatballs back in, spoon the sauce over, lid on, low (3/10) 20 min. Done when the sauce coats a spoon and the meatballs read 160°F.','Rice alongside, salad and the half pita on the side. Active ~20 min.']},
 ];
 /* static mirror of his Google Calendar reminders — I update this when the calendar changes */
@@ -7140,7 +7192,7 @@ function viewToday(){
       const t = Array.isArray(arr)? weekPick(arr) : arr;
       return `
       <details class="acc" data-acc="draft-${lane}"${openAcc.has('draft-'+lane)?' open':''} style="margin-top:10px;border-top:1px solid var(--line);padding-top:10px">
-        <summary><b>${t.n}</b> <span class="ingmac">${t.mac}</span></summary>
+        <summary><b>${t.n}</b> <span class="ingmac">${dishMac(t)}</span></summary>
         <ul class="ing">${t.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
         <ul class="sched" style="margin-top:6px">${t.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
       </details>`;
@@ -7338,7 +7390,7 @@ function feastCardHTML(accId){
   return `
   <details class="card acc" data-acc="${accId}"${openAcc.has(accId)?' open':''}>
     <summary><h3 style="display:inline;font-size:16px">${f.n}</h3> ${tchip('Cook '+feastCookWord(f))} ${tchip(f.when||'Thu night / Fri PM')}</summary>
-    <div class="budget" style="margin-top:6px"><span><b>${f.mac}</b></span></div>
+    <div class="budget" style="margin-top:6px"><span><b>${dishMac(f)}</b></span></div>
     ${(assembleOnly && f.other) ? `<div class="note" style="margin:8px 0"><b>Tonight — assembly only.</b> ${f.other}</div>` : ''}
     <ul class="ing">${f.ing.map(([n,q])=>`<li><span>${n}</span><span class="q">${q}</span></li>`).join('')}</ul>
     <ul class="sched" style="margin-top:8px">${f.st.map((s,i)=>`<li><span class="t">${i+1}</span><span>${s}</span></li>`).join('')}</ul>
@@ -8911,7 +8963,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787937453';
+const BUILD = 'b1787939509';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

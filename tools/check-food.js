@@ -1217,6 +1217,85 @@ const NEGATED = /\bno\b|\bnot\b|\bskip\b|avoid|\bwait\b|hours?\b|tomorrow|instea
 })();
 
 
+/* ============ [feast-fit] the Shabbat feast obeys the same two rules as every other meal ============
+ * ADDED 2026-08-28. Arnold priced the feast card against its own ingredient rows and found the two
+ * did not agree. He was right, and the reason is the part worth remembering:
+ *
+ *   [priced], [row-math] and [slot-fit] all iterate SLOTS. SHABBAT_FEAST is a separate top-level
+ *   array. This file has LOADED it since the nut check was written -- and used it for nothing but
+ *   scanning ingredient text. So 65 guards reported green while seven dinners sat outside all of
+ *   them, carrying hand-typed mac:'~965 . 88P . 97C . 22F' strings next to the rows they described.
+ *
+ * The lesson is not "the feast was wrong". It is that a guard suite is only as wide as the
+ * structures it walks, and nothing in the suite could tell anyone that SHABBAT_FEAST was not walked.
+ * If another array of dishes is ever added, it must be added HERE too, or it inherits this hole.
+ *
+ * Two rules, the same ones slot-fit applies to SLOTS:
+ *   1. every row carries a source, so the total is computed and not asserted
+ *   2. the dish lands within +25 cal of the snack+dinner budget it is designed to cover
+ * The budget is READ from SLOT_BUDGET, never typed, so it follows if he ever re-cuts the slots.
+ */
+(function feastFit() {
+  if (!SHABBAT_FEAST) { fail('feast-fit', 'SHABBAT_FEAST did not load'); return; }
+  const SB = grab('SLOT_BUDGET');
+  if (!SB || !SB.sn || !SB.di) { fail('feast-fit', 'SLOT_BUDGET did not load - cannot derive the feast budget'); return; }
+  const BUDGET = SB.sn[0] + SB.di[0];
+  const OVER_CAL = 25;
+  const UNSOURCED_CEILING = 1;   /* the Tomato Beef "big bowl" salad states no grams anywhere.
+                                    Only ever falls -- get the grams and take it to 0. */
+  const over = [], unsourced = [];
+  SHABBAT_FEAST.forEach(function (d) {
+    let sum = 0, bare = 0;
+    (d.ing || []).forEach(function (r) {
+      /* ⛔ DO NOT test this with priceRow(): it returns [0,0,0,0] for a row with NO spec at all,
+         not null, so an unsourced row reads as a priced zero and vanishes from both the total and
+         this count. That is how the Tomato Beef salad hid — and it is how THIS guard read "0
+         unsourced" on its first run while an unsourced row was sitting right there. Sourced means
+         index 2 is a SPEC OBJECT ({f,n} / {parts} / {free}); undefined or a hand-typed [c,p,c,f]
+         array is not sourced, whatever priceRow hands back. */
+      const spec = r[2];
+      const sourced = spec && typeof spec === 'object' && !Array.isArray(spec);
+      if (!sourced) { bare++; return; }
+      const m = priceRow(r);
+      if (m) sum += m[0];
+    });
+    const name = String(d.n || '?').replace(/[^\x20-\x7e]/g, '').trim().slice(0, 34);
+    if (bare) unsourced.push(name + ' (' + bare + ')');
+    const diff = Math.round(sum) - BUDGET;
+    if (diff > OVER_CAL) over.push(name + ': ' + Math.round(sum) + ' vs ' + BUDGET + ', +' + diff);
+  });
+  /* Rule 3: a step must not name a gram figure its own rows do not carry. [step-qty] enforces this
+     for HOWTO and ONLY for HOWTO, so the feast methods were never checked -- Shawarma had told him
+     to cook 70 g of rice against a 45 g row since the dish was written, and a trim here silently
+     staled a second one. No exceptions list: prose that wants to say 'not a big pour' can say that
+     without naming a weight, and one carve-out is how a strict guard becomes a soft one. */
+  const stepBad = [];
+  SHABBAT_FEAST.forEach(function (d) {
+    const rowG = (d.ing || []).map(function (r) { return String(r[1]); }).join(' ').replace(/\s/g, '');
+    const name = String(d.n || '?').replace(/[^ -~]/g, '').trim().slice(0, 30);
+    (d.st || []).forEach(function (step, i) {
+      (String(step).match(/\d+\s?g\b/g) || []).forEach(function (x) {
+        if (rowG.indexOf(x.replace(/\s/g, '')) < 0) stepBad.push(name + ' step ' + i + ' says "' + x + '"');
+      });
+    });
+  });
+
+  const bad = [];
+  if (stepBad.length)
+    bad.push(stepBad.length + ' feast step(s) name a weight no ingredient row carries: ' + stepBad.join(' | '));
+  if (over.length)
+    bad.push(over.length + ' feast dish(es) OVER the ' + BUDGET + ' snack+dinner budget by more than ' +
+      OVER_CAL + ' cal: ' + over.join(' | ') + '. Fix the FOOD, never the budget.');
+  if (unsourced.length > UNSOURCED_CEILING)
+    bad.push(unsourced.length + ' dish(es) with unsourced rows, past the ceiling of ' +
+      UNSOURCED_CEILING + ': ' + unsourced.join(', '));
+  if (bad.length) fail('feast-fit', bad.join(' -- '));
+  else pass('feast-fit', SHABBAT_FEAST.length + ' feast dishes, every one within +' + OVER_CAL +
+    ' cal of the ' + BUDGET + ' snack+dinner budget, no step naming a weight its rows lack; ' +
+    unsourced.length + ' still carrying an unsourced row (ceiling ' + UNSOURCED_CEILING + ')');
+})();
+
+
 /* ============ [status-doc] STATUS.md must not drift from reality ============
  * The mechanism CLAUDE.md never had. Its onboarding section claimed most ingredient rows were
  * hand-typed with no source — true in the morning of Aug 18 2026, false by that evening — and nothing
