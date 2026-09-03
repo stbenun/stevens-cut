@@ -7,7 +7,7 @@ Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 125 rows: **56** label · **40** USDA · **27** derived · **2** UNVERIFIED
+Provenance of the 126 rows: **57** label · **40** USDA · **27** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -66,6 +66,7 @@ Provenance of the 125 rows: **56** label · **40** USDA · **27** derived · **2
 | `frozen strawberries` | g | 0.35 | 0.004 | 0.091 | 0.001 | USDA | USDA strawberries, frozen, UNSWEETENED — he confirmed unsweetened Aug 12: 100 g = 35 cal / 0.43 P / 9.13 C / 0.11 F -> per gram. The app had 150 g at 75 cal; real is 53. Corrected in b6 and b16. |
 | `fruity pebbles` | g | 3.89 | 0.028 | 0.861 | 0.056 | label | Post Fruity Pebbles label: 1 cup (36 g) = 140 cal / 1 P / 31 C / 2 F -> per gram. 3 cups. |
 | `fruity pebbles protein` | g | 4.3333 | 0.8333 | 0.1333 | 0.0667 | derived | Per gram, from the app's own half-serving row (15 g = 65/12.5/2/1) which is exactly half the PP_G scoop weight of 30 g. the densest of his tubs at 4.33 cal/g -- a 30 g scoop for the same 25 P, so grams matter most here. Fetched/derived Aug 18 2026. |
+| `golden grahams` | g | 3.75 | 0.05 | 0.85 | 0.05 | label | General Mills Golden Grahams published panel: 1 cup (40 g) = 150 cal / 2 P / 34 C / 2 F -> per gram. Fetched Sept 3 2026. Cross-checked against the older USDA SR entry for the same cereal (1 cup = 111.6 cal / 1.5 P / 24.9 C on a lighter 30 g cup), which gives 3.72 cal/g against this 3.75 — 1% apart, so the per-gram figure does not depend on which box or which cup weight. |
 | `graham cracker` | g | 4.19 | 0.065 | 0.774 | 0.097 | label | Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g. |
 | `hersheys zero sugar syrup` | g | 0.333 | 0 | 0.133 | 0 | label | Hershey's Zero Sugar Syrup, his own bottle label photographed Aug 18 2026: 1 tbsp (15 g) = 5 cal / 0 F / 2 C (all sugar alcohol) / 0 P, about 32 servings. Per gram 0.333. His 15 g drizzle rows said 5 cal and were exactly right. |
 | `hummus` | g | 1.83 | 0.04 | 0.13 | 0.1 | derived | Category figure for plain hummus, 1.7-2.0 cal/g; his rows use 1.83 (30 g = 55 cal) which sits mid-range. NOT brand-verified — if hummus ever becomes more than a 15-30 g smear, get the tub. |

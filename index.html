@@ -1984,6 +1984,11 @@ const FOOD_FACTS = {
   'biscoff':        {unit:'g',             ea:7.75, /* its own src: "7.75 g per cookie" */ cal:4.84, p:0.065, c:0.742, f:0.194, src:'lotusbiscoff.com US Classic panel: 4 cookies (31 g) = 150 cal / 2 P / 23 C / 6 F -> per gram. 7.75 g per cookie. Airline/snack packs differ (2 cookies 25 g = 120 cal) — this is the Classic box. 4 cups.'},
   'fruity pebbles': {unit:'g',             cal:3.89, p:0.028, c:0.861, f:0.056, src:'Post Fruity Pebbles label: 1 cup (36 g) = 140 cal / 1 P / 31 C / 2 F -> per gram. 3 cups.'},
   'cinnamon toast crunch': {unit:'g',      cal:4.15, p:0.049, c:0.805, f:0.098, src:'General Mills Cinnamon Toast Crunch label: 1 cup (41 g) = 170 cal / 2 P / 33 C / 4 F -> per gram. 2 cups.'},
+  /* ⚠️ NOT interchangeable with the Cinnamon Toast Crunch above at the gram, which is why both are
+     here: Golden Grahams is 3.75 cal/g against CTC's 4.15 and carries HALF the fat (0.05 vs 0.098).
+     On a fat-tight slot that difference is the whole margin. He said Sept 3 2026 he has Golden
+     Grahams and does NOT have CTC, so a recipe written for one has to be re-priced for the other. */
+  'golden grahams': {unit:'g',             cal:3.75, p:0.05,  c:0.85,  f:0.05,  src:'General Mills Golden Grahams published panel: 1 cup (40 g) = 150 cal / 2 P / 34 C / 2 F -> per gram. Fetched Sept 3 2026. Cross-checked against the older USDA SR entry for the same cereal (1 cup = 111.6 cal / 1.5 P / 24.9 C on a lighter 30 g cup), which gives 3.72 cal/g against this 3.75 — 1% apart, so the per-gram figure does not depend on which box or which cup weight.'},
   'raisins':        {unit:'g',             ea:1, /* Sun-Maid does not state a per-raisin weight and he weighs these anyway; ea is a placeholder so a COUNTED raisin row fails loudly rather than pricing wrong. Every COR spec states GRAMS. */ cal:3.0,  p:0.025, c:0.775, f:0,     src:'Sun-Maid Natural California Raisins label: 40 g (about 1/4 cup) = 120 cal / 1 P / 31 C / 0 F -> per gram. ⚠️ WEIGH 15 g — the bag’s own serving is 40 g, so a poured “serving” is nearly three times what a COR spec calls for. Moved here 2026-08-24 from a comment on COR_CRUNCH, where it was a hand-typed macro no guard could see.'},
   'graham cracker': {unit:'g',             ea:15.5, /* its own src: "31 g (8 crackers / 2 full sheets) = 130 cal", so 15.5 g a sheet */ cal:4.19, p:0.065, c:0.774, f:0.097, src:'Honey Maid Original label: 31 g (8 crackers / 2 full sheets) = 130 cal / 2 P / 24 C / 3 F -> per gram. Batch 5 cup 4 Key Lime takes 25 g.'},
   'sliced almonds': {unit:'g',             cal:5.79, p:0.212, c:0.216, f:0.499, src:'USDA raw almonds, 100 g = 579 cal / 21.2 P / 21.6 C / 49.9 F -> per gram. Almonds are a commodity so USDA is reliable here; a bag photo would only matter if his are roasted or salted. HIS ONE ALLOWED NUT. Batch 5 cup 1.'},
@@ -3434,7 +3439,18 @@ function rateBtns(key){
    His call, 2026-08-24: “there should def not be one flat number for all toppings.”
    So a topping now NAMES its FOOD_FACTS key and nothing else; the quantity comes from the spec text
    and priceRow() prices it — the same engine every ingredient row on every card already goes through. */
-const COR_CRUNCH = [['coconut chips','bare coconut chips'],['Cinnamon Toast Crunch','cinnamon toast crunch'],['Fruity Pebbles','fruity pebbles'],['Nilla','nilla wafer'],['Oreo','oreo thin'],['Biscoff','biscoff'],['raisins','raisins'],['graham','graham cracker']];
+/* ⛔ BOTH Golden Graham SPELLINGS ARE HERE, AND BOTH SIT ABOVE 'graham'. Added Sept 3 2026. The scan
+   below uses .find(), so the FIRST key that matches wins and list order is load-bearing — but order
+   alone does NOT close this one, which is why there are two entries instead of a careful sort.
+   corKeyRe wraps a key in \b...\b, so the keys are not substrings of each other the way they look:
+     "15 g Golden Grahams"  — 'graham' does NOT match it (the trailing 's' is a word char, so \b fails)
+     "15 g Golden Graham"   — 'graham' DOES match it, and would price Honey Maid at 4.19 cal/g
+   So the singular was the actual trap, and the plural's failure mode was the opposite one: before
+   these entries existed it matched NOTHING and the crunch was dropped from the card silently.
+   I asserted the reverse of both in a first draft of this comment and the probe contradicted it —
+   plural mispriced, singular safe. It was exactly backwards. Two aliases, one fact, no reasoning
+   required at the call site. */
+const COR_CRUNCH = [['coconut chips','bare coconut chips'],['Cinnamon Toast Crunch','cinnamon toast crunch'],['Golden Grahams','golden grahams'],['Golden Graham','golden grahams'],['Fruity Pebbles','fruity pebbles'],['Nilla','nilla wafer'],['Oreo','oreo thin'],['Biscoff','biscoff'],['raisins','raisins'],['graham','graham cracker']];
 /* ⛔ 'Fruity Pebbles', NOT 'Fruity Pebbles on top' — the longer key is what broke Double Fruity Cereal
    Milk. Its spec reads “70 g strawberries + 12 g Fruity Pebbles”, the key could not match it, so the
    pebbles fell through to the FRUIT branch: the card dropped his 70 g strawberries, told him to eat
@@ -8962,7 +8978,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1787939509';
+const BUILD = 'b1788443320';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
