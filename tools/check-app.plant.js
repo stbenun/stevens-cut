@@ -93,6 +93,24 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [gen-build]: mode ② — foods in, a solved plate out ----
+     The veg plant is the interesting one: seeding broccoli against the CARB target instead of a
+     human portion does not merely look silly, it starves the rest of the plate — the guard catches
+     it as chicken landing at a zero amount, which is the real consequence. */
+  { guard: 'gen-build', name: 'roles stop being derived, so everything seeds as a carb',
+    edits: [{ from: "  if(ft/tot >= 0.45) return 'fat';", to: "  if(false) return 'fat';" }] },
+  { guard: 'gen-build', name: 'veg gets seeded against a macro target instead of a portion',
+    edits: [{ from: "    const n = (f.unit === 'g' || f.unit === 'mL') ? 150 : 1;",
+              to:   "    const n = (f.unit === 'g' || f.unit === 'mL') ? amountFor(k, 2, target[2]) : 1;" }] },
+  { guard: 'gen-build', name: 'the card stops saying amounts are not a method',
+    edits: [{ from: "+ '<div class=\"sub\" style=\"margin-top:6px\">These are amounts, not a method. For a dish to actually '",
+              to:   "+ '<div class=\"sub\" style=\"margin-top:6px\">Enjoy. '" }] },
+  { guard: 'gen-build', name: 'the brief drops the role annotations Claude needs to write the method',
+    edits: [{ from: "        + ((sp.u)||(FOOD_FACTS[sp.f]||{}).unit||'') + '   [' + plate.roles[i] + ']').join(NL) + NL + NL",
+              to:   "        + ((sp.u)||(FOOD_FACTS[sp.f]||{}).unit||'')).join(NL) + NL + NL" }] },
+  { guard: 'gen-build', name: 'the build-a-plate card time-seeds itself open',
+    edits: [{ from: "(openAcc.has('genbuild') ? ' open' : '')", to: "' open'" }] },
+
   /* ---- [gen-fit]: mode ① of the generator, as a card he can use ----
      ⚠️ TWO OF THESE INITIALLY MISSED, and both times the guard was at fault, not the plant. It opened
      the card in its first line, so nothing could detect it time-seeding itself open; and it called

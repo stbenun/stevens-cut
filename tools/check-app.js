@@ -1927,6 +1927,75 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [gen-build] — mode ② of the generator: foods in, a solved plate out ====================
+ * "tell it the ingredients i want to use and for what meal ... and have it produce a recipe."
+ *
+ * Mode ① starts from amounts he pasted; this one has none, so the plate is built by ROLE first —
+ * derived from each food's own macros, never asked for — and only then handed to the solver. Scaling
+ * arbitrary seeds proportionally would just preserve whatever ratio the seeds happened to have.
+ *
+ * ⛔ CLAUSE (d): THE CARD MUST SAY IT IS NOT A RECIPE. Amounts are not a method, and he has corrected
+ * me on precisely that: "this isnt what i wanted. i wanted you to put together a recipe for me to
+ * cook. what you did was just write a bunch of ingredients." The brief exists so the method comes
+ * from me, and it must carry SPECS and constraints — never computed macros, which would be a second
+ * copy of figures FOOD_FACTS already owns.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{}), g0 = store.get('qpcut.gen2', null);
+
+    /* (a) roles are derived from the food, and the obvious ones must come out right */
+    const want = {'chicken breast raw':'pro','white rice dry':'carb','broccoli':'veg',
+                  'almond butter':'fat','olive oil':'fat','tuna packet':'pro','elev8 cor':'carb'};
+    Object.keys(want).forEach(k=>{
+      if(FOOD_FACTS[k] && foodRole(k) !== want[k])
+        bad.push(k + ' classified as ' + foodRole(k) + ', expected ' + want[k]);
+    });
+
+    /* (b) three real combinations land on their targets without exceeding them */
+    [[['chicken breast raw','white rice dry','broccoli'], SLOT_BUDGET.di],
+     [['fage 0% greek yogurt','blueberries','almond butter','elev8 cor'], SLOT_BUDGET.bf],
+     [['tuna packet','rice cake'], SLOT_BUDGET.pre]].forEach(([keys, b])=>{
+      const t = [b[0], b[2], b[3], b[4]];
+      const p = generatePlate(keys, t);
+      if(!p) { bad.push(keys.join('+') + ' produced no plate'); return; }
+      if(p.t[0] > t[0]) bad.push(keys[0] + ' plate exceeded its ceiling: ' + Math.round(p.t[0]) + ' vs ' + t[0]);
+      if(p.rows.some(sp=>!sp || sp.n == null || sp.n <= 0)) bad.push(keys[0] + ' plate has a zero or missing amount');
+      if(p.rows.length !== keys.length) bad.push(keys[0] + ' plate dropped or duplicated a food');
+    });
+
+    /* (c) the card renders, starts CLOSED, and lets him take a food back out */
+    store.set('qpcut.gen2', {keys:['chicken breast raw','white rice dry','broccoli'], target:'di'});
+    openAcc.delete('genbuild'); render();
+    let html = document.body.innerHTML;
+    if(!/data-acc="genbuild"/.test(html))      bad.push('the build-a-plate card does not render');
+    if(/data-acc="genbuild" open/.test(html))  bad.push('the build-a-plate card time-seeds itself open');
+    openAcc.add('genbuild'); render(); html = document.body.innerHTML;
+    if(!/data-g2rm=/.test(html))               bad.push('picked foods cannot be removed');
+    if(!/data-g2log/.test(html))               bad.push('the plate offers no log button');
+
+    /* (d) ⛔ it must not pretend a list of weights is a recipe, and the brief carries specs only */
+    if(!/amounts, not a method/.test(html)) bad.push('the card no longer says these are amounts rather than a method');
+    const brief = gen2Brief(D);
+    if(!/chicken breast raw/.test(brief))    bad.push('the brief lost the ingredient specs');
+    if(!/\\[pro\\]/.test(brief))               bad.push('the brief lost the role annotations');
+    if(!/RAW\\/dry/.test(brief))              bad.push('the brief dropped the raw-weight rule');
+    if(!/almond/.test(brief))                bad.push('the brief dropped the nut constraint');
+    if(/\\bP\\b.*\\bC\\b.*\\bF\\b.*\\d+ cal/.test(brief.replace(/target:[^\\n]*/,'')))
+      bad.push('the brief is carrying computed macros — specs and constraints only');
+
+    store.set('qpcut.eaten', eat0); if(g0) store.set('qpcut.gen2', g0);
+    return {bad};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('gen-build', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('gen-build', 'roles derive from the food itself, three real combinations land on ' +
+    'their slot budgets without exceeding them, the card starts closed and foods can be removed, and ' +
+    'it says plainly that amounts are not a method — the brief carries specs and constraints, no macros');
+}
+
 /* ==== [gen-fit] — mode ① of the generator, as a card he can actually use =====================
  * Paste an ingredient list, see what matched, point at anything that did not, pick a target, log it.
  *

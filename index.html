@@ -1459,6 +1459,33 @@ function wireRowEdit(ld){
      lost to a re-render triggered from anywhere else on the page. */
   { const ta = document.getElementById('genText');
     if(ta) ta.addEventListener('input', ()=>{ genSetState({text: ta.value}); }); }
+  document.querySelectorAll('[data-g2addbtn]').forEach(b=>b.addEventListener('click',()=>{
+    const sel = document.getElementById('g2add');
+    const k = sel && sel.value;
+    if(!k || !FOOD_FACTS[k]) return;
+    const keys = (gen2State().keys||[]).slice();
+    if(keys.indexOf(k) < 0) keys.push(k);
+    gen2SetState({keys}); openAcc.add('genbuild'); render();
+  }));
+  document.querySelectorAll('[data-g2rm]').forEach(b=>b.addEventListener('click',()=>{
+    gen2SetState({keys:(gen2State().keys||[]).filter(x=>x!==b.dataset.g2rm)});
+    openAcc.add('genbuild'); render();
+  }));
+  document.querySelectorAll('[data-g2tgt]').forEach(b=>b.addEventListener('click',()=>{
+    gen2SetState({target:b.dataset.g2tgt}); openAcc.add('genbuild'); render();
+  }));
+  document.querySelectorAll('[data-g2log]').forEach(b=>b.addEventListener('click',()=>{
+    const g = gen2State(), keys = (g.keys||[]).filter(k=>FOOD_FACTS[k]);
+    if(!keys.length) return;
+    const plate = generatePlate(keys, gen2Target(ld).t);
+    const slot = g.target === 'left' ? 'di' : g.target;
+    logWrite(ld, slot, [{id:'gen2', name:'Built plate', rows: plate.rows}]);
+    openAcc.add('erow-'+slot); render();
+  }));
+  document.querySelectorAll('[data-g2brief]').forEach(b=>b.addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(gen2Brief(ld)); b.textContent='✓ Copied — paste it to Claude'; }
+    catch(e){ b.textContent='copy failed'; }
+  }));
   document.querySelectorAll('[data-genpick]').forEach(sel=>sel.addEventListener('change',()=>{
     const p = genState().picks || {}; p[sel.dataset.genpick] = sel.value;
     genSetState({picks:p}); openAcc.add('genfit'); render();
@@ -5643,6 +5670,169 @@ function genRows(){
   });
   return rows;
 }
+/* ==== SEEDING — turn a list of FOODS into a starting plate ==================================
+   Mode ② of the generator: "tell it the ingredients i want to use and for what meal (and/or for
+   what #cals and macros) and have it produce a recipe that matches my goals."
+
+   Mode ① starts from amounts he pasted; this one has none. Scaling arbitrary seeds proportionally
+   would keep whatever ratio the seeds happened to have, which is no better than guessing — so the
+   plate is built by ROLE first and only then handed to the solver to polish.
+
+   ⛔ THE ROLE IS DERIVED FROM THE FOOD, not asked for. A food's own macros say what it is doing on a
+   plate: chicken is there for protein, rice for carbs, almond butter for fat, broccoli for volume.
+   Reading that off FOOD_FACTS means he picks foods, not foods-plus-a-job.
+
+   ⚠️ VEG IS SEEDED BY VOLUME, NOT BY MACRO. Broccoli exists on the plate to be eaten, not to hit a
+   number — seeding it against a macro target would put 600 g of it next to 4 oz of chicken. 150 g is
+   a portion; the solver may move it, but it starts from something a person would serve. */
+function foodRole(key){
+  const f = FOOD_FACTS[key];
+  if(!f || !f.cal) return 'free';
+  const p = (f.p||0)*4, c = (f.c||0)*4, ft = (f.f||0)*9;
+  const tot = p + c + ft;
+  if(!tot) return 'free';
+  /* fat first: almond butter is 53% fat and 19% protein, and it is on the plate for the fat */
+  if(ft/tot >= 0.45) return 'fat';
+  if(p/tot  >= 0.40) return 'pro';
+  if(c/tot  >= 0.50 && f.cal >= 1.0) return 'carb';   /* dense carbs — rice, oats, bread */
+  if(c/tot  >= 0.50) return 'veg';                    /* watery carbs — broccoli, tomato, berries */
+  return 'veg';
+}
+/* amount of `key` that delivers `want` of macro index mi, in that food's own unit */
+function amountFor(key, mi, want){
+  const f = FOOD_FACTS[key];
+  const per = [f.cal, f.p||0, f.c||0, f.f||0][mi];
+  if(!per || want <= 0) return 0;
+  const n = want / per;
+  const u = f.unit;
+  if(u === 'g' || u === 'mL') return Math.max(5, Math.round(n / 5) * 5);
+  if(u === 'oz') return Math.max(1, Math.round(n * 2) / 2);
+  return Math.max(1, Math.round(n));                   /* whole units */
+}
+function seedRows(keys, target){
+  const roles = {pro:[], carb:[], fat:[], veg:[], free:[]};
+  keys.forEach(k=>{ if(FOOD_FACTS[k]) roles[foodRole(k)].push(k); });
+
+  const rows = [];
+  /* veg first, at a human portion, so the macros it brings are already on the books */
+  roles.veg.forEach(k=>{
+    const f = FOOD_FACTS[k];
+    const n = (f.unit === 'g' || f.unit === 'mL') ? 150 : 1;
+    rows.push({key:k, spec:{f:k, n:n}});
+  });
+  roles.free.forEach(k=> rows.push({key:k, spec:{f:k, n:1}}));
+  const spent = () => sumRows(rows.map(r=>r.spec));
+
+  /* protein next — it is the macro the cut protects, and it anchors the plate */
+  if(roles.pro.length){
+    const need = Math.max(0, target[1] - spent()[1]);
+    roles.pro.forEach(k=> rows.push({key:k, spec:{f:k, n: amountFor(k, 1, need / roles.pro.length)}}));
+  }
+  /* fat before carbs: fat is the denser of the two, so letting it land first leaves carbs to fill
+     what is actually left rather than the other way round */
+  if(roles.fat.length){
+    const need = Math.max(0, target[3] - spent()[3]);
+    roles.fat.forEach(k=> rows.push({key:k, spec:{f:k, n: amountFor(k, 3, need / roles.fat.length)}}));
+  }
+  if(roles.carb.length){
+    const need = Math.max(0, target[2] - spent()[2]);
+    roles.carb.forEach(k=> rows.push({key:k, spec:{f:k, n: amountFor(k, 2, need / roles.carb.length)}}));
+  }
+  return rows;
+}
+/* the whole of mode ②: foods in, a solved plate out */
+function generatePlate(keys, target){
+  const seeded = seedRows(keys, target);
+  if(!seeded.length) return null;
+  const sol = solveRows(seeded.map(r=>r.spec), target);
+  return {rows: sol.rows, keys: seeded.map(r=>r.key), t: sol.t, over: sol.over,
+          roles: seeded.map(r=>foodRole(r.key))};
+}
+
+/* ==== 🍳 BUILD ME A PLATE — mode ② of the generator ==========================================
+   "tell it the ingredients i want to use and for what meal (and/or for what #cals and macros) and
+   have it produce a recipe that matches my goals."
+
+   He picks foods; the app works out the amounts. It does NOT write a method — that is the half that
+   still needs me, and the card says so rather than pretending a list of weights is a recipe. His own
+   correction on exactly that, from an earlier attempt: "this isnt what i wanted. i wanted you to put
+   together a recipe for me to cook. what you did was just write a bunch of ingredients." */
+function gen2State(){ return store.get('qpcut.gen2', {keys:[], target:'di'}); }
+function gen2SetState(p){ store.set('qpcut.gen2', Object.assign(gen2State(), p)); }
+function gen2Target(ld){
+  const g = gen2State();
+  if(g.target === 'left'){
+    const t = planTarget(ld).t, had = eatenMacros(ld);
+    return {label:'what is left today', t: t.map((v,i)=>Math.max(0, Math.round(v - had[i])))};
+  }
+  const b = SLOT_BUDGET[g.target] || SLOT_BUDGET.di;
+  return {label: b[1], t:[b[0], b[2], b[3], b[4]]};
+}
+const ROLE_LBL = {pro:'protein', carb:'carb', fat:'fat', veg:'volume', free:'free'};
+function gen2CardHTML(ld){
+  const g = gen2State();
+  const keys = (g.keys||[]).filter(k=>FOOD_FACTS[k]);
+  const tgt = gen2Target(ld);
+  const plate = keys.length ? generatePlate(keys, tgt.t) : null;
+  const foodOpts = Object.keys(FOOD_FACTS).sort()
+    .map(k=>'<option value="'+k+'">'+k+' · '+ROLE_LBL[foodRole(k)]+'</option>').join('');
+
+  const chips = keys.map(k=>'<button class="mealpick on" data-g2rm="'+esc(k)+'">'+esc(k)
+    + '<span class="rem">' + ROLE_LBL[foodRole(k)] + ' ✕</span></button>').join('');
+
+  let body = '';
+  if(plate){
+    body = '<div style="margin-top:8px">' + plate.rows.map((sp,i)=>{
+      const m = priceRow([null,null,sp]) || [0,0,0,0];
+      const unit = (sp.u) || (FOOD_FACTS[sp.f]||{}).unit || '';
+      return '<div class="erow"><span class="en">' + esc(plate.keys[i])
+        + '<span class="eu">' + ROLE_LBL[plate.roles[i]] + '</span></span>'
+        + '<span class="em" style="text-align:center"><b>' + sp.n + '</b> ' + esc(unit) + '</span>'
+        + '<span class="em">' + Math.round(m[0]) + ' · ' + Math.round(m[1]) + 'P</span></div>';
+    }).join('') + '</div>'
+    + '<div class="note" style="margin-top:10px"><b>Plate:</b> ' + plate.t.map(Math.round).join(' · ')
+    + '  <span class="sub">vs ' + esc(tgt.label) + ' ' + tgt.t.join(' · ') + '</span>'
+    + (plate.over ? '<br>⚠ over by ' + plate.over : '') + '</div>'
+    /* ⛔ SAY WHAT THIS IS NOT. Amounts are not a recipe, and he has corrected me on exactly that. */
+    + '<div class="sub" style="margin-top:6px">These are amounts, not a method. For a dish to actually '
+    + 'cook, copy the brief and ask Claude to write it.</div>'
+    + '<div class="pickrow" style="margin-top:8px">'
+    + '<button class="mealpick on" data-g2log="1">Log this plate</button>'
+    + '<button class="mealpick" data-g2brief="1">📋 Copy the brief for Claude</button></div>';
+  }
+
+  return '<details class="acc innerrow" data-acc="genbuild"' + (openAcc.has('genbuild') ? ' open' : '') + '>'
+    + '<summary><span>🍳 Build me a plate</span><span class="statline">'
+    + (keys.length ? keys.length + ' food' + (keys.length>1?'s':'') : 'pick foods') + '</span></summary>'
+    + '<div class="sub" style="margin-top:4px">Pick what you want to eat. The app works out how much.</div>'
+    + '<div class="erow" style="margin-top:6px"><span><select id="g2add" style="width:100%;padding:5px 6px;font-size:13px">'
+    + '<option value="">+ add a food…</option>' + foodOpts + '</select></span>'
+    + '<span></span><span class="em"><button class="step" data-g2addbtn="1" style="width:auto;padding:0 10px">Add</button></span></div>'
+    + (chips ? '<div class="pickrow" style="margin-top:8px">' + chips + '</div>' : '')
+    + '<div class="slotlbl" style="margin-top:8px">Fit it to</div><div class="pickrow">'
+    + SLOT_SEQ.map(k=>'<button class="mealpick' + (g.target===k?' on':'') + '" data-g2tgt="' + k + '">'
+        + SLOT_BUDGET[k][1] + '<span class="rem">' + SLOT_BUDGET[k][0] + '</span></button>').join('')
+    + '<button class="mealpick' + (g.target==='left'?' on':'') + '" data-g2tgt="left">what is left today'
+    + '<span class="rem">' + Math.max(0, Math.round(planTarget(ld).t[0] - eatenMacros(ld)[0])) + '</span></button>'
+    + '</div>' + body + '</details>';
+}
+/* what he hands me when he wants a METHOD for the plate. Specs and constraints, never macros —
+   same rule as the draft payload: numbers FOOD_FACTS already owns must not travel as a second copy. */
+function gen2Brief(ld){
+  const g = gen2State(), keys = (g.keys||[]).filter(k=>FOOD_FACTS[k]);
+  if(!keys.length) return '';
+  const tgt = gen2Target(ld), plate = generatePlate(keys, tgt.t);
+  const NL = String.fromCharCode(10);
+  const lanes = dairyWindow ? '' : '';
+  return 'WRITE ME A RECIPE FOR THIS PLATE' + NL
+    + 'slot: ' + tgt.label + '   target: ' + tgt.t.join(' / ') + ' (cal/P/C/F)' + NL
+    + 'date: ' + ld + NL + NL
+    + plate.rows.map((sp,i)=>'  ' + plate.keys[i] + '  ' + sp.n + ' '
+        + ((sp.u)||(FOOD_FACTS[sp.f]||{}).unit||'') + '   [' + plate.roles[i] + ']').join(NL) + NL + NL
+    + 'rules: weights are RAW/dry · no non-almond nuts · a step never restates a quantity · '
+    + 'however many steps it needs, no padding';
+}
+
 /* The log step, named so [gen-fit] can exercise THIS rather than re-implementing it. A guard that
    rebuilds the rule it is checking passes while the shipped rule is broken — which is exactly how
    the missing-name defect slipped through its own first plant. */
@@ -7970,6 +8160,7 @@ function viewToday(){
   <section class="zone" id="z-tools">
   <div class="zhead"><span class="zt">🧰 Tools</span></div>
   <div class="card">${genCardHTML(ld)}</div>
+  <div class="card">${gen2CardHTML(ld)}</div>
   ${/* ⬇️ MOVED HERE FROM THE FOOD ZONE — his ask Aug 13 2026, verbatim: "final meal and tonights
        dinner tools are in Food, move it to Tools." They are TOOLS, not food he is reading: Final Meal
        solves whatever is left of the day, and Tonight's dinner is a picker. Food stays what he eats.
@@ -9889,7 +10080,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788555691';
+const BUILD = 'b1788558075';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
