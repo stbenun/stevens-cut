@@ -1927,6 +1927,76 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [solver] — scaling a set of rows onto a macro target ===================================
+ * The engine under both generator modes he asked for: "tell it the ingredients i want to use and for
+ * what meal ... and have it produce a recipe", and "give it a recipe i found ... and let it adjust it
+ * to the meal and/or for what #cals and macros i want to hit".
+ *
+ * CLAUSE (a) IS THE ONE THAT MATTERS. Calories are a HARD ceiling — his instruction, already recorded
+ * in finalMeal: "we shouldnt be overfeeding or underfeeding. we should be on target always." The
+ * first version broke its own ceiling by 3 cal on the Shabbat platter, because the row it chose to
+ * trim was measured in OUNCES and half an ounce is 17 cal — too coarse to shave 3, so it adjusted by
+ * nothing and left the plate over. Small, and exactly the kind of thing that teaches him the printed
+ * number is approximate.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const B = entryRows({id:'b1'});
+    const f = weekPick(SHABBAT_FEAST,'2026-09-04');
+    const feast = f.ing.map(x=>x[2]);
+    const pita = f.ing.findIndex(x=>/pita/i.test(x[0]));
+    /* ⛔ d1 AND l4 ARE HERE BECAUSE THE FIRST VERSION WAS VACUOUS ON WHOLE UNITS. b1 and the feast
+       are all grams and ounces — not one movable whole-unit row between them — so the clause that
+       says "a pita never becomes 1.4 pitas" had nothing to look at, and a plant that made whole rows
+       fractional passed clean. d1 (keto bun + egg) and l4 (rice cakes, tuna packets, Ezekiel) are
+       mostly whole units, which is exactly the shape that clause exists for. */
+    const cases = [
+      {n:'b1 -> 400',      rows:B,     target:[400,30,40,15], opts:{}},
+      {n:'b1 -> 700',      rows:B,     target:[700,50,70,25], opts:{}},
+      {n:'b1 -> 250',      rows:B,     target:[250,20,25,10], opts:{}},
+      {n:'feast -> 700',   rows:feast, target:[700,60,70,20], opts:{lock:[pita]}},
+      {n:'feast -> 1100',  rows:feast, target:[1100,90,110,30], opts:{lock:[pita]}},
+      {n:'d1 -> 450',      rows:entryRows({id:'d1'}), target:[450,45,40,15], opts:{}},
+      {n:'d1 -> 700',      rows:entryRows({id:'d1'}), target:[700,60,70,22], opts:{}},
+      {n:'l4 -> 400',      rows:entryRows({id:'l4'}), target:[400,35,45,10], opts:{}},
+      {n:'l4 -> 750',      rows:entryRows({id:'l4'}), target:[750,65,80,20], opts:{}}
+    ];
+    let sawWhole = 0;
+    let anyMoved = 0;
+    cases.forEach(c=>{
+      const out = solveRows(c.rows, c.target, c.opts);
+      /* (a) the ceiling is hard */
+      if(out.t[0] > c.target[0]) bad.push(c.n + ' OVERSHOT its own ceiling: ' + Math.round(out.t[0]) + ' vs ' + c.target[0]);
+      /* and it should land close, not merely under */
+      if(out.t[0] < c.target[0] - 40) bad.push(c.n + ' landed ' + Math.round(c.target[0]-out.t[0]) + ' cal short');
+      out.rows.forEach((sp,i)=>{
+        const was = c.rows[i], kind = out.kinds[i];
+        /* (b) frozen, free and LOCKED rows never move */
+        if(kind !== 'cont' && kind !== 'whole' && JSON.stringify(sp) !== JSON.stringify(was))
+          bad.push(c.n + ' moved a ' + kind + ' row at index ' + i);
+        /* (c) whole-unit rows stay whole */
+        if(kind === 'whole'){ sawWhole++;
+          if(sp && sp.n % 1 !== 0) bad.push(c.n + ' left a whole-unit row at a fraction: ' + sp.n); }
+        /* (d) nothing goes negative */
+        if(sp && typeof sp.n === 'number' && sp.n < 0) bad.push(c.n + ' produced a negative amount');
+        if(sp && was && sp.n !== was.n) anyMoved++;
+      });
+      /* (e) an explicitly locked row is byte-identical */
+      if(c.opts.lock && JSON.stringify(out.rows[c.opts.lock[0]]) !== JSON.stringify(c.rows[c.opts.lock[0]]))
+        bad.push(c.n + ' moved the LOCKED row');
+    });
+    if(!anyMoved)  bad.push('the solver changed nothing in any case — this guard ran vacuous');
+    if(!sawWhole)  bad.push('not one whole-unit row was examined — the whole-unit clause is vacuous');
+    return {bad, anyMoved, sawWhole, n: cases.length};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('solver', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('solver', r.n + ' solves across b1, the Shabbat platter, the Burger and the Tuna Melt: none ' +
+    'exceeds its calorie ceiling or lands more than 40 under, frozen/free/locked rows are byte-identical, ' +
+    r.sawWhole + ' whole-unit rows all stayed whole, no negative amounts (' + r.anyMoved + ' amounts moved)');
+}
+
 /* ==== [my-meals] — the cookbook became a place he can act from ===============================
  * His ask: "have a My Meals section where all my meals that ive made before live." The Meals tab was
  * read-only — he could look a meal up and then had to go to Today, open the right slot and find it

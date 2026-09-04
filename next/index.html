@@ -5347,6 +5347,146 @@ function logToggleMeal(ld, slot, id){
 }
 /* ==== LOG-ACCESS-END ==== */
 
+/* ==== THE SOLVER — scale a set of ingredient rows onto a macro target ========================
+   The engine under every generator mode he described: "tell it the ingredients i want to use and
+   for what meal (and/or for what #cals and macros) and have it produce a recipe", and "give it a
+   recipe i found or have and let it adjust it to the meal and/or for what #cals and macros i want".
+   Both are this function; only where the rows come from differs.
+
+   ⛔ ROW FLAGS ARE DERIVED, NOT TYPED. FOOD_FACTS already knows a food's unit, so the app can work
+   out for itself that a pita moves 1 → 2 and rice moves 25 g → 31 g:
+     · {free:1}                  → FREE, never touched, contributes nothing
+     · a legacy [cal,P,C,F] spec → FROZEN, because there is no amount in it to change
+     · a whole-unit food (each / slice / cup / bar) → scales in INTEGERS only
+     · grams and millilitres     → scales continuously
+   The ONLY flag a human sets is LOCK, and it is always for a reason outside the arithmetic: the pita
+   is locked because it is Hamotzi, the hen because it is one bird. No formula gets those.
+
+   ⛔ CALORIES ARE A HARD CEILING, PROTEIN IS THE PRIZE. His standing instruction, recorded in
+   finalMeal for the same reason: "we shouldnt be overfeeding or underfeeding. we should be on target
+   always." So a candidate that overshoots calories is rejected outright rather than scored down.
+
+   ⛔ AND THE SEARCH DOES NOT TRUST ITS OWN ALGEBRA. finalMeal learned this the hard way: solving the
+   ratios exactly and then snapping whole units to integers lands calories far off with nothing left
+   to correct them. The proportional solve here is a STARTING POINT; the integer rows are then walked
+   a step either side and every combination re-scored. */
+function rowKind(sp){
+  if(!sp) return 'free';
+  if(Array.isArray(sp)) return 'frozen';        /* legacy [cal,P,C,F] — no amount to scale */
+  if(sp.free) return 'free';
+  if(sp.parts) return 'frozen';                 /* several foods behind one label; scale them apart */
+  const f = FOOD_FACTS[sp.f];
+  if(!f || typeof sp.n !== 'number') return 'frozen';
+  const u = sp.u || f.unit;
+  return (u === 'g' || u === 'mL' || u === 'oz') ? 'cont' : 'whole';
+}
+function rowMac(sp){ const m = priceRow([null,null,sp]); return m || [0,0,0,0]; }
+function sumRows(rows){
+  const t = [0,0,0,0];
+  rows.forEach(sp=>{ const m = rowMac(sp); for(let i=0;i<4;i++) t[i]+=m[i]; });
+  return t;
+}
+/* how far a plate is from target. Calories over the ceiling is disqualifying, not merely bad. */
+function solveScore(t, target){
+  if(t[0] > target[0]) return -Infinity;
+  const shortCal = (target[0] - t[0]) / Math.max(target[0], 1);
+  const shortP   = Math.max(0, target[1] - t[1]) / Math.max(target[1], 1);
+  const offC     = Math.abs(target[2] - t[2]) / Math.max(target[2], 1);
+  const offF     = Math.abs(target[3] - t[3]) / Math.max(target[3], 1);
+  /* protein weighted hardest, then landing the calories, then the two that are mostly remainder */
+  return -(3.0*shortP + 2.0*shortCal + 0.5*offC + 0.4*offF);
+}
+function solveRows(rows, target, opts){
+  opts = opts || {};
+  const lock = new Set(opts.lock || []);
+  const kinds = rows.map((sp,i)=> lock.has(i) ? 'frozen' : rowKind(sp));
+  const out = rows.map(sp=> Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+
+  /* fixed = everything the solver may not move. What is left has to cover the rest. */
+  const fixed = [0,0,0,0];
+  rows.forEach((sp,i)=>{ if(kinds[i] !== 'cont' && kinds[i] !== 'whole'){
+    const m = rowMac(sp); for(let k=0;k<4;k++) fixed[k]+=m[k]; } });
+  const movable = rows.map((sp,i)=>i).filter(i=>kinds[i]==='cont'||kinds[i]==='whole');
+  if(!movable.length) return {rows: out, t: sumRows(out), moved: 0, reason:'nothing is scalable here'};
+
+  /* ① proportional solve on calories — the starting point, deliberately not the answer */
+  const movCal = movable.reduce((a,i)=>a+rowMac(rows[i])[0], 0);
+  const room = target[0] - fixed[0];
+  const k = (movCal > 0 && room > 0) ? room / movCal : 1;
+  movable.forEach(i=>{
+    const sp = out[i];
+    if(kinds[i]==='cont') sp.n = Math.max(0, Math.round(sp.n * k * 2) / 2);   /* half-gram resolution */
+    else sp.n = Math.max(0, Math.round(sp.n * k));
+  });
+
+  /* ② walk every whole-unit row one step either side and re-score. This is the part that stops the
+        algebra from being trusted — see the note above. Bounded: 3^n over whole rows, capped. */
+  const wholes = movable.filter(i=>kinds[i]==='whole').slice(0, 6);
+  let best = null;
+  const walk = (wi, cur) => {
+    if(wi === wholes.length){
+      const t = sumRows(cur);
+      const sc = solveScore(t, target);
+      if(!best || sc > best.sc) best = {sc, rows: cur.map(x=>Array.isArray(x)?x.slice():Object.assign({},x)), t};
+      return;
+    }
+    const i = wholes[wi], base = cur[i].n;
+    for(const d of [-1, 0, 1]){
+      const n = base + d;
+      if(n < 0) continue;
+      cur[i].n = n;
+      walk(wi + 1, cur);
+    }
+    cur[i].n = base;
+  };
+  walk(0, out);
+
+  /* ③ close the remaining calories on the LARGEST continuous row, which is the one a human would
+        adjust — you top up the rice, not the teaspoon of sumac. */
+  const res = best ? best.rows : out;
+  const conts = movable.filter(i=>kinds[i]==='cont');
+  if(conts.length){
+    const big = conts.reduce((a,i)=> rowMac(res[i])[0] > rowMac(res[a])[0] ? i : a, conts[0]);
+    const per = FOOD_FACTS[res[big].f];
+    const perCal = per ? ffScale(per, 1, res[big].u) * per.cal : 0;
+    if(perCal > 0){
+      /* ⛔ THIS STEP RUNS AFTER THE SCORING, SO IT CAN UNDO THE CEILING. Closing the gap on the
+         biggest row landed the Shabbat platter at 703 against a 700 target — three calories, but the
+         rule is a HARD ceiling ("we shouldnt be overfeeding or underfeeding"), and a solver that
+         quietly exceeds its own limit teaches him not to trust the number. Step DOWN until it fits. */
+      const gap = target[0] - sumRows(res)[0];
+      let adj = Math.round((gap / perCal) * 2) / 2;
+      const step = res[big].u === undefined && FOOD_FACTS[res[big].f] ? 0.5 : 0.5;
+      while(adj !== 0 && res[big].n + adj >= 0){
+        const trial = Math.round((res[big].n + adj) * 2) / 2;
+        const keep = res[big].n; res[big].n = trial;
+        if(sumRows(res)[0] <= target[0]) break;
+        res[big].n = keep; adj -= step;
+      }
+      if(res[big].n < 0) res[big].n = 0;
+    }
+  }
+  /* ④ ⛔ THE CEILING, ACTUALLY ENFORCED. Step ③ trims the BIGGEST row, and on the Shabbat platter
+        that is chicken measured in OUNCES — half an ounce is 17 cal, far too coarse to shave a 3-cal
+        overshoot, so it computed an adjustment of zero and the plate stayed over its own hard limit.
+        A solver that quietly exceeds the number it printed teaches him not to trust the number.
+        So: while still over, trim the row with the FINEST control — the smallest calories-per-step —
+        which is also what a person does. You take a little rice off, not a slice of the chicken. */
+  const fine = movable.filter(i=>kinds[i]==='cont' && res[i] && res[i].n > 0)
+    .map(i=>{ const f = FOOD_FACTS[res[i].f];
+              return {i, per: f ? Math.abs(ffScale(f, 0.5, res[i].u) * f.cal) : Infinity}; })
+    .filter(x=>isFinite(x.per) && x.per > 0)
+    .sort((a,b)=>a.per - b.per);
+  for(let guard = 0; guard < 200 && fine.length && sumRows(res)[0] > target[0]; guard++){
+    const pick = fine.find(x=>res[x.i].n >= 0.5);
+    if(!pick) break;
+    res[pick.i].n = Math.round((res[pick.i].n - 0.5) * 2) / 2;
+  }
+  const t = sumRows(res);
+  return {rows: res, t, moved: movable.length,
+          kinds: kinds, over: Math.max(0, Math.round(t[0] - target[0]))};
+}
+
 /* ==== MEAL DRAFTS — the bridge between his phone and the guarded library =====================
    His call, 2026-09-04: the meal library lives in the REPO, where [priced], [slot-fit] and
    [row-math] can see it and where I can read it. A phone cannot write to that. So "save as a new
@@ -9510,7 +9650,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788550096';
+const BUILD = 'b1788551564';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

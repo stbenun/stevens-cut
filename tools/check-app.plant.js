@@ -93,6 +93,25 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [solver]: scaling ingredient rows onto a macro target ----
+     ⚠️ TWO CANDIDATE PLANTS ARE DELIBERATELY ABSENT, because neither can fail and a plant that cannot
+     fail reads exactly like a guard that works:
+       · marking a legacy [cal,P,C,F] row scalable — priceRow ignores .n for an array spec, so scaling
+         it changes nothing observable. A genuine no-op.
+       · making an overshoot merely bad instead of disqualifying (-1 rather than -Infinity in
+         solveScore) — the step-④ shave pass enforces the ceiling AFTER scoring, so the plate still
+         lands under. That is defence in depth doing its job; the scoring is the belt and step ④ the
+         braces, and removing the belt alone produces no defect to catch. */
+  { guard: 'solver', name: 'the final shave pass goes, so the calorie ceiling is soft again',
+    edits: [{ from: '  for(let guard = 0; guard < 200 && fine.length && sumRows(res)[0] > target[0]; guard++){',
+              to:   '  for(let guard = 0; guard < 0 && fine.length && sumRows(res)[0] > target[0]; guard++){' }] },
+  { guard: 'solver', name: 'LOCK is ignored, so the Hamotzi pita gets scaled',
+    edits: [{ from: "  const kinds = rows.map((sp,i)=> lock.has(i) ? 'frozen' : rowKind(sp));",
+              to:   '  const kinds = rows.map((sp,i)=> rowKind(sp));' }] },
+  { guard: 'solver', name: 'whole-unit rows start taking fractional amounts',
+    edits: [{ from: '    else sp.n = Math.max(0, Math.round(sp.n * k));',
+              to:   '    else sp.n = Math.max(0, sp.n * k);' }] },
+
   /* ---- [my-meals]: the cookbook became a place he can act from ----
      ⚠️ The first case here MISSED, and the guard was checking the wrong thing: it asserted wireMeals
      EXISTS, while the plant removes it from the render DISPATCH. The function stayed perfectly
