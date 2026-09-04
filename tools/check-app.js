@@ -1927,6 +1927,64 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [meal-drafts] — the bridge from his phone to the guarded library ========================
+ * He chose a repo-canonical meal library: guarded by [priced]/[slot-fit]/[row-math], and readable by
+ * me. A phone cannot write to that, so "save as a new meal" writes a device-local draft that
+ * graduates when he sends it over.
+ *
+ * THE CLAUSE THAT MATTERS IS (b). The payload he pastes must carry SPECS — {f:'elev8 cor',n:25} —
+ * and never computed macros. If it ever carried numbers, a draft would arrive as a second copy of
+ * figures FOOD_FACTS already owns, and the moment a fact was corrected the pasted meal would be
+ * quietly stale. That is the same "two copies of one number" bug this whole file exists to delete.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const d0 = store.get('qpcut.mealdrafts', {});
+    store.set('qpcut.mealdrafts', {});
+
+    const rows = addEntryRow({id:'b1'}, 'blueberries', 155);
+    const id = draftSave('bf', 'Blueberry COR bowl', {id:'b1', rows:rows});
+    if(!id) bad.push('draftSave refused a legitimate save');
+
+    /* (a) a draft prices exactly like the entry it was cut from */
+    const want = entryMacros({id:'b1', rows:rows}).map(Math.round).join('/');
+    const got  = entryMacros({id:id, rows:(draftAll()[id]||{}).rows}).map(Math.round).join('/');
+    if(want !== got) bad.push('the draft prices ' + got + ' but the entry it came from is ' + want);
+
+    /* (b) ⛔ the payload carries SPECS, never macros */
+    const pay = draftPayload();
+    if(!/"f":"blueberries"/.test(pay)) bad.push('the payload lost the ingredient specs');
+    if(!/"n":155/.test(pay))           bad.push('the payload lost the amounts');
+    if(/\\bcal\\b|kcal/i.test(pay))     bad.push('the payload is carrying computed calories — it must carry specs only');
+    if(pay.indexOf(want.split('/')[0]) > -1 && want.split('/')[0].length > 2)
+      bad.push('the payload contains the computed total ' + want.split('/')[0] + ' — specs only');
+
+    /* (c) refusals */
+    if(draftSave('bf', '',   {id:'b1'})) bad.push('draftSave accepted an unnamed draft');
+    if(draftSave('bf', 'x',  null))      bad.push('draftSave accepted a null entry');
+
+    /* (d) the card exists, starts CLOSED, and says on its face that nothing guards a draft */
+    const before = expandSlot; expandSlot = 'bf'; render();
+    const html = document.body.innerHTML;
+    expandSlot = before;
+    if(!/data-acc="drafts"/.test(html))        bad.push('the drafts card does not render');
+    if(/data-acc="drafts" open/.test(html))    bad.push('the drafts card time-seeds itself open');
+    if(!/nothing guards them/.test(html))      bad.push('the drafts card no longer warns that a draft is unguarded');
+    if(!/data-dlog="bf\\|/.test(html))          bad.push('the draft does not appear as a loggable pill in its slot');
+
+    const n = Object.keys(draftAll()).length;
+    store.set('qpcut.mealdrafts', d0);
+    return {bad, n, pay: pay.slice(0, 60)};
+  `);
+  const bad = r.bad.slice();
+  if (r.n !== 1) bad.push('expected exactly one draft in the fixture, found ' + r.n + ' — this guard ran vacuous');
+  if (bad.length) fail('meal-drafts', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('meal-drafts', 'a draft prices like the entry it came from, the paste payload carries ingredient ' +
+    'SPECS and no computed macros, unnamed and empty saves are refused, and the card starts closed ' +
+    'saying plainly that nothing guards a draft until it reaches the repo');
+}
+
 /* ==== [log-access] — qpcut.eaten has exactly one reader and one writer ========================
  * Structural, not behavioural, and that is why it earns its place: the refactor that made two
  * storage shapes safe works ONLY because a single block knows about both. Someone adding

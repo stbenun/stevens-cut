@@ -93,6 +93,19 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [meal-drafts]: the bridge from his phone into the guarded library ----
+     The first plant here targeted prose the guard does not read, so it MISSED — my plant was wrong,
+     not the guard. It now cuts the exact phrase [meal-drafts] checks for. */
+  { guard: 'meal-drafts', name: 'the paste payload carries computed macros instead of ingredient specs',
+    edits: [{ from: "    return NL + d.name + '  [slot ' + d.slot + (d.from ? ', from ' + d.from : '') + ', saved ' + d.at + ']' + NL",
+              to:   "    return NL + d.name + ' ' + entryMacros({id:k,rows:d.rows}).map(Math.round).join(' cal / ') + NL" }] },
+  { guard: 'meal-drafts', name: 'the drafts card time-seeds itself open',
+    edits: [{ from: "(openAcc.has('drafts') ? ' open' : '')", to: "' open'" }] },
+  { guard: 'meal-drafts', name: 'the card stops saying a draft is unguarded',
+    edits: [{ from: "and <b>nothing guards them</b>", to: "and they are fine" }] },
+  { guard: 'meal-drafts', name: 'draftSave stops requiring a name',
+    edits: [{ from: "  if(!nm || !entry) return null;", to: "  if(!entry) return null;" }] },
+
   /* ---- [log-access]: qpcut.eaten has exactly one reader and one writer ----
      The plant is the innocent line someone will actually write. It reads the legacy shape perfectly
      and drops every row-carrying entry, which is why nothing else notices. */

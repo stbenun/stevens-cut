@@ -40,6 +40,14 @@ const setup = `
   const D = isoToday();
   /* log a meal so the row editor has something to edit, and open its slot + the editor */
   logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1');
+  /* EDIT one row and ADD one, so the preview shows the editor in its FULL state — the save-as-a-
+     new-meal control only renders once something has been changed, and a preview of the empty
+     case would have said 'layout clean' about markup that was never on the page. */
+  { const e0 = (logEntries(D)[${JSON.stringify(SLOT)}]||[])[0];
+    let rs = editEntryRows(e0, 0, 50);
+    rs = addEntryRow({id:'b1', rows:rs}, 'smucker sf breakfast syrup', 20);
+    logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1', rs); }
+  openAcc.add('drafts');
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
   render();

@@ -1430,6 +1430,30 @@ function wireRowEdit(ld){
     logSetMeal(ld, slot, e.id, rows);
     render();
   }));
+  document.querySelectorAll('[data-dsave]').forEach(btn=>btn.addEventListener('click',()=>{
+    const slot = btn.dataset.dsave;
+    const nm = document.querySelector('[data-dname="'+slot+'"]');
+    const e = (logEntries(ld)[slot]||[])[0];
+    if(!draftSave(slot, nm && nm.value, e)) { render(); return; }   /* no name = no save */
+    openAcc.add('erow-'+slot);
+    render();
+  }));
+  document.querySelectorAll('[data-dlog]').forEach(b=>b.addEventListener('click',()=>{
+    const parts = String(b.dataset.dlog).split('|'), slot = parts[0], id = parts[1];
+    const d = draftAll()[id]; if(!d) { render(); return; }
+    const cur = (logEntries(ld)[slot]||[])[0];
+    /* same tap-to-toggle semantics as a repo meal */
+    if(cur && cur.id === id) logWrite(ld, slot, []);
+    else logWrite(ld, slot, [{id:id, name:d.name, rows:copyRows({rows:d.rows})}]);
+    render();
+  }));
+  document.querySelectorAll('[data-ddel]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault(); draftDelete(a.dataset.ddel); render();
+  }));
+  document.querySelectorAll('[data-dcopy]').forEach(b=>b.addEventListener('click',async()=>{
+    try{ await navigator.clipboard.writeText(draftPayload()); b.textContent='✓ Copied — paste it to Claude'; }
+    catch(e){ b.textContent='copy failed — select the text below'; }
+  }));
   document.querySelectorAll('[data-eadd]').forEach(btn=>btn.addEventListener('click',()=>{
     const slot = btn.dataset.eadd;
     const sel = document.querySelector('[data-eaddf="'+slot+'"]');
@@ -5273,6 +5297,68 @@ function logToggleMeal(ld, slot, id){
 }
 /* ==== LOG-ACCESS-END ==== */
 
+/* ==== MEAL DRAFTS — the bridge between his phone and the guarded library =====================
+   His call, 2026-09-04: the meal library lives in the REPO, where [priced], [slot-fit] and
+   [row-math] can see it and where I can read it. A phone cannot write to that. So "save as a new
+   meal" writes a DRAFT here, device-local and flagged unguarded, and it graduates when he sends it
+   to me and I commit it into SLOTS.
+   ⚠️ A DRAFT IS IMMEDIATELY LOGGABLE, and that is deliberate. It is just an entry carrying its own
+   rows, which the log has stored since the first commit of this refactor — so it prices exactly like
+   a repo meal from the moment he saves it. What it does NOT get is a guard: nothing checks its rows
+   against a slot budget or its provenance until it lands in the repo, which is why the pill says so
+   on its face rather than in a note he would have to go looking for. */
+function draftAll(){ return store.get('qpcut.mealdrafts', {}); }
+/* The card that gets a draft OUT of his phone and into the guarded library. Starts closed with the
+   count in the badge, like every other section. It renders only when there is something to send. */
+function draftsCardHTML(){
+  const all = draftAll(), ids = Object.keys(all);
+  if(!ids.length) return '';
+  const rows = ids.map(k=>{
+    const d = all[k], m = entryMacros({id:k, rows:d.rows}).map(Math.round);
+    return '<div class="mrow"><span class="nm">' + d.name
+      + ' <span class="daytag">' + d.slot + ' · ' + d.at + '</span></span>'
+      + '<span class="em" style="font-family:var(--mono);font-size:11px">' + m[0] + ' · ' + m[1] + 'P '
+      + '<a href="#" data-ddel="' + k + '" style="color:var(--meat);text-decoration:none">✕</a></span></div>';
+  }).join('');
+  return '<details class="acc innerrow" data-acc="drafts"' + (openAcc.has('drafts') ? ' open' : '') + '>'
+    + '<summary><span>📝 Meal drafts</span><span class="statline"><b>' + ids.length + '</b> to send</span></summary>'
+    + rows
+    + '<div class="note" style="margin-top:8px">These live on this phone only and <b>nothing guards them</b> — '
+    + 'no slot-budget check, no provenance. Send them to Claude and they go into the library properly.</div>'
+    + '<button class="step" data-dcopy="1" style="width:auto;padding:0 12px;margin-top:8px">📋 Copy for Claude</button>'
+    + '</details>';
+}
+function draftSave(slotKey, name, entry){
+  const nm = String(name||'').trim();
+  if(!nm || !entry) return null;
+  const rows = entryRows(entry);
+  if(!rows.length) return null;
+  const all = draftAll();
+  const id = 'draft-' + Date.now().toString(36);
+  all[id] = {id:id, name:nm, slot:slotKey, rows:copyRows(entry), at:isoToday(),
+             from:(OPTBYID[entry.id] && OPTBYID[entry.id].name) || null};
+  store.set('qpcut.mealdrafts', all);
+  return id;
+}
+function draftDelete(id){ const all = draftAll(); delete all[id]; store.set('qpcut.mealdrafts', all); }
+/* what he hands me. Rows are SPECS, so I can drop them straight into SLOTS and let the engine price
+   them — no numbers travel, which is the whole reason this is safe to paste. */
+function draftPayload(){
+  const all = draftAll(), ids = Object.keys(all);
+  if(!ids.length) return '';
+  /* ⛔ NEWLINES AS A NAMED CONST, not '\n' literals. This function was written through a shell
+     heredoc and every backslash-n collapsed into a REAL line break inside a single-quoted string —
+     the app stopped booting entirely, which is the loud version of the failure CLAUDE.md warns about
+     ("never write escapes through a heredoc"; the quiet version is a regex that silently matches
+     nothing). A const cannot be mangled by whatever writes this file next. */
+  const NL = String.fromCharCode(10);
+  return 'MEAL DRAFTS — add these to SLOTS' + NL + ids.map(k=>{
+    const d = all[k];
+    return NL + d.name + '  [slot ' + d.slot + (d.from ? ', from ' + d.from : '') + ', saved ' + d.at + ']' + NL
+         + d.rows.map(r=>'  ' + JSON.stringify(r)).join(NL);
+  }).join(NL);
+}
+
 /* ---- ROW EDITOR: what he ACTUALLY ate, per ingredient -------------------------------------
    The reason the whole log refactor happened. On 2026-09-04 he made a breakfast with 155 g of
    blueberries instead of 175 and added 20 mL of syrup, and the app had no way to express it -- it
@@ -5369,7 +5455,11 @@ function rowEditorHTML(ld, slotKey, entry){
       <span class="statline">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span></summary>
     <div style="margin-top:4px">${body}${addRow}</div>
     <div class="sub" style="margin-top:8px">Change any amount — the day re-prices off FOOD_FACTS.${
-      edited?' <a href="#" data-ereset="'+slotKey+'">↺ back to the recipe</a>':''}</div>
+      edited?' <a href="#" data-ereset="'+slotKey+'" style="color:var(--brass);text-decoration:none;font-weight:600">↺ back to the recipe</a>':''}</div>${
+    edited?`<div class="mrow" style="margin-top:8px;gap:6px">
+      <input type="text" data-dname="${slotKey}" placeholder="name this meal…" style="flex:1;min-width:0;padding:6px 8px;font-size:13px">
+      <button class="step" data-dsave="${slotKey}" style="width:auto;padding:0 10px;flex-shrink:0">💾 Save</button>
+    </div>`:''}
   </details>`;
 }
 /* The rows an entry is made of: its own if it carries them, else the meal's.
@@ -7280,8 +7370,20 @@ function viewToday(){
           : '';
         timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
       }
-      const editor = rowEditorHTML(ld, s.key, (logEntries(ld)[s.key]||[])[0]);
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${editor}${timeRow}`;
+      /* drafts for THIS slot, alongside the repo meals. The pill says "draft" on its face because a
+         note he has to go looking for is not a warning. */
+      const dAll = draftAll();
+      const dIds = Object.keys(dAll).filter(k=>dAll[k].slot === s.key);
+      const cur  = (logEntries(ld)[s.key]||[])[0];
+      const draftRow = dIds.length ? `<div class="slotlbl" style="margin-top:8px">📝 your drafts · not yet in the guarded library</div>`
+        + `<div class="pickrow">${dIds.map(k=>{
+            const d = dAll[k], on = cur && cur.id === k;
+            const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
+            return `<button class="mealpick${on?' on':''}" data-dlog="${s.key}|${k}">${d.name}`
+                 + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
+          }).join('')}</div>` : '';
+      const editor = rowEditorHTML(ld, s.key, cur);
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${draftRow}${editor}${timeRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -7290,6 +7392,7 @@ function viewToday(){
     ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
     <div class="mtiles">${tileHTML}</div>
     ${panel}
+    ${draftsCardHTML()}
     <details class="acc innerrow" data-acc="log-hydr"${openAcc.has('log-hydr')?' open':''}>
       <summary><span>💧 Hydration</span><span class="statline"><span class="pbar mini"><span class="pfill" style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></span></span><b>${oz}</b>/${ht.oz} oz</span></summary>
       ${ht.why.length?`<div class="note" style="margin:2px 0 9px">${ht.fast?'':`Today’s target: <b>${ht.oz} oz</b> (base gallon ${ht.base}). `}${ht.why.join(' ')}</div>`:''}
@@ -9298,7 +9401,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788546316';
+const BUILD = 'b1788546979';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
