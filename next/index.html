@@ -1508,6 +1508,21 @@ function wireRowEdit(ld){
     render();
   }));
 }
+/* The Meals tab had NO wiring whatsoever until now — it was a read-only cookbook, so there was
+   nothing to bind. Same toggle semantics as the Today picker, through the same writer. */
+function wireMeals(){
+  const ld = logDate || isoToday();
+  document.querySelectorAll('[data-mlog]').forEach(b=>b.addEventListener('click',()=>{
+    const p = String(b.dataset.mlog).split('|'), slot = p[0], id = p[1];
+    const d = draftAll()[id];
+    if(d){
+      const cur = (logEntries(ld)[slot]||[])[0];
+      if(cur && cur.id === id) logWrite(ld, slot, []);
+      else logWrite(ld, slot, [{id:id, name:d.name, rows:copyRows({rows:d.rows})}]);
+    } else logToggleMeal(ld, slot, id);
+    render();
+  }));
+}
 function wireWeights(){
   document.querySelectorAll('input.prw2').forEach(inp=>inp.addEventListener('change',()=>{
     const p = store.get('qpcut.prset',{});
@@ -7814,8 +7829,43 @@ function ingRow(row){
     ${potatoSwapAlt(row)}
   </li>`;
 }
+/* ✏️ LOG IT AS — the row that turns the cookbook into MY MEALS. His ask, 2026-09-04: "have a My
+   Meals section where all my meals that ive made before live", and the complaint under it, that he
+   "cant even use one meals for another". Browsing was read-only: he could look a meal up here and
+   then had to go to Today, open the right slot, and find it again.
+   Every slot is offered with the DELTA against that slot's budget, so putting a dinner in a
+   breakfast is a visible trade rather than a surprise in the hero afterwards. */
+function logAsRow(id, t, rows){
+  const ld = logDate || isoToday();
+  const on = eatenIds(ld);
+  return '<div class="slotlbl" style="margin-top:10px">✏️ Log it as</div><div class="pickrow">'
+    + SLOT_SEQ.map(function(k){
+        const sl = SLOTS.find(x=>x.key===k), d = t[0] - sl.b[0];
+        return '<button class="mealpick' + (on[k]===id ? ' on' : '') + '" data-mlog="' + k + '|' + id + '">'
+             + sl.slot + '<span class="rem">' + (d>0?'+':'') + d + '</span></button>';
+      }).join('')
+    + '</div>';
+}
 function viewMeals(){
-  return `<h2 class="sec" style="margin-top:14px">The cookbook · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
+  const dAll = draftAll(), dIds = Object.keys(dAll);
+  const draftSec = dIds.length ? `<h2 class="sec" style="margin-top:14px">📝 Yours · saved off a meal you logged</h2>`
+    + dIds.map(k=>{
+        const d = dAll[k], t = entryMacros({id:k, rows:d.rows}).map(Math.round);
+        return `<details class="card acc mealcard" data-acc="draft-${k}"${openAcc.has('draft-'+k)?' open':''}`
+          + ` data-search="${esc((d.name+' '+d.rows.map(r=>r&&r.f||'').join(' ')).toLowerCase())}" data-kosher="">`
+          + `<summary><span style="display:flex;align-items:center;gap:8px;width:100%">`
+          + `<b style="flex:1 1 12ch;min-width:0">${d.name}</b>`
+          + `<span class="chip notetag">draft</span>`
+          + `<span class="r" style="flex-shrink:0;font-family:var(--mono)">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span>`
+          + `</span></summary>`
+          + `<ul class="ing">${d.rows.map(r=>`<li><span>${foodLabel(r)}</span><span class="q">${
+               r && r.n != null ? r.n + ' ' + ((r.u)||(FOOD_FACTS[r.f]||{}).unit||'') : '—'}</span></li>`).join('')}</ul>`
+          + macros(t)
+          + `<div class="note" style="margin-top:8px">Saved on this phone. <b>Nothing guards it</b> until Claude puts it in the library — send it from Today → Meal drafts.</div>`
+          + logAsRow(k, t, d.rows)
+          + `</details>`;
+      }).join('') : '';
+  return draftSec + `<h2 class="sec" style="margin-top:14px">My Meals · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
   SLOTS.map(s=>`
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
@@ -7855,6 +7905,7 @@ function viewMeals(){
        <div class="slotlbl" style="margin-top:10px">👨‍🍳 How to make it</div>
        <ul class="sched" style="margin-top:4px">${HOWTO[m.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>
        ${sideDishesHTML(m.id)}`:''}
+       ${logAsRow(m.id, t)}
      </details>`;
    }).join('')}
    </details>`).join('') + `
@@ -8757,7 +8808,7 @@ function render(){
       Screenshot this and send it to Claude; the message above tells him exactly where to look.</span></div>`;
   }
   try{
-    ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
+    ({today:wireToday, meals:wireMeals, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
   }catch(err){ try{ console.error('wiring failed:', current, err); }catch(e){} }
   document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{
     if(window.__filterOpening) return; /* transient search force-open — don't persist */
@@ -9459,7 +9510,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788548874';
+const BUILD = 'b1788550096';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

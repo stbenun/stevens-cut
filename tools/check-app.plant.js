@@ -93,6 +93,23 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [my-meals]: the cookbook became a place he can act from ----
+     ⚠️ The first case here MISSED, and the guard was checking the wrong thing: it asserted wireMeals
+     EXISTS, while the plant removes it from the render DISPATCH. The function stayed perfectly
+     healthy and was simply never called — every button on the tab inert. That is exactly how the tab
+     was passive for its whole life. The guard now reads the dispatch out of the source. */
+  { guard: 'my-meals', name: 'the Meals tab loses its wiring, so nothing on it is tappable',
+    edits: [{ from: '({today:wireToday, meals:wireMeals, prep:wirePrep',
+              to:   '({today:wireToday, prep:wirePrep' }] },
+  { guard: 'my-meals', name: 'the log-it-as row stops printing the delta against the slot budget',
+    edits: [{ from: "+ sl.slot + '<span class=\"rem\">' + (d>0?'+':'') + d + '</span></button>';",
+              to:   "+ sl.slot + '</button>';" }] },
+  { guard: 'my-meals', name: "only the meal's own slot is offered, so cross-slot use dies here too",
+    edits: [{ from: '    + SLOT_SEQ.map(function(k){',
+              to:   "    + SLOT_SEQ.filter(k=>k==='bf').map(function(k){" }] },
+  { guard: 'my-meals', name: 'his own drafts vanish from My Meals',
+    edits: [{ from: '  const draftSec = dIds.length ?', to: '  const draftSec = false ?' }] },
+
   /* ---- [cross-slot]: any meal can be logged into any slot ----
      ⚠️ The open-by-default plant is built by CONCATENATION below rather than written inline, because
      the obvious version replaces the expression with "' open'" — which puts LITERAL QUOTES inside a

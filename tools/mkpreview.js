@@ -29,7 +29,10 @@ const SLOT     = arg('slot', 'bf');
 const MEASURE  = arg('measure', '.erow');
 const OUTDIR   = path.resolve(arg('out', 'scratchpad'));
 const WIDTHS   = (arg('widths', '320,400')).split(',').map(Number);
-const MAXH     = +arg('maxh', 60);   /* 0 = no height check; see the note at the check itself */
+const MAXH     = +arg('maxh', 60);
+const TAB      = arg('tab', 'today');   /* the fixture only ever rendered Today, so a Meals-tab
+                                           selector matched NOTHING and the tool said so rather than
+                                           passing — right behaviour, missing capability. */   /* 0 = no height check; see the note at the check itself */
 const CHROME   = arg('chrome', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
 
 if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
@@ -50,8 +53,10 @@ const setup = `
     logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1', rs); }
   openAcc.add('drafts');
   openAcc.add('other-' + ${JSON.stringify(SLOT)});
+  openAcc.add('meals-bf'); openAcc.add('opt-b28');
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
+  current = ${JSON.stringify(TAB)};
   render();
   return document.body.innerHTML;
 `;

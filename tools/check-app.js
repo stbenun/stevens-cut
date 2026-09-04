@@ -1927,6 +1927,61 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [my-meals] — the cookbook became a place he can act from ===============================
+ * His ask: "have a My Meals section where all my meals that ive made before live." The Meals tab was
+ * read-only — he could look a meal up and then had to go to Today, open the right slot and find it
+ * again. It had no event wiring AT ALL, which is how a whole tab stays passive without anyone
+ * noticing. Every meal now offers every slot with the delta against that slot's budget, and his own
+ * saved drafts sit at the top, where "meals I've made before" actually means his.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{}), d0 = store.get('qpcut.mealdrafts',{});
+    store.set('qpcut.mealdrafts', {});
+    draftSave('bf', 'Test draft', {id:'b1', rows: addEntryRow({id:'b1'}, 'blueberries', 155)});
+
+    const before = current; current = 'meals'; render();
+    const html = document.body.innerHTML;
+    current = before;
+
+    if(!/My Meals/.test(html))                 bad.push('the section is not called My Meals');
+    if(/The cookbook/.test(html))              bad.push('the old read-only cookbook heading is still there');
+    if(!/data-acc="draft-/.test(html))         bad.push('his own drafts do not appear in My Meals');
+    if(!/Nothing guards it/.test(html))        bad.push('a draft card no longer says it is unguarded');
+
+    /* every meal AND every draft must offer every slot — that is the "use one meal for another" ask */
+    const meals = SLOTS.reduce((a,s)=>a+s.opts.length, 0);
+    const want = (meals + 1) * SLOT_SEQ.length;
+    const got = (html.match(/data-mlog="/g)||[]).length;
+    if(got !== want) bad.push('expected ' + want + ' log-it-as buttons (' + meals + ' meals + 1 draft x ' + SLOT_SEQ.length + ' slots), found ' + got);
+    /* and each must print the delta, or the trade is invisible */
+    if(!/data-mlog="[^"]*"[^>]*>[^<]*<span class="rem">[+-]?\\d+</.test(html))
+      bad.push('the log-it-as buttons do not print the delta against the slot budget');
+
+    if(typeof wireMeals !== 'function') bad.push('wireMeals does not exist');
+
+    store.set('qpcut.eaten', eat0); store.set('qpcut.mealdrafts', d0);
+    return {bad, got, meals};
+  `);
+  const bad = r.bad.slice();
+  if (!r.got) bad.push('no log-it-as buttons rendered at all — this guard ran vacuous');
+  /* ⛔ THE FUNCTION EXISTING IS NOT THE SAME AS THE TAB BEING WIRED, and my first version checked the
+     wrong one. A plant that removed `meals:wireMeals` from the render dispatch left wireMeals defined
+     and perfectly healthy — it was simply never called, every button on the tab was inert, and the
+     guard reported MISSED. The tab was passive for its whole life precisely because nothing pointed
+     at it, so the DISPATCH is the thing to assert. */
+  {
+    const src = require('fs').readFileSync(SRC, 'utf8');
+    if (!/\{\s*today:\s*wireToday\s*,\s*meals:\s*wireMeals\b/.test(src))
+      bad.push('the render dispatch no longer calls wireMeals — the Meals tab is inert again');
+  }
+  if (bad.length) fail('my-meals', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('my-meals', r.meals + ' meals plus his own drafts, each offering all 5 slots with the delta ' +
+    'against that slot budget (' + r.got + ' buttons), drafts flagged unguarded, and the tab is wired');
+}
+
 /* ==== [cross-slot] — any meal can be logged into any slot ====================================
  * His complaint, verbatim: the app "only lets me choose the meals we made before and i cant even use
  * one meals for another." What was there was a lunch⇄dinner swap and nothing else, because those two
