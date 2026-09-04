@@ -268,9 +268,14 @@ For the current coverage, the rows that remain, and what each is waiting on: **`
   wider than the screen. **Two rules fall out of it:** prefer a DETERMINISTIC break (a full-width
   zero-height spacer) over forcing content onto one line; and pin everything that must not deform with
   `flex-shrink:0`, because flex will shrink whatever it can reach before it gives up. To check a layout,
-  run `scratchpad/mkpreview.js` — it pulls the real markup out of the booted app, inlines the real
-  `<style>`, renders at 320/400 px and measures the element positions in a real browser. **Send him the
-  preview instead of asserting it works.**
+  run `node tools/mkpreview.js --slot bf --measure ".erow"` — it pulls the real markup out of the
+  booted app, inlines the real `<style>`, drives the page into the state you want, renders at 320/400 px
+  in headless Chrome and measures the element boxes. It reports horizontal overflow, clipped text and
+  wrapped rows, and writes a PNG per width. **Send him the preview instead of asserting it works.**
+  ⚠️ It lived at `scratchpad/mkpreview.js` in this doc but was not in the tree — restored under `tools/`
+  on 2026-09-04, where the rest of the committed tooling is (`scratchpad/` is now gitignored output).
+  Its own first version screenshotted the page header while reporting on a card 2,000 px below; it now
+  clips the shot to the element it measured, because a preview of the wrong thing looks like evidence.
 - **Two sessions can share this clone.** `git fetch && git log --oneline HEAD..origin/main` before
   editing, and again before committing. Never force-push.
 - **⛔ A DIRTY FILE IS OWNED BY WHOEVER MADE IT DIRTY, UNTIL IT IS COMMITTED.** His rule, 2026-08-20.

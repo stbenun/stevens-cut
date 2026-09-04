@@ -1839,6 +1839,40 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     set({bf:null, lu:'l2'});
     if(Object.keys(logEntries(D)).join() !== 'lu') bad.push('a null slot no longer reads as empty: '+JSON.stringify(logEntries(D)));
 
+    /* (f) ⛔ EDITING ONE ROW MUST NOT DISTURB ANY OTHER. b1 carries a LEGACY [cal,P,C,F] spec (the
+       Ryse protein row), and the first version of the editor copied rows with Object.assign, which
+       turns that array into {0:…,1:…} — priceRow's Array.isArray branch misses and the row prices as
+       nothing. Changing the BERRIES silently deleted 140 cal and 25 P and took b1 from 545 to 390,
+       rendering perfectly the whole time. This clause runs the SHIPPED editEntryRows, not a copy. */
+    const base = OPTBYID['b1'].vars[0].t.slice();
+    const rows0 = entryRows({id:'b1'});
+    const bi = rows0.findIndex(sp=>sp && sp.f === 'mixed berries');
+    const li = rows0.findIndex(sp=>Array.isArray(sp));
+    if(bi < 0 || li < 0) bad.push('b1 no longer has both a priced berry row and a legacy array row — clause (f) is vacuous');
+    else {
+      const edited = editEntryRows({id:'b1'}, bi, 40);      /* 70 g of berries -> 40 g */
+      if(!edited) bad.push('editEntryRows refused a legitimate edit');
+      else {
+        if(!Array.isArray(edited[li])) bad.push('the legacy [cal,P,C,F] row stopped being an array: '+JSON.stringify(edited[li]));
+        set({bf:[{id:'b1', rows:edited}]});
+        const got = eatenMacros(D).map(Math.round);
+        const dCal = base[0] - got[0], dP = base[1] - got[1];
+        if(dP !== 0) bad.push('editing the BERRIES changed protein by '+dP+' g — another row was destroyed');
+        if(dCal < 10 || dCal > 20) bad.push('30 g less mixed berries should cost ~15 cal, got '+dCal);
+      }
+      /* and it must refuse nonsense rather than store it */
+      if(editEntryRows({id:'b1'}, bi, -5))  bad.push('editEntryRows accepted a negative amount');
+      if(editEntryRows({id:'b1'}, bi, NaN)) bad.push('editEntryRows accepted NaN');
+      if(editEntryRows({id:'b1'}, li, 10))  bad.push('editEntryRows edited a legacy array row, which has no amount to change');
+    }
+
+    /* (g) the editor addresses rows BY INDEX, so entryRows must line up with the meal's ing[] */
+    const misaligned = [];
+    SLOTS.forEach(s=>s.opts.forEach(o=>o.vars.forEach((v,vi)=>{
+      if(entryRows({id:o.id}).length !== v.ing.length && vi === 0) misaligned.push(o.id);
+    })));
+    if(misaligned.length) bad.push('entryRows is not index-aligned with ing[] for: '+misaligned.slice(0,5).join(', '));
+
     store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
     return {bad, legacy, asRows, halved, twice};
   `);

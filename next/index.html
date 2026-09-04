@@ -340,6 +340,27 @@
   .mealpick.on .rem{color:#5c4715}
   .mealpick.nomeat{opacity:.5;text-decoration:line-through;border-style:dashed}
   .mealpick.nomeat .rem{color:var(--meat);text-decoration:none;font-weight:700}
+  /* ---- row editor: what he ACTUALLY ate, per ingredient ----
+     ⛔ GRID, NOT FLEX, and that is the whole point. This repo has already shipped a card whose title
+     collapsed to "..." with a chip stacked one letter per line, because flex shrinks whatever it can
+     reach before it gives up. A grid with two fixed columns and 1fr cannot deform: the amount box and
+     the macro readout keep their width at every viewport and the NAME is the only thing that gives,
+     which is the one thing an ellipsis handles gracefully. Measured at 320 and 400 px, not reasoned. */
+  .erow{display:grid;grid-template-columns:1fr 74px 76px;gap:8px;align-items:center;
+        padding:6px 0;border-bottom:1px solid var(--line)}
+  .erow:last-of-type{border-bottom:0}
+  .erow .en{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+  .erow .eu{color:var(--muted);font-size:11px;margin-left:5px}
+  /* ⛔ MEASURED, NOT REASONED. At 320 px the name column is 100 px and 'Ryse/RAW protein' clipped;
+     the two fixed columns give back 22 px here, which un-clips it. 74 px was generous for a 3-digit
+     gram box and 76 for '190 · 6P'. His phone is ~400 px, where the name already had 180 px — this
+     is purely so the narrow case degrades gracefully instead of mid-word. */
+  @media (max-width:360px){ .erow{grid-template-columns:1fr 62px 66px;gap:6px} }
+  .erow input{width:100%;padding:5px 6px;font-size:13px;text-align:right;
+        border:1px solid var(--brass);border-radius:7px;background:var(--panel2);color:var(--text)}
+  .erow .em{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+  .erow.free .en{color:var(--muted)}
+  .erow.free .em{font-style:italic}
   /* ---- flavor rating (👍 😐 👎 on the daily COR / yogurt-bowl / Creami picks) ---- */
   .rate{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
   .rate .lbl{font-size:10px;color:var(--faint);letter-spacing:.12em;text-transform:uppercase;margin-right:1px}
@@ -1394,6 +1415,26 @@ function wireExSel(){
     const m = store.get('qpcut.exsel',{});
     m[el.dataset.selkey] = el.value;
     store.set('qpcut.exsel',m); render();
+  }));
+}
+/* Wire the row editor. Same shape as wireWeights: change -> store -> render.
+   ⛔ A BAD VALUE SNAPS BACK RATHER THAN BEING STORED. An empty box or a negative number is a typo,
+   not data, and this file has already been bitten once by a mistyped input being taken at face value
+   (the 23:45 breakfast that pushed lunch to 5:45 PM). Re-rendering restores the last good amount. */
+function wireRowEdit(ld){
+  document.querySelectorAll('input[data-erow]').forEach(inp=>inp.addEventListener('change',()=>{
+    const parts = String(inp.dataset.erow).split('|'), slot = parts[0], i = +parts[1];
+    const e = (logEntries(ld)[slot]||[])[0];
+    const rows = e ? editEntryRows(e, i, parseFloat(inp.value)) : null;
+    if(!rows){ render(); return; }          /* a bad value snaps back rather than being stored */
+    logSetMeal(ld, slot, e.id, rows);
+    render();
+  }));
+  document.querySelectorAll('[data-ereset]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault();
+    const slot = a.dataset.ereset, e = (logEntries(ld)[slot]||[])[0];
+    if(e) logSetMeal(ld, slot, e.id);   /* no rows -> falls back to the recipe's own */
+    render();
   }));
 }
 function wireWeights(){
@@ -5210,11 +5251,77 @@ function logToggleMeal(ld, slot, id){
   else logSetMeal(ld, slot, id);
 }
 /* ==== LOG-ACCESS-END ==== */
-/* The rows an entry is made of: its own if it carries them, else the meal's. */
+
+/* ---- ROW EDITOR: what he ACTUALLY ate, per ingredient -------------------------------------
+   The reason the whole log refactor happened. On 2026-09-04 he made a breakfast with 155 g of
+   blueberries instead of 175 and added 20 mL of syrup, and the app had no way to express it -- it
+   got priced by hand in chat. Now the amount is an input.
+   ⛔ NAMES COME FROM THE FOOD_FACTS KEY, not from the recipe's row label. Two reasons: the key IS
+   the food ('kodiak protein oats' rather than 'Oats (Kodiak Classic protein rolled oats)'), and a
+   log must not inherit text that a recipe edit can later change underneath it. */
+function foodLabel(sp, fallback){
+  if(!sp) return fallback || '—';
+  if(Array.isArray(sp)) return fallback || 'hand-typed row';   /* no fact key to name it by */
+  if(sp.free) return fallback || 'seasoning';
+  if(sp.parts) return sp.parts.map(p=>p.f).join(' + ');
+  return sp.f || fallback || '—';
+}
+/* One row's amount changed, returning the FULL rows array to store. Named and exported to the page
+   scope on purpose: [log-shape] exercises THIS, not a copy of it. A guard that re-implements the
+   rule it is checking passes while the shipped rule is broken — which is how the Object.assign bug
+   below survived its first test.
+   ⛔ Array.isArray FIRST. A legacy hand-typed spec is [cal,P,C,F]; Object.assign({}, arr) returns
+   {0:…,1:…}, priceRow's Array.isArray branch then misses, and the row prices as NOTHING. Caught on
+   b1: changing the BERRIES silently deleted the protein row's 140 cal / 25 P and took the meal from
+   545 to 390. It rendered fine and threw nothing. */
+function editEntryRows(entry, i, v){
+  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  if(!rows[i] || Array.isArray(rows[i]) || !rows[i].f || typeof v !== 'number' || !isFinite(v) || v < 0) return null;
+  rows[i].n = v;
+  return rows;
+}
+function rowEditorHTML(ld, slotKey, entry){
+  /* the Final Meal sentinel has no rows by design — its macros live in one off-plan row */
+  if(!entry || entry.id === 'final') return '';
+  const rows = entryRows(entry);
+  if(!rows.length) return '';
+  const t = entryMacros(entry).map(Math.round);
+  const edited = !!(entry.rows && entry.rows.length);
+  /* the meal's own ing[] is the ONLY name source for a legacy [cal,P,C,F] row and for {free:1} */
+  const ing = (OPTBYID[entry.id] && OPTBYID[entry.id].vars[0].ing) || [];
+  const body = rows.map((sp,i)=>{
+    const m = priceRow([null,null,sp]) || [0,0,0,0];
+    const nm = foodLabel(sp, ing[i] && ing[i][0]);
+    /* free rows and composites are shown but NOT editable: a {free:1} has no amount to change, and
+       a {parts} line is several foods behind one label — editing it needs the generator, not a box. */
+    if(sp.free || sp.parts || !sp.f || typeof sp.n !== 'number')
+      return `<div class="erow free"><span class="en">${nm}</span><span></span>`
+           + `<span class="em">${sp.free?'free':Math.round(m[0])+' cal'}</span></div>`;
+    const unit = sp.u || (FOOD_FACTS[sp.f]||{}).unit || '';
+    return `<div class="erow">
+      <span class="en">${nm}<span class="eu">· ${unit}</span></span>
+      <span><input type="number" inputmode="decimal" step="any" min="0" data-erow="${slotKey}|${i}"
+                   value="${sp.n}" aria-label="${nm} amount in ${unit}"></span>
+      <span class="em">${Math.round(m[0])} · ${Math.round(m[1])}P</span>
+    </div>`;
+  }).join('');
+  return `<details class="acc innerrow" data-acc="erow-${slotKey}"${openAcc.has('erow-'+slotKey)?' open':''}>
+    <summary><span>⚖️ What you actually ate${edited?' <span class="daytag">edited</span>':''}</span>
+      <span class="statline">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span></summary>
+    <div style="margin-top:4px">${body}</div>
+    <div class="sub" style="margin-top:8px">Change any amount — the day re-prices off FOOD_FACTS.${
+      edited?' <a href="#" data-ereset="'+slotKey+'">↺ back to the recipe</a>':''}</div>
+  </details>`;
+}
+/* The rows an entry is made of: its own if it carries them, else the meal's.
+   ⛔ NO .filter() HERE, EVER. The row editor addresses rows BY INDEX, so this array must line up
+   one-for-one with the meal's ing[]. An earlier version filtered out spec-less rows; that is
+   currently a no-op (0 of 284 rows lack a spec) which is exactly what made it dangerous — the day
+   someone adds one, every edit index silently shifts and he edits the wrong ingredient. */
 function entryRows(e){
   if(e && e.rows && e.rows.length) return e.rows;
   const o = e && OPTBYID[e.id];
-  return o ? o.vars[0].ing.map(r=>r[2]).filter(Boolean) : [];
+  return o ? o.vars[0].ing.map(r=>r[2]) : [];
 }
 function entryMacros(e){
   if(!e) return [0,0,0,0];
@@ -7107,7 +7214,8 @@ function viewToday(){
           : '';
         timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
       }
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${timeRow}`;
+      const editor = rowEditorHTML(ld, s.key, (logEntries(ld)[s.key]||[])[0]);
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${editor}${timeRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -8486,6 +8594,7 @@ function wireToday(){
   }));
   wireReps();
   wireWeights();
+  wireRowEdit(logDate || isoToday());
   wireExSel();
   wireArm();
   const wiz = $('#wizList');
@@ -9123,7 +9232,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788544005';
+const BUILD = 'b1788544958';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
