@@ -70,8 +70,8 @@ const PLANTS = [
   /* Both of these are bugs I actually shipped into the working tree while building the row editor,
      planted back verbatim. Neither threw; both rendered perfectly. */
   { guard: 'log-shape', name: 'editEntryRows goes back to Object.assign, destroying legacy array rows',
-    edits: [{ from: "  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));",
-              to:   "  const rows = entryRows(entry).map(sp=>Object.assign({}, sp));" }] },
+    edits: [{ from: "  return entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));",
+              to:   "  return entryRows(entry).map(sp=>Object.assign({}, sp));" }] },
   /* ⚠️ The obvious plant here — putting back .filter(Boolean) — CANNOT FAIL: 0 of 284 rows lack a
      spec, so it removes nothing and the lengths still match. Filtering the {free:1} rows is the same
      class of mistake ("don't show seasonings") and actually shifts the indices. */

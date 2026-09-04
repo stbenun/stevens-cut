@@ -5294,8 +5294,18 @@ function foodLabel(sp, fallback){
    {0:…,1:…}, priceRow's Array.isArray branch then misses, and the row prices as NOTHING. Caught on
    b1: changing the BERRIES silently deleted the protein row's 140 cal / 25 P and took the meal from
    545 to 390. It rendered fine and threw nothing. */
+/* ⛔ THE COPY RULE, ONCE. Array.isArray FIRST: a legacy hand-typed spec is [cal,P,C,F], and
+   Object.assign({}, arr) returns {0:…,1:…} — priceRow's Array.isArray branch then misses and the row
+   prices as NOTHING. Caught on b1: changing the BERRIES silently deleted the protein row's 140 cal /
+   25 P and took the meal from 545 to 390, rendering perfectly throughout.
+   It lives here rather than inline in all three editors because three copies of one rule is the bug
+   this file keeps deleting — and because the duplicate lines made [log-shape]'s plant anchor
+   ambiguous, which is how a fixture quietly stops testing anything while the suite still reads green. */
+function copyRows(entry){
+  return entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+}
 function editEntryRows(entry, i, v){
-  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  const rows = copyRows(entry);
   if(!rows[i] || Array.isArray(rows[i]) || !rows[i].f || typeof v !== 'number' || !isFinite(v) || v < 0) return null;
   rows[i].n = v;
   return rows;
@@ -5304,7 +5314,7 @@ function editEntryRows(entry, i, v){
    log. Added rows live AFTER the meal's own, so the meal's indices never move under an edit. */
 function addEntryRow(entry, key, n){
   if(!FOOD_FACTS[key] || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
-  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  const rows = copyRows(entry);
   rows.push({f:key, n:n});
   return rows;
 }
@@ -5312,7 +5322,7 @@ function addEntryRow(entry, key, n){
    meal IS, and the honest way to eat less of something is to set its amount, not delete it. */
 function removeEntryRow(entry, i){
   const base = ((OPTBYID[entry.id] && OPTBYID[entry.id].vars[0].ing) || []).length;
-  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  const rows = copyRows(entry);
   if(i < base || i >= rows.length) return null;
   rows.splice(i, 1);
   return rows;
@@ -9280,7 +9290,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788545622';
+const BUILD = 'b1788545883';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
