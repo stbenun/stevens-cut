@@ -93,6 +93,20 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [recipe-parser]: a pasted ingredient list becomes priceable rows ----
+     All four are defects the first version actually shipped, and every one of them PRICED PERFECTLY
+     while being wrong — which is the only kind worth planting here. */
+  { guard: 'recipe-parser', name: 'the coverage floor goes, so one shared word is a match again',
+    edits: [{ from: '    if(cover < 0.5) return;', to: '    if(cover < 0) return;' }] },
+  { guard: 'recipe-parser', name: 'a bare count against a per-gram fact goes back to meaning grams',
+    edits: [{ from: "    if(f.ea && (p.u === 'each' || p.u == null)) u = 'each';", to: '    if(false) u = 0;' }] },
+  { guard: 'recipe-parser', name: 'the greedy unit capture returns, splitting a word in half',
+    edits: [{ from: '  let m = s.match(/^(\\d+(?:\\.\\d+)?)\\s*(?:([a-zA-Z]+)\\s+)?(?:of\\s+)?(.+)$/);',
+              to:   '  let m = s.match(/^(\\d+(?:\\.\\d+)?)\\s*([a-zA-Z]+)?\\s*(?:of\\s+)?(.+)$/);' }] },
+  { guard: 'recipe-parser', name: 'an unmatched line silently takes the best guess anyway',
+    edits: [{ from: '  return best || null;',
+              to:   '  return best || {key:Object.keys(FOOD_FACTS)[0], score:0, hit:0};' }] },
+
   /* ---- [solver]: scaling ingredient rows onto a macro target ----
      ⚠️ TWO CANDIDATE PLANTS ARE DELIBERATELY ABSENT, because neither can fail and a plant that cannot
      fail reads exactly like a guard that works:

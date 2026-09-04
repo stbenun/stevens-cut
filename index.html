@@ -5346,6 +5346,108 @@ function logToggleMeal(ld, slot, id){
 }
 /* ==== LOG-ACCESS-END ==== */
 
+/* ==== RECIPE PARSER — turn a pasted ingredient list into priceable rows =====================
+   Mode ① of what he asked for: "give it a recipe i found or have and let it adjust it to the meal
+   and/or for what #cals and macros i want to hit."
+
+   This is the 2026-09-04 case, automated. He found a Cream of Rice bowl on TikTok, and turning it
+   into numbers took a dozen messages of me reading lines and looking foods up by hand.
+
+   ⛔ IT MATCHES, IT NEVER GUESSES. A line it cannot resolve comes back as UNMATCHED with its text
+   intact, for him to point at a food. The alternative — picking the closest key and moving on — is
+   how "40 g" of Oikos became forty CUPS and put a snack at 3,896 cal against a 330 slot. A wrong
+   match prices perfectly and reads as authoritative, which is the worst failure this file has.
+
+   Handles the shapes a real recipe uses:
+     90g Elev8 CoR          175 g strawberries        1 scoop protein
+     300ml of water         2 slices Ezekiel bread    Fage 0% — 175g
+     - 1 Biscoff cookie     ¼ tsp cinnamon            2 eggs                                    */
+const PARSE_UNITS = {g:'g', gram:'g', grams:'g', ml:'mL', mls:'mL', millilitre:'mL', milliliter:'mL',
+                     oz:'oz', ounce:'oz', ounces:'oz', tbsp:'tbsp', tsp:'tsp',
+                     scoop:'each', scoops:'each', slice:'each', slices:'each',
+                     cookie:'each', cookies:'each', cup:'cup', cups:'cup', piece:'each', pieces:'each'};
+const PARSE_FRAC  = {'½':0.5, '¼':0.25, '¾':0.75, '⅓':1/3, '⅔':2/3, '⅛':0.125};
+/* spices and water: a recipe names them, they cost nothing, and asking him to match them is noise */
+const PARSE_FREE_RE = /\b(water|salt|pepper|cinnamon|cocoa|vanilla|extract|spray|zest|sweetener|stevia|monk ?fruit|lakanto|seasoning|spice|paprika|cumin|sumac|za'?atar|turmeric|garlic powder|baking powder|ice)\b/i;
+
+function parseAmount(txt){
+  let s = String(txt).trim().replace(/^[-•*•]\s*/, '');
+  for(const f in PARSE_FRAC) s = s.replace(f, String(PARSE_FRAC[f]));
+  /* leading "90g name" / "1 scoop name" / "2 eggs"
+     ⛔ THE UNIT WORD MUST BE FOLLOWED BY WHITESPACE. Without the \s+ that capture is greedy and
+     splits a word in half: "1 Biscoff" parsed to the name "Biscof f" and "2 eggs" to "egg s",
+     because ([a-zA-Z]+)? took "Biscof", (.+) took "f", and the branch below rejoined them with a
+     space. Both then matched nothing — which at least failed loudly instead of pricing the wrong
+     food, but it silently dropped a 38-cal cookie out of a total that still looked plausible. */
+  let m = s.match(/^(\d+(?:\.\d+)?)\s*(?:([a-zA-Z]+)\s+)?(?:of\s+)?(.+)$/);
+  if(m){
+    const unit = m[2] ? PARSE_UNITS[m[2].toLowerCase()] : null;
+    /* "2 eggs" — the word after the number is the FOOD, not a unit */
+    if(m[2] && !unit) return {n:+m[1], u:null, name:(m[2]+' '+m[3]).trim()};
+    return {n:+m[1], u:unit, name:m[3].trim()};
+  }
+  /* trailing "Fage 0% — 175g" */
+  m = s.match(/^(.+?)[\s—–:,-]+(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?$/);
+  if(m) return {n:+m[2], u:m[3] ? PARSE_UNITS[m[3].toLowerCase()] : null, name:m[1].trim()};
+  return {n:null, u:null, name:s};
+}
+/* score a food key against a name. Word overlap, so "STRAWBERRY CHEESECAKE Elev8 CoR" still finds
+   'elev8 cor' — a substring test would not, and neither would a naive equality. */
+function matchFood(name){
+  const clean = String(name).toLowerCase().replace(/[^a-z0-9%\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if(!clean) return null;
+  const words = clean.split(' ').filter(w=>w.length > 2);
+  let best = null;
+  Object.keys(FOOD_FACTS).forEach(k=>{
+    const kw = k.split(' ');
+    let hit = 0;
+    kw.forEach(w=>{ if(w.length > 2 && clean.indexOf(w) >= 0) hit++; });
+    words.forEach(w=>{ if(k.indexOf(w) >= 0) hit += 0.5; });
+    if(!hit) return;
+    /* prefer the key that matches with the FEWEST spare words — 'blueberries' over 'frozen
+       blueberries' for "175g blueberries", and the reverse when he wrote "frozen". */
+    /* ⛔ COVERAGE OF THE KEY, NOT RAW HITS. "1 scoop of Maple Brown Sugar protein" matched
+       'lakanto sugar-free maple syrup' on the single word "maple" — one word out of four — and
+       priced it silently. That is the exact failure the comment above this function promises not to
+       make: a wrong match prices perfectly and reads as authoritative. A key must have at least HALF
+       its significant words present in the line before it is a candidate at all. */
+    /* ⚠️ LENGTH >= 2, NOT > 2. The first cut excluded short tokens as noise and threw away "0%" —
+       the single most distinguishing token in 'fage 0% greek yogurt' — so a line reading "175g Fage
+       0%" covered 1 of 3 and got rejected outright. The short tokens in this list are the precise
+       ones: 0%, 2%, oz. */
+    const sig = kw.filter(w=>w.length >= 2).length || 1;
+    const cover = kw.filter(w=>w.length >= 2 && clean.indexOf(w) >= 0).length / sig;
+    if(cover < 0.5) return;
+    const score = hit + cover - Math.abs(kw.length - words.length) * 0.15;
+    if(!best || score > best.score) best = {key:k, score:score, hit:hit, cover:cover};
+  });
+  return best || null;
+}
+function parseRecipe(text){
+  return String(text || '').split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(line=>{
+    const p = parseAmount(line);
+    if(PARSE_FREE_RE.test(p.name) && !matchFood(p.name))
+      return {line, name:p.name, n:p.n, u:p.u, spec:{free:1}, why:'free'};
+    const m = matchFood(p.name);
+    if(!m)          return {line, name:p.name, n:p.n, u:p.u, spec:null, why:'no match'};
+    if(p.n == null) return {line, name:p.name, n:null, u:p.u, spec:null, why:'no amount', key:m.key};
+    const f = FOOD_FACTS[m.key];
+    /* ⛔ THE UNIT TRAP, GUARDED AT THE DOOR. Omitting u: means "in the fact's own unit", and a row
+       reading 40 g against a fact measured in CUPS once priced forty cups. If the line states a unit
+       and it is not the fact's, carry it explicitly and let ffScale convert or refuse. */
+    /* ⛔ A BARE COUNT AGAINST A PER-GRAM FACT IS A COUNT, NOT GRAMS. "1 Biscoff cookies" priced as
+       ONE GRAM — 5 cal instead of 37 — because biscoff is measured per gram. Facts that carry ea:
+       know what one piece weighs, so a line with no unit (or a counting word like "cookie" or
+       "slice") means PIECES and must say u:'each'. This is the same class as the 40-g-of-Oikos row
+       that priced forty cups: the spec resolved, the units were legal, the answer was wrong. */
+    let u = (p.u && p.u !== f.unit) ? p.u : undefined;
+    if(f.ea && (p.u === 'each' || p.u == null)) u = 'each';
+    const spec = u ? {f:m.key, n:p.n, u:u} : {f:m.key, n:p.n};
+    return {line, name:p.name, n:p.n, u:p.u, spec, key:m.key, why:null,
+            priced: priceRow([null,null,spec])};
+  });
+}
+
 /* ==== THE SOLVER — scale a set of ingredient rows onto a macro target ========================
    The engine under every generator mode he described: "tell it the ingredients i want to use and
    for what meal (and/or for what #cals and macros) and have it produce a recipe", and "give it a
@@ -9649,7 +9751,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788551564';
+const BUILD = 'b1788554630';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

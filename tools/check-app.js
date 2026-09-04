@@ -1927,6 +1927,65 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [recipe-parser] — a pasted ingredient list becomes priceable rows ======================
+ * Mode ① of what he asked for: "give it a recipe i found or have and let it adjust it to the meal."
+ * The fixture is his ACTUAL 2026-09-04 breakfast, which took a dozen messages of me reading lines
+ * and looking foods up by hand.
+ *
+ * ⛔ THE POINT OF THIS GUARD IS THAT IT MATCHES OR ADMITS IT CANNOT. Three real defects came out of
+ * the first version, and every one priced perfectly while being wrong:
+ *   · "Maple Brown Sugar protein" matched 'lakanto sugar-free maple syrup' on the single word maple
+ *   · "1 Biscoff cookies" priced as ONE GRAM (5 cal) instead of one cookie (38)
+ *   · "1 Biscoff" parsed to the name "Biscof f" — a greedy unit capture splitting the word in half
+ * A wrong match reads as authoritative. Clause (b) is the one that stops that class.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const rows = parseRecipe([
+      '80g Elev8 CoR','300ml water','155g blueberries','36g Cinnamon Toast protein',
+      '175g Fage 0%','1 Biscoff','20ml smucker sf breakfast syrup'
+    ].join(String.fromCharCode(10)));
+
+    const want = {0:'elev8 cor',2:'blueberries',3:'cinnamon toast protein',
+                  4:'fage 0% greek yogurt',5:'biscoff',6:'smucker sf breakfast syrup'};
+    Object.keys(want).forEach(i=>{
+      if(rows[i].key !== want[i]) bad.push('line ' + i + ' (' + rows[i].line + ') matched ' + JSON.stringify(rows[i].key) + ', wanted ' + want[i]);
+    });
+    if(!rows[1].spec || !rows[1].spec.free) bad.push('water did not resolve as free');
+
+    /* (a) his real bowl reproduces the figure I computed by hand that morning */
+    const total = sumRows(rows.map(x=>x.spec).filter(Boolean)).map(Math.round);
+    if(Math.abs(total[0] - 645) > 3) bad.push('his 2026-09-04 bowl prices to ' + total[0] + ', not ~645');
+
+    /* (b) ⛔ A WRONG MATCH IS WORSE THAN NO MATCH. One shared word must not be enough. */
+    const maple = parseRecipe('1 scoop (32g) of "Maple Brown Sugar" protein')[0];
+    if(maple.key === 'lakanto sugar-free maple syrup')
+      bad.push('a protein scoop matched the maple SYRUP again — one shared word is not a match');
+    const nonsense = parseRecipe('200g wagyu ribeye')[0];
+    if(nonsense.spec) bad.push('a food that is not on the price list matched ' + nonsense.key + ' instead of admitting it cannot');
+
+    /* (c) a bare count against a per-gram fact means PIECES, not grams */
+    const b1 = parseRecipe('1 Biscoff')[0];
+    if(!b1.spec || b1.spec.u !== 'each') bad.push('"1 Biscoff" did not resolve as one PIECE: ' + JSON.stringify(b1.spec));
+    if(!b1.priced || Math.round(b1.priced[0]) < 30) bad.push('"1 Biscoff" priced as ' + (b1.priced && Math.round(b1.priced[0])) + ' cal — that is grams, not a cookie');
+
+    /* (d) the greedy-capture word split */
+    ['1 Biscoff','2 eggs','3 Oreos'].forEach(t=>{
+      const p = parseAmount(t);
+      if(/\\s/.test(p.name.trim()) && p.name.trim().split(/\\s+/).some(w=>w.length===1))
+        bad.push('parseAmount split a word: ' + t + ' -> ' + JSON.stringify(p.name));
+    });
+
+    return {bad, total: total.join('/'), n: rows.length};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('recipe-parser', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('recipe-parser', 'his real 2026-09-04 paste resolves all ' + r.n + ' lines to ' + r.total +
+    ', water reads as free, a one-word overlap is refused rather than guessed, an unknown food admits ' +
+    'it cannot match, and a bare count against a per-gram fact prices as PIECES');
+}
+
 /* ==== [solver] — scaling a set of rows onto a macro target ===================================
  * The engine under both generator modes he asked for: "tell it the ingredients i want to use and for
  * what meal ... and have it produce a recipe", and "give it a recipe i found ... and let it adjust it
