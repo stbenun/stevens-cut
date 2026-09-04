@@ -7342,14 +7342,37 @@ function viewToday(){
       }
       const picks = sOpts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id || oo.noPrep);
       const list = (picks.length?picks:sOpts).map(pill).join('');
-      /* lunch ⇄ dinner run near-identical budgets — a skipped dinner can be logged as lunch */
-      const sib = expandSlot==='lu'? 'di' : expandSlot==='di'? 'lu' : null;
-      let swapRow = '';
-      if(sib){
-        const s2 = SLOTS.find(x=>x.key===sib);
-        const picks2 = s2.opts.filter(oo=>((counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id) && !s.opts.some(x=>x.id===oo.id));
-        if(picks2.length) swapRow = `<div class="slotlbl" style="margin-top:8px">↔ ${s2.slot.toLowerCase()} swaps · same budget</div><div class="pickrow">${picks2.map(pill).join('')}</div>`;
-      }
+      /* ⭐ ANY MEAL, ANY SLOT — his complaint, verbatim: the app "only lets me choose the meals we
+         made before and i cant even use one meals for another."
+         What was here was a lunch⇄dinner swap and nothing else, because those two budgets happen to
+         sit close together. That is a rule about two slots, not about him — a Jiben makes a perfectly
+         good breakfast. Every other meal is offered now, and the pill carries what it costs AGAINST
+         THIS SLOT'S budget, so the trade is visible before he taps instead of discovered in the hero
+         afterwards. Starts CLOSED with the count in the badge, like every section in this file.
+         ⚠️ The meat block still applies: a meal being legal somewhere else does not make it legal
+         today, and isMeatOpt/noMeat are the same checks the primary row uses. */
+      const otherRow = (()=>{
+        const mine = new Set(s.opts.map(o=>o.id));
+        const groups = SLOTS.filter(x=>x.key!==s.key)
+          .map(x=>({s:x, opts:x.opts.filter(oo=>!mine.has(oo.id))}))
+          .filter(g=>g.opts.length);
+        if(!groups.length) return '';
+        const n = groups.reduce((a,g)=>a+g.opts.length,0);
+        const body = groups.map(g=>
+          `<div class="slotlbl" style="margin-top:6px">${g.s.slot}</div><div class="pickrow">${
+            g.opts.map(oo=>{
+              const on = todayEaten[s.key]===oo.id;
+              const t = oo.vars[0].t, d = t[0] - s.b[0];
+              const meatBlock = noMeat && isMeatOpt(oo) && !on;
+              return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">${
+                meatBlock?'🚫 ':''}${oo.name}<span class="rem">${
+                meatBlock?'Nine Days':`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`}</span></button>`;
+            }).join('')
+          }</div>`).join('');
+        return `<details class="acc innerrow" data-acc="other-${s.key}"${openAcc.has('other-'+s.key)?' open':''}>`
+          + `<summary><span>↔ any other meal, logged here</span>`
+          + `<span class="statline"><b>${n}</b> · vs ${s.b[0]} budget</span></summary>${body}</details>`;
+      })();
       /* off-menu FRESH options (no weekly count, not already eaten) — cook-tonight one-offs still need a tap */
       const freshRow = (()=>{
         const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
@@ -7382,7 +7405,7 @@ function viewToday(){
                  + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
           }).join('')}</div>` : '';
       const editor = rowEditorHTML(ld, s.key, cur);
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${swapRow}${draftRow}${editor}${timeRow}`;
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -9400,7 +9423,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788546979';
+const BUILD = 'b1788547925';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

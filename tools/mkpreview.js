@@ -29,6 +29,7 @@ const SLOT     = arg('slot', 'bf');
 const MEASURE  = arg('measure', '.erow');
 const OUTDIR   = path.resolve(arg('out', 'scratchpad'));
 const WIDTHS   = (arg('widths', '320,400')).split(',').map(Number);
+const MAXH     = +arg('maxh', 60);   /* 0 = no height check; see the note at the check itself */
 const CHROME   = arg('chrome', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
 
 if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
@@ -48,6 +49,7 @@ const setup = `
     rs = addEntryRow({id:'b1', rows:rs}, 'smucker sf breakfast syrup', 20);
     logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1', rs); }
   openAcc.add('drafts');
+  openAcc.add('other-' + ${JSON.stringify(SLOT)});
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
   render();
@@ -111,18 +113,30 @@ fs.writeFileSync(tmp, page);
         + '  w=' + String(k.w).padStart(4) + (k.clipped ? '  ✂ TEXT CLIPPED' : '') + '   "' + k.txt + '"'));
     });
     /* a row taller than ~2 lines means it wrapped — the deformation this tool exists to catch */
-    r.rows.forEach((row, i) => { if (row.h > 60) { console.log('  ⛔ row ' + i + ' is ' + row.h + 'px tall — it wrapped'); bad++; } });
+    /* ⚠️ A HEIGHT CAP ONLY MEANS SOMETHING FOR A SINGLE-LINE ROW. `.erow` is a 3-column grid, so 60 px
+       means it deformed; `.pickrow` is a WRAPPING pill container and is SUPPOSED to grow. Pointing the
+       default at a pickrow printed four confident "⛔ LAYOUT PROBLEM" lines about markup that was
+       perfectly fine. A tool that cries wolf gets muted, and a muted tool protects nothing. Pass
+       --maxh 0 to switch the check off for a container that is meant to wrap. */
+    if (MAXH > 0) r.rows.forEach((row, i) => {
+      if (row.h > MAXH) { console.log('  ⛔ row ' + i + ' is ' + row.h + 'px tall against a ' + MAXH + 'px cap — it wrapped'); bad++; }
+    });
 
     /* ⛔ SHOOT WHAT WE MEASURED. The first version screenshotted the viewport at scroll 0 and handed
        back a picture of the page HEADER while reporting on a card 2,000 px further down. A preview
        of the wrong element is worse than no preview: it looks like evidence. */
     const clip = await pg.evaluate(sel => {
-      const el = document.querySelector(sel);
-      if (!el) return null;
-      const card = el.closest('.card, details') || el;
-      const b = card.getBoundingClientRect();
-      return { x: Math.max(0, b.left - 6), y: b.top + window.scrollY - 6,
-               width: Math.min(window.innerWidth, b.width + 12), height: b.height + 12 };
+      /* ⛔ NOT querySelector. The FIRST `.pickrow` on the page lives in the header, so clipping to
+         match[0] handed back a picture of the date picker while the report described a card far
+         below — the second time this tool has photographed the wrong thing. Cover every match, so
+         the shot always contains what was measured. */
+      const els = [...document.querySelectorAll(sel)];
+      if (!els.length) return null;
+      const boxes = els.map(e => (e.closest('.card, details') || e).getBoundingClientRect());
+      const top = Math.min(...boxes.map(b => b.top)),  bot = Math.max(...boxes.map(b => b.bottom));
+      const lft = Math.min(...boxes.map(b => b.left)), rgt = Math.max(...boxes.map(b => b.right));
+      return { x: Math.max(0, lft - 6), y: top + window.scrollY - 6,
+               width: Math.min(window.innerWidth, (rgt - lft) + 12), height: (bot - top) + 12 };
     }, MEASURE);
     const png = path.join(OUTDIR, 'preview-' + SLOT + '-' + w + '.png');
     if (clip && clip.height > 8) await pg.screenshot({ path: png, clip, captureBeyondViewport: true });

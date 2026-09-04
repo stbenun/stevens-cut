@@ -93,6 +93,20 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [cross-slot]: any meal can be logged into any slot ----
+     ⚠️ The open-by-default plant is built by CONCATENATION below rather than written inline, because
+     the obvious version replaces the expression with "' open'" — which puts LITERAL QUOTES inside a
+     template literal, renders malformed HTML, and misses the guard's regex. My plant was wrong, not
+     the guard, and a plant that produces garbage instead of the defect reads exactly like a pass. */
+  { guard: 'cross-slot', name: 'the list goes back to lunch⇄dinner only',
+    edits: [{ from: "        const groups = SLOTS.filter(x=>x.key!==s.key)",
+              to:   "        const groups = SLOTS.filter(x=>x.key!==s.key && (s.key==='lu'?x.key==='di':s.key==='di'?x.key==='lu':false))" }] },
+  { guard: 'cross-slot', name: 'the pills stop printing the delta against this slot budget',
+    edits: [{ from: "`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`", to: "`${t[0]} · ${t[1]}P`" }] },
+  { guard: 'cross-slot', name: 'the section time-seeds itself open',
+    edits: [{ from: 'data-acc="other-$' + '{s.key}"$' + "{openAcc.has('other-'+s.key)?' open':''}>",
+              to:   'data-acc="other-$' + '{s.key}" open>' }] },
+
   /* ---- [meal-drafts]: the bridge from his phone into the guarded library ----
      The first plant here targeted prose the guard does not read, so it MISSED — my plant was wrong,
      not the guard. It now cuts the exact phrase [meal-drafts] checks for. */

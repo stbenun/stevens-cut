@@ -1927,6 +1927,52 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [cross-slot] — any meal can be logged into any slot ====================================
+ * His complaint, verbatim: the app "only lets me choose the meals we made before and i cant even use
+ * one meals for another." What was there was a lunch⇄dinner swap and nothing else, because those two
+ * budgets happen to sit close together — a rule about two slots rather than about him.
+ * The pill must carry the DELTA against the slot he is putting it in, so the trade is visible before
+ * he taps instead of discovered in the hero afterwards.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{});
+    store.set('qpcut.eaten', Object.assign({},eat0,{[D]:{}}));
+    const before = expandSlot; expandSlot = 'bf'; render();
+    const html = document.body.innerHTML;
+    const det = (html.match(/<details[^>]*data-acc="other-bf"[\\s\\S]*?<\\/details>/)||[''])[0];
+
+    if(!det) bad.push('the cross-slot section does not render');
+    if(/data-acc="other-bf" open/.test(html)) bad.push('the cross-slot section time-seeds itself open');
+    const offered = (det.match(/data-opt="([^"]+)"/g)||[]).map(x=>x.slice(10,-1));
+    const bfIds = new Set(SLOTS.find(s=>s.key==='bf').opts.map(o=>o.id));
+    const otherIds = SLOTS.filter(s=>s.key!=='bf').reduce((a,s)=>a.concat(s.opts.map(o=>o.id)), []);
+    if(offered.length < otherIds.length) bad.push('only ' + offered.length + ' of ' + otherIds.length + ' other-slot meals are offered');
+    if(offered.some(id=>bfIds.has(id))) bad.push('a breakfast meal is duplicated into the cross-slot list');
+    /* the delta must be printed, or the trade is invisible until after the tap */
+    if(!/·\\s*[+-]\\d+</.test(det)) bad.push('the pills do not print the delta against this slot budget');
+
+    /* and it must actually LOG — a dinner into breakfast, priced as itself */
+    logToggleMeal(D, 'bf', 'd1');
+    const got = eatenIds(D).bf;
+    if(got !== 'd1') bad.push('logging a dinner into breakfast did not stick: ' + JSON.stringify(eatenIds(D)));
+    const m = entryMacros((logEntries(D).bf||[])[0]).map(Math.round);
+    const want = OPTBYID['d1'].vars[0].t;
+    if(m[0] !== want[0]) bad.push('the cross-slot meal priced ' + m[0] + ', not its own ' + want[0]);
+
+    expandSlot = before;
+    store.set('qpcut.eaten', eat0);
+    return {bad, offered: offered.length};
+  `);
+  const bad = r.bad.slice();
+  if (!r.offered) bad.push('no cross-slot meals were offered at all — this guard ran vacuous');
+  if (bad.length) fail('cross-slot', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('cross-slot', r.offered + ' meals from other slots are offered on breakfast, each printing its ' +
+    'delta against that slot budget, the section starts closed, and a dinner logged into breakfast prices as itself');
+}
+
 /* ==== [meal-drafts] — the bridge from his phone to the guarded library ========================
  * He chose a repo-canonical meal library: guarded by [priced]/[slot-fit]/[row-math], and readable by
  * me. A phone cannot write to that, so "save as a new meal" writes a device-local draft that
