@@ -163,8 +163,19 @@ const PLANTS = [
     edits: [{ from: "  var rows = bs.all.map(function(b){", to: "  var rows = bs.left.map(function(b){" }] },
   { guard: 'buffins', name: 'the card time-seeds itself open',
     edits: [{ from: "(openAcc.has(\"buffins\") ? \" open\" : \"\")", to: "\" open\"" }] },
-  { guard: 'buffins', name: 'the nut-flagged flavor loses its mark',
-    edits: [{ from: "         + (b.nut ? \" <span class='chip notetag'>nuts</span>\" : \"\")", to: "         + \"\"" }] }
+  /* ⛔ TWO EDITS, AND IT NEEDS BOTH. This case used to plant only the removal of the chip, which
+     worked while exactly one buffin carried nut:1. On 2026-09-04 he corrected that flag off Welcome
+     To The Sno ("has coconut. im not allergic" — the FDA counts coconut as a tree nut, hence the
+     badge mark), leaving ZERO flagged facts. The guard compares chips against flagged facts, so
+     0 === 0 passed and deleting the chip renderer changed nothing: the case reported NOT CAUGHT.
+     Flagging a buffin AND removing the chip makes the two counts disagree the way a real regression
+     would, and it no longer depends on a nut-bearing product being in his cupboard. */
+  { guard: 'buffins', name: 'a nut-flagged flavor loses its mark on the card',
+    edits: [
+      { from: "  'buffin blueberry':            {unit:'each', cal:370,",
+        to:   "  'buffin blueberry':            {unit:'each', nut:1, cal:370," },
+      { from: "         + (b.nut ? \" <span class='chip notetag'>nuts</span>\" : \"\")", to: "         + \"\"" }
+    ] }
 ,
 
   /* ---- [cor-crunch]: the three real defects of 2026-08-24, planted verbatim ---- */
