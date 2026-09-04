@@ -43,6 +43,23 @@ const numstat = () => {
 };
 
 const PLANTS = [
+  /* ---- [log-shape]: qpcut.eaten reads a bare option id AND an array of row-carrying entries ----
+     Both shapes are live on his device at once and will be for months. Every defect below leaves the
+     app rendering perfectly; the first one is the reason this whole harness entry exists, because a
+     row-editing feature that silently ignores the edit looks exactly like one that works. */
+  { guard: 'log-shape', name: 'entryMacros ignores the entry rows and falls back to the meal id',
+    edits: [{ from: "  if(e.rows && e.rows.length){\n    const t = [0,0,0,0];",
+              to:   "  if(false){\n    const t = [0,0,0,0];" }] },
+  { guard: 'log-shape', name: 'logEntries stops normalising the legacy string shape, erasing his history',
+    edits: [{ from: "    out[slot] = [{id:String(v), legacy:1}];",
+              to:   "    out[slot] = [];" }] },
+  { guard: 'log-shape', name: 'a null slot starts reading as eaten',
+    edits: [{ from: "    if(!v) return;                                  /* null = not eaten, same as absent */",
+              to:   "    if(v===undefined) return;" }] },
+  { guard: 'log-shape', name: "the 'final' sentinel resolves to a meal, so the day double-counts it",
+    edits: [{ from: "  const o = OPTBYID[e.id];\n  return o ? o.vars[0].t.slice() : [0,0,0,0];",
+              to:   "  const o = OPTBYID[e.id] || OPTBYID['b1'];\n  return o ? o.vars[0].t.slice() : [0,0,0,0];" }] },
+
   /* ---- [offplan-topping]: off-track calories come out of that day's Creami topping ---- */
   { guard: 'offplan-topping', name: 'the 5 g trim step returns, so a 60-cal debt over-cuts the dessert',
     edits: [

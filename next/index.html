@@ -5094,11 +5094,75 @@ function gymLeaveMin(wd, ld){
   return gl? (+gl.slice(0,2))*60+(+gl.slice(3,5)) : null;
 }
 
+/* ==== THE LOG — ONE READER, TWO STORAGE SHAPES ==============================================
+   qpcut.eaten[date][slot] has held a bare option id since v2: {bf:'b1'}. That single string is
+   the whole reason the Meals section is a cage. An id cannot carry a portion, a second item in
+   the same slot, or an edit — so "I had 155 g of blueberries, not 175, plus 20 mL of syrup" was
+   simply unloggable, and on 2026-09-04 it got priced by hand in chat instead. His words for what
+   this is costing him: the app "only lets me choose the meals we made before and i cant even use
+   one meals for another."
+
+   The new shape is an ARRAY of entries per slot:
+     [{id:'b1', rows:[{f:'elev8 cor',n:80}, {f:'blueberries',n:155}, …], at:'10:45'}]
+
+   ⛔ AN ENTRY STORES AMOUNTS, NEVER MACROS. Same rule as every ingredient row in this file, and
+   here it settles two opposite questions at once:
+     · Correcting a FOOD_FACT — what a gram of Elev8 COR is — SHOULD move his history. The food
+       did not change; what I knew about it did.
+     · Editing a RECIPE next month must NOT move his history. So the entry carries its OWN rows
+       instead of pointing at the meal's.
+   An id alone can only ever get the second one wrong, silently and retroactively.
+
+   ⛔ NOTHING MIGRATES ON HIS DEVICE. Old string entries stay valid forever and are normalised on
+   read. 21 call sites in this file and 6 in check-app.js touch this key; they get pointed at the
+   accessors below rather than each learning both shapes — teaching 27 places to branch is how a
+   storage change becomes a month of bugs.
+
+   ⛔ 'final' IS NOT AN OPTION ID. finalMeal() writes it to mark a slot handled while the macros
+   go in as ONE off-plan row, so it MUST price as zero here or the day double-counts the food.
+   That was already true by accident — OPTBYID['final'] is undefined — and is now on purpose. */
+function logEntries(ld){
+  const raw = (store.get('qpcut.eaten',{}))[ld] || {};
+  const out = {};
+  Object.keys(raw).forEach(slot=>{
+    const v = raw[slot];
+    if(!v) return;                                  /* null = not eaten, same as absent */
+    if(Array.isArray(v)){ if(v.length) out[slot] = v; return; }
+    out[slot] = [{id:String(v), legacy:1}];         /* the old shape, read where it lies */
+  });
+  return out;
+}
+/* The rows an entry is made of: its own if it carries them, else the meal's. */
+function entryRows(e){
+  if(e && e.rows && e.rows.length) return e.rows;
+  const o = e && OPTBYID[e.id];
+  return o ? o.vars[0].ing.map(r=>r[2]).filter(Boolean) : [];
+}
+function entryMacros(e){
+  if(!e) return [0,0,0,0];
+  if(e.rows && e.rows.length){
+    const t = [0,0,0,0];
+    e.rows.forEach(sp=>{ const m = priceRow([null,null,sp]); if(m) for(let i=0;i<4;i++) t[i]+=m[i]; });
+    return t;
+  }
+  const o = OPTBYID[e.id];
+  return o ? o.vars[0].t.slice() : [0,0,0,0];
+}
+/* {slot: id} — the shape most call sites actually want. First entry wins, which IS today's
+   semantics: a slot can currently only hold one thing. */
+function eatenIds(ld){
+  const es = logEntries(ld), out = {};
+  Object.keys(es).forEach(k=>{ out[k] = es[k][0].id; });
+  return out;
+}
+
 /* -- eaten macros + hero -- */
 function eatenMacros(ld){
-  const eaten = (store.get('qpcut.eaten',{}))[ld]||{};
+  const es = logEntries(ld);
   const t = [0,0,0,0];
-  Object.values(eaten).forEach(id=>{ const o = OPTBYID[id]; if(o) o.vars[0].t.forEach((v,i)=>t[i]+=v); });
+  Object.keys(es).forEach(slot=> es[slot].forEach(e=>{
+    const m = entryMacros(e); for(let i=0;i<4;i++) t[i]+=m[i];
+  }));
   /* off-plan items (incl. ones Claude logged from chat) count toward the day's totals too —
      each carries {cal, p?, c?, f?}; fixes[] are subtractions applied elsewhere, so ADD net cal here. */
   const ops = (store.get('qpcut.offplan',{}))[ld]||[];
@@ -8979,7 +9043,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788443320';
+const BUILD = 'b1788541725';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

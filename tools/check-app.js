@@ -1789,5 +1789,66 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('eat-time', 'impossible logged times are refused (future stamp + out of order against ' +
     'the DAY order ' + r.order + '), backfilling still works, and the next-meal time is withheld rather than computed');
 }
+/* ==== [log-shape] — the log reads two storage shapes and must not tell them apart ==============
+ * qpcut.eaten[date][slot] held a bare option id for the whole cut. It now also holds an array of
+ * entries carrying their own ingredient rows, so a portion can be edited at log time. Both shapes
+ * are live on his device simultaneously and will be for months.
+ *
+ * THE FAILURE THIS EXISTS TO CATCH is not a crash — it is silence. If entryMacros() ever stops
+ * reading `rows` and falls back to the meal's stored total, every screen still renders, every other
+ * guard still passes, and editing a weight quietly does nothing at all. He would go on logging
+ * "155 g of blueberries" and the app would go on counting 175. Clause (b) is the one that bites.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{}), op0 = store.get('qpcut.offplan',{});
+    const set = v => { store.set('qpcut.offplan',{}); store.set('qpcut.eaten', Object.assign({},eat0,{[D]:v})); };
+    const M = () => eatenMacros(D).map(Math.round).join('/');
+
+    /* (a) the two shapes must be indistinguishable for the same food */
+    set({bf:'b1'});                       const legacy = M();
+    set({bf:[{id:'b1'}]});                const asArray = M();
+    if(legacy !== asArray) bad.push('legacy {bf:"b1"} reads '+legacy+' but [{id:"b1"}] reads '+asArray);
+    const rows = OPTBYID['b1'].vars[0].ing.map(r=>r[2]).filter(Boolean);
+    set({bf:[{id:'b1', rows}]});          const asRows = M();
+    if(legacy !== asRows) bad.push('b1 by id reads '+legacy+' but by its OWN rows reads '+asRows);
+
+    /* (b) ⛔ THE ONE THAT MATTERS: editing a row's amount MUST move the total. If this passes
+       while (a) also passes, rows are being read. If this alone fails, rows are decorative. */
+    const half = rows.map(sp => (sp && sp.f && typeof sp.n === 'number') ? Object.assign({},sp,{n:sp.n/2}) : sp);
+    set({bf:[{id:'b1', rows:half}]});     const halved = M();
+    if(halved === asRows) bad.push('halving every row of b1 changed NOTHING ('+halved+') — rows are not being priced');
+    else {
+      const a = +asRows.split('/')[0], b = +halved.split('/')[0];
+      if(!(b < a)) bad.push('halving b1 did not reduce calories: '+a+' -> '+b);
+    }
+
+    /* (c) the 'final' sentinel is not a meal — it must price as zero or the day double-counts,
+       because finalMeal() puts those macros in as an off-plan row. */
+    set({bf:'final', lu:'final'});
+    if(M() !== '0/0/0/0') bad.push("the 'final' sentinel contributed macros: "+M());
+
+    /* (d) two things in one slot sum — the capability the old shape could not express at all */
+    set({bf:[{id:'b1'},{id:'b1'}]});
+    const twice = M(), once = +legacy.split('/')[0];
+    if(+twice.split('/')[0] !== once*2) bad.push('two entries in one slot summed to '+twice+', expected double '+legacy);
+
+    /* (e) a null slot is still "not eaten", the way it always was */
+    set({bf:null, lu:'l2'});
+    if(Object.keys(logEntries(D)).join() !== 'lu') bad.push('a null slot no longer reads as empty: '+JSON.stringify(logEntries(D)));
+
+    store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
+    return {bad, legacy, asRows, halved, twice};
+  `);
+  const bad = r.bad.slice();
+  if (!r.legacy || r.legacy === '0/0/0/0') bad.push('the fixture priced to nothing — this guard ran vacuous');
+  if (bad.length) fail('log-shape', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('log-shape', 'legacy ids and row-carrying entries price identically (' + r.legacy +
+    '), edited rows actually move the total (halved -> ' + r.halved + '), the final sentinel stays at zero, ' +
+    'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
