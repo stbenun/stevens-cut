@@ -1927,6 +1927,75 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [gen-fit] — mode ① of the generator, as a card he can actually use =====================
+ * Paste an ingredient list, see what matched, point at anything that did not, pick a target, log it.
+ *
+ * CLAUSE (b) IS THE ONE THAT MATTERS: an unmatched line must BLOCK the solve, not be skipped.
+ * Solving around a line the parser could not read hands him a total that silently omits a food he is
+ * about to eat — the same shape as the feast rows that summed 66-99 cal short because one salad row
+ * carried no spec and every row-sum quietly dropped it. A confident wrong total is the failure mode
+ * this whole file exists to prevent.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{}), g0 = store.get('qpcut.gen', null);
+    const NL = String.fromCharCode(10);
+    const good = ['80g Elev8 CoR','300ml water','155g blueberries','36g Cinnamon Toast protein',
+                  '175g Fage 0%','1 Biscoff','20ml smucker sf breakfast syrup'].join(NL);
+
+    /* (a) a clean paste solves, and reproduces the figure he ate on 2026-09-04 */
+    /* ⛔ CLOSED FIRST. Every section in this file starts closed, and the original version of this
+       guard opened the card in its very first line — so a plant that time-seeded it open had
+       nothing to trip. Check the default, THEN open it to inspect the contents. */
+    openAcc.delete('genfit');
+    store.set('qpcut.gen', {text:good, target:'bf', picks:{}});
+    render();
+    if(/data-acc="genfit" open/.test(document.body.innerHTML)) bad.push('the fit-a-recipe card time-seeds itself open');
+    openAcc.add('genfit'); render();
+    let html = document.body.innerHTML;
+    if(!/data-acc="genfit"/.test(html))  bad.push('the fit-a-recipe card does not render');
+    if(!/data-genlog="fit"/.test(html))  bad.push('a fully matched paste offers no log button');
+    const asPasted = sumRows(genRows().map(x=>x.spec).filter(Boolean)).map(Math.round);
+    if(Math.abs(asPasted[0] - 644) > 3) bad.push('his real paste prices to ' + asPasted[0] + ', not ~644');
+    const fitted = solveRows(genRows().map(x=>x.spec).filter(Boolean), genTarget(D).t);
+    if(fitted.t[0] > SLOT_BUDGET.bf[0]) bad.push('the fitted plate exceeds the breakfast budget: ' + Math.round(fitted.t[0]));
+
+    /* (b) ⛔ an unreadable line BLOCKS, and says so */
+    store.set('qpcut.gen', {text:'80g Elev8 CoR' + NL + '200g wagyu ribeye', target:'bf', picks:{}});
+    render(); html = document.body.innerHTML;
+    if(/data-genlog=/.test(html))   bad.push('an UNMATCHED line still offered a log button — the total would drop a food silently');
+    if(!/not matched/.test(html))   bad.push('the card does not say a line was unmatched');
+    if(!/data-genpick="1"/.test(html)) bad.push('the card offers no way to point at a food for the unmatched line');
+
+    /* (c) his manual pick resolves it */
+    store.set('qpcut.gen', {text:'80g Elev8 CoR' + NL + '200g wagyu ribeye', target:'bf', picks:{1:'93/7 ground beef'}});
+    render(); html = document.body.innerHTML;
+    if(!/data-genlog="fit"/.test(html)) bad.push('picking a food for the unmatched line did not unblock the solve');
+
+    /* (d) and it logs as a named entry carrying its own rows */
+    /* ⛔ THROUGH genLog, NOT A REBUILD OF IT. The first version called logWrite directly with its
+       own object, so a plant that stripped the name out of the real handler changed code this
+       guard never executed and reported MISSED. */
+    const slot = genLog(D, 'fit');
+    if(slot !== 'bf') bad.push('genLog logged into ' + slot + ' instead of the chosen slot');
+    const e = (logEntries(D).bf||[])[0];
+    if(!e || !e.rows || !e.rows.length) bad.push('logging the fitted recipe did not store its rows');
+    if(!e || e.name !== 'Fitted recipe') bad.push('the logged entry carries no name, so the tile would read blank');
+    render();
+    if(!/Fitted recipe/.test(document.body.innerHTML)) bad.push('the slot tile does not name the fitted recipe');
+
+    store.set('qpcut.eaten', eat0); if(g0) store.set('qpcut.gen', g0);
+    return {bad, asPasted: asPasted.join('/'), fitted: fitted.t.map(Math.round).join('/')};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('gen-fit', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('gen-fit', 'his real 2026-09-04 paste reads as ' + r.asPasted + ' and fits the breakfast budget at ' +
+    r.fitted + '; an unreadable line BLOCKS the solve and offers a picker instead of quietly dropping a food; ' +
+    'the fitted plate logs as a named entry carrying its own rows');
+}
+
 /* ==== [recipe-parser] — a pasted ingredient list becomes priceable rows ======================
  * Mode ① of what he asked for: "give it a recipe i found or have and let it adjust it to the meal."
  * The fixture is his ACTUAL 2026-09-04 breakfast, which took a dozen messages of me reading lines

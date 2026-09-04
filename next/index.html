@@ -1456,6 +1456,22 @@ function wireRowEdit(ld){
     logSetMeal(ld, slot, e.id, rows);
     render();
   }));
+  /* 🧪 fit-a-recipe. The textarea saves on INPUT rather than change, so a half-typed list is not
+     lost to a re-render triggered from anywhere else on the page. */
+  { const ta = document.getElementById('genText');
+    if(ta) ta.addEventListener('input', ()=>{ genSetState({text: ta.value}); }); }
+  document.querySelectorAll('[data-genpick]').forEach(sel=>sel.addEventListener('change',()=>{
+    const p = genState().picks || {}; p[sel.dataset.genpick] = sel.value;
+    genSetState({picks:p}); openAcc.add('genfit'); render();
+  }));
+  document.querySelectorAll('[data-gentgt]').forEach(b=>b.addEventListener('click',()=>{
+    genSetState({target: b.dataset.gentgt}); openAcc.add('genfit'); render();
+  }));
+  document.querySelectorAll('[data-genlog]').forEach(b=>b.addEventListener('click',()=>{
+    const slot = genLog(ld, b.dataset.genlog);
+    if(!slot) return;
+    openAcc.add('erow-'+slot); render();
+  }));
   document.querySelectorAll('[data-dsave]').forEach(btn=>btn.addEventListener('click',()=>{
     const slot = btn.dataset.dsave;
     const nm = document.querySelector('[data-dname="'+slot+'"]');
@@ -5589,6 +5605,127 @@ function solveRows(rows, target, opts){
           kinds: kinds, over: Math.max(0, Math.round(t[0] - target[0]))};
 }
 
+/* ==== 🧪 FIT A RECIPE — mode ① of the generator, end to end ==================================
+   Paste an ingredient list, see what matched, point at anything that did not, pick a target, and
+   log the solved plate. His 2026-09-04 morning in one card instead of a dozen messages.
+
+   ⛔ UNMATCHED LINES BLOCK THE SOLVE, they do not get skipped. Solving around a line the parser
+   could not read would hand him a total that silently omits a food he is about to eat — the same
+   shape as the feast rows that summed 66-99 cal short because one salad row carried no spec and
+   every row-sum quietly dropped it. The card counts them and says so on the button.
+
+   State lives in qpcut.gen so a half-entered recipe survives a re-render: {text, target, picks}. */
+function genState(){ return store.get('qpcut.gen', {text:'', target:'bf', picks:{}}); }
+function genSetState(p){ store.set('qpcut.gen', Object.assign(genState(), p)); }
+/* the target he is fitting to: a slot budget, or everything still open today */
+function genTarget(ld){
+  const g = genState();
+  if(g.target === 'left'){
+    const t = planTarget(ld).t, had = eatenMacros(ld);
+    return {label:'what is left today', t: t.map((v,i)=>Math.max(0, Math.round(v - had[i])))};
+  }
+  const b = SLOT_BUDGET[g.target] || SLOT_BUDGET.bf;
+  return {label: b[1], t:[b[0], b[2], b[3], b[4]]};
+}
+/* parsed rows with his manual picks folded in */
+function genRows(){
+  const g = genState();
+  const rows = parseRecipe(g.text);
+  rows.forEach((r,i)=>{
+    const pick = g.picks[i];
+    if(!pick || r.spec) return;
+    if(pick === '__free'){ r.spec = {free:1}; r.key = null; r.why = 'free'; return; }
+    if(!FOOD_FACTS[pick] || r.n == null) return;
+    const f = FOOD_FACTS[pick];
+    let u = (r.u && r.u !== f.unit) ? r.u : undefined;
+    if(f.ea && (r.u === 'each' || r.u == null)) u = 'each';
+    r.spec = u ? {f:pick, n:r.n, u:u} : {f:pick, n:r.n};
+    r.key = pick; r.why = null; r.priced = priceRow([null,null,r.spec]);
+  });
+  return rows;
+}
+/* The log step, named so [gen-fit] can exercise THIS rather than re-implementing it. A guard that
+   rebuilds the rule it is checking passes while the shipped rule is broken — which is exactly how
+   the missing-name defect slipped through its own first plant. */
+function genLog(ld, mode){
+  const rows = genRows().map(r=>r.spec).filter(Boolean);
+  if(!rows.length) return null;
+  const g = genState();
+  const slot = g.target === 'left' ? 'di' : g.target;   /* 'what is left' has no slot of its own */
+  const use = mode === 'fit' ? solveRows(rows, genTarget(ld).t).rows : rows;
+  logWrite(ld, slot, [{id:'gen', name:'Fitted recipe', rows: use}]);
+  return slot;
+}
+function genCardHTML(ld){
+  const g = genState();
+  const rows = g.text.trim() ? genRows() : [];
+  const unmatched = rows.filter(r=>!r.spec);
+  const tgt = genTarget(ld);
+  const foodOpts = Object.keys(FOOD_FACTS).sort()
+    .map(k=>'<option value="'+k+'">'+k+' · '+FOOD_FACTS[k].unit+'</option>').join('');
+
+  const table = rows.map((r,i)=>{
+    if(r.spec){
+      const m = r.priced || priceRow([null,null,r.spec]) || [0,0,0,0];
+      const amt = r.n == null ? '' : r.n + ' ' + ((r.spec.u)||(FOOD_FACTS[r.key]||{}).unit||'');
+      return '<div class="erow"><span class="en">' + esc(r.key || 'free') + '<span class="eu">' + esc(amt) + '</span></span>'
+        /* ⛔ NO ECHO OF THE ORIGINAL LINE. It read "elev8 cor 80 g" beside "80g Elev8 CoR" —
+           the same fact twice, and the duplicate was what wrapped the row. The name column
+           IS the confirmation that the line was read correctly; repeating his input adds
+           nothing and costs the width that keeps a long food name un-clipped. */
+        + '<span></span>'
+        + '<span class="em">' + Math.round(m[0]) + ' · ' + Math.round(m[1]) + 'P</span></div>';
+    }
+    /* ⛔ NAMED, NOT NUMBERED. The row says which LINE could not be read, in his own words. */
+    return '<div class="erow"><span class="en" style="color:var(--meat)">⚠ ' + esc(r.line.slice(0,26)) + '</span>'
+      + '<span><select data-genpick="' + i + '" style="width:100%;padding:5px 6px;font-size:12px">'
+      + '<option value="">pick a food…</option><option value="__free">— free (spice / water) —</option>'
+      + foodOpts + '</select></span>'
+      + '<span class="em">' + (r.n == null ? 'no amount' : r.n + ' ' + (r.u||'')) + '</span></div>';
+  }).join('');
+
+  let result = '';
+  if(rows.length && !unmatched.length){
+    const specs = rows.map(r=>r.spec);
+    const as = sumRows(specs).map(Math.round);
+    const sol = solveRows(specs, tgt.t);
+    const moved = sol.rows.map((sp,i)=>({sp, was:specs[i]}))
+      .filter(x=>x.sp && x.was && x.sp.n !== x.was.n)
+      .map(x=>foodLabel(x.sp) + ' ' + x.was.n + ' → ' + x.sp.n).join(' · ');
+    result = '<div class="note" style="margin-top:10px">'
+      + '<b>As pasted:</b> ' + as.join(' · ') + '<br>'
+      + '<b>Fitted to ' + esc(tgt.label) + ' (' + tgt.t.join(' · ') + ')</b> '
+      + sol.t.map(Math.round).join(' · ') + (sol.over ? ' ⚠ over by ' + sol.over : '')
+      + (moved ? '<br><span class="sub">' + esc(moved) + '</span>' : '')
+      + '</div>'
+      + '<div class="pickrow" style="margin-top:8px">'
+      + '<button class="mealpick" data-genlog="as">Log as pasted</button>'
+      + '<button class="mealpick on" data-genlog="fit">Log the fitted version</button></div>';
+  } else if(rows.length){
+    result = '<div class="note" style="margin-top:10px;border-color:var(--meat)">'
+      + '<b>' + unmatched.length + ' line' + (unmatched.length>1?'s':'') + ' not matched.</b> '
+      + 'Point at a food above, or mark it free. Nothing is solved until every line is read — '
+      + 'a total that quietly drops an ingredient is worse than no total.</div>';
+  }
+
+  return '<details class="acc innerrow" data-acc="genfit"' + (openAcc.has('genfit') ? ' open' : '') + '>'
+    + '<summary><span>🧪 Fit a recipe to my macros</span><span class="statline">'
+    + (rows.length ? rows.length + ' lines · ' + unmatched.length + ' to fix' : 'paste one') + '</span></summary>'
+    + '<div class="sub" style="margin-top:4px">Paste the ingredients, one per line. Amounts in g, mL, oz or counts.</div>'
+    + '<textarea id="genText" rows="5" placeholder="80g Elev8 CoR&#10;155g blueberries&#10;175g Fage 0%&#10;1 Biscoff" '
+    + 'style="width:100%;margin-top:6px;padding:7px 8px;font-size:13px;border:1px solid var(--line);'
+    + 'border-radius:8px;background:var(--panel2);color:var(--text);font-family:var(--mono)">' + esc(g.text) + '</textarea>'
+    + '<div class="slotlbl" style="margin-top:8px">Fit it to</div><div class="pickrow">'
+    + SLOT_SEQ.map(k=>'<button class="mealpick' + (g.target===k?' on':'') + '" data-gentgt="' + k + '">'
+        + SLOT_BUDGET[k][1] + '<span class="rem">' + SLOT_BUDGET[k][0] + '</span></button>').join('')
+    + '<button class="mealpick' + (g.target==='left'?' on':'') + '" data-gentgt="left">what is left today'
+    + '<span class="rem">' + Math.max(0, Math.round(planTarget(ld).t[0] - eatenMacros(ld)[0])) + '</span></button>'
+    + '</div>'
+    + (table ? '<div style="margin-top:8px">' + table + '</div>' : '')
+    + result
+    + '</details>';
+}
+
 /* ==== MEAL DRAFTS — the bridge between his phone and the guarded library =====================
    His call, 2026-09-04: the meal library lives in the REPO, where [priced], [slot-fit] and
    [row-math] can see it and where I can read it. A phone cannot write to that. So "save as a new
@@ -7833,6 +7970,7 @@ function viewToday(){
     return `
   <section class="zone" id="z-tools">
   <div class="zhead"><span class="zt">🧰 Tools</span></div>
+  <div class="card">${genCardHTML(ld)}</div>
   ${/* ⬇️ MOVED HERE FROM THE FOOD ZONE — his ask Aug 13 2026, verbatim: "final meal and tonights
        dinner tools are in Food, move it to Tools." They are TOOLS, not food he is reading: Final Meal
        solves whatever is left of the day, and Tonight's dinner is a picker. Food stays what he eats.
@@ -9752,7 +9890,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788554630';
+const BUILD = 'b1788555691';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

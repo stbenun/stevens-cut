@@ -54,6 +54,8 @@ const setup = `
   openAcc.add('drafts');
   openAcc.add('other-' + ${JSON.stringify(SLOT)});
   openAcc.add('meals-bf'); openAcc.add('opt-b28');
+  openAcc.add('genfit');
+  store.set('qpcut.gen', {text:['80g Elev8 CoR','155g blueberries','175g Fage 0%','1 Biscoff','200g wagyu ribeye'].join(String.fromCharCode(10)), target:'bf', picks:{}});
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
   current = ${JSON.stringify(TAB)};

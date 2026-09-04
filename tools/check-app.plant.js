@@ -93,6 +93,21 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [gen-fit]: mode ① of the generator, as a card he can use ----
+     ⚠️ TWO OF THESE INITIALLY MISSED, and both times the guard was at fault, not the plant. It opened
+     the card in its first line, so nothing could detect it time-seeding itself open; and it called
+     logWrite directly with its own object, so a plant stripping the name out of the REAL handler
+     changed code the guard never executed. The log step is now a named genLog() the guard exercises. */
+  { guard: 'gen-fit', name: 'unmatched lines get SKIPPED instead of blocking the solve',
+    edits: [{ from: '  if(rows.length && !unmatched.length){', to: '  if(rows.length){' }] },
+  { guard: 'gen-fit', name: 'the fit-a-recipe card time-seeds itself open',
+    edits: [{ from: "(openAcc.has('genfit') ? ' open' : '')", to: "' open'" }] },
+  { guard: 'gen-fit', name: 'his manual pick is ignored, so an unmatched line can never be fixed',
+    edits: [{ from: '    if(!pick || r.spec) return;', to: '    if(true) return;' }] },
+  { guard: 'gen-fit', name: 'the logged entry loses its name, so the tile reads blank',
+    edits: [{ from: "  logWrite(ld, slot, [{id:'gen', name:'Fitted recipe', rows: use}]);",
+              to:   "  logWrite(ld, slot, [{id:'gen', rows: use}]);" }] },
+
   /* ---- [recipe-parser]: a pasted ingredient list becomes priceable rows ----
      All four are defects the first version actually shipped, and every one of them PRICED PERFECTLY
      while being wrong — which is the only kind worth planting here. */
