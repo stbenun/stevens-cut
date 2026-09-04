@@ -1866,6 +1866,29 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(editEntryRows({id:'b1'}, li, 10))  bad.push('editEntryRows edited a legacy array row, which has no amount to change');
     }
 
+    /* (h) adding a food the recipe never had — the 20 mL of syrup he could not log on 2026-09-04.
+       Added rows go AFTER the meal's own so the recipe's indices never move under an edit, and a
+       recipe row must NOT be removable: deleting one silently changes what the meal IS, and the
+       honest way to eat less of something is to set its amount to less. */
+    const add1 = addEntryRow({id:'b1'}, 'smucker sf breakfast syrup', 20);
+    if(!add1) bad.push('addEntryRow refused a legitimate add');
+    else {
+      if(add1.length !== rows0.length + 1) bad.push('adding a row did not grow the entry by exactly one');
+      for(let k = 0; k < rows0.length; k++)
+        if(JSON.stringify(add1[k]) !== JSON.stringify(rows0[k]))
+          bad.push('adding a row disturbed the recipe row at index ' + k);
+      set({bf:[{id:'b1', rows:add1}]});
+      const d = eatenMacros(D).map(Math.round)[0] - base[0];
+      if(d < 5 || d > 10) bad.push('20 mL of SF syrup should cost ~7 cal, the day moved by ' + d);
+      const back = removeEntryRow({id:'b1', rows:add1}, add1.length - 1);
+      if(!back || back.length !== rows0.length) bad.push('removing the added row did not restore the original length');
+    }
+    if(addEntryRow({id:'b1'}, 'not a real food', 10)) bad.push('addEntryRow accepted a food that is not on the price list');
+    if(addEntryRow({id:'b1'}, 'blueberries', 0))      bad.push('addEntryRow accepted a zero amount');
+    if(addEntryRow({id:'b1'}, 'blueberries', NaN))    bad.push('addEntryRow accepted NaN');
+    if(removeEntryRow({id:'b1'}, 0))                  bad.push('removeEntryRow deleted a RECIPE row — only added rows may go');
+    if(removeEntryRow({id:'b1'}, 99))                 bad.push('removeEntryRow accepted an out-of-range index');
+
     /* (g) the editor addresses rows BY INDEX, so entryRows must line up with the meal's ing[] */
     const misaligned = [];
     SLOTS.forEach(s=>s.opts.forEach(o=>o.vars.forEach((v,vi)=>{

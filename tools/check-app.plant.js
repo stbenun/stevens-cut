@@ -79,6 +79,14 @@ const PLANTS = [
     edits: [{ from: "  return o ? o.vars[0].ing.map(r=>r[2]) : [];",
               to:   "  return o ? o.vars[0].ing.map(r=>r[2]).filter(sp=>sp && !sp.free) : [];" }] },
 
+  { guard: 'log-shape', name: 'a recipe row becomes removable, so deleting one silently changes the meal',
+    edits: [{ from: "  if(i < base || i >= rows.length) return null;",
+              to:   "  if(i >= rows.length) return null;" }] },
+  { guard: 'log-shape', name: 'added rows go to the FRONT, shifting every recipe index under an edit',
+    edits: [{ from: "  rows.push({f:key, n:n});", to: "  rows.unshift({f:key, n:n});" }] },
+  { guard: 'log-shape', name: 'addEntryRow stops checking the food is on the price list',
+    edits: [{ from: "  if(!FOOD_FACTS[key] || typeof n !== ", to: "  if(false || typeof n !== " }] },
+
   /* ---- [log-access]: qpcut.eaten has exactly one reader and one writer ----
      The plant is the innocent line someone will actually write. It reads the legacy shape perfectly
      and drops every row-carrying entry, which is why nothing else notices. */

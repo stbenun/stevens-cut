@@ -1429,6 +1429,27 @@ function wireRowEdit(ld){
     logSetMeal(ld, slot, e.id, rows);
     render();
   }));
+  document.querySelectorAll('[data-eadd]').forEach(btn=>btn.addEventListener('click',()=>{
+    const slot = btn.dataset.eadd;
+    const sel = document.querySelector('[data-eaddf="'+slot+'"]');
+    const amt = document.querySelector('[data-eaddn="'+slot+'"]');
+    const e = (logEntries(ld)[slot]||[])[0];
+    const rows = e ? addEntryRow(e, sel && sel.value, parseFloat(amt && amt.value)) : null;
+    if(!rows){ render(); return; }        /* no food picked, or a nonsense amount */
+    openAcc.add('erow-'+slot);            /* keep the editor open — he is probably adding two things */
+    logSetMeal(ld, slot, e.id, rows);
+    render();
+  }));
+  document.querySelectorAll('[data-erm]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault();
+    const parts = String(a.dataset.erm).split('|'), slot = parts[0], i = +parts[1];
+    const e = (logEntries(ld)[slot]||[])[0];
+    const rows = e ? removeEntryRow(e, i) : null;
+    if(!rows){ render(); return; }
+    openAcc.add('erow-'+slot);
+    logSetMeal(ld, slot, e.id, rows);
+    render();
+  }));
   document.querySelectorAll('[data-ereset]').forEach(a=>a.addEventListener('click',ev=>{
     ev.preventDefault();
     const slot = a.dataset.ereset, e = (logEntries(ld)[slot]||[])[0];
@@ -5279,6 +5300,23 @@ function editEntryRows(entry, i, v){
   rows[i].n = v;
   return rows;
 }
+/* Append a food that the recipe never had — the 20 mL of syrup he added on 2026-09-04 and could not
+   log. Added rows live AFTER the meal's own, so the meal's indices never move under an edit. */
+function addEntryRow(entry, key, n){
+  if(!FOOD_FACTS[key] || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
+  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  rows.push({f:key, n:n});
+  return rows;
+}
+/* Remove a row. ⛔ ONLY an ADDED one: dropping a row the recipe owns would silently change what the
+   meal IS, and the honest way to eat less of something is to set its amount, not delete it. */
+function removeEntryRow(entry, i){
+  const base = ((OPTBYID[entry.id] && OPTBYID[entry.id].vars[0].ing) || []).length;
+  const rows = entryRows(entry).map(sp=>Array.isArray(sp) ? sp.slice() : Object.assign({}, sp));
+  if(i < base || i >= rows.length) return null;
+  rows.splice(i, 1);
+  return rows;
+}
 function rowEditorHTML(ld, slotKey, entry){
   /* the Final Meal sentinel has no rows by design — its macros live in one off-plan row */
   if(!entry || entry.id === 'final') return '';
@@ -5301,13 +5339,24 @@ function rowEditorHTML(ld, slotKey, entry){
       <span class="en">${nm}<span class="eu">· ${unit}</span></span>
       <span><input type="number" inputmode="decimal" step="any" min="0" data-erow="${slotKey}|${i}"
                    value="${sp.n}" aria-label="${nm} amount in ${unit}"></span>
-      <span class="em">${Math.round(m[0])} · ${Math.round(m[1])}P</span>
+      <span class="em">${Math.round(m[0])} · ${Math.round(m[1])}P${i>=ing.length
+        ? ` <a href="#" data-erm="${slotKey}|${i}" title="remove" style="color:var(--meat);text-decoration:none">✕</a>` : ''}</span>
     </div>`;
   }).join('');
+  /* ⛔ ALPHABETICAL, and every fact is offered. A shortlist would be me guessing what he eats, and
+     the whole point of this control is the thing the plan did not anticipate. */
+  const addOpts = Object.keys(FOOD_FACTS).sort()
+    .map(k=>`<option value="${k}">${k} · ${FOOD_FACTS[k].unit}</option>`).join('');
+  const addRow = `<div class="erow">
+      <span><select data-eaddf="${slotKey}" aria-label="food to add" style="width:100%;padding:5px 6px;font-size:13px">
+        <option value="">+ add a food…</option>${addOpts}</select></span>
+      <span><input type="number" inputmode="decimal" step="any" min="0" data-eaddn="${slotKey}" placeholder="amt" aria-label="amount to add"></span>
+      <span class="em"><button class="step" data-eadd="${slotKey}" style="width:auto;padding:0 10px">Add</button></span>
+    </div>`;
   return `<details class="acc innerrow" data-acc="erow-${slotKey}"${openAcc.has('erow-'+slotKey)?' open':''}>
     <summary><span>⚖️ What you actually ate${edited?' <span class="daytag">edited</span>':''}</span>
       <span class="statline">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span></summary>
-    <div style="margin-top:4px">${body}</div>
+    <div style="margin-top:4px">${body}${addRow}</div>
     <div class="sub" style="margin-top:8px">Change any amount — the day re-prices off FOOD_FACTS.${
       edited?' <a href="#" data-ereset="'+slotKey+'">↺ back to the recipe</a>':''}</div>
   </details>`;
@@ -9231,7 +9280,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788544958';
+const BUILD = 'b1788545622';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
