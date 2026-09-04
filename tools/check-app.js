@@ -1850,5 +1850,34 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [log-access] — qpcut.eaten has exactly one reader and one writer ========================
+ * Structural, not behavioural, and that is why it earns its place: the refactor that made two
+ * storage shapes safe works ONLY because a single block knows about both. Someone adding
+ * `store.get('qpcut.eaten')` somewhere else is writing the obvious, innocent line — and it would
+ * read the legacy shape correctly while dropping every row-carrying entry on the floor. Silent,
+ * partial, and invisible to every other guard, because the day would still render.
+ */
+{
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const b = src.indexOf('LOG-ACCESS-BEGIN'), e = src.indexOf('LOG-ACCESS-END');
+  const bad = [];
+  if (b === -1 || e === -1 || e < b) bad.push('the LOG-ACCESS sentinels are missing or inverted');
+  else {
+    const outside = [];
+    let i = 0, inside = 0;
+    while ((i = src.indexOf("qpcut.eaten'", i)) !== -1) {
+      if (i > b && i < e) inside++;
+      else outside.push('line ' + (src.slice(0, i).split('\n').length));
+      i++;
+    }
+    if (!inside) bad.push('no qpcut.eaten access INSIDE the sentinels — the block moved and this guard is vacuous');
+    if (outside.length) bad.push(outside.length + ' access(es) outside the sentinels: ' + outside.join(', '));
+    var stat = inside + ' inside, ' + outside.length + ' outside';
+  }
+  if (bad.length) fail('log-access', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('log-access', 'qpcut.eaten is touched in exactly one place (' + stat + ') — every other ' +
+    'consumer goes through logEntries / eatenIds / eatenIdsAll / logWrite');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);

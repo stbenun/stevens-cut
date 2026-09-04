@@ -67,6 +67,15 @@ const PLANTS = [
     edits: [{ from: "                    vars:[{ing:[], t:[0,0,0,0]}], slotKey:null, slotName:'Final meal'};",
               to:   "                    vars:[{ing:[], t:[500,40,50,15]}], slotKey:null, slotName:'Final meal'};" }] },
 
+  /* ---- [log-access]: qpcut.eaten has exactly one reader and one writer ----
+     The plant is the innocent line someone will actually write. It reads the legacy shape perfectly
+     and drops every row-carrying entry, which is why nothing else notices. */
+  { guard: 'log-access', name: 'a second reader of qpcut.eaten appears outside the sentinels',
+    edits: [{ from: "function eatenMacros(ld){",
+              to:   "function eatenMacros(ld){ const sneaky = store.get('qpcut.eaten',{});" }] },
+  { guard: 'log-access', name: 'the sentinels are removed, so the guard has nothing to measure',
+    edits: [{ from: "/* ==== LOG-ACCESS-BEGIN", to: "/* ==== LOG-ACCESS-DISABLED" }] },
+
   /* ---- [offplan-topping]: off-track calories come out of that day's Creami topping ---- */
   { guard: 'offplan-topping', name: 'the 5 g trim step returns, so a 60-cal debt over-cuts the dessert',
     edits: [
