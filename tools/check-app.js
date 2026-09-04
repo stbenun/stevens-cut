@@ -1927,6 +1927,77 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [food-log] — log foods with no meal at all ============================================
+ * His correction, 2026-09-04, holding up Cronometer: "When Im logging a food/meal I also need the
+ * ability to just choose the foods I ate and the amount."
+ *
+ * ⛔ EVERYTHING BUILT BEFORE THIS WAS MEAL-FIRST. The row editor, the free-ingredient add, the
+ * drafts — all of it starts from a meal that already exists and then lets him change it. That is the
+ * wrong way round for the commonest case: he ate some foods. The app made him find a meal to attach
+ * his food to first, which is not a thing a diary should ever ask.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{}), q0 = store.get('qpcut.foodq','');
+    const raw = store.get('qpcut.eaten',{}); delete raw[D]; store.set('qpcut.eaten', raw);
+
+    /* (a) an EMPTY slot takes a food with no meal behind it */
+    if(logAddFood(D,'bf','elev8 cor',80) !== 'new') bad.push('adding a food to an empty slot did not create an entry');
+    const e1 = (logEntries(D).bf||[])[0];
+    if(!e1 || e1.id !== 'custom') bad.push('the food-only entry does not use the custom id');
+    if(!e1 || !e1.name) bad.push('the food-only entry carries no name, so its tile would read blank');
+    if(OPTBYID['custom']) bad.push("'custom' resolves in OPTBYID — it must not, or the tile shows a meal name");
+
+    /* (b) more foods APPEND rather than replacing */
+    logAddFood(D,'bf','blueberries',155);
+    logAddFood(D,'bf','fage 0% greek yogurt',175);
+    logAddFood(D,'bf','biscoff',1);
+    const e = (logEntries(D).bf||[])[0];
+    if(!e || e.rows.length !== 4) bad.push('four foods added but the entry holds ' + (e && e.rows.length));
+    const t = eatenMacros(D).map(Math.round);
+    if(Math.abs(t[0] - 498) > 3) bad.push('four foods price to ' + t[0] + ', expected ~498');
+
+    /* (c) ⛔ a per-gram food added by COUNT is pieces, not grams. Same trap as the parser. */
+    const bis = e.rows[3];
+    if(!bis || bis.u !== 'each') bad.push('1 Biscoff logged as ' + JSON.stringify(bis) + ' — that is one GRAM');
+
+    /* (d) the card is in the slot panel, and the row editor picks the foods up for editing */
+    const before = expandSlot; expandSlot = 'bf'; openAcc.add('foodadd-bf'); render();
+    const html = document.body.innerHTML;
+    expandSlot = before;
+    if(!/data-acc="foodadd-bf"/.test(html)) bad.push('the add-foods card does not render inside the slot');
+    if(!/data-fqty=/.test(html))            bad.push('search results carry no amount box');
+    if(!/data-fadd=/.test(html))            bad.push('search results carry no add control');
+    if(!/data-erow="bf\\|3"/.test(html))     bad.push('the row editor does not expose the added foods for editing');
+
+    /* (e) search ranks a prefix match first */
+    const blue = foodSearch('blue', 12);
+    if(blue[0] !== 'blueberries') bad.push('search "blue" ranked ' + blue[0] + ' first, not blueberries');
+    /* ⛔ THE ONE THAT ACTUALLY MATTERS. He calls his Cream of Rice "COR" every day, and ranking on a
+       bare string prefix put 'cornish hen roasted skin not eaten' above 'elev8 cor'. A whole-word hit
+       must outrank a word that merely starts with the query. */
+    const cor = foodSearch('cor', 12);
+    if(cor[0] !== 'elev8 cor') bad.push('search "cor" ranked ' + cor[0] + ' first, not elev8 cor');
+    const alm = foodSearch('alm', 12);
+    if(alm[0] !== 'almond butter') bad.push('search "alm" ranked ' + alm[0] + ' first — a mid-word hit like salmon must rank below a word start');
+    if(!foodSearch('', 12).length) bad.push('an empty search shows nothing at all');
+
+    /* (f) refusals */
+    if(logAddFood(D,'bf','not a food',10)) bad.push('added a food that is not on the price list');
+    if(logAddFood(D,'bf','blueberries',0)) bad.push('accepted a zero amount');
+
+    store.set('qpcut.eaten', eat0); store.set('qpcut.foodq', q0);
+    return {bad, t: t.join('/')};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('food-log', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('food-log', 'an empty slot takes foods with no meal behind them, four of them append to one ' +
+    'entry (' + r.t + '), a per-gram food added by count logs as PIECES, the search sits inside the slot ' +
+    'with an amount box per result, and the row editor picks them up for editing');
+}
+
 /* ==== [gen-build] — mode ② of the generator: foods in, a solved plate out ====================
  * "tell it the ingredients i want to use and for what meal ... and have it produce a recipe."
  *

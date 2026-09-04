@@ -1522,6 +1522,23 @@ function wireRowEdit(ld){
     try{ await navigator.clipboard.writeText(draftPayload()); b.textContent='✓ Copied — paste it to Claude'; }
     catch(e){ b.textContent='copy failed — select the text below'; }
   }));
+  { const fq = document.getElementById('foodQ');
+    if(fq) fq.addEventListener('input', ()=>{
+      store.set('qpcut.foodq', fq.value);
+      /* keep the section open and the cursor alive: re-render, then restore focus + caret */
+      const pos = fq.selectionStart; render();
+      const n = document.getElementById('foodQ');
+      if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
+    }); }
+  document.querySelectorAll('[data-fadd]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault();
+    const p = String(a.dataset.fadd).split('|'), slot = p[0], key = p.slice(1).join('|');
+    const box = document.querySelector('[data-fqty="' + key.replace(/"/g,'') + '"]');
+    const n = parseFloat(box && box.value);
+    if(!logAddFood(ld, slot, key, n)) return;
+    openAcc.add('foodadd-'+slot); openAcc.add('erow-'+slot);
+    render();
+  }));
   document.querySelectorAll('[data-eadd]').forEach(btn=>btn.addEventListener('click',()=>{
     const slot = btn.dataset.eadd;
     const sel = document.querySelector('[data-eaddf="'+slot+'"]');
@@ -5977,6 +5994,87 @@ function draftPayload(){
   }).join(NL);
 }
 
+/* ==== 🔍 ADD FOODS DIRECTLY — log without a meal at all =====================================
+   His correction, 2026-09-04, holding up Cronometer: "When Im logging a food/meal I also need the
+   ability to just choose the foods I ate and the amount."
+
+   ⛔ EVERYTHING BEFORE THIS WAS MEAL-FIRST. The row editor, the free-ingredient add, the drafts —
+   all of it starts from a meal that already exists and then lets him change it. That is the wrong
+   way round for the commonest case: he ate some foods. A diary app opens a slot and offers a search
+   box; this one made him find a meal to attach his food to first.
+
+   Adding a food to an empty slot creates a plain entry with no meal behind it — id 'custom', which
+   deliberately does not resolve in OPTBYID, so the tile falls back to entry.name the way a draft
+   does. The rows are the same shape as every other entry, so the row editor, the day total and the
+   week report all read it without knowing it was never a recipe. */
+const FOOD_DEFAULT_N = {g:100, mL:100, oz:4};
+function foodDefaultAmount(key){
+  const f = FOOD_FACTS[key];
+  if(!f) return 1;
+  return FOOD_DEFAULT_N[f.unit] != null ? FOOD_DEFAULT_N[f.unit] : 1;
+}
+/* Append a food to whatever is in the slot, creating the entry if the slot is empty. */
+function logAddFood(ld, slot, key, n){
+  const f = FOOD_FACTS[key];
+  if(!f || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
+  const spec = (f.ea) ? {f:key, n:n, u:'each'} : {f:key, n:n};
+  const cur = (logEntries(ld)[slot] || [])[0];
+  if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }
+  const rows = copyRows(cur).concat([spec]);
+  logWrite(ld, slot, [Object.assign({}, cur, {rows: rows})]);
+  return 'appended';
+}
+/* the search itself — name match over the price list, his own foods first */
+function foodSearch(q, limit){
+  const s = String(q||'').toLowerCase().trim();
+  const keys = Object.keys(FOOD_FACTS);
+  if(!s) return keys.slice(0, limit||12);
+  const hit = keys.filter(k=>k.indexOf(s) >= 0);
+  /* ⛔ WHOLE WORD BEATS MERE PREFIX, and "cor" is why. Ranking on a string prefix alone put
+     'cornish hen roasted skin not eaten' above 'elev8 cor' — and COR is what he calls his Cream of
+     Rice every single day. Three of sixteen probe queries reorder under this rule, and it is the one
+     that decides them: an exact word ("cor" in "elev8 cor") outranks a word that merely starts with
+     the query ("cornish"), which outranks a match buried mid-word ("alm" inside "salmon"). Length
+     breaks the remaining ties, which is what puts blueberries above buffin blueberry. */
+  const rank = k => {
+    const w = k.split(' ');
+    if(w.indexOf(s) >= 0) return 0;                 /* an exact word */
+    if(w.some(x=>x.indexOf(s) === 0)) return 1;     /* a word starts with it */
+    return 2;                                        /* buried mid-word */
+  };
+  hit.sort((a,b)=>{
+    const ra = rank(a), rb = rank(b);
+    return ra !== rb ? ra - rb : a.length - b.length;
+  });
+  return hit.slice(0, limit||12);
+}
+function foodAddHTML(ld, slotKey){
+  const q = store.get('qpcut.foodq', '');
+  const hits = foodSearch(q, 12);
+  const rows = hits.map(k=>{
+    const n = foodDefaultAmount(k), f = FOOD_FACTS[k];
+    const m = priceRow([null,null, f.ea ? {f:k,n:n,u:'each'} : {f:k,n:n}]) || [0,0,0,0];
+    return '<div class="erow">'
+      + '<span class="en">' + esc(k) + '<span class="eu">' + esc(f.unit) + '</span></span>'
+      + '<span><input type="number" inputmode="decimal" step="any" min="0" data-fqty="' + esc(k) + '"'
+      + ' value="' + n + '" aria-label="' + esc(k) + ' amount"></span>'
+      + '<span class="em">' + Math.round(m[0]) + ' · ' + Math.round(m[1]) + 'P'
+      + ' <a href="#" data-fadd="' + slotKey + '|' + esc(k) + '" style="color:var(--brass);text-decoration:none;font-weight:700">＋</a></span>'
+      + '</div>';
+  }).join('');
+  return '<details class="acc innerrow" data-acc="foodadd-' + slotKey + '"'
+    + (openAcc.has('foodadd-'+slotKey) ? ' open' : '') + '>'
+    + '<summary><span>🔍 Add foods directly</span><span class="statline">'
+    + Object.keys(FOOD_FACTS).length + ' on the list</span></summary>'
+    + '<div class="sub" style="margin-top:4px">No meal needed — pick what you ate and the amount.</div>'
+    + '<input type="search" id="foodQ" placeholder="search foods…" value="' + esc(q) + '" '
+    + 'style="width:100%;margin-top:6px;padding:7px 8px;font-size:13px;border:1px solid var(--line);'
+    + 'border-radius:8px;background:var(--panel2);color:var(--text)">'
+    + '<div style="margin-top:6px">' + rows + '</div>'
+    + (hits.length === 12 ? '<div class="sub" style="margin-top:6px">Showing 12 — type to narrow it.</div>' : '')
+    + '</details>';
+}
+
 /* ---- ROW EDITOR: what he ACTUALLY ate, per ingredient -------------------------------------
    The reason the whole log refactor happened. On 2026-09-04 he made a breakfast with 155 g of
    blueberries instead of 175 and added 20 mL of syrup, and the app had no way to express it -- it
@@ -8024,7 +8122,7 @@ function viewToday(){
                  + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
           }).join('')}</div>` : '';
       const editor = rowEditorHTML(ld, s.key, cur);
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${foodAddHTML(ld, s.key)}${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
     })() : '';
     return `
   <section class="zone" id="z-log">
@@ -10080,7 +10178,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788558075';
+const BUILD = 'b1788560075';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

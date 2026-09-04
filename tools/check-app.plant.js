@@ -93,6 +93,26 @@ const PLANTS = [
     edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
               to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
 
+  /* ---- [food-log]: log foods with no meal at all ----
+     His correction holding up Cronometer: "When Im logging a food/meal I also need the ability to
+     just choose the foods I ate and the amount."
+     ⚠️ The search plant went through TWO wrong versions first, both no-ops, and for the same reason:
+     the LENGTH tiebreak backstops the ranking. Killing the exact-word branch still leaves 'elev8 cor'
+     (9 chars) above 'cornish hen roasted skin not eaten' (34). Only going back to a bare STRING
+     prefix actually breaks it, because then the query sits at index 0 of 'cornish...' and wins. */
+  { guard: 'food-log', name: 'adding a food REPLACES the slot instead of appending',
+    edits: [{ from: '  const rows = copyRows(cur).concat([spec]);', to: '  const rows = [spec];' }] },
+  { guard: 'food-log', name: 'a per-gram food added by count goes back to meaning grams',
+    edits: [{ from: "  const spec = (f.ea) ? {f:key, n:n, u:'each'} : {f:key, n:n};", to: '  const spec = {f:key, n:n};' }] },
+  { guard: 'food-log', name: 'the food-only entry loses its name, so the tile reads blank',
+    edits: [{ from: "  if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }",
+              to:   "  if(!cur){ logWrite(ld, slot, [{id:'custom', rows:[spec]}]); return 'new'; }" }] },
+  { guard: 'food-log', name: 'ranking goes back to a bare STRING prefix, so "cor" surfaces the cornish hen',
+    edits: [{ from: '    const ra = rank(a), rb = rank(b);',
+              to:   '    const ra = a.indexOf(s)===0?0:1, rb = b.indexOf(s)===0?0:1;' }] },
+  { guard: 'food-log', name: 'the add-foods card disappears from the slot panel',
+    edits: [{ from: '${foodAddHTML(ld, s.key)}${freshRow}', to: '${freshRow}' }] },
+
   /* ---- [gen-build]: mode ② — foods in, a solved plate out ----
      The veg plant is the interesting one: seeding broccoli against the CARB target instead of a
      human portion does not merely look silly, it starves the rest of the plate — the guard catches

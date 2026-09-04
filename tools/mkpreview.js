@@ -58,6 +58,8 @@ const setup = `
   store.set('qpcut.gen', {text:['80g Elev8 CoR','155g blueberries','175g Fage 0%','1 Biscoff','200g wagyu ribeye'].join(String.fromCharCode(10)), target:'bf', picks:{}});
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
+  openAcc.add('foodadd-' + ${JSON.stringify(SLOT)});
+  store.set('qpcut.foodq','blue');
   current = ${JSON.stringify(TAB)};
   render();
   return document.body.innerHTML;
