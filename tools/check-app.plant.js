@@ -56,9 +56,16 @@ const PLANTS = [
   { guard: 'log-shape', name: 'a null slot starts reading as eaten',
     edits: [{ from: "    if(!v) return;                                  /* null = not eaten, same as absent */",
               to:   "    if(v===undefined) return;" }] },
-  { guard: 'log-shape', name: "the 'final' sentinel resolves to a meal, so the day double-counts it",
-    edits: [{ from: "  const o = OPTBYID[e.id];\n  return o ? o.vars[0].t.slice() : [0,0,0,0];",
-              to:   "  const o = OPTBYID[e.id] || OPTBYID['b1'];\n  return o ? o.vars[0].t.slice() : [0,0,0,0];" }] },
+  /* ⛔ THIS CASE WAS WRITTEN WRONG FIRST AND REPORTED "NOT CAUGHT", which is the harness doing its
+     job on the harness. The original plant added `|| OPTBYID['b1']` as a fallback for a lookup I had
+     assumed misses — but OPTBYID['final'] is a REGISTERED synthetic option with t:[0,0,0,0], so the
+     fallback was dead code and the plant changed nothing observable. A plant that cannot fail reads
+     exactly like a guard that works. The real defect is the one the sentinel note above SLOTS warns
+     about: give it real macros and eatenMacros() counts the meal twice, once as a slot and once as
+     the off-plan row finalMeal() writes. */
+  { guard: 'log-shape', name: "the 'final' sentinel stops being zero, so the day double-counts the meal",
+    edits: [{ from: "                    vars:[{ing:[], t:[0,0,0,0]}], slotKey:null, slotName:'Final meal'};",
+              to:   "                    vars:[{ing:[], t:[500,40,50,15]}], slotKey:null, slotName:'Final meal'};" }] },
 
   /* ---- [offplan-topping]: off-track calories come out of that day's Creami topping ---- */
   { guard: 'offplan-topping', name: 'the 5 g trim step returns, so a 60-cal debt over-cuts the dessert',

@@ -5118,9 +5118,14 @@ function gymLeaveMin(wd, ld){
    accessors below rather than each learning both shapes — teaching 27 places to branch is how a
    storage change becomes a month of bugs.
 
-   ⛔ 'final' IS NOT AN OPTION ID. finalMeal() writes it to mark a slot handled while the macros
-   go in as ONE off-plan row, so it MUST price as zero here or the day double-counts the food.
-   That was already true by accident — OPTBYID['final'] is undefined — and is now on purpose. */
+   ⛔ 'final' IS A SYNTHETIC OPTION, NOT A MISSING ONE — and getting that backwards produced a plant
+   that could not fail. finalMeal() writes it to mark a slot handled while the real macros go in as
+   ONE off-plan row. OPTBYID['final'] IS registered, deliberately, with t:[0,0,0,0] — see the sentinel
+   note above SLOTS, which already says why: eatenMacros() sums eaten-slot totals AND off-plan rows,
+   so giving it real numbers double-counts the whole meal. The first draft of this comment claimed the
+   lookup simply missed, and the guard case written from that belief planted a fallback that never
+   executes and passed while asserting nothing. It now moves the synthetic total instead, which is the
+   defect the sentinel note actually warns about. */
 function logEntries(ld){
   const raw = (store.get('qpcut.eaten',{}))[ld] || {};
   const out = {};
