@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 782,968 bytes, 9,449 lines, one file |
-| build | `b1788547925` |
+| app | `index.html`, 787,524 bytes, 9,484 lines, one file |
+| build | `b1788548874` |
 | foods on the price list | 131 |
 | provenance | 58 label · 42 USDA · 29 derived · 2 unverified |
 
@@ -19,7 +19,7 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **225** | 79% of 284 |
+| priced from FOOD_FACTS | **247** | 81% of 306 |
 | deliberately zero (`{free:1}`) | 55 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
@@ -49,12 +49,23 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
 | `di/d3` | Blackened Salmon Plate | 589 / 54 / 58 / 15 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
+| `bf/b28#2` | Buffin + Greek Yogurt | 546 / 48 / 57 / 13 | +6 cal |
+| `bf/b28#8` | Buffin + Greek Yogurt | 546 / 45 / 59 / 14 | +6 cal |
+| `bf/b28#9` | Buffin + Greek Yogurt | 546 / 45 / 59 / 14 | +6 cal |
 | `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
 | `di/d15` | Tomato Beef | 586 / 56 / 62 / 19 | +6 cal |
 | `bf/b1` | Cream of Rice | 545 / 38 / 52 / 22 | +5 cal |
+| `bf/b28#1` | Buffin + Greek Yogurt | 545 / 55 / 54 / 11 | +5 cal |
+| `bf/b28#3` | Buffin + Greek Yogurt | 545 / 50 / 58 / 12 | +5 cal |
+| `bf/b28#4` | Buffin + Greek Yogurt | 545 / 47 / 61 / 12 | +5 cal |
+| `bf/b28#5` | Buffin + Greek Yogurt | 545 / 47 / 61 / 12 | +5 cal |
+| `bf/b28#6` | Buffin + Greek Yogurt | 545 / 46 / 57 / 14 | +5 cal |
+| `bf/b28#7` | Buffin + Greek Yogurt | 545 / 45 / 61 / 13 | +5 cal |
 | `lu/l4` | Tuna Melt Stack | 580 / 51 / 62 / 17 | +5 cal |
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
 | `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
+| `bf/b28#0` | Buffin + Greek Yogurt | 544 / 56 / 55 / 10 | +4 cal |
+| `bf/b28#10` | Buffin + Greek Yogurt | 544 / 47 / 51 / 12 | +4 cal |
 | `bf/b18` | Chocolate Cookie Bowl | 543 / 44 / 50 / 20 | +3 cal |
 | `bf/b23` | Pumpkin Pie Bowl | 543 / 46 / 51 / 19 | +3 cal |
 | `lu/l8` | Salmon Smash Patties | 578 / 51 / 70 / 14 | +3 cal |
@@ -92,7 +103,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 
-**0 of 51 variants over budget.**
+**0 of 62 variants over budget.**
 
 ## Waiting on him
 

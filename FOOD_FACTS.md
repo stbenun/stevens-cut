@@ -3,7 +3,7 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 97 / 130 foods in the meal plan (**75%**)
+## Coverage: 97 / 132 foods in the meal plan (**73%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
@@ -37,7 +37,7 @@ Provenance of the 131 rows: **58** label · **42** USDA · **29** derived · **2
 | `buffin cookie butter tres leches` | each | 422 | 24 | 50 | 14 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
 | `buffin double chocolate brownie` | each | 437 | 25 | 55 | 13 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. |
 | `buffin twistbar` | each | 408 | 22 | 53 | 12 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026; matches the myhummusfit.com published figure exactly. Filled. |
-| `buffin welcome to the sno` | each | 424 | 25 | 44 | 12 | label | ⛔ Badge carries a CONTAINS NUTS mark. He confirmed Aug 19 2026 that he checks the wrappers himself, so this is recorded as the label fact, not a warning at him — nut:1 exists so nothing can put it in a meal silently. Badge Aug 19 2026 reads 44 C where the brand publishes 54 C; unresolved, and moot while it stays uneaten. Brand also marks the flavor as pausing. |
+| `buffin welcome to the sno` | each | 424 | 25 | 44 | 12 | label | HummusFit Buffin badge, HIS OWN shipment email photographed Aug 19 2026. Badge carries a CONTAINS NUTS mark; he identified the nut as COCONUT on 2026-09-04 and does not avoid it — FDA labelling counts coconut as a tree nut, which is why the mark is there. ⚠️ Badge reads 44 C where the brand publishes 54 C, unresolved: the badge is used because his own photograph outranks a website, and one wrapper check settles it. Brand also marks the flavor as pausing. |
 | `butter` | g | 7.17 | 0.0085 | 0.0006 | 0.8111 | USDA | USDA butter, salted: 100 g = 717 cal / 0.85 P / 0.06 C / 81.11 F -> per gram. Fetched Aug 18 2026. DAIRY. Appears only as 3 g in the Brookie's cookie-dough layer. |
 | `celery` | g | 0.16 | 0.0069 | 0.0297 | 0.0017 | USDA | USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026. |
 | `chicken breast` | oz cooked | 47 | 8.8 | 0 | 1 | derived | grilled skinless, 165 cal / 31 P per 100 g |
@@ -143,13 +143,15 @@ Provenance of the 131 rows: **58** label · **42** USDA · **29** derived · **2
 | `vanilla ice cream protein` | g | 3.7143 | 0.7143 | 0.0857 | 0.0714 | derived | Per gram, from the app's own half-serving row (17.5 g = 65/12.5/1.5/1.25) which is exactly half the PP_G scoop weight of 35 g. published RYSE Loaded Vanilla Ice Cream: 25 P a scoop, ~35 g, 130 cal -> 3.714 cal/g, EXACT match to the app row. Fetched/derived Aug 18 2026. |
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 
-## Still to source — 33 foods, most-used first
+## Still to source — 35 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
 | food | times it appears in the plan |
 |---|---:|
 | pinch of salt + lakanto, to taste | 22 |
+| hummusfit buffin | 11 |
+| fage total 0% | 11 |
 | vanilla bean paste | 5 |
 | berries | 4 |
 | lemon extract | 3 |

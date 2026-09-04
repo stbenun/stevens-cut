@@ -64,12 +64,25 @@ const CASES = [
   /* --- Aug 19 2026: a nut-bearing PRODUCT can hide behind a name that says nothing about nuts.
          [nuts] reads text and is blind to {f:'buffin welcome to the sno'}; [nut-facts] reads the flag
          on the fact. Both directions of the spec shape are planted — a plain row and a {parts} part. */
-  { name: 'a nut-flagged product named by a plain ingredient row', check: 'nut-facts',
-    from: "['Almond butter (for breakfast size)','9 g',{f:'almond butter',n:9}]",
-    to:   "['Almond butter (for breakfast size)','9 g',{f:'buffin welcome to the sno',n:1,u:'each'}]" },
-  { name: 'a nut-flagged product hidden inside a {parts} composite', check: 'nut-facts',
-    from: "{parts:[{f:'tomato',n:150},{f:'cucumber',n:150}]}",
-    to:   "{parts:[{f:'tomato',n:150},{f:'buffin welcome to the sno',n:1}]}" },
+  /* ⛔ THESE TWO PLANT THE FLAG, NOT A REFERENCE TO A FLAGGED FOOD — and the rewrite is the point.
+     They used to name {f:'buffin welcome to the sno'}, the only nut-flagged fact on the list. On
+     2026-09-04 he corrected that flag off it ("welcome to the sno has coconut. im not allergic";
+     the FDA counts coconut as a tree nut, which is why the badge says CONTAINS NUTS), and the moment
+     it went, BOTH cases reported MISSED — there was no flagged food left to smuggle anywhere.
+     That is the failure this file exists to catch, arriving at this file itself: a fixture anchored
+     to one real row, and the row moved.
+     ⛔ AND IT LEFT [nut-facts] TOTALLY UNARMED. Zero flagged facts means its flag-and-walk wiring is
+     untested, on the one guard standing between an automated swap and anaphylaxis — HummusFit itself
+     warns that some muffins contain peanuts and tree nuts, so the next shipment can re-arm it.
+     Flagging a food he eats DAILY tests the wiring regardless of what is in his cupboard, and tests
+     it harder: almond butter is in 26 ingredient rows and tomato sits inside {parts} composites, so
+     one plant each proves the plain-row walk and the parts walk still bite. */
+  { name: 'a nut flag on a food used in plain ingredient rows', check: 'nut-facts',
+    from: "  'almond butter':     {unit:'g',           sp:[5.94,6.88],",
+    to:   "  'almond butter':     {unit:'g', nut:1,    sp:[5.94,6.88]," },
+  { name: 'a nut flag on a food used inside a {parts} composite', check: 'nut-facts',
+    from: "  'tomato':         {unit:'g', ea:123,",
+    to:   "  'tomato':         {unit:'g', nut:1, ea:123," },
   /* ⛔ Anchored on the DISH NAME AND PRICE, not the description. The previous version quoted the whole
      tacos line verbatim and broke the moment that copy was rewritten (2026-08-20) — it printed
      BROKEN CASE while the suite still read as fine, which is the staleness this file already warns
