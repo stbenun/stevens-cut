@@ -87,6 +87,12 @@ const PLANTS = [
   { guard: 'log-shape', name: 'addEntryRow stops checking the food is on the price list',
     edits: [{ from: "  if(!FOOD_FACTS[key] || typeof n !== ", to: "  if(false || typeof n !== " }] },
 
+  /* The tile regression, planted as the exact line it used to be. It was CORRECT for months — the
+     recipe total and what he ate were the same number until the row editor shipped. */
+  { guard: 'log-shape', name: 'the slot tile goes back to printing the RECIPE total instead of what he ate',
+    edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
+              to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
+
   /* ---- [log-access]: qpcut.eaten has exactly one reader and one writer ----
      The plant is the innocent line someone will actually write. It reads the legacy shape perfectly
      and drops every row-carrying entry, which is why nothing else notices. */

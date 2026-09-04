@@ -1896,6 +1896,26 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     })));
     if(misaligned.length) bad.push('entryRows is not index-aligned with ing[] for: '+misaligned.slice(0,5).join(', '));
 
+    /* (i) ⛔ THE TILE MUST PRINT WHAT HE ATE, NOT WHAT THE RECIPE SAYS. The tile read
+       OPTBYID[id].vars[0].t, which was identical to the truth right up until the row editor shipped.
+       After that a bowl edited to 633 still showed "545 · 38P" with the hero above it correctly
+       counting 633 — two numbers disagreeing on one screen, which is the sushi-card bug exactly. */
+    {
+      const T = isoToday();
+      const grown = addEntryRow({id:'b1'}, 'blueberries', 155);
+      store.set('qpcut.eaten', Object.assign({},eat0,{[T]: {bf:[{id:'b1', rows:grown}]}}));
+      store.set('qpcut.offplan', {});
+      const want = entryMacros({id:'b1', rows:grown}).map(Math.round);
+      const before = expandSlot; expandSlot = 'bf'; render();
+      const tile = (document.body.innerHTML.match(/<button class="mtile[^>]*data-mtile="bf"[\\s\\S]*?<\\/button>/)||[''])[0];
+      expandSlot = before;
+      const shown = (tile.match(/<span class="mt-m">(\\d+) · (\\d+)P/)||[]);
+      if(!shown.length) bad.push('could not read the bf tile macro — clause (i) is vacuous');
+      else if(+shown[1] !== want[0] || +shown[2] !== want[1])
+        bad.push('the tile prints ' + shown[1] + ' · ' + shown[2] + 'P but he ate ' + want[0] + ' · ' + want[1] + 'P');
+      if(tile && !/Cream of Rice/.test(tile)) bad.push('the tile lost the meal name: ' + tile.slice(0,120));
+    }
+
     store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
     return {bad, legacy, asRows, halved, twice};
   `);
