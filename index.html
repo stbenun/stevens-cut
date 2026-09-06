@@ -6443,6 +6443,17 @@ function fvSearchHTML(ld){
     + '<div class="fvlist">' + list + '</div>' + bar + '</div>';
 }
 /* ---- page 2: the food, its amount, its unit, its group ---- */
+/* The provenance, cut at a WORD. A hard slice(0,150) ended almond butter mid-token — "basis is the
+   low end (190/" — which reads as a rendering fault rather than an abbreviation. Prefer the end of
+   a sentence when one falls in range, since the first sentence is nearly always the label itself. */
+function srcBlurb(src){
+  const t = String(src || '').trim();
+  if(t.length <= 160) return t;
+  const dot = t.lastIndexOf('. ', 160);
+  if(dot > 70) return t.slice(0, dot + 1);
+  const sp = t.lastIndexOf(' ', 160);
+  return t.slice(0, sp > 70 ? sp : 160).replace(/[s,;:(/-]+$/, '') + '…';
+}
 function fvDetailHTML(ld){
   const st = fvState(), k = st.pick, f = FOOD_FACTS[k];
   if(!f) return fvSearchHTML(ld);
@@ -6469,7 +6480,7 @@ function fvDetailHTML(ld){
     + '<span class="fve-c">Carbs (' + pct(2) + '%) — <b>' + (Math.round(m[2]*10)/10) + ' g</b></span>'
     + '<span class="fve-f">Fat (' + pct(3) + '%) — <b>' + (Math.round(m[3]*10)/10) + ' g</b></span>'
     + '</div></div>'
-    + '<div class="sub" style="margin:10px 2px">' + esc(String(f.src||'').slice(0,150)) + '</div>'
+    + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     + '<button class="fvsave" data-fvsave="1">SAVE</button>'
     + '</div>';
 }
@@ -7555,7 +7566,14 @@ let zbTab = null, mealQ = '', mealKF = null, expandSlot = null;
 function renderZoneBar(){
   const zb = document.getElementById('zoneBar'); if(!zb) return;
   /* rebuild on tab change OR when the time-aware zone order shifts — chips mirror the page */
-  const sig = current==='today'? 'today|'+zoneOrder().join() : current;
+  /* ⛔ THE FOOD PAGE IS PART OF THE SIGNATURE. This function returns early unless the signature
+     changes, and for Meals the signature was the bare string 'meals' — so opening the food page
+     never rebuilt the bar and the hide-it branch below sat behind a return that could not fire.
+     The screenshots were byte-identical after the fix, which is the only reason I caught it: a
+     change that alters nothing looks exactly like a change that was not needed. */
+  const sig = current==='today'? 'today|'+zoneOrder().join()
+            : current==='meals'? 'meals|'+(fvState().slot ? 'fv' : '-')
+            : current;
   if(zbTab===sig){ return; }
   zbTab = sig;
   if(current==='today'){
@@ -7565,6 +7583,11 @@ function renderZoneBar(){
       ${zoneOrder().map(k=>`<button class="zchip" data-jump="z-${k}">${LBL[k]}</button>`).join('')}
       <span class="zbrest" id="zbRest"></span>`;
   } else if(current==='meals'){
+    /* ⛔ A PAGE TAKES THE SCREEN. With the food page open this bar put a SECOND search box directly
+       above its own — 'Search meals & ingredients…' over 'Search all foods…', with the kosher chips
+       between them — which is precisely the crowding he threw the nested accordions out for. The bar
+       belongs to the meal library, and while the food page is up the library is not on screen. */
+    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */
     zb.innerHTML = `
       <input class="zsearch" id="mealSearch" type="search" placeholder="Search meals &amp; ingredients…" autocomplete="off" value="${esc(mealQ)}">
       <span class="chip kf${mealKF==='meat'?' on':''}" data-kf="meat">Meat</span>

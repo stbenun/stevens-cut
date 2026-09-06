@@ -119,6 +119,15 @@ const PLANTS = [
     /* banana read "1 g · 1 cal" while meaning 1 each · 105, and salmon "6 g" meaning 6 oz. */
     edits: [{ from: "        + '<span class=\"fv-s\">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'",
               to:   "        + '<span class=\"fv-s\">' + n + ' ' + esc(FOOD_FACTS[k].unit) + ' · ' + Math.round(m[0]) + ' cal</span>'" }] },
+  { guard: 'food-log', name: 'the zone bar stops hiding behind the food page (two search boxes)',
+    edits: [{ from: "    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */",
+              to:   "    if(false){ zb.innerHTML = ''; return; }" }] },
+  { guard: 'food-log', name: 'the zone-bar signature forgets the food page, so the hide branch never runs',
+    /* the shape of the original bug: renderZoneBar returns early on an unchanged signature, and for
+       this tab the signature was the bare string 'meals'. The fix sat behind a return that could not
+       fire, and the screenshots came back byte-identical. */
+    edits: [{ from: "            : current==='meals'? 'meals|'+(fvState().slot ? 'fv' : '-')",
+              to:   "            : current==='meals'? 'meals'" }] },
   { guard: 'food-log', name: 'the tick boxes vanish from the search rows',
     edits: [{ from: "        + '<span class=\"fv-c' + (sel.indexOf(k)>=0?' on':'') + '\" data-fvsel=\"' + esc(k) + '\">✓</span></button>';",
               to:   "        + '</button>';" }] },

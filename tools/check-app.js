@@ -2070,6 +2070,23 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
       if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
+      /* ⛔ ONE SEARCH BOX. The tab's own zone bar carries 'Search meals & ingredients…' plus the
+         kosher chips, and with the page open it sat directly above the page's own box — two search
+         fields stacked, which is the crowding he threw the nested accordions out for. Worse, the fix
+         hid behind renderZoneBar's early return: its signature for this tab was the bare string
+         'meals', so opening the page never rebuilt the bar and the new branch could not run. The
+         screenshots came back BYTE-IDENTICAL, which is the only reason it surfaced. */
+      current = 'meals'; fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:[]});
+      renderZoneBar(); render();
+      { const zb = document.getElementById('zoneBar');
+        if(zb && zb.innerHTML.trim()) bad.push('the meal-library search bar is still on screen behind the food page');
+        const boxes = (document.body.innerHTML.match(/type="search"/g)||[]).length;
+        if(boxes !== 1) bad.push(boxes + ' search boxes are on screen at once — the page must own the screen');
+        fvClose(); renderZoneBar(); render();
+        const zb2 = document.getElementById('zoneBar');
+        if(!zb2 || zb2.innerHTML.indexOf('mealSearch') < 0)
+          bad.push('closing the food page did not bring the meal-library search bar back'); }
+      fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:[]});
       /* ⛔ MULTI-SELECT — his ask, 2026-09-06: "Add it to", on the checkboxes and ADD TO DIARY he
          pointed at. Three things have to hold. The tick must not navigate (it lives inside the row
          button, so the handler needs stopPropagation exactly like the ★ does). The bar must not

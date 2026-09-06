@@ -68,7 +68,9 @@ const setup = `
   /* the food page, if asked for: a bare tab name is the search screen, anything else is a food key */
   if(FV_){
     const tabs = ['all','fav','dishes'];
-    if(tabs.indexOf(FV_) >= 0) fvSet({slot:SLOT_, tab:FV_, q:'', pick:null});
+    /* --fv "sel:a,b,c" ticks those foods, which is the only way to see the ADD TO DIARY bar */
+    if(FV_.indexOf('sel:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, sel:FV_.slice(4).split(',')});
+    else if(tabs.indexOf(FV_) >= 0) fvSet({slot:SLOT_, tab:FV_, q:'', pick:null});
     else                       fvSet({slot:SLOT_, tab:'all', q:'', pick:FV_, amt:null, unit:null});
     current = 'meals';
   }
