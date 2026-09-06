@@ -6164,11 +6164,17 @@ function logAddFood(ld, slot, key, n, unit){
    move: tap ＋ on a group and a PAGE takes over — search, three tabs, a list; tap a food and a
    second page asks Amount / Serving Size / Group and offers SAVE. Nothing nests at all.
 
-   So this is a view state, not a <details>. While qpcut.fv.slot is set the Meals tab renders THIS
+   So this is a view state, not a <details>. While FV.slot is set the Meals tab renders THIS
    instead of the diary, and ✕ goes back. */
-function fvState(){ return store.get('qpcut.fv', {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null}); }
-function fvSet(p){ store.set('qpcut.fv', Object.assign(fvState(), p)); }
-function fvClose(){ store.set('qpcut.fv', {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null}); }
+/* ⛔ THIS IS SESSION STATE, NOT SAVED STATE, and the difference is not cosmetic. It lived in
+   localStorage for an afternoon, which meant closing the app with a food open reopened it on a
+   search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
+   on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
+   pressed is, and that stays in the store. */
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null};
+function fvState(){ return FV; }
+function fvSet(p){ FV = Object.assign({}, FV, p); }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);

@@ -115,6 +115,16 @@ const PLANTS = [
     /* retargeted 2026-09-06 onto the rewritten foodSearch. Same defect, same reason it is the one
        worth planting: he types "cor" every day, and a bare prefix puts the cornish hen above it. */
     edits: [{ from: '      if(w.indexOf(s) >= 0) r = 0;', to: '      if(nk.indexOf(s) === 0) r = 0;' }] },
+  { guard: 'food-log', name: 'the open food page gets persisted, stranding him on it after a reload',
+    /* it really did live in localStorage for an afternoon: he would have closed the app on a food and
+       reopened it to a search screen with no diary behind it, and nothing on screen explaining why. */
+    edits: [{ from: 'function fvSet(p){ FV = Object.assign({}, FV, p); }',
+              to:   "function fvSet(p){ FV = Object.assign({}, FV, p); store.set('qpcut.fv', FV); }" }] },
+  { guard: 'food-log', name: 'a favourite STOPS being persisted, so starring a food does not survive a reload',
+    /* the other half of the same line: page position is not worth saving, his ★ is. */
+    edits: [{ from: "  store.set('qpcut.favs', f);", to: '  /* dropped */' }] },
+  { guard: 'food-log', name: 'the default list goes back to insertion order instead of what he eats',
+    edits: [{ from: '    return ua !== ub ? ub - ua : a.localeCompare(b);', to: '    return 0;' }] },
   { guard: 'food-log', name: 'the way into the food page disappears from the diary group',
     /* retargeted 2026-09-06: the in-group search card is gone on his instruction and the group offers
        a button instead. Take the button away and a slot becomes a dead end again — which is the same

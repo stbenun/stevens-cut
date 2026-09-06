@@ -2058,7 +2058,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     expandSlot = before;
     if(!/data-fvopen="bf"/.test(html)) bad.push('the slot offers no way to open the food page');
     {
-      const fv0 = store.get('qpcut.fv',{});
+      const fv0 = fvState();
       fvSet({slot:'bf', tab:'all', q:'', pick:null});
       const p1 = foodPageHTML(D);
       if(!/data-fvpick=/.test(p1))  bad.push('the food page lists no foods to pick');
@@ -2070,6 +2070,17 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
       if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
+      /* ⛔ WHERE HE IS INSIDE A SCREEN MUST NOT SURVIVE A RELOAD. This lived in localStorage for an
+         afternoon: closing the app with a food open reopened it on a search screen with no diary
+         behind it, and nothing on screen would have explained why. The ★ he pressed IS worth saving
+         and stays in the store — this clause draws that line and keeps it drawn. */
+      if(store.get('qpcut.fv', null) !== null)
+        bad.push('the open food page is being persisted — he would reopen the app stranded on it');
+      { const f0 = store.get('qpcut.favs', []);
+        favToggle('biscoff');
+        if((store.get('qpcut.favs', [])||[]).indexOf('biscoff') < 0)
+          bad.push('a favourite is NOT persisted — starring a food would not survive a reload');
+        store.set('qpcut.favs', f0); }
       /* ⛔ THE AMOUNT AND THE UNIT MUST DESCRIBE THE SAME QUANTITY. A graham cracker opened at 6,495
          kcal because the default amount was read in grams while the unit shown said 'each'. */
       /* ⛔ COMPUTE the sweep, do not render it. The first version rendered foodPageHTML for every
@@ -2107,7 +2118,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         if(!last || last.f !== 'blueberries' || last.u !== 'oz' || last.n !== 2)
           bad.push('SAVE wrote ' + JSON.stringify(last) + ', not 2 oz of blueberries');
       }
-      fvClose(); store.set('qpcut.fv', fv0);
+      fvClose(); fvSet(fv0);
     }
     /* the added foods are DIARY LINES now, each with its own amount box and remove control */
     if(!/data-diq="bf\\|0\\|3"/.test(html)) bad.push('the diary does not expose the added foods as editable lines');
@@ -2124,6 +2135,21 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const alm = foodSearch('alm', 12);
     if(alm[0] !== 'almond butter') bad.push('search "alm" ranked ' + alm[0] + ' first — a mid-word hit like salmon must rank below a word start');
     if(!foodSearch('', 12).length) bad.push('an empty search shows nothing at all');
+    /* ⛔ AND IT MUST SHOW THE RIGHT THINGS FIRST. The empty list was insertion order, which opened
+       on tuna packet / mayonnaise / light mayo / romaine lettuce while the five foods he eats every
+       morning were nowhere on screen. His log decides now, so the head of the list must be foods he
+       has actually eaten, most-logged first — asserted as a SHAPE rather than as names, because the
+       names are supposed to change as he does. */
+    { const use = foodUseCounts();
+      const head = foodSearch('', 8);
+      const counts = head.map(k=>use[k]||0);
+      if(counts.some(c=>c === 0))
+        bad.push('the default list offers a food he has never logged in its first 8: ' +
+                 head.filter((k,n)=>counts[n] === 0).join(', '));
+      for(let n = 1; n < counts.length; n++) if(counts[n] > counts[n-1])
+        bad.push('the default list is not ordered by how often he eats things: ' +
+                 head[n-1] + ' (' + counts[n-1] + ') above ' + head[n] + ' (' + counts[n] + ')');
+      if(!counts.length || counts[0] < 2) bad.push('the default list ran vacuous — no usage counted at all'); }
 
     /* (f) refusals */
     if(logAddFood(D,'bf','not a food',10)) bad.push('added a food that is not on the price list');
@@ -2492,7 +2518,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const D = isoToday();
     const eat0 = store.get('qpcut.eaten',{});
     store.set('qpcut.eaten', Object.assign({},eat0,{[D]:{}}));
-    const fv0 = store.get('qpcut.fv',{});
+    const fv0 = fvState();
 
     fvSet({slot:'bf', tab:'dishes', q:'', pick:null});
     const html = foodPageHTML(D);
@@ -2530,7 +2556,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const want2 = OPTBYID['d1'].vars[0].t;
     if(m[0] !== want2[0]) bad.push('the cross-slot meal priced ' + m[0] + ', not its own ' + want2[0]);
 
-    store.set('qpcut.fv', fv0);
+    fvSet(fv0);
     store.set('qpcut.eaten', eat0);
     return {bad, offered: offered.length};
   `);
@@ -2584,7 +2610,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
        Showing them in ONE list with guarded meals is exactly why the warning still has to be there —
        a repo meal is priced by [priced]/[slot-fit]/[row-math] and a draft he typed on his phone is
        priced by nothing, and the list is the only place that difference is visible. */
-    const fv0 = store.get('qpcut.fv',{});
+    const fv0 = fvState();
     fvSet({slot:'bf', tab:'dishes', q:'', pick:null});
     const html = foodPageHTML(isoToday());
     if(!/data-fvdish="/.test(html))       bad.push('the dishes tab lists nothing at all');
@@ -2606,7 +2632,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       }
       store.set('qpcut.eaten', eat0);
     }
-    store.set('qpcut.fv', fv0);
+    fvSet(fv0);
 
     const n = Object.keys(draftAll()).length;
     store.set('qpcut.mealdrafts', d0);
