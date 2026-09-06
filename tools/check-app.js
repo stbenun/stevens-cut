@@ -2072,14 +2072,29 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
       /* ⛔ THE AMOUNT AND THE UNIT MUST DESCRIBE THE SAME QUANTITY. A graham cracker opened at 6,495
          kcal because the default amount was read in grams while the unit shown said 'each'. */
+      /* ⛔ COMPUTE the sweep, do not render it. Rendering foodPageHTML for all of FOOD_FACTS ran
+         once per plant and timed the plant harness out at two minutes — a guard nobody can afford to
+         run is a guard that gets skipped. The claim is about the DEFAULT AMOUNT, so read the default;
+         then render three foods to prove the page prints the number it computed, which is the only
+         part the rendering was ever establishing. */
       const over = [];
       Object.keys(FOOD_FACTS).forEach(function(k){
-        fvSet({pick:k, amt:null, unit:null});
-        const h = foodPageHTML(D);
-        const kc = +((h.match(/class="fve-k">(\\d+)/)||[])[1] || 0);
-        if(kc > 1200) over.push(k + ' opens at ' + kc + ' kcal');
+        const uu = fvUnits(k)[0];
+        const kc = fvMacros(k, fvDefaultAmount(k, uu), uu)[0];
+        if(kc > 1200) over.push(k + ' opens at ' + Math.round(kc) + ' kcal');
+        const n0 = fvDefaultAmount(k, uu);
+        if(!(n0 > 0))        over.push(k + ' proposes an amount of ' + n0);
+        if(!isFinite(kc))    over.push(k + ' prices to ' + kc + ' — not a number');
       });
       if(over.length) bad.push('the default amount is wrong for ' + over.length + ' food(s): ' + over.slice(0,3).join(', '));
+      /* and the screen shows what was computed — graham cracker is the one that broke */
+      ['graham cracker','egg','blueberries'].forEach(function(k){
+        fvSet({pick:k, amt:null, unit:null});
+        const shown = +((foodPageHTML(D).match(/class="fve-k">(\\d+)/)||[])[1] || -1);
+        const uu = fvUnits(k)[0];
+        const want = Math.round(fvMacros(k, fvDefaultAmount(k, uu), uu)[0]);
+        if(shown !== want) bad.push('the page shows ' + shown + ' kcal for ' + k + ' but its default is ' + want);
+      });
       /* and SAVE writes the unit it showed */
       fvSet({pick:'blueberries', unit:'oz', amt:2});
       if(!fvSaveFood(D)) bad.push('SAVE refused a legitimate 2 oz of blueberries');
