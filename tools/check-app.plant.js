@@ -89,9 +89,11 @@ const PLANTS = [
 
   /* The tile regression, planted as the exact line it used to be. It was CORRECT for months — the
      recipe total and what he ate were the same number until the row editor shipped. */
-  { guard: 'log-shape', name: 'the slot tile goes back to printing the RECIPE total instead of what he ate',
-    edits: [{ from: "          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)",
-              to:   "          ? ((picked && picked.synthetic) ? 'salvaged' : `${picked.vars[0].t[0]} · ${picked.vars[0].t[1]}P`)" }] },
+  /* ⚠️ RETARGETED 2026-09-05: the tile became a diary GROUP HEADER. Same defect either way — the
+     header printing the recipe's own total instead of the foods actually in the group. */
+  { guard: 'log-shape', name: 'the group header goes back to printing the RECIPE total instead of what he ate',
+    edits: [{ from: "    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P'",
+              to:   "    const val = items.length ? (OPTBYID[(logEntries(ld)[s.key]||[])[0].id]||{vars:[{t:[0,0]}]}).vars[0].t[0] + ' · ' + (OPTBYID[(logEntries(ld)[s.key]||[])[0].id]||{vars:[{t:[0,0]}]}).vars[0].t[1] + 'P'" }] },
 
   /* ---- [food-log]: log foods with no meal at all ----
      His correction holding up Cronometer: "When Im logging a food/meal I also need the ability to
@@ -110,8 +112,8 @@ const PLANTS = [
   { guard: 'food-log', name: 'ranking goes back to a bare STRING prefix, so "cor" surfaces the cornish hen',
     edits: [{ from: '    const ra = rank(a), rb = rank(b);',
               to:   '    const ra = a.indexOf(s)===0?0:1, rb = b.indexOf(s)===0?0:1;' }] },
-  { guard: 'food-log', name: 'the add-foods card disappears from the slot panel',
-    edits: [{ from: '${foodAddHTML(ld, s.key)}${freshRow}', to: '${freshRow}' }] },
+  { guard: 'food-log', name: 'the add-foods card disappears from the diary group',
+    edits: [{ from: '      + foodAddHTML(ld, s.key)\n', to: '' }] },
 
   /* ---- [gen-build]: mode ② — foods in, a solved plate out ----
      The veg plant is the interesting one: seeding broccoli against the CARB target instead of a
@@ -208,13 +210,13 @@ const PLANTS = [
      template literal, renders malformed HTML, and misses the guard's regex. My plant was wrong, not
      the guard, and a plant that produces garbage instead of the defect reads exactly like a pass. */
   { guard: 'cross-slot', name: 'the list goes back to lunch⇄dinner only',
-    edits: [{ from: "        const groups = SLOTS.filter(x=>x.key!==s.key)",
-              to:   "        const groups = SLOTS.filter(x=>x.key!==s.key && (s.key==='lu'?x.key==='di':s.key==='di'?x.key==='lu':false))" }] },
+    edits: [{ from: "  const others = SLOTS.filter(function(x){ return x.key !== s.key; })",
+              to:   "  const others = SLOTS.filter(function(x){ return x.key !== s.key && (s.key==='lu'?x.key==='di':s.key==='di'?x.key==='lu':false); })" }] },
   { guard: 'cross-slot', name: 'the pills stop printing the delta against this slot budget',
-    edits: [{ from: "`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`", to: "`${t[0]} · ${t[1]}P`" }] },
+    edits: [{ from: "t[0] + ' · ' + t[1] + 'P · ' + (d>0?'+':'') + d", to: "t[0] + ' · ' + t[1] + 'P'" }] },
   { guard: 'cross-slot', name: 'the section time-seeds itself open',
-    edits: [{ from: 'data-acc="other-$' + '{s.key}"$' + "{openAcc.has('other-'+s.key)?' open':''}>",
-              to:   'data-acc="other-$' + '{s.key}" open>' }] },
+    edits: [{ from: "'<details class=\"acc innerrow\" data-acc=\"other-' + s.key + '\"' + (openAcc.has('other-'+s.key)?' open':'') + '>'",
+              to:   "'<details class=\"acc innerrow\" data-acc=\"other-' + s.key + '\" open>'" }] },
 
   /* ---- [meal-drafts]: the bridge from his phone into the guarded library ----
      The first plant here targeted prose the guard does not read, so it MISSED — my plant was wrong,
@@ -357,8 +359,8 @@ const PLANTS = [
 
   /* And the card prints a next-meal time beside the warning instead of withholding it. */
   { guard: 'eat-time', name: 'the card computes a next-meal time from a time it just called impossible',
-    edits: [{ from: "        const sug = conflict ? null : nextEatSuggestion(ld);",
-              to:   "        const sug = nextEatSuggestion(ld);" }] },
+    edits: [{ from: "    const sug = conflict ? null : nextEatSuggestion(ld);",
+              to:   "    const sug = nextEatSuggestion(ld);" }] },
 
   /* ---- [progression-rule]: one plant per rule his coach gave on 2026-08-25 ---- */
   /* The feeler stops being a feeler — this is the OLD behaviour, and against his own log it held him
