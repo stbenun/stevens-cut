@@ -115,6 +115,22 @@ const PLANTS = [
     /* retargeted 2026-09-06 onto the rewritten foodSearch. Same defect, same reason it is the one
        worth planting: he types "cor" every day, and a bare prefix puts the cornish hen above it. */
     edits: [{ from: '      if(w.indexOf(s) >= 0) r = 0;', to: '      if(nk.indexOf(s) === 0) r = 0;' }] },
+  { guard: 'food-log', name: 'the search row labels his amount in the FACT’s unit again',
+    /* banana read "1 g · 1 cal" while meaning 1 each · 105, and salmon "6 g" meaning 6 oz. */
+    edits: [{ from: "        + '<span class=\"fv-s\">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'",
+              to:   "        + '<span class=\"fv-s\">' + n + ' ' + esc(FOOD_FACTS[k].unit) + ' · ' + Math.round(m[0]) + ' cal</span>'" }] },
+  { guard: 'food-log', name: 'the tick boxes vanish from the search rows',
+    edits: [{ from: "        + '<span class=\"fv-c' + (sel.indexOf(k)>=0?' on':'') + '\" data-fvsel=\"' + esc(k) + '\">✓</span></button>';",
+              to:   "        + '</button>';" }] },
+  { guard: 'food-log', name: 'ADD TO DIARY adds only the first food he ticked',
+    edits: [{ from: '  sel.forEach(function(k){', to: '  sel.slice(0,1).forEach(function(k){' }] },
+  { guard: 'food-log', name: 'the selection survives the add, so the next one double-logs it',
+    edits: [{ from: '  if(n) fvSet({sel: []});', to: '  /* kept */' }] },
+  { guard: 'food-log', name: 'the ADD bar stops showing what the selection costs',
+    edits: [{ from: "    + ' TO DIARY <span class=\"fvadd-c\">' + Math.round(selCal) + ' cal</span></button></div>' : '';",
+              to:   "    + ' TO DIARY</button></div>' : '';" }] },
+  { guard: 'food-log', name: 'bulk-add goes back to a flat 100 g instead of what he actually eats',
+    edits: [{ from: '  if(mine != null) return mine;', to: '  if(false) return mine;' }] },
   { guard: 'food-log', name: 'the open food page gets persisted, stranding him on it after a reload',
     /* it really did live in localStorage for an afternoon: he would have closed the app on a food and
        reopened it to a search screen with no diary behind it, and nothing on screen explaining why. */

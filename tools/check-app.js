@@ -2070,6 +2070,67 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
       if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
+      /* ⛔ MULTI-SELECT — his ask, 2026-09-06: "Add it to", on the checkboxes and ADD TO DIARY he
+         pointed at. Three things have to hold. The tick must not navigate (it lives inside the row
+         button, so the handler needs stopPropagation exactly like the ★ does). The bar must not
+         exist with nothing ticked. And the bar must carry the CALORIES, because bulk-add is the one
+         path where he commits an amount he never saw — a food he has logged arrives at his own
+         median, one he has not falls back to a flat 100 g, which for olive oil is 884 cal. */
+      fvSet({tab:'all', q:'', pick:null, sel:[]});
+      const p3 = foodPageHTML(D);
+      if(!/data-fvsel=/.test(p3))    bad.push('the search rows carry no checkbox');
+      /* ⛔ THE ROW MUST PRICE ITSELF IN THE UNIT IT PRINTS. It once took the amount from his typical
+         unit and labelled it in the fact's, so banana read '1 g · 1 cal' while meaning 1 each · 105.
+         Seven foods were wrong and every one of them looked perfectly plausible on screen.
+         Built with indexOf rather than a regex: a food key can contain /, %, ( and ., and a pattern
+         built by hand out of one is a second bug waiting behind the first. */
+      { const wrong = [];
+        Object.keys(FOOD_FACTS).forEach(function(k){
+          const at = p3.indexOf('data-fvpick="' + k + '"');
+          if(at < 0) return;
+          const stop = p3.indexOf('</button>', at);
+          const row = p3.slice(at, stop < 0 ? at + 600 : stop);
+          const si = row.indexOf('fv-s">');
+          if(si < 0) return;
+          const said = row.slice(si + 6, row.indexOf('<', si + 6));
+          const uu = fvUnits(k)[0];
+          const amt = fvDefaultAmount(k, uu);
+          const want = amt + ' ' + uu + ' · ' + Math.round(fvMacros(k, amt, uu)[0]) + ' cal';
+          if(said !== want) wrong.push(k + ' shows "' + said + '" but means "' + want + '"');
+        });
+        if(!p3.length) wrong.push('the search page rendered nothing — this clause ran vacuous');
+        if(wrong.length) bad.push(wrong.length + ' search row(s) print an amount in the wrong unit: ' + wrong.slice(0,3).join('; ')); }
+      if(/data-fvaddsel/.test(p3))   bad.push('the ADD TO DIARY bar shows with nothing selected');
+      fvSelToggle('elev8 cor'); fvSelToggle('mixed berries');
+      const p4 = foodPageHTML(D);
+      if(!/data-fvaddsel/.test(p4))  bad.push('ticking two foods does not raise the ADD bar');
+      if(!/ADD 2 TO DIARY/.test(p4)) bad.push('the ADD bar does not say how many are selected');
+      {
+        const shown = +((p4.match(/fvadd-c">(\\d+) cal/)||[])[1] || -1);
+        let want = 0;
+        ['elev8 cor','mixed berries'].forEach(function(k){
+          const uu = fvUnits(k)[0]; want += fvMacros(k, fvDefaultAmount(k, uu), uu)[0];
+        });
+        if(shown !== Math.round(want))
+          bad.push('the ADD bar shows ' + shown + ' cal but the selection is ' + Math.round(want));
+      }
+      /* it must actually add BOTH, at his own amounts, through the button's own function */
+      {
+        const D2 = isoToday(), e0 = store.get('qpcut.eaten',{});
+        const r0 = store.get('qpcut.eaten',{}); delete r0[D2]; store.set('qpcut.eaten', r0);
+        fvSet({slot:'bf', sel:['elev8 cor','mixed berries']});
+        const added = fvAddSelected(D2);
+        if(added !== 2) bad.push('ADD TO DIARY added ' + added + ' of 2 selected foods');
+        const rows = entryRows((logEntries(D2).bf||[])[0] || {});
+        if(rows.length !== 2) bad.push('two selected foods produced ' + rows.length + ' row(s)');
+        const cor = rows.filter(r=>r.f === 'elev8 cor')[0];
+        if(!cor) bad.push('the selection lost elev8 cor');
+        else if(cor.n !== foodTypicalAmount('elev8 cor','g'))
+          bad.push('bulk-add used ' + cor.n + ' g of elev8 cor, not his usual ' + foodTypicalAmount('elev8 cor','g'));
+        if(fvState().sel.length) bad.push('the selection survived the add — the next one would double up');
+        store.set('qpcut.eaten', e0);
+      }
+      fvSet({sel:[]});
       /* ⛔ WHERE HE IS INSIDE A SCREEN MUST NOT SURVIVE A RELOAD. This lived in localStorage for an
          afternoon: closing the app with a food open reopened it on a search screen with no diary
          behind it, and nothing on screen would have explained why. The ★ he pressed IS worth saving
@@ -2617,6 +2678,29 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(html.indexOf(id) < 0)              bad.push('the draft does not appear in the dishes tab');
     if(!/nothing guards them/.test(html)) bad.push('the dishes tab no longer warns that a draft is unguarded');
     if(!/fv-tag/.test(html))              bad.push('the draft is not marked apart from the guarded repo meals');
+    /* ⛔ THE DRAFTS CARD IS A SECOND SURFACE, AND RETARGETING LOST IT. Two plants went NOT CAUGHT on
+       2026-09-06: the card time-seeding itself open, and the card dropping its unguarded warning.
+       When these clauses moved to the dishes tab I checked the tab and stopped checking the card,
+       which still renders in the diary. The warning one is the instructive failure — my dishes-tab
+       copy contains the phrase 'nothing guards them' too, so a whole-page regex matched MY text
+       while the card's had been cut. A guard that reads the whole page cannot tell which surface
+       answered it. Both are read separately now, each from its own markup. */
+    { const before2 = expandSlot; expandSlot = 'bf'; fvClose(); render();
+      const page = document.body.innerHTML;
+      expandSlot = before2;
+      const di = page.indexOf('data-acc="drafts"');
+      if(di < 0) bad.push('the drafts card does not render');
+      else {
+        const end = page.indexOf('</details>', di);
+        const card = page.slice(di, end < 0 ? di + 4000 : end);
+        if(/^drafts" open/.test(page.slice(di + 10)) || /data-acc="drafts" open/.test(page))
+          bad.push('the drafts card time-seeds itself open');
+        if(!/nothing guards them/.test(card))
+          bad.push('the drafts card itself no longer warns that a draft is unguarded');
+      } }
+    /* ⛔ PUT THE PAGE BACK. Rendering the diary above needed the page CLOSED, and the next clause
+       adds a dish through it — without this it silently had no slot and logged nothing. */
+    fvSet({slot:'bf', tab:'dishes', q:'', pick:null});
     /* and adding it must carry the draft's own rows, not a stale copy of its macros */
     {
       const D = isoToday(), eat0 = store.get('qpcut.eaten',{});
