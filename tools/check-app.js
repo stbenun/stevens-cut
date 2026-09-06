@@ -1906,14 +1906,19 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       store.set('qpcut.eaten', Object.assign({},eat0,{[T]: {bf:[{id:'b1', rows:grown}]}}));
       store.set('qpcut.offplan', {});
       const want = entryMacros({id:'b1', rows:grown}).map(Math.round);
+      /* ⚠️ RE-POINTED 2026-09-05. The slot TILE became a diary GROUP HEADER when the flat diary
+         landed, so this read a selector that no longer exists and reported itself vacuous — the guard
+         working, aimed at an address that moved. The assertion is unchanged: the header must print
+         what he ATE, never the recipe's own total. It now also checks the header names the FOODS,
+         because that is the whole point of the rewrite. */
       const before = expandSlot; expandSlot = 'bf'; render();
-      const tile = (document.body.innerHTML.match(/<button class="mtile[^>]*data-mtile="bf"[\\s\\S]*?<\\/button>/)||[''])[0];
+      const grp = (document.body.innerHTML.match(/data-acc="dg-bf"[\\s\\S]*?<\\/summary>/)||[''])[0];
       expandSlot = before;
-      const shown = (tile.match(/<span class="mt-m">(\\d+) · (\\d+)P/)||[]);
-      if(!shown.length) bad.push('could not read the bf tile macro — clause (i) is vacuous');
+      const shown = (grp.match(/class="dg-v">(\\d+) · (\\d+)P/)||[]);
+      if(!shown.length) bad.push('could not read the bf group header — clause (i) is vacuous');
       else if(+shown[1] !== want[0] || +shown[2] !== want[1])
-        bad.push('the tile prints ' + shown[1] + ' · ' + shown[2] + 'P but he ate ' + want[0] + ' · ' + want[1] + 'P');
-      if(tile && !/Cream of Rice/.test(tile)) bad.push('the tile lost the meal name: ' + tile.slice(0,120));
+        bad.push('the group header prints ' + shown[1] + ' · ' + shown[2] + 'P but he ate ' + want[0] + ' · ' + want[1] + 'P');
+      if(grp && !/elev8 cor/.test(grp)) bad.push('the group header does not name the FOODS in it: ' + grp.slice(0,140));
     }
 
     store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
@@ -1950,12 +1955,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     /* (a) the hub carries the whole food workflow */
     current = 'meals'; expandSlot = 'bf'; render();
     const m = document.body.innerHTML;
+    /* ⚠️ the separate row editor is GONE on purpose: every diary line now carries its own amount box,
+       so editing IS the list rather than an accordion underneath it. */
     const need = {'the diary':/class="diaryroot"/, 'the food search':/data-acc="foodadd-bf"/,
-                  'the row editor':/data-acc="erow-bf"/, 'fit-a-recipe':/data-acc="genfit"/,
+                  'editable food lines':/data-diq="bf\\|/, 'fit-a-recipe':/data-acc="genfit"/,
                   'build-a-plate':/data-acc="genbuild"/, 'the My Meals library':/My Meals/};
     Object.keys(need).forEach(k=>{ if(!need[k].test(m)) bad.push('the Meals hub is missing ' + k); });
-    if((m.match(/data-mtile=/g)||[]).length !== SLOT_SEQ.length)
-      bad.push('the hub does not show all ' + SLOT_SEQ.length + ' slots');
+    if((m.match(/data-acc="dg-(pre|bf|lu|sn|di)"/g)||[]).length !== SLOT_SEQ.length)
+      bad.push('the hub does not show all ' + SLOT_SEQ.length + ' slots as diary groups');
+    if(!/data-acc="dg-water"/.test(m)) bad.push('water is not a diary row');
 
     /* (b) Today keeps the non-food cards and LOST the generator */
     current = 'today'; render();
@@ -2032,7 +2040,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(!/data-acc="foodadd-bf"/.test(html)) bad.push('the add-foods card does not render inside the slot');
     if(!/data-fqty=/.test(html))            bad.push('search results carry no amount box');
     if(!/data-fadd=/.test(html))            bad.push('search results carry no add control');
-    if(!/data-erow="bf\\|3"/.test(html))     bad.push('the row editor does not expose the added foods for editing');
+    /* the added foods are DIARY LINES now, each with its own amount box and remove control */
+    if(!/data-diq="bf\\|0\\|3"/.test(html)) bad.push('the diary does not expose the added foods as editable lines');
+    if(!/data-dix="bf\\|0\\|3"/.test(html)) bad.push('the diary offers no way to remove an added food');
 
     /* (e) search ranks a prefix match first */
     const blue = foodSearch('blue', 12);
@@ -2191,7 +2201,8 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(!e || !e.rows || !e.rows.length) bad.push('logging the fitted recipe did not store its rows');
     if(!e || e.name !== 'Fitted recipe') bad.push('the logged entry carries no name, so the tile would read blank');
     render();
-    if(!/Fitted recipe/.test(document.body.innerHTML)) bad.push('the slot tile does not name the fitted recipe');
+    /* the group names the FOODS now, not the meal, so look for one of them rather than the entry name */
+    if(!/elev8 cor/.test(document.body.innerHTML)) bad.push('the diary does not show the fitted recipe as food lines');
 
     current = tab0;
     store.set('qpcut.eaten', eat0); if(g0) store.set('qpcut.gen', g0);

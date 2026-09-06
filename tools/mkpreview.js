@@ -59,6 +59,7 @@ const setup = `
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
   openAcc.add('foodadd-' + ${JSON.stringify(SLOT)});
+  openAcc.add('dg-' + ${JSON.stringify(SLOT)});
   store.set('qpcut.foodq','blue');
   current = ${JSON.stringify(TAB)};
   render();

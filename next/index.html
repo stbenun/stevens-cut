@@ -340,6 +340,33 @@
   .mealpick.on .rem{color:#5c4715}
   .mealpick.nomeat{opacity:.5;text-decoration:line-through;border-style:dashed}
   .mealpick.nomeat .rem{color:var(--meat);text-decoration:none;font-weight:700}
+  /* ---- the flat diary: one row per group, one line per food ----
+     ⛔ FLAT ON PURPOSE. The version this replaces put the foods three levels down (card > panel >
+     accordion) and showed a meal NAME where the food should be. A diary is a list. */
+  .dgroup{border:1px solid var(--line);border-radius:12px;background:var(--panel);margin:8px 0;overflow:hidden}
+  .dgroup>summary{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;list-style:none}
+  .dgroup>summary::-webkit-details-marker{display:none}
+  .dgroup .dg-n{flex:1 1 10ch;min-width:0;font-weight:700;font-size:15px;display:flex;flex-direction:column;gap:2px}
+  .dgroup .dg-s{font-weight:400;font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dgroup .dg-v{flex-shrink:0;font-family:var(--mono);font-size:12.5px;color:var(--text)}
+  .dgroup .dg-b{color:var(--muted)}
+  .dgroup.skipped{opacity:.6}
+  .dg-body{padding:0 14px 12px}
+  /* ⛔ TWO LINES, NOT FOUR COLUMNS. On one row the name got 112 px at 400 and 'smucker sf breakfast
+     syrup' and 'kodiak protein oats' both clipped. The app he showed me puts the serving BENEATH the
+     food name for exactly this reason, so the name gets the full width and the numbers get their own
+     line. Measured, not guessed. */
+  .ditem{display:grid;grid-template-columns:1fr auto 18px;gap:3px 8px;align-items:center;
+         padding:8px 0;border-bottom:1px solid var(--line)}
+  .ditem .di-n{grid-area:1/1/2/3;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ditem .di-x{grid-area:1/3/2/4}
+  .ditem .di-q{grid-area:2/1/3/2;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
+  .ditem .di-m{grid-area:2/2/3/4}
+  .ditem .di-q input{width:52px;padding:4px 5px;font-size:12.5px;text-align:right;border:1px solid var(--brass);
+         border-radius:6px;background:var(--panel2);color:var(--text)}
+  .ditem .di-m{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
+  .ditem .di-x{color:var(--meat);text-decoration:none;text-align:right;font-size:13px}
+  .ditem .di-free{font-style:italic}
   /* ---- row editor: what he ACTUALLY ate, per ingredient ----
      ⛔ GRID, NOT FLEX, and that is the whole point. This repo has already shipped a card whose title
      collapsed to "..." with a chip stacked one letter per line, because flex shrinks whatever it can
@@ -1531,6 +1558,32 @@ function wireRowEdit(ld){
       const n = document.getElementById('foodQ');
       if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
     }); }
+  /* one diary line: change its amount, or take it out. ⛔ REMOVING A LINE IS ALLOWED EVEN WHEN IT
+     CAME FROM A RECIPE — in a diary he must be able to delete something he did not eat. What that
+     costs is honest and stated: the entry stops being that meal and becomes his own list, which is
+     exactly what it now is. Emptying the last line clears the slot. */
+  document.querySelectorAll('[data-diq]').forEach(inp=>inp.addEventListener('change',()=>{
+    const p = String(inp.dataset.diq).split('|'), slot = p[0], ei = +p[1], ri = +p[2];
+    const es = logEntries(ld)[slot] || [], e = es[ei];
+    const v = parseFloat(inp.value);
+    const rows = e ? editEntryRows(e, ri, v) : null;
+    if(!rows){ render(); return; }
+    logWrite(ld, slot, es.map((x,i)=> i===ei ? Object.assign({}, x, {rows}) : x));
+    openAcc.add('dg-'+slot); render();
+  }));
+  document.querySelectorAll('[data-dix]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault();
+    const p = String(a.dataset.dix).split('|'), slot = p[0], ei = +p[1], ri = +p[2];
+    const es = logEntries(ld)[slot] || [], e = es[ei];
+    if(!e) return;
+    const rows = copyRows(e); if(ri < 0 || ri >= rows.length) { render(); return; }
+    rows.splice(ri, 1);
+    const kept = es.slice();
+    if(rows.length) kept[ei] = Object.assign({}, e, {rows, id:'custom', name: e.name || 'Foods'});
+    else kept.splice(ei, 1);
+    logWrite(ld, slot, kept);
+    openAcc.add('dg-'+slot); render();
+  }));
   document.querySelectorAll('[data-fadd]').forEach(a=>a.addEventListener('click',ev=>{
     ev.preventDefault();
     const p = String(a.dataset.fadd).split('|'), slot = p[0], key = p.slice(1).join('|');
@@ -7652,135 +7705,198 @@ function finalMeal(ld, opts){
 const salvageDays = () => store.get('qpcut.salvage', {});
 const isSalvageDay = ld => !!salvageDays()[ld];
 
-/* ==== THE DIARY — the five slots and what is in them ========================================
-   ⛔ EXTRACTED FROM viewToday SO TWO TABS CAN SHOW IT. His call, 2026-09-05: the Meals tab becomes
-   the food hub -- the diary, the search, My Meals and the generator on one screen -- and Today goes
-   back to being schedule, lift, hydration, dials and the stack.
-   It was a closure inside viewToday, which is why it could only ever appear there. The four locals
-   it borrowed (todayEaten, counts, isFri, backfill) are all one line each, so it recomputes them
-   rather than taking them as arguments -- a signature of five positional flags is how a function
-   becomes impossible to call from anywhere new, which is the situation this is fixing. */
+/* ⛔ HOISTED OUT OF viewToday 2026-09-05. Water became a DIARY ROW, and the diary renders on the
+   Meals hub too — so a const scoped inside viewToday put an ERROR CARD on that whole tab. Anything
+   the diary reads has to live where the diary can be called from, which is now anywhere. */
+const DRINKS = [
+  ['bottle','🚰 Water bottle','30 oz'],['stick','💧 Ryse stick','12–16 oz → counts 14'],
+  ['pre','⚡ Pre-workout','~9 oz'],
+  ['eaa','💪 EAA','~9 oz'],['seltzer','🫧 Seltzer','12 oz'],
+  ['dietsoda','🥤 Diet soda','12 oz · max 1/day'],
+];
+
+/* ==== THE DIARY — a flat list of groups, each showing the FOODS in it =======================
+   Rebuilt 2026-09-05, after he held up Cronometer twice and said "this isn't what I want."
+
+   ⛔ WHAT WAS WRONG WITH WHAT I HAD. A slot showed a MEAL NAME, and the individual foods lived
+   behind a "what you actually ate" accordion, inside a panel, inside a card. Three levels down to
+   see that he ate 155 g of blueberries. The app he showed me does the opposite: you open a group
+   and THE FOODS ARE THE LIST. Meals, drafts, cross-slot and the generator are ways of putting foods
+   into that list — they are not what the list is made of, and I had built the UI as if they were.
+
+   So: one row per group, and opening it gives one line per food with its own amount box, its macros
+   and an ✕. Everything meal-shaped is folded into a single collapsed row underneath. Nothing nests
+   more than one level, because a diary is a list. */
+function diarySlotItems(ld, slotKey){
+  const entries = logEntries(ld)[slotKey] || [];
+  const out = [];
+  entries.forEach((e, ei)=>{
+    if(e.id === 'final'){
+      out.push({label:'Final meal — counted as an off-plan row', m:[0,0,0,0], ei, ri:-1, free:true});
+      return;
+    }
+    entryRows(e).forEach((sp, ri)=>{
+      if(!sp) return;
+      const ing = (OPTBYID[e.id] && OPTBYID[e.id].vars[0].ing) || [];
+      out.push({
+        label: foodLabel(sp, ing[ri] && ing[ri][0]),
+        m: priceRow([null,null,sp]) || [0,0,0,0],
+        ei, ri,
+        unit: (sp && sp.u) || (FOOD_FACTS[sp && sp.f] || {}).unit || '',
+        n: (sp && typeof sp.n === 'number') ? sp.n : null,
+        free: !!(sp && (sp.free || Array.isArray(sp)))
+      });
+    });
+  });
+  return out;
+}
+/* one line per food: name · editable amount · macros · remove */
+function diaryItemHTML(slotKey, i){
+  const amt = i.free ? '<span class="di-free">free</span>'
+    : (i.n == null ? '—'
+    : '<input type="number" inputmode="decimal" step="any" min="0" data-diq="' + slotKey + '|' + i.ei + '|' + i.ri + '"'
+      + ' value="' + i.n + '" aria-label="' + esc(i.label) + ' amount"> <span class="di-u">' + esc(i.unit) + '</span>');
+  return '<div class="ditem">'
+    + '<span class="di-n">' + esc(i.label) + '</span>'
+    + '<span class="di-q">' + amt + '</span>'
+    + '<span class="di-m">' + Math.round(i.m[0]) + ' · ' + Math.round(i.m[1]) + 'P</span>'
+    + '<a href="#" class="di-x" data-dix="' + slotKey + '|' + i.ei + '|' + i.ri + '" title="remove">✕</a>'
+    + '</div>';
+}
 function diaryHTML(ld){
   const backfill = ld !== isoToday();
-  const isFri = new Date(ld + "T12:00:00").getDay() === 5;
-  const counts = store.get("qpcut.menucounts", {});
+  const isFri = new Date(ld + 'T12:00:00').getDay() === 5;
+  const ht = hydrTarget(ld), drinks = store.get('qpcut.drinks.' + dkey(ld), {});
+  const oz = (drinks.bottle||0)*30 + (drinks.stick||0)*14 + (drinks.pre||0)*9
+           + (drinks.eaa||0)*9 + (drinks.seltzer||0)*12 + (drinks.custom||0);
+
+  /* ⭐ WATER IS A DIARY ROW. He showed it sitting at the top of the list with the meals, not filed
+     away in a different card on a different tab, and that is simply where it belongs. */
+  const water = '<details class="acc dgroup" data-acc="dg-water"' + (openAcc.has('dg-water')?' open':'') + '>'
+    + '<summary><span class="dg-n">💧 Water</span><span class="dg-v">' + oz + ' / ' + ht.oz + ' oz</span></summary>'
+    + '<div class="dg-body">'
+    + DRINKS.map(function(d){ return '<div class="mrow"><span class="nm">' + d[1]
+        + ' <span class="daytag">' + d[2] + '</span></span><span class="stepper">'
+        + '<button class="step" data-ddec="' + d[0] + '">−</button>'
+        + '<span class="stepn">' + (drinks[d[0]]||0) + '</span>'
+        + '<button class="step" data-dinc="' + d[0] + '">+</button></span></div>'; }).join('')
+    + '<div class="mrow"><span class="nm">➕ Log oz directly</span><span style="display:flex;gap:5px;align-items:center">'
+    + [8,12,16,20].map(function(n){ return '<button class="step" data-dozq="' + n + '" style="width:auto;padding:0 9px">+' + n + '</button>'; }).join('')
+    + '</span></div></div></details>';
+
+  const groups = SLOTS.map(function(s){
+    const items = diarySlotItems(ld, s.key);
+    const t = items.reduce(function(a,i){ return [a[0]+i.m[0], a[1]+i.m[1], a[2]+i.m[2], a[3]+i.m[3]]; }, [0,0,0,0]);
+    const skip = isFri && s.key === 'sn';
+    /* the sub-line names what is actually in the group — the point of a diary is seeing the food */
+    const sub = skip ? 'skipped → feast'
+      : items.length ? items.slice(0,3).map(function(i){ return i.label; }).join(', ')
+                       + (items.length > 3 ? ' +' + (items.length-3) + ' more' : '')
+      : '';
+    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P'
+                             : '<span class="dg-b">' + s.b[0] + '</span>';
+    return '<details class="acc dgroup' + (skip?' skipped':'') + '" data-acc="dg-' + s.key + '"'
+      + (openAcc.has('dg-'+s.key)?' open':'') + '>'
+      + '<summary><span class="dg-n">' + s.slot + (sub ? '<span class="dg-s">' + esc(sub) + '</span>' : '') + '</span>'
+      + '<span class="dg-v">' + val + '</span></summary>'
+      + '<div class="dg-body">'
+      + items.map(function(i){ return diaryItemHTML(s.key, i); }).join('')
+      + foodAddHTML(ld, s.key)
+      + slotTimeRowHTML(ld, s.key)
+      + '<details class="acc innerrow" data-acc="dmore-' + s.key + '"' + (openAcc.has('dmore-'+s.key)?' open':'') + '>'
+      + '<summary><span>🍽 Add a whole meal instead</span><span class="statline">recipes · drafts</span></summary>'
+      + slotMealPicksHTML(ld, s.key) + '</details>'
+      + '</div></details>';
+  }).join('');
+
+  return '<div class="diaryroot">'
+    + (backfill ? '<div class="note" style="margin:0 0 10px">Backfilling <b>' + ld + '</b></div>' : '')
+    + water + groups + draftsCardHTML() + '</div>';
+}
+/* Everything meal-shaped for one slot: the week's picks, any other meal, and his drafts.
+   Unchanged in substance — it just takes a slot key now instead of reading the expandSlot global,
+   because every group renders its own and there is no longer one "expanded" slot. */
+/* ⛔ RESTORED. The flat-diary rewrite dropped this, and [eat-time] caught it — a guard noticing a
+   feature had gone missing rather than a bug being introduced. It records WHEN he ate the slot and
+   drives the next-meal suggestion and the meat/dairy clock, so losing it silently would have cost
+   real function for the sake of a layout. It lives on the GROUP now, not the meal picker, because
+   a slot logged food-by-food still has a time. */
+function slotTimeRowHTML(ld, slotKey){
   const todayEaten = eatenIds(ld);
-    /* ⛔ THE TILE PRINTS THE ENTRY, NOT THE RECIPE. It used to print OPTBYID[id].vars[0].t, which was
-       identical to what he ate right up until the row editor shipped — after that, a bowl edited to
-       633 cal still showed "545 · 38P" while the hero above it correctly counted 633. Two numbers
-       disagreeing on one screen is the sushi-card bug (a static 915 beside a live 883), and the fix
-       is the same: read the thing that is true, never a copy that used to be. */
-    const tiles = SLOTS.map(s=>{
-      const entry  = (logEntries(ld)[s.key]||[])[0] || null;
-      const picked = entry ? (OPTBYID[entry.id] || null) : null;
-      const mac    = entry ? entryMacros(entry).map(Math.round) : null;
-      const name   = entry ? (entry.name || (picked && picked.name) || 'Logged') : null;
-      const skip = isFri && s.key==='sn';
-      const time = slotTimeLabel(s.key, ld);
-      return {s, entry, picked, mac, name, skip, time};
-    });
-    const firstOpen = tiles.find(t=>!t.entry && !t.skip);
-    const tileHTML = tiles.map(({s,entry,picked,mac,name,skip,time})=>`
-      <button class="mtile${entry?' done':''}${skip?' done':''}${(!entry&&!skip&&firstOpen&&firstOpen.s.key===s.key)?' next':''}${expandSlot===s.key?' exp':''}" data-mtile="${s.key}">
-        <span class="mt-t">${time} · ${s.slot}</span>
-        <span class="mt-n">${skip?'Skipped → feast':entry?name:'—'}</span>
-        <span class="mt-m">${entry
-          /* the Final Meal sentinel carries zero macros by design (they live in one off-plan row, or
-             the day would double-count) — printing "0 · 0P" on the tile reads as a logging failure */
-          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)
-          : `${s.b[0]} budget`}</span>
-      </button>`).join('');
-    const panel = expandSlot? (()=>{
-      const s = SLOTS.find(x=>x.key===expandSlot);
-      if(!s) return '';
-      const noMeat = isNoMeat(ld);
-      const pill = oo=>{
-        const rem = Math.max(0,(counts[oo.id]||0) - eatenCountThisWeek(oo.id,s.key));
-        const on = todayEaten[s.key]===oo.id;
-        const meatBlock = noMeat && isMeatOpt(oo) && !on;
-        return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">
-          ${meatBlock?'🚫 ':''}${oo.name}${meatBlock?'<span class="rem">Nine Days</span>':counts[oo.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
-      };
-      /* no-prep meals (assembled from pantry, never batch-prepped) are ALWAYS loggable — no need to
-         add them to the weekly menu first (e.g. Cold Crunch Bowl). */
-      /* Breakfast has no menu counts, so every option would otherwise show — and that is 14 yogurt
-         bowls. Collapse them to the day's bowl, keeping whatever he actually logged. */
-      let sOpts = s.opts;
-      if(s.key==='bf'){
-        const keep = bowlOfDay(ld), bowls = new Set(bowlIdsAll());
-        sOpts = s.opts.filter(oo=> !bowls.has(oo.id) || oo.id===keep || todayEaten[s.key]===oo.id);
-      }
-      const picks = sOpts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id || oo.noPrep);
-      const list = (picks.length?picks:sOpts).map(pill).join('');
-      /* ⭐ ANY MEAL, ANY SLOT — his complaint, verbatim: the app "only lets me choose the meals we
-         made before and i cant even use one meals for another."
-         What was here was a lunch⇄dinner swap and nothing else, because those two budgets happen to
-         sit close together. That is a rule about two slots, not about him — a Jiben makes a perfectly
-         good breakfast. Every other meal is offered now, and the pill carries what it costs AGAINST
-         THIS SLOT'S budget, so the trade is visible before he taps instead of discovered in the hero
-         afterwards. Starts CLOSED with the count in the badge, like every section in this file.
-         ⚠️ The meat block still applies: a meal being legal somewhere else does not make it legal
-         today, and isMeatOpt/noMeat are the same checks the primary row uses. */
-      const otherRow = (()=>{
-        const mine = new Set(s.opts.map(o=>o.id));
-        const groups = SLOTS.filter(x=>x.key!==s.key)
-          .map(x=>({s:x, opts:x.opts.filter(oo=>!mine.has(oo.id))}))
-          .filter(g=>g.opts.length);
-        if(!groups.length) return '';
-        const n = groups.reduce((a,g)=>a+g.opts.length,0);
-        const body = groups.map(g=>
-          `<div class="slotlbl" style="margin-top:6px">${g.s.slot}</div><div class="pickrow">${
-            g.opts.map(oo=>{
-              const on = todayEaten[s.key]===oo.id;
+  /* eat-time: when this slot was logged (editable) + when to eat next */
+  let timeRow = '';
+  if(todayEaten[slotKey]){
+    const et = eatTimes(ld)[slotKey] || '';
+    const conflict = eatTimeConflict(ld, slotKey, et);
+    const sug = conflict ? null : nextEatSuggestion(ld);
+    const sugLine = (sug && sug.target)? `<div class="sub" style="margin-top:6px">⏱ <b>Next: eat around ${fmtMin(sug.mins)}</b> (${sug.label.toLowerCase()}) <span class="chip time">${sug.basis}</span><br>${sug.why}.${sug.past?' <b>You’re past it — eat soon.</b>':''}</div>` : '';
+    /* the warning replaces the suggestion rather than sitting next to it — a next-meal time
+       computed from a time that cannot be right is worse than no time at all. */
+    const badTime = conflict
+      ? `<div class="note" style="margin-top:6px;border-color:var(--meat)">⚠️ <b>${fmtMin((()=>{const [h,m]=et.split(':').map(Number);return h*60+m;})())} can’t be right for ${(SLOTS.find(function(x){return x.key===slotKey;})||{slot:slotKey}).slot.toLowerCase()}</b> — ${conflict.kind==='future' ? `that is later than right now (${fmtMin(conflict.now)}). Check the AM/PM.` : `you logged ${conflict.name.toLowerCase()} at ${fmtMin(conflict.at)}, which is ${conflict.dir}. Check the AM/PM.`} No next-meal time until this is fixed.</div>`
+      : '';
+    timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${slotKey}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
+  }
+  return timeRow;
+}
+function slotMealPicksHTML(ld, slotKey){
+  const s = SLOTS.find(function(x){ return x.key === slotKey; });
+  if(!s) return '';
+  const counts = store.get('qpcut.menucounts', {});
+  const todayEaten = eatenIds(ld);
+  const noMeat = isNoMeat(ld);
+  const pill = function(oo){
+    const rem = Math.max(0, (counts[oo.id]||0) - eatenCountThisWeek(oo.id, s.key));
+    const on = todayEaten[s.key] === oo.id;
+    const meatBlock = noMeat && isMeatOpt(oo) && !on;
+    return '<button class="mealpick' + (on?' on':'') + (meatBlock?' nomeat':'') + '" data-slot="' + s.key
+      + '" data-opt="' + oo.id + '">' + (meatBlock?'🚫 ':'') + oo.name
+      + (meatBlock ? '<span class="rem">Nine Days</span>'
+        : (counts[oo.id] ? '<span class="rem">' + (on?'✓':rem + ' left') + '</span>' : '')) + '</button>';
+  };
+  let sOpts = s.opts;
+  if(s.key === 'bf'){
+    const keep = bowlOfDay(ld), bowls = new Set(bowlIdsAll());
+    sOpts = s.opts.filter(function(oo){ return !bowls.has(oo.id) || oo.id === keep || todayEaten[s.key] === oo.id; });
+  }
+  const picks = sOpts.filter(function(oo){ return (counts[oo.id]||0) > 0 || todayEaten[s.key] === oo.id || oo.noPrep; });
+  const list = (picks.length ? picks : sOpts).map(pill).join('');
+
+  /* ⭐ ANY MEAL, ANY SLOT — his complaint that the app "only lets me choose the meals we made before
+     and i cant even use one meals for another". The pill carries the delta against THIS slot. */
+  const others = SLOTS.filter(function(x){ return x.key !== s.key; })
+    .map(function(x){ const mine = new Set(s.opts.map(function(o){ return o.id; }));
+                      return {s:x, opts:x.opts.filter(function(oo){ return !mine.has(oo.id); })}; })
+    .filter(function(g){ return g.opts.length; });
+  const n = others.reduce(function(a,g){ return a + g.opts.length; }, 0);
+  const otherRow = !others.length ? '' :
+    '<details class="acc innerrow" data-acc="other-' + s.key + '"' + (openAcc.has('other-'+s.key)?' open':'') + '>'
+    + '<summary><span>↔ any other meal, logged here</span><span class="statline"><b>' + n + '</b> · vs ' + s.b[0] + ' budget</span></summary>'
+    + others.map(function(g){
+        return '<div class="slotlbl" style="margin-top:6px">' + g.s.slot + '</div><div class="pickrow">'
+          + g.opts.map(function(oo){
+              const on = todayEaten[s.key] === oo.id;
               const t = oo.vars[0].t, d = t[0] - s.b[0];
               const meatBlock = noMeat && isMeatOpt(oo) && !on;
-              return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">${
-                meatBlock?'🚫 ':''}${oo.name}<span class="rem">${
-                meatBlock?'Nine Days':`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`}</span></button>`;
-            }).join('')
-          }</div>`).join('');
-        return `<details class="acc innerrow" data-acc="other-${s.key}"${openAcc.has('other-'+s.key)?' open':''}>`
-          + `<summary><span>↔ any other meal, logged here</span>`
-          + `<span class="statline"><b>${n}</b> · vs ${s.b[0]} budget</span></summary>${body}</details>`;
-      })();
-      /* off-menu FRESH options (no weekly count, not already eaten) — cook-tonight one-offs still need a tap */
-      const freshRow = (()=>{
-        const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
-        return fresh.length? `<div class="slotlbl" style="margin-top:8px">🍳 fresh tonight · off the weekly menu</div><div class="pickrow">${fresh.map(pill).join('')}</div>` : '';
-      })();
-      /* eat-time: when this slot was logged (editable) + when to eat next */
-      let timeRow = '';
-      if(todayEaten[s.key]){
-        const et = eatTimes(ld)[s.key] || '';
-        const conflict = eatTimeConflict(ld, s.key, et);
-        const sug = conflict ? null : nextEatSuggestion(ld);
-        const sugLine = (sug && sug.target)? `<div class="sub" style="margin-top:6px">⏱ <b>Next: eat around ${fmtMin(sug.mins)}</b> (${sug.label.toLowerCase()}) <span class="chip time">${sug.basis}</span><br>${sug.why}.${sug.past?' <b>You’re past it — eat soon.</b>':''}</div>` : '';
-        /* the warning replaces the suggestion rather than sitting next to it — a next-meal time
-           computed from a time that cannot be right is worse than no time at all. */
-        const badTime = conflict
-          ? `<div class="note" style="margin-top:6px;border-color:var(--meat)">⚠️ <b>${fmtMin((()=>{const [h,m]=et.split(':').map(Number);return h*60+m;})())} can’t be right for ${s.slot.toLowerCase()}</b> — ${conflict.kind==='future' ? `that is later than right now (${fmtMin(conflict.now)}). Check the AM/PM.` : `you logged ${conflict.name.toLowerCase()} at ${fmtMin(conflict.at)}, which is ${conflict.dir}. Check the AM/PM.`} No next-meal time until this is fixed.</div>`
-          : '';
-        timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
-      }
-      /* drafts for THIS slot, alongside the repo meals. The pill says "draft" on its face because a
-         note he has to go looking for is not a warning. */
-      const dAll = draftAll();
-      const dIds = Object.keys(dAll).filter(k=>dAll[k].slot === s.key);
-      const cur  = (logEntries(ld)[s.key]||[])[0];
-      const draftRow = dIds.length ? `<div class="slotlbl" style="margin-top:8px">📝 your drafts · not yet in the guarded library</div>`
-        + `<div class="pickrow">${dIds.map(k=>{
-            const d = dAll[k], on = cur && cur.id === k;
-            const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
-            return `<button class="mealpick${on?' on':''}" data-dlog="${s.key}|${k}">${d.name}`
-                 + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
-          }).join('')}</div>` : '';
-      const editor = rowEditorHTML(ld, s.key, cur);
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${foodAddHTML(ld, s.key)}${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
-    })() : '';
-  return `<div class="diaryroot">
-    <div class="mtiles">${tileHTML}</div>
-    ${panel}
-    ${draftsCardHTML()}</div>`;
+              return '<button class="mealpick' + (on?' on':'') + (meatBlock?' nomeat':'') + '" data-slot="' + s.key
+                + '" data-opt="' + oo.id + '">' + (meatBlock?'🚫 ':'') + oo.name + '<span class="rem">'
+                + (meatBlock ? 'Nine Days' : t[0] + ' · ' + t[1] + 'P · ' + (d>0?'+':'') + d) + '</span></button>';
+            }).join('') + '</div>';
+      }).join('') + '</details>';
+
+  const dAll = draftAll();
+  const dIds = Object.keys(dAll).filter(function(k){ return dAll[k].slot === s.key; });
+  const cur = (logEntries(ld)[s.key]||[])[0];
+  const draftRow = !dIds.length ? '' :
+    '<div class="slotlbl" style="margin-top:8px">📝 your drafts</div><div class="pickrow">'
+    + dIds.map(function(k){
+        const d = dAll[k], on = cur && cur.id === k;
+        const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
+        return '<button class="mealpick' + (on?' on':'') + '" data-dlog="' + s.key + '|' + k + '">'
+          + d.name + '<span class="rem">' + m[0] + ' · ' + m[1] + 'P</span></button>';
+      }).join('') + '</div>';
+
+  return '<div class="pickrow" style="margin-top:6px">' + list + '</div>' + otherRow + draftRow;
 }
 
 function viewToday(){
@@ -7808,12 +7924,6 @@ function viewToday(){
   const drinks = store.get('qpcut.drinks.'+dkey(ld), {});
   const oz = (drinks.bottle||0)*30 + (drinks.stick||0)*14 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.soda||0)*12 + (drinks.seltzer||0)*12 + (drinks.dietsoda||0)*12 + (drinks.custom||0);
   const ht = hydrTarget(ld);
-  const DRINKS = [
-    ['bottle','🚰 Water bottle','30 oz'],['stick','💧 Ryse stick','12–16 oz → counts 14'],
-    ['pre','⚡ Pre-workout','~9 oz'],
-    ['eaa','💪 EAA','~9 oz'],['seltzer','🫧 Seltzer','12 oz'],
-    ['dietsoda','🥤 Diet soda','12 oz · max 1/day'],
-  ];
   const done = store.get('qpcut.supps.'+dkey(ld), []);
   const counts = store.get('qpcut.menucounts',{});
   const eaten = eatenIdsAll();
@@ -10220,7 +10330,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788655299';
+const BUILD = 'b1788662180';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
