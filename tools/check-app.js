@@ -1927,6 +1927,68 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
+/* ==== [meals-hub] — the Meals tab is where food lives now ===================================
+ * His call, 2026-09-05: "I'm imagining this be the new meals tab with all these capabilities."
+ * The diary, the food search, both generator cards and the library are one screen; Today keeps
+ * schedule, lift, hydration, dials and the stack.
+ *
+ * ⛔ CLAUSE (c) IS THE EXPENSIVE ONE. The Meals tab now renders Today's cards, so it needs Today's
+ * HANDLERS — and wireToday bound to $('#mealLog') and $('#suppList') unguarded, both Today-only
+ * elements. The first null threw before the rest of the function ran and the ENTIRE hub came up
+ * inert: every tile, every pill, every input dead, with the page looking perfectly normal. That is
+ * strictly worse than the bug it replaced, and no rendering guard would ever see it.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const D = isoToday();
+    const eat0 = store.get('qpcut.eaten',{});
+    const raw = store.get('qpcut.eaten',{}); delete raw[D]; store.set('qpcut.eaten', raw);
+    logAddFood(D,'bf','elev8 cor',80);
+    const before = current, bex = expandSlot;
+
+    /* (a) the hub carries the whole food workflow */
+    current = 'meals'; expandSlot = 'bf'; render();
+    const m = document.body.innerHTML;
+    const need = {'the diary':/class="diaryroot"/, 'the food search':/data-acc="foodadd-bf"/,
+                  'the row editor':/data-acc="erow-bf"/, 'fit-a-recipe':/data-acc="genfit"/,
+                  'build-a-plate':/data-acc="genbuild"/, 'the My Meals library':/My Meals/};
+    Object.keys(need).forEach(k=>{ if(!need[k].test(m)) bad.push('the Meals hub is missing ' + k); });
+    if((m.match(/data-mtile=/g)||[]).length !== SLOT_SEQ.length)
+      bad.push('the hub does not show all ' + SLOT_SEQ.length + ' slots');
+
+    /* (b) Today keeps the non-food cards and LOST the generator */
+    current = 'today'; render();
+    const t = document.body.innerHTML;
+    ['log-hydr','log-dials','log-stack'].forEach(a=>{
+      if(!new RegExp('data-acc="' + a + '"').test(t)) bad.push('Today lost ' + a);
+    });
+    if(/data-acc="genfit"/.test(t) || /data-acc="genbuild"/.test(t))
+      bad.push('the generator cards are still on Today — they moved to the hub');
+
+    current = before; expandSlot = bex;
+    store.set('qpcut.eaten', eat0);
+    return {bad};
+  `);
+  const bad = r.bad.slice();
+  /* (c) the wiring, read from source: the hub needs BOTH, and every lookup must be optional */
+  {
+    const src = require('fs').readFileSync(SRC, 'utf8');
+    if (!/if\s*\(\s*current === 'meals'\s*\)\s*\{\s*wireMeals\(\);\s*wireToday\(\);/.test(src))
+      bad.push('the Meals hub no longer calls wireToday — every card it borrowed from Today would be inert');
+    if (/\$\('#mealLog'\)\.addEventListener/.test(src))
+      bad.push("wireToday binds $('#mealLog') unguarded again — that element does not exist on the hub");
+    if (/\$\('#suppList'\)\.addEventListener/.test(src))
+      bad.push("wireToday binds $('#suppList') unguarded again — that element does not exist on the hub");
+    if (!/document\.querySelectorAll\('\.diaryroot'\)/.test(src))
+      bad.push('the meal-pick handler no longer delegates from .diaryroot, so it only works on one tab');
+  }
+  if (bad.length) fail('meals-hub', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('meals-hub', 'the Meals tab carries the diary, the food search, the row editor, both ' +
+    'generator cards and the library; Today keeps hydration, dials and the stack and has lost the ' +
+    'generator; and the hub wires BOTH wireMeals and wireToday with no unguarded Today-only lookups');
+}
+
 /* ==== [food-log] — log foods with no meal at all ============================================
  * His correction, 2026-09-04, holding up Cronometer: "When Im logging a food/meal I also need the
  * ability to just choose the foods I ate and the amount."
@@ -2038,6 +2100,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     });
 
     /* (c) the card renders, starts CLOSED, and lets him take a food back out */
+    const tab0 = current; current = 'meals';   /* the card lives on the hub now, not Today */
     store.set('qpcut.gen2', {keys:['chicken breast raw','white rice dry','broccoli'], target:'di'});
     openAcc.delete('genbuild'); render();
     let html = document.body.innerHTML;
@@ -2057,6 +2120,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(/\\bP\\b.*\\bC\\b.*\\bF\\b.*\\d+ cal/.test(brief.replace(/target:[^\\n]*/,'')))
       bad.push('the brief is carrying computed macros — specs and constraints only');
 
+    current = tab0;
     store.set('qpcut.eaten', eat0); if(g0) store.set('qpcut.gen2', g0);
     return {bad};
   `);
@@ -2089,6 +2153,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     /* ⛔ CLOSED FIRST. Every section in this file starts closed, and the original version of this
        guard opened the card in its very first line — so a plant that time-seeded it open had
        nothing to trip. Check the default, THEN open it to inspect the contents. */
+    /* ⛔ RENDER THE MEALS TAB. These cards moved off Today on 2026-09-05, and this guard kept
+       rendering Today and reporting them missing — the guard working, pointed at the old address. */
+    const tab0 = current; current = 'meals';
     openAcc.delete('genfit');
     store.set('qpcut.gen', {text:good, target:'bf', picks:{}});
     render();
@@ -2126,6 +2193,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     render();
     if(!/Fitted recipe/.test(document.body.innerHTML)) bad.push('the slot tile does not name the fitted recipe');
 
+    current = tab0;
     store.set('qpcut.eaten', eat0); if(g0) store.set('qpcut.gen', g0);
     return {bad, asPasted: asPasted.join('/'), fitted: fitted.t.map(Math.round).join('/')};
   `);
@@ -2312,7 +2380,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
      at it, so the DISPATCH is the thing to assert. */
   {
     const src = require('fs').readFileSync(SRC, 'utf8');
-    if (!/\{\s*today:\s*wireToday\s*,\s*meals:\s*wireMeals\b/.test(src))
+    /* ⚠️ The dispatch stopped being a map literal on 2026-09-05: the hub needs BOTH wireMeals and
+       wireToday, so it became an if/else. This guard kept matching the old shape and reported the tab
+       inert when it was fine — a guard pointed at an address that moved. */
+    if (!/current === 'meals'\s*\)\s*\{\s*wireMeals\(\);\s*wireToday\(\);/.test(src))
       bad.push('the render dispatch no longer calls wireMeals — the Meals tab is inert again');
   }
   if (bad.length) fail('my-meals', bad.length + ' fault(s): ' + bad.join(' | '));

@@ -7651,6 +7651,137 @@ function finalMeal(ld, opts){
 const salvageDays = () => store.get('qpcut.salvage', {});
 const isSalvageDay = ld => !!salvageDays()[ld];
 
+/* ==== THE DIARY — the five slots and what is in them ========================================
+   ⛔ EXTRACTED FROM viewToday SO TWO TABS CAN SHOW IT. His call, 2026-09-05: the Meals tab becomes
+   the food hub -- the diary, the search, My Meals and the generator on one screen -- and Today goes
+   back to being schedule, lift, hydration, dials and the stack.
+   It was a closure inside viewToday, which is why it could only ever appear there. The four locals
+   it borrowed (todayEaten, counts, isFri, backfill) are all one line each, so it recomputes them
+   rather than taking them as arguments -- a signature of five positional flags is how a function
+   becomes impossible to call from anywhere new, which is the situation this is fixing. */
+function diaryHTML(ld){
+  const backfill = ld !== isoToday();
+  const isFri = new Date(ld + "T12:00:00").getDay() === 5;
+  const counts = store.get("qpcut.menucounts", {});
+  const todayEaten = eatenIds(ld);
+    /* ⛔ THE TILE PRINTS THE ENTRY, NOT THE RECIPE. It used to print OPTBYID[id].vars[0].t, which was
+       identical to what he ate right up until the row editor shipped — after that, a bowl edited to
+       633 cal still showed "545 · 38P" while the hero above it correctly counted 633. Two numbers
+       disagreeing on one screen is the sushi-card bug (a static 915 beside a live 883), and the fix
+       is the same: read the thing that is true, never a copy that used to be. */
+    const tiles = SLOTS.map(s=>{
+      const entry  = (logEntries(ld)[s.key]||[])[0] || null;
+      const picked = entry ? (OPTBYID[entry.id] || null) : null;
+      const mac    = entry ? entryMacros(entry).map(Math.round) : null;
+      const name   = entry ? (entry.name || (picked && picked.name) || 'Logged') : null;
+      const skip = isFri && s.key==='sn';
+      const time = slotTimeLabel(s.key, ld);
+      return {s, entry, picked, mac, name, skip, time};
+    });
+    const firstOpen = tiles.find(t=>!t.entry && !t.skip);
+    const tileHTML = tiles.map(({s,entry,picked,mac,name,skip,time})=>`
+      <button class="mtile${entry?' done':''}${skip?' done':''}${(!entry&&!skip&&firstOpen&&firstOpen.s.key===s.key)?' next':''}${expandSlot===s.key?' exp':''}" data-mtile="${s.key}">
+        <span class="mt-t">${time} · ${s.slot}</span>
+        <span class="mt-n">${skip?'Skipped → feast':entry?name:'—'}</span>
+        <span class="mt-m">${entry
+          /* the Final Meal sentinel carries zero macros by design (they live in one off-plan row, or
+             the day would double-count) — printing "0 · 0P" on the tile reads as a logging failure */
+          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)
+          : `${s.b[0]} budget`}</span>
+      </button>`).join('');
+    const panel = expandSlot? (()=>{
+      const s = SLOTS.find(x=>x.key===expandSlot);
+      if(!s) return '';
+      const noMeat = isNoMeat(ld);
+      const pill = oo=>{
+        const rem = Math.max(0,(counts[oo.id]||0) - eatenCountThisWeek(oo.id,s.key));
+        const on = todayEaten[s.key]===oo.id;
+        const meatBlock = noMeat && isMeatOpt(oo) && !on;
+        return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">
+          ${meatBlock?'🚫 ':''}${oo.name}${meatBlock?'<span class="rem">Nine Days</span>':counts[oo.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
+      };
+      /* no-prep meals (assembled from pantry, never batch-prepped) are ALWAYS loggable — no need to
+         add them to the weekly menu first (e.g. Cold Crunch Bowl). */
+      /* Breakfast has no menu counts, so every option would otherwise show — and that is 14 yogurt
+         bowls. Collapse them to the day's bowl, keeping whatever he actually logged. */
+      let sOpts = s.opts;
+      if(s.key==='bf'){
+        const keep = bowlOfDay(ld), bowls = new Set(bowlIdsAll());
+        sOpts = s.opts.filter(oo=> !bowls.has(oo.id) || oo.id===keep || todayEaten[s.key]===oo.id);
+      }
+      const picks = sOpts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id || oo.noPrep);
+      const list = (picks.length?picks:sOpts).map(pill).join('');
+      /* ⭐ ANY MEAL, ANY SLOT — his complaint, verbatim: the app "only lets me choose the meals we
+         made before and i cant even use one meals for another."
+         What was here was a lunch⇄dinner swap and nothing else, because those two budgets happen to
+         sit close together. That is a rule about two slots, not about him — a Jiben makes a perfectly
+         good breakfast. Every other meal is offered now, and the pill carries what it costs AGAINST
+         THIS SLOT'S budget, so the trade is visible before he taps instead of discovered in the hero
+         afterwards. Starts CLOSED with the count in the badge, like every section in this file.
+         ⚠️ The meat block still applies: a meal being legal somewhere else does not make it legal
+         today, and isMeatOpt/noMeat are the same checks the primary row uses. */
+      const otherRow = (()=>{
+        const mine = new Set(s.opts.map(o=>o.id));
+        const groups = SLOTS.filter(x=>x.key!==s.key)
+          .map(x=>({s:x, opts:x.opts.filter(oo=>!mine.has(oo.id))}))
+          .filter(g=>g.opts.length);
+        if(!groups.length) return '';
+        const n = groups.reduce((a,g)=>a+g.opts.length,0);
+        const body = groups.map(g=>
+          `<div class="slotlbl" style="margin-top:6px">${g.s.slot}</div><div class="pickrow">${
+            g.opts.map(oo=>{
+              const on = todayEaten[s.key]===oo.id;
+              const t = oo.vars[0].t, d = t[0] - s.b[0];
+              const meatBlock = noMeat && isMeatOpt(oo) && !on;
+              return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">${
+                meatBlock?'🚫 ':''}${oo.name}<span class="rem">${
+                meatBlock?'Nine Days':`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`}</span></button>`;
+            }).join('')
+          }</div>`).join('');
+        return `<details class="acc innerrow" data-acc="other-${s.key}"${openAcc.has('other-'+s.key)?' open':''}>`
+          + `<summary><span>↔ any other meal, logged here</span>`
+          + `<span class="statline"><b>${n}</b> · vs ${s.b[0]} budget</span></summary>${body}</details>`;
+      })();
+      /* off-menu FRESH options (no weekly count, not already eaten) — cook-tonight one-offs still need a tap */
+      const freshRow = (()=>{
+        const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
+        return fresh.length? `<div class="slotlbl" style="margin-top:8px">🍳 fresh tonight · off the weekly menu</div><div class="pickrow">${fresh.map(pill).join('')}</div>` : '';
+      })();
+      /* eat-time: when this slot was logged (editable) + when to eat next */
+      let timeRow = '';
+      if(todayEaten[s.key]){
+        const et = eatTimes(ld)[s.key] || '';
+        const conflict = eatTimeConflict(ld, s.key, et);
+        const sug = conflict ? null : nextEatSuggestion(ld);
+        const sugLine = (sug && sug.target)? `<div class="sub" style="margin-top:6px">⏱ <b>Next: eat around ${fmtMin(sug.mins)}</b> (${sug.label.toLowerCase()}) <span class="chip time">${sug.basis}</span><br>${sug.why}.${sug.past?' <b>You’re past it — eat soon.</b>':''}</div>` : '';
+        /* the warning replaces the suggestion rather than sitting next to it — a next-meal time
+           computed from a time that cannot be right is worse than no time at all. */
+        const badTime = conflict
+          ? `<div class="note" style="margin-top:6px;border-color:var(--meat)">⚠️ <b>${fmtMin((()=>{const [h,m]=et.split(':').map(Number);return h*60+m;})())} can’t be right for ${s.slot.toLowerCase()}</b> — ${conflict.kind==='future' ? `that is later than right now (${fmtMin(conflict.now)}). Check the AM/PM.` : `you logged ${conflict.name.toLowerCase()} at ${fmtMin(conflict.at)}, which is ${conflict.dir}. Check the AM/PM.`} No next-meal time until this is fixed.</div>`
+          : '';
+        timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
+      }
+      /* drafts for THIS slot, alongside the repo meals. The pill says "draft" on its face because a
+         note he has to go looking for is not a warning. */
+      const dAll = draftAll();
+      const dIds = Object.keys(dAll).filter(k=>dAll[k].slot === s.key);
+      const cur  = (logEntries(ld)[s.key]||[])[0];
+      const draftRow = dIds.length ? `<div class="slotlbl" style="margin-top:8px">📝 your drafts · not yet in the guarded library</div>`
+        + `<div class="pickrow">${dIds.map(k=>{
+            const d = dAll[k], on = cur && cur.id === k;
+            const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
+            return `<button class="mealpick${on?' on':''}" data-dlog="${s.key}|${k}">${d.name}`
+                 + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
+          }).join('')}</div>` : '';
+      const editor = rowEditorHTML(ld, s.key, cur);
+      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${foodAddHTML(ld, s.key)}${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
+    })() : '';
+  return `<div class="diaryroot">
+    <div class="mtiles">${tileHTML}</div>
+    ${panel}
+    ${draftsCardHTML()}</div>`;
+}
+
 function viewToday(){
   const now = new Date();
   const ld = logDate || isoToday();            /* the day being VIEWED (global date picker) */
@@ -8012,126 +8143,12 @@ function viewToday(){
 
   /* ---- LOG zone (super-card: tiles + hydration + dials + stack) ---- */
   const logZone = (()=>{
-    /* ⛔ THE TILE PRINTS THE ENTRY, NOT THE RECIPE. It used to print OPTBYID[id].vars[0].t, which was
-       identical to what he ate right up until the row editor shipped — after that, a bowl edited to
-       633 cal still showed "545 · 38P" while the hero above it correctly counted 633. Two numbers
-       disagreeing on one screen is the sushi-card bug (a static 915 beside a live 883), and the fix
-       is the same: read the thing that is true, never a copy that used to be. */
-    const tiles = SLOTS.map(s=>{
-      const entry  = (logEntries(ld)[s.key]||[])[0] || null;
-      const picked = entry ? (OPTBYID[entry.id] || null) : null;
-      const mac    = entry ? entryMacros(entry).map(Math.round) : null;
-      const name   = entry ? (entry.name || (picked && picked.name) || 'Logged') : null;
-      const skip = isFri && s.key==='sn';
-      const time = slotTimeLabel(s.key, ld);
-      return {s, entry, picked, mac, name, skip, time};
-    });
-    const firstOpen = tiles.find(t=>!t.entry && !t.skip);
-    const tileHTML = tiles.map(({s,entry,picked,mac,name,skip,time})=>`
-      <button class="mtile${entry?' done':''}${skip?' done':''}${(!entry&&!skip&&firstOpen&&firstOpen.s.key===s.key)?' next':''}${expandSlot===s.key?' exp':''}" data-mtile="${s.key}">
-        <span class="mt-t">${time} · ${s.slot}</span>
-        <span class="mt-n">${skip?'Skipped → feast':entry?name:'—'}</span>
-        <span class="mt-m">${entry
-          /* the Final Meal sentinel carries zero macros by design (they live in one off-plan row, or
-             the day would double-count) — printing "0 · 0P" on the tile reads as a logging failure */
-          ? ((picked && picked.synthetic) ? 'salvaged' : `${mac[0]} · ${mac[1]}P`)
-          : `${s.b[0]} budget`}</span>
-      </button>`).join('');
-    const panel = expandSlot? (()=>{
-      const s = SLOTS.find(x=>x.key===expandSlot);
-      if(!s) return '';
-      const noMeat = isNoMeat(ld);
-      const pill = oo=>{
-        const rem = Math.max(0,(counts[oo.id]||0) - eatenCountThisWeek(oo.id,s.key));
-        const on = todayEaten[s.key]===oo.id;
-        const meatBlock = noMeat && isMeatOpt(oo) && !on;
-        return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">
-          ${meatBlock?'🚫 ':''}${oo.name}${meatBlock?'<span class="rem">Nine Days</span>':counts[oo.id]?`<span class="rem">${on?'✓':rem+' left'}</span>`:''}</button>`;
-      };
-      /* no-prep meals (assembled from pantry, never batch-prepped) are ALWAYS loggable — no need to
-         add them to the weekly menu first (e.g. Cold Crunch Bowl). */
-      /* Breakfast has no menu counts, so every option would otherwise show — and that is 14 yogurt
-         bowls. Collapse them to the day's bowl, keeping whatever he actually logged. */
-      let sOpts = s.opts;
-      if(s.key==='bf'){
-        const keep = bowlOfDay(ld), bowls = new Set(bowlIdsAll());
-        sOpts = s.opts.filter(oo=> !bowls.has(oo.id) || oo.id===keep || todayEaten[s.key]===oo.id);
-      }
-      const picks = sOpts.filter(oo=>(counts[oo.id]||0)>0 || todayEaten[s.key]===oo.id || oo.noPrep);
-      const list = (picks.length?picks:sOpts).map(pill).join('');
-      /* ⭐ ANY MEAL, ANY SLOT — his complaint, verbatim: the app "only lets me choose the meals we
-         made before and i cant even use one meals for another."
-         What was here was a lunch⇄dinner swap and nothing else, because those two budgets happen to
-         sit close together. That is a rule about two slots, not about him — a Jiben makes a perfectly
-         good breakfast. Every other meal is offered now, and the pill carries what it costs AGAINST
-         THIS SLOT'S budget, so the trade is visible before he taps instead of discovered in the hero
-         afterwards. Starts CLOSED with the count in the badge, like every section in this file.
-         ⚠️ The meat block still applies: a meal being legal somewhere else does not make it legal
-         today, and isMeatOpt/noMeat are the same checks the primary row uses. */
-      const otherRow = (()=>{
-        const mine = new Set(s.opts.map(o=>o.id));
-        const groups = SLOTS.filter(x=>x.key!==s.key)
-          .map(x=>({s:x, opts:x.opts.filter(oo=>!mine.has(oo.id))}))
-          .filter(g=>g.opts.length);
-        if(!groups.length) return '';
-        const n = groups.reduce((a,g)=>a+g.opts.length,0);
-        const body = groups.map(g=>
-          `<div class="slotlbl" style="margin-top:6px">${g.s.slot}</div><div class="pickrow">${
-            g.opts.map(oo=>{
-              const on = todayEaten[s.key]===oo.id;
-              const t = oo.vars[0].t, d = t[0] - s.b[0];
-              const meatBlock = noMeat && isMeatOpt(oo) && !on;
-              return `<button class="mealpick${on?' on':''}${meatBlock?' nomeat':''}" data-slot="${s.key}" data-opt="${oo.id}">${
-                meatBlock?'🚫 ':''}${oo.name}<span class="rem">${
-                meatBlock?'Nine Days':`${t[0]} · ${t[1]}P · ${d>0?'+':''}${d}`}</span></button>`;
-            }).join('')
-          }</div>`).join('');
-        return `<details class="acc innerrow" data-acc="other-${s.key}"${openAcc.has('other-'+s.key)?' open':''}>`
-          + `<summary><span>↔ any other meal, logged here</span>`
-          + `<span class="statline"><b>${n}</b> · vs ${s.b[0]} budget</span></summary>${body}</details>`;
-      })();
-      /* off-menu FRESH options (no weekly count, not already eaten) — cook-tonight one-offs still need a tap */
-      const freshRow = (()=>{
-        const fresh = s.opts.filter(oo=>!(counts[oo.id]||0) && todayEaten[s.key]!==oo.id && !picks.includes(oo) && /fresh/i.test(oo.name));
-        return fresh.length? `<div class="slotlbl" style="margin-top:8px">🍳 fresh tonight · off the weekly menu</div><div class="pickrow">${fresh.map(pill).join('')}</div>` : '';
-      })();
-      /* eat-time: when this slot was logged (editable) + when to eat next */
-      let timeRow = '';
-      if(todayEaten[s.key]){
-        const et = eatTimes(ld)[s.key] || '';
-        const conflict = eatTimeConflict(ld, s.key, et);
-        const sug = conflict ? null : nextEatSuggestion(ld);
-        const sugLine = (sug && sug.target)? `<div class="sub" style="margin-top:6px">⏱ <b>Next: eat around ${fmtMin(sug.mins)}</b> (${sug.label.toLowerCase()}) <span class="chip time">${sug.basis}</span><br>${sug.why}.${sug.past?' <b>You’re past it — eat soon.</b>':''}</div>` : '';
-        /* the warning replaces the suggestion rather than sitting next to it — a next-meal time
-           computed from a time that cannot be right is worse than no time at all. */
-        const badTime = conflict
-          ? `<div class="note" style="margin-top:6px;border-color:var(--meat)">⚠️ <b>${fmtMin((()=>{const [h,m]=et.split(':').map(Number);return h*60+m;})())} can’t be right for ${s.slot.toLowerCase()}</b> — ${conflict.kind==='future' ? `that is later than right now (${fmtMin(conflict.now)}). Check the AM/PM.` : `you logged ${conflict.name.toLowerCase()} at ${fmtMin(conflict.at)}, which is ${conflict.dir}. Check the AM/PM.`} No next-meal time until this is fixed.</div>`
-          : '';
-        timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${s.key}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
-      }
-      /* drafts for THIS slot, alongside the repo meals. The pill says "draft" on its face because a
-         note he has to go looking for is not a warning. */
-      const dAll = draftAll();
-      const dIds = Object.keys(dAll).filter(k=>dAll[k].slot === s.key);
-      const cur  = (logEntries(ld)[s.key]||[])[0];
-      const draftRow = dIds.length ? `<div class="slotlbl" style="margin-top:8px">📝 your drafts · not yet in the guarded library</div>`
-        + `<div class="pickrow">${dIds.map(k=>{
-            const d = dAll[k], on = cur && cur.id === k;
-            const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
-            return `<button class="mealpick${on?' on':''}" data-dlog="${s.key}|${k}">${d.name}`
-                 + `<span class="rem">${m[0]} · ${m[1]}P</span></button>`
-          }).join('')}</div>` : '';
-      const editor = rowEditorHTML(ld, s.key, cur);
-      return `<div class="slotlbl" style="margin-top:10px">${s.slot} — tap what you ate</div><div class="pickrow">${list}</div>${foodAddHTML(ld, s.key)}${freshRow}${otherRow}${draftRow}${editor}${timeRow}`;
-    })() : '';
     return `
   <section class="zone" id="z-log">
   <div class="zhead"><span class="zt">✏️ Log</span><span class="zn">${backfill?`backfill ${ld}`:'today'}</span></div>
   <div class="card" id="mealLog">
     ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
-    <div class="mtiles">${tileHTML}</div>
-    ${panel}
-    ${draftsCardHTML()}
+    ${diaryHTML(ld)}
     <details class="acc innerrow" data-acc="log-hydr"${openAcc.has('log-hydr')?' open':''}>
       <summary><span>💧 Hydration</span><span class="statline"><span class="pbar mini"><span class="pfill" style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></span></span><b>${oz}</b>/${ht.oz} oz</span></summary>
       ${ht.why.length?`<div class="note" style="margin:2px 0 9px">${ht.fast?'':`Today’s target: <b>${ht.oz} oz</b> (base gallon ${ht.base}). `}${ht.why.join(' ')}</div>`:''}
@@ -8257,8 +8274,6 @@ function viewToday(){
     return `
   <section class="zone" id="z-tools">
   <div class="zhead"><span class="zt">🧰 Tools</span></div>
-  <div class="card">${genCardHTML(ld)}</div>
-  <div class="card">${gen2CardHTML(ld)}</div>
   ${/* ⬇️ MOVED HERE FROM THE FOOD ZONE — his ask Aug 13 2026, verbatim: "final meal and tonights
        dinner tools are in Food, move it to Tools." They are TOOLS, not food he is reading: Final Meal
        solves whatever is left of the day, and Tonight's dinner is a picker. Food stays what he eats.
@@ -8533,7 +8548,18 @@ function viewMeals(){
           + logAsRow(k, t, d.rows)
           + `</details>`;
       }).join('') : '';
-  return draftSec + `<h2 class="sec" style="margin-top:14px">My Meals · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
+  /* ⭐ THE MEALS TAB IS THE FOOD HUB. His call, 2026-09-05: "I'm imagining this be the new meals
+     tab with all these capabilities." The diary sits at the top because logging is what he opens
+     this for; the generator next because that is where a new meal comes from; the library last
+     because browsing is the least frequent of the three. Today keeps schedule, lift, hydration,
+     dials and the stack -- the things that are not food. */
+  const hubLd = logDate || isoToday();
+  const hub = `<h2 class="sec" style="margin-top:14px">📓 Diary · ${hubLd===isoToday()?'today':hubLd}</h2>`
+    + `<div class="card">${diaryHTML(hubLd)}</div>`
+    + `<h2 class="sec">🧪 Make something</h2>`
+    + `<div class="card">${genCardHTML(hubLd)}</div>`
+    + `<div class="card">${gen2CardHTML(hubLd)}</div>`;
+  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
   SLOTS.map(s=>`
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
@@ -9476,7 +9502,12 @@ function render(){
       Screenshot this and send it to Claude; the message above tells him exactly where to look.</span></div>`;
   }
   try{
-    ({today:wireToday, meals:wireMeals, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
+        /* ⛔ THE MEALS TAB RENDERS TODAY'S CARDS NOW, SO IT NEEDS TODAY'S HANDLERS. The diary, the food
+       search, the row editor and both generator cards all moved here, and every one of them binds
+       by selector after render. Wiring only wireMeals would leave the whole hub inert -- which is
+       exactly the state the Meals tab was in for its entire life before this. */
+    if(current === 'meals'){ wireMeals(); wireToday(); }
+    else ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
   }catch(err){ try{ console.error('wiring failed:', current, err); }catch(e){} }
   document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{
     if(window.__filterOpening) return; /* transient search force-open — don't persist */
@@ -9664,7 +9695,12 @@ function wireToday(){
     arr.splice(+del.dataset.opx,1);
     store.set('qpcut.offplan',m); render();
   });
-  $('#mealLog').addEventListener('click',e=>{
+  /* ⛔ DELEGATE FROM THE DIARY, NOT FROM TODAY'S CARD. This bound to $('#mealLog') -- a wrapper that
+     only exists on Today -- so the moment the diary also rendered on the Meals hub, wireToday threw
+     on a null and the ENTIRE tab came up unwired, which is a worse failure than the one it fixed.
+     .diaryroot is emitted by diaryHTML itself, so it exists wherever the diary does and is replaced
+     on every render, which is what stops these listeners accumulating. */
+  document.querySelectorAll('.diaryroot').forEach(root=>root.addEventListener('click',e=>{
     const b = e.target.closest('.mealpick'); if(!b || !b.dataset.slot) return;
     const d = logDate || isoToday();
     const slot = b.dataset.slot;
@@ -9691,7 +9727,7 @@ function wireToday(){
       else setEatTime(d, slot, null);
     }
     render();
-  });
+  }));
   /* ⛔ A TIME INPUT MUST NOT RENDER ON 'change'. His report Aug 12 2026: "ill be choosing the hour and
      ill scroll to 7 and then once i take my finger off the screen the whole time choosing box closes and
      then i have to reopen it."
@@ -9818,7 +9854,12 @@ function wireToday(){
     const key = 'qpcut.drinks.'+dkey(logDate || isoToday());
     const d = store.get(key,{}); d.custom = 0; store.set(key,d); render();
   }));
-  $('#suppList').addEventListener('click',e=>{
+  /* ⛔ NULL-GUARDED, like every other lookup in this function. wireToday now also runs on the
+     Meals hub, where the supplement stack does not exist — and an unguarded bind here threw before
+     the rest of the function ran, leaving the ENTIRE tab unwired. Every element wireToday reaches
+     for must be optional now, because it no longer owns the page it is wiring. */
+  const suppEl = $('#suppList');
+  if(suppEl) suppEl.addEventListener('click',e=>{
     const it = e.target.closest('.suppitem'); if(!it) return;
     const i = +it.dataset.i, key = 'qpcut.supps.'+dkey(logDate||isoToday());
     let done = store.get(key,[]);
@@ -10178,7 +10219,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788560075';
+const BUILD = 'b1788655299';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
