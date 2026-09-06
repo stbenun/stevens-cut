@@ -2072,11 +2072,14 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
       /* ⛔ THE AMOUNT AND THE UNIT MUST DESCRIBE THE SAME QUANTITY. A graham cracker opened at 6,495
          kcal because the default amount was read in grams while the unit shown said 'each'. */
-      /* ⛔ COMPUTE the sweep, do not render it. Rendering foodPageHTML for all of FOOD_FACTS ran
-         once per plant and timed the plant harness out at two minutes — a guard nobody can afford to
-         run is a guard that gets skipped. The claim is about the DEFAULT AMOUNT, so read the default;
-         then render three foods to prove the page prints the number it computed, which is the only
-         part the rendering was ever establishing. */
+      /* ⛔ COMPUTE the sweep, do not render it. The first version rendered foodPageHTML for every
+         entry in FOOD_FACTS, which is wasteful once and absurd 69 times over in the plant harness.
+         ⚠ It did NOT cause the timeout I first blamed it for: measured afterwards, check-app.js takes
+         ~16s with this sweep and ~16s without it, and the plant harness has always needed ~18 minutes
+         because it runs the whole suite once per plant. The two-minute limit was mine, not the code's.
+         The change stands on its own merit — the claim is about the DEFAULT AMOUNT, so read the
+         default; the three renders below prove the page prints the number it computed, which is the
+         only thing rendering all of them was ever establishing. */
       const over = [];
       Object.keys(FOOD_FACTS).forEach(function(k){
         const uu = fvUnits(k)[0];

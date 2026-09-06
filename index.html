@@ -387,8 +387,11 @@
          padding:11px 2px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text)}
   .fvrow .fv-n{grid-area:1/1/2/3;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .fvrow .fv-s{grid-area:2/1/3/3;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
-  .fvrow .fv-f{grid-area:1/3/3/4;align-self:center;color:var(--line);font-size:15px}
-  .fvrow .fv-f.on{color:var(--brass)}
+  /* ⛔ NOT SCOPED TO .fvrow. The detail page's star sits in .fvtitle, so a .fvrow-scoped rule left
+     it inheriting the title colour — every food looked already-favourited on its own screen. */
+  .fv-f{color:var(--line);font-size:15px}
+  .fv-f.on{color:var(--brass)}
+  .fvrow .fv-f{grid-area:1/3/3/4;align-self:center}
   .fv-tag{margin-left:6px;font-size:10px;color:var(--brass);border:1px solid var(--brass);
           border-radius:99px;padding:1px 5px;vertical-align:middle}
   .fvfield{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 2px;
@@ -5487,6 +5490,11 @@ function logEntries(ld){ return normDaySlots((store.get('qpcut.eaten',{}))[ld]);
 /* {date: {slot:id}} for the consumers that walk history rather than one day. Same first-entry-wins
    rule as eatenIds, and it normalises every day, so a date written in the new shape shows up in the
    Creami counter and the COR history exactly like a legacy one. */
+/* Every date he has logged anything on. foodUseCounts needed to walk his whole history and reached
+   for store.get('qpcut.eaten') to do it; [log-access] caught that on the next run, which is the
+   guard doing precisely its job — the rule is that this key has ONE reader, and 'my case is small'
+   is how a second one always starts. */
+function logDates(){ return Object.keys(store.get('qpcut.eaten', {})); }
 function eatenIdsAll(){
   const raw = store.get('qpcut.eaten',{}), out = {};
   Object.keys(raw).forEach(d=>{
@@ -5936,7 +5944,7 @@ function gen2CardHTML(ld){
   }
 
   return '<details class="acc innerrow" data-acc="genbuild"' + (openAcc.has('genbuild') ? ' open' : '') + '>'
-    + '<summary><span>🍳 Build me a plate</span><span class="statline">'
+    + '<summary><span>🍳 Build a plate</span><span class="statline">'
     + (keys.length ? keys.length + ' food' + (keys.length>1?'s':'') : 'pick foods') + '</span></summary>'
     + '<div class="sub" style="margin-top:4px">Pick what you want to eat. The app works out how much.</div>'
     + '<div class="erow" style="margin-top:6px"><span><select id="g2add" style="width:100%;padding:5px 6px;font-size:13px">'
@@ -6032,7 +6040,7 @@ function genCardHTML(ld){
   }
 
   return '<details class="acc innerrow" data-acc="genfit"' + (openAcc.has('genfit') ? ' open' : '') + '>'
-    + '<summary><span>🧪 Fit a recipe to my macros</span><span class="statline">'
+    + '<summary><span>🧪 Fit a recipe</span><span class="statline">'
     + (rows.length ? rows.length + ' lines · ' + unmatched.length + ' to fix' : 'paste one') + '</span></summary>'
     + '<div class="sub" style="margin-top:4px">Paste the ingredients, one per line. Amounts in g, mL, oz or counts.</div>'
     + '<textarea id="genText" rows="5" placeholder="80g Elev8 CoR&#10;155g blueberries&#10;175g Fage 0%&#10;1 Biscoff" '
@@ -6185,7 +6193,12 @@ function fsStem(w){
 function foodSearch(q, limit){
   const raw = fsNorm(q).trim();
   const keys = Object.keys(FOOD_FACTS);
-  if(!raw) return keys.slice(0, limit||40);
+  const use = foodUseCounts();
+  /* nothing typed yet: lead with what he actually eats, then the rest alphabetically */
+  if(!raw) return keys.slice().sort(function(a,b){
+    const ua = use[a]||0, ub = use[b]||0;
+    return ua !== ub ? ub - ua : a.localeCompare(b);
+  }).slice(0, limit||40);
   /* try what he typed AND its singular, so neither spelling is a dead end */
   const forms = [raw]; const st = raw.split(' ').map(fsStem).join(' ');
   if(st !== raw) forms.push(st);
@@ -6205,8 +6218,15 @@ function foodSearch(q, limit){
     });
     return best;
   };
+  /* rank first, then HIS USAGE, then the shorter name. Usage as the tiebreak is why 'alm' lands on
+     almond butter (36 logs) rather than whichever almond product has the shortest name. */
   return keys.map(k=>({k, r:rank(k)})).filter(x=>x.r < 99)
-    .sort((a,b)=> a.r !== b.r ? a.r - b.r : a.k.length - b.k.length)
+    .sort(function(a,b){
+      if(a.r !== b.r) return a.r - b.r;
+      const ua = use[a.k]||0, ub = use[b.k]||0;
+      if(ua !== ub) return ub - ua;
+      return a.k.length - b.k.length;
+    })
     .slice(0, limit||40).map(x=>x.k);
 }
 /* ⛔ THE AMOUNT MUST BE READ IN THE UNIT ON SCREEN. Caught in render 2026-09-06: the detail page for
@@ -6214,6 +6234,29 @@ function foodSearch(q, limit){
    the fact is per-gram — while fvUnits() had put 'each' first, so the page proposed ONE HUNDRED CRACKERS.
    Neither function was wrong alone; they disagreed about what the number meant. So the default takes the
    unit as an argument now and there is no unit-less version left to reach for. */
+/* ⛔ THE DEFAULT LIST WAS INSERTION ORDER, which is to say no order at all. Opening the page showed
+   him tuna packet, mayonnaise, light mayo, romaine lettuce, celery, tomato paste — an accident of how
+   FOOD_FACTS happens to be written, with the five things he eats every single morning nowhere in
+   sight. His log already knows the answer: 43 logged days, 54 distinct foods, and mixed berries /
+   almond butter / elev8 cor / kodiak protein oats / oikos triple zero at the top of it. Counting his
+   own rows is better than any list I could rank by hand, and it keeps being right as he changes.
+   Counted fresh per render — 43 days of rows is trivial to walk, and a cache would go stale the
+   moment he logged something, which is exactly when this matters most. */
+function foodUseCounts(){
+  const cnt = {};
+  const bump = sp => {
+    if(!sp) return;
+    if(sp.f) cnt[sp.f] = (cnt[sp.f]||0) + 1;
+    if(sp.parts) sp.parts.forEach(p=>{ if(p && p.f) cnt[p.f] = (cnt[p.f]||0) + 1; });
+  };
+  logDates().forEach(function(d){
+    const es = logEntries(d);
+    Object.keys(es).forEach(function(sl){
+      (es[sl]||[]).forEach(function(e){ entryRows(e).forEach(bump); });
+    });
+  });
+  return cnt;
+}
 function fvDefaultAmount(key, unit){
   const f = FOOD_FACTS[key]; if(!f) return 1;
   const u = unit || fvUnits(key)[0];
@@ -6275,7 +6318,14 @@ function fvSearchHTML(ld){
       }).join('');
   } else {
     let keys = foodSearch(st.q, 60);
-    if(st.tab === 'fav') keys = keys.filter(k=>F.indexOf(k) >= 0);
+    /* ⛔ AN EMPTY FAVORITES TAB IS A DEAD TAB. He asked for "favorites for things I use often" — so
+       until he has starred anything, that is exactly what it shows: the foods his own log says he
+       uses most. It says so on the tab rather than pretending he chose them. */
+    let favAuto = false;
+    if(st.tab === 'fav'){
+      if(F.length) keys = keys.filter(k=>F.indexOf(k) >= 0);
+      else { const u = foodUseCounts(); keys = keys.filter(k=>(u[k]||0) > 0); favAuto = true; }
+    }
     list = keys.map(k=>{
       const n = fvDefaultAmount(k), m = fvMacros(k, n, null);   /* list: the fact's own unit */
       return '<button class="fvrow" data-fvpick="' + esc(k) + '">'
@@ -6285,6 +6335,8 @@ function fvSearchHTML(ld){
     }).join('');
     if(!list) list = '<div class="sub" style="padding:14px 2px">Nothing on the price list matches that. '
       + 'Tell Claude the brand and he will add it.</div>';
+    else if(favAuto) list = '<div class="sub" style="padding:8px 2px">You have not starred anything yet, '
+      + 'so these are the foods you log most. Tap a ★ to pin your own.</div>' + list;
   }
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvclose="1">✕</button>'
@@ -8833,7 +8885,8 @@ function viewMeals(){
     + `<h2 class="sec">🧪 Make something</h2>`
     + `<div class="card">${genCardHTML(hubLd)}</div>`
     + `<div class="card">${gen2CardHTML(hubLd)}</div>`;
-  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
+  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals</h2>`
+    + `<div class="sub" style="margin:-6px 2px 8px">All weights RAW / dry. Search and the kosher filter are up top.</div>` +
   SLOTS.map(s=>`
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
@@ -8877,7 +8930,8 @@ function viewMeals(){
      </details>`;
    }).join('')}
    </details>`).join('') + `
-   <h2 class="sec">⚖️ Protein powder · weigh from the ziplock</h2>
+   <h2 class="sec">⚖️ Protein powder</h2>
+   <div class="sub" style="margin:-6px 2px 8px">Weigh from the ziplock.</div>
    <div class="card">
      <div class="sub" style="margin-top:0">No containers at the office — so <b>never scoop, always weigh</b>. 1 serving per flavor (½ scoop in any recipe = half this number):</div>
      <ul class="ing" style="margin-top:8px">

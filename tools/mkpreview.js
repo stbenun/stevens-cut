@@ -30,6 +30,10 @@ const MEASURE  = arg('measure', '.erow');
 const OUTDIR   = path.resolve(arg('out', 'scratchpad'));
 const WIDTHS   = (arg('widths', '320,400')).split(',').map(Number);
 const MAXH     = +arg('maxh', 60);
+/* --fv opens the food PAGE instead of the diary: 'all' | 'fav' | 'dishes' for the search screen, or
+   a food key (--fv "graham cracker") for that food's own screen. It is a view state rather than an
+   accordion, so unlike everything else here it cannot be opened with openAcc. */
+const FV       = arg('fv', '');
 const TAB      = arg('tab', 'today');   /* the fixture only ever rendered Today, so a Meals-tab
                                            selector matched NOTHING and the tool said so rather than
                                            passing — right behaviour, missing capability. */   /* 0 = no height check; see the note at the check itself */
@@ -41,6 +45,8 @@ if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
 const DAY = '2026-08-06';
 const inst = probe.boot(DAY, '09:00', 'deal');
 const setup = `
+  const FV_   = ${JSON.stringify(FV)};
+  const SLOT_ = ${JSON.stringify(SLOT)};
   const D = isoToday();
   /* log a meal so the row editor has something to edit, and open its slot + the editor */
   logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1');
@@ -52,16 +58,21 @@ const setup = `
     rs = addEntryRow({id:'b1', rows:rs}, 'smucker sf breakfast syrup', 20);
     logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1', rs); }
   openAcc.add('drafts');
-  openAcc.add('other-' + ${JSON.stringify(SLOT)});
   openAcc.add('meals-bf'); openAcc.add('opt-b28');
   openAcc.add('genfit');
   store.set('qpcut.gen', {text:['80g Elev8 CoR','155g blueberries','175g Fage 0%','1 Biscoff','200g wagyu ribeye'].join(String.fromCharCode(10)), target:'bf', picks:{}});
   expandSlot = ${JSON.stringify(SLOT)};
   openAcc.add('erow-' + ${JSON.stringify(SLOT)});
-  openAcc.add('foodadd-' + ${JSON.stringify(SLOT)});
   openAcc.add('dg-' + ${JSON.stringify(SLOT)});
-  store.set('qpcut.foodq','blue');
   current = ${JSON.stringify(TAB)};
+  /* the food page, if asked for: a bare tab name is the search screen, anything else is a food key */
+  if(FV_){
+    const tabs = ['all','fav','dishes'];
+    if(tabs.indexOf(FV_) >= 0) fvSet({slot:SLOT_, tab:FV_, q:'', pick:null});
+    else                       fvSet({slot:SLOT_, tab:'all', q:'', pick:FV_, amt:null, unit:null});
+    current = 'meals';
+  }
+  else fvClose();          /* deterministic: never inherit a page left open by a prior run */
   render();
   return document.body.innerHTML;
 `;
