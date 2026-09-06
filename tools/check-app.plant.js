@@ -105,15 +105,21 @@ const PLANTS = [
   { guard: 'food-log', name: 'adding a food REPLACES the slot instead of appending',
     edits: [{ from: '  const rows = copyRows(cur).concat([spec]);', to: '  const rows = [spec];' }] },
   { guard: 'food-log', name: 'a per-gram food added by count goes back to meaning grams',
-    edits: [{ from: "  const spec = (f.ea) ? {f:key, n:n, u:'each'} : {f:key, n:n};", to: '  const spec = {f:key, n:n};' }] },
+    /* retargeted 2026-09-06: logAddFood takes an explicit unit now, so the defect is the DEFAULT
+       going back to the fact's own unit — "1 biscoff" then means one gram again. */
+    edits: [{ from: "  const u = unit || (f.ea ? 'each' : f.unit);", to: '  const u = unit || f.unit;' }] },
   { guard: 'food-log', name: 'the food-only entry loses its name, so the tile reads blank',
     edits: [{ from: "  if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }",
               to:   "  if(!cur){ logWrite(ld, slot, [{id:'custom', rows:[spec]}]); return 'new'; }" }] },
   { guard: 'food-log', name: 'ranking goes back to a bare STRING prefix, so "cor" surfaces the cornish hen',
-    edits: [{ from: '    const ra = rank(a), rb = rank(b);',
-              to:   '    const ra = a.indexOf(s)===0?0:1, rb = b.indexOf(s)===0?0:1;' }] },
-  { guard: 'food-log', name: 'the add-foods card disappears from the diary group',
-    edits: [{ from: '      + foodAddHTML(ld, s.key)\n', to: '' }] },
+    /* retargeted 2026-09-06 onto the rewritten foodSearch. Same defect, same reason it is the one
+       worth planting: he types "cor" every day, and a bare prefix puts the cornish hen above it. */
+    edits: [{ from: '      if(w.indexOf(s) >= 0) r = 0;', to: '      if(nk.indexOf(s) === 0) r = 0;' }] },
+  { guard: 'food-log', name: 'the way into the food page disappears from the diary group',
+    /* retargeted 2026-09-06: the in-group search card is gone on his instruction and the group offers
+       a button instead. Take the button away and a slot becomes a dead end again — which is the same
+       loss the old plant described, in the shape the app now has. */
+    edits: [{ from: "      + '<button class=\"dgadd\" data-fvopen=\"' + s.key + '\">＋ Add food</button>'\n", to: '' }] },
 
   /* ---- [gen-build]: mode ② — foods in, a solved plate out ----
      The veg plant is the interesting one: seeding broccoli against the CARB target instead of a
@@ -209,14 +215,18 @@ const PLANTS = [
      the obvious version replaces the expression with "' open'" — which puts LITERAL QUOTES inside a
      template literal, renders malformed HTML, and misses the guard's regex. My plant was wrong, not
      the guard, and a plant that produces garbage instead of the defect reads exactly like a pass. */
-  { guard: 'cross-slot', name: 'the list goes back to lunch⇄dinner only',
-    edits: [{ from: "  const others = SLOTS.filter(function(x){ return x.key !== s.key; })",
-              to:   "  const others = SLOTS.filter(function(x){ return x.key !== s.key && (s.key==='lu'?x.key==='di':s.key==='di'?x.key==='lu':false); })" }] },
-  { guard: 'cross-slot', name: 'the pills stop printing the delta against this slot budget',
-    edits: [{ from: "t[0] + ' · ' + t[1] + 'P · ' + (d>0?'+':'') + d", to: "t[0] + ' · ' + t[1] + 'P'" }] },
-  { guard: 'cross-slot', name: 'the section time-seeds itself open',
-    edits: [{ from: "'<details class=\"acc innerrow\" data-acc=\"other-' + s.key + '\"' + (openAcc.has('other-'+s.key)?' open':'') + '>'",
-              to:   "'<details class=\"acc innerrow\" data-acc=\"other-' + s.key + '\" open>'" }] },
+  { guard: 'cross-slot', name: 'the dishes tab goes back to offering only this slot\'s own meals',
+    /* retargeted 2026-09-06 onto the "Your dishes" tab, where the capability lives now. */
+    edits: [{ from: "      .concat(SLOTS.reduce((a,x)=>a.concat(x.opts.map(o=>({id:o.id, name:o.name, t:o.vars[0].t, from:x.slot}))), []));",
+              to:   "      .concat((SLOTS.filter(x=>x.key===st.slot)).reduce((a,x)=>a.concat(x.opts.map(o=>({id:o.id, name:o.name, t:o.vars[0].t, from:x.slot}))), []));" }] },
+  { guard: 'cross-slot', name: 'the rows stop printing the delta against this slot budget',
+    /* THE clause worth protecting: without it the trade is invisible until after he has tapped. */
+    edits: [{ from: "          + (bud ? ' · ' + (d>=0?'+':'') + d + '' : '')", to: "          + ''" }] },
+  { guard: 'cross-slot', name: 'the food page renders with no slot open, so it can appear by accident',
+    /* retargeted 2026-09-06. The old defect was an accordion time-seeding itself open; the page has
+       no accordion, and its equivalent is showing up when nothing asked for it — which would hide the
+       diary behind a search screen on every render of the Meals tab. */
+    edits: [{ from: "  if(!st.slot) return '';", to: "  if(!st.slot) return fvSearchHTML(ld);" }] },
 
   /* ---- [meal-drafts]: the bridge from his phone into the guarded library ----
      The first plant here targeted prose the guard does not read, so it MISSED — my plant was wrong,

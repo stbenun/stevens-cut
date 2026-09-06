@@ -1957,10 +1957,24 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const m = document.body.innerHTML;
     /* ⚠️ the separate row editor is GONE on purpose: every diary line now carries its own amount box,
        so editing IS the list rather than an accordion underneath it. */
-    const need = {'the diary':/class="diaryroot"/, 'the food search':/data-acc="foodadd-bf"/,
+    /* ⛔ 'the food search' is now a way IN, not a card. He threw the card out on 2026-09-06 —
+       "there's so many more tabs to open after that and it gets hard to use and messy" — so what the
+       group has to offer is the button that opens the page. Checking for the button rather than the
+       panel is the same claim (he can reach a search from the group) asked of the shape he asked for. */
+    const need = {'the diary':/class="diaryroot"/, 'a way into the food search':/data-fvopen="bf"/,
                   'editable food lines':/data-diq="bf\\|/, 'fit-a-recipe':/data-acc="genfit"/,
                   'build-a-plate':/data-acc="genbuild"/, 'the My Meals library':/My Meals/};
     Object.keys(need).forEach(k=>{ if(!need[k].test(m)) bad.push('the Meals hub is missing ' + k); });
+    /* ⛔ AND THE NESTING HE COMPLAINED ABOUT MUST STAY GONE. A group holds its lines, one button and
+       the eat time — nothing that opens further. This is the clause that would fail if someone
+       "helpfully" put a picker back inside a slot. */
+    {
+      const gi = m.indexOf('data-acc="dg-bf"');
+      const nx = m.indexOf('data-acc="dg-', gi + 10);
+      const g = gi < 0 ? "" : m.slice(gi, nx < 0 ? gi + 4000 : nx);
+      const inner = (g.match(/data-acc="(?!dg-bf)[^"]+"/g)||[]);
+      if(inner.length) bad.push('a diary group nests ' + inner.length + ' more accordion(s) inside it: ' + inner.join(', '));
+    }
     if((m.match(/data-acc="dg-(pre|bf|lu|sn|di)"/g)||[]).length !== SLOT_SEQ.length)
       bad.push('the hub does not show all ' + SLOT_SEQ.length + ' slots as diary groups');
     if(!/data-acc="dg-water"/.test(m)) bad.push('water is not a diary row');
@@ -1992,9 +2006,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       bad.push('the meal-pick handler no longer delegates from .diaryroot, so it only works on one tab');
   }
   if (bad.length) fail('meals-hub', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('meals-hub', 'the Meals tab carries the diary, the food search, the row editor, both ' +
-    'generator cards and the library; Today keeps hydration, dials and the stack and has lost the ' +
-    'generator; and the hub wires BOTH wireMeals and wireToday with no unguarded Today-only lookups');
+  else ok('meals-hub', 'the Meals tab carries the diary, a way into the food page, editable food lines, ' +
+    'both generator cards and the library; no diary group nests another accordion inside it; Today keeps ' +
+    'hydration, dials and the stack and has lost the generator; and the hub wires BOTH wireMeals and ' +
+    'wireToday with no unguarded Today-only lookups');
 }
 
 /* ==== [food-log] — log foods with no meal at all ============================================
@@ -2033,13 +2048,49 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const bis = e.rows[3];
     if(!bis || bis.u !== 'each') bad.push('1 Biscoff logged as ' + JSON.stringify(bis) + ' — that is one GRAM');
 
-    /* (d) the card is in the slot panel, and the row editor picks the foods up for editing */
-    const before = expandSlot; expandSlot = 'bf'; openAcc.add('foodadd-bf'); render();
+    /* (d) ⛔ RETARGETED 2026-09-06 at the food PAGE. The in-group search accordion this used to read
+       is deleted, on his instruction, and the amount box moved with it: the page asks for the amount
+       ONCE, on the food's own screen, instead of putting a box on all 60 search results. So the three
+       assertions become: the group offers a way in, the page lists foods, and the food's screen asks
+       for an amount, a unit and a group and offers SAVE. */
+    const before = expandSlot; expandSlot = 'bf'; render();
     const html = document.body.innerHTML;
     expandSlot = before;
-    if(!/data-acc="foodadd-bf"/.test(html)) bad.push('the add-foods card does not render inside the slot');
-    if(!/data-fqty=/.test(html))            bad.push('search results carry no amount box');
-    if(!/data-fadd=/.test(html))            bad.push('search results carry no add control');
+    if(!/data-fvopen="bf"/.test(html)) bad.push('the slot offers no way to open the food page');
+    {
+      const fv0 = store.get('qpcut.fv',{});
+      fvSet({slot:'bf', tab:'all', q:'', pick:null});
+      const p1 = foodPageHTML(D);
+      if(!/data-fvpick=/.test(p1))  bad.push('the food page lists no foods to pick');
+      if(!/data-fvtab="all"/.test(p1) || !/data-fvtab="fav"/.test(p1) || !/data-fvtab="dishes"/.test(p1))
+        bad.push('the food page is missing one of the All / Favorites / Your dishes tabs');
+      fvSet({pick:'blueberries'});
+      const p2 = foodPageHTML(D);
+      if(!/id="fvAmt"/.test(p2))    bad.push('the food page asks for no amount');
+      if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
+      if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
+      if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
+      /* ⛔ THE AMOUNT AND THE UNIT MUST DESCRIBE THE SAME QUANTITY. A graham cracker opened at 6,495
+         kcal because the default amount was read in grams while the unit shown said 'each'. */
+      const over = [];
+      Object.keys(FOOD_FACTS).forEach(function(k){
+        fvSet({pick:k, amt:null, unit:null});
+        const h = foodPageHTML(D);
+        const kc = +((h.match(/class="fve-k">(\\d+)/)||[])[1] || 0);
+        if(kc > 1200) over.push(k + ' opens at ' + kc + ' kcal');
+      });
+      if(over.length) bad.push('the default amount is wrong for ' + over.length + ' food(s): ' + over.slice(0,3).join(', '));
+      /* and SAVE writes the unit it showed */
+      fvSet({pick:'blueberries', unit:'oz', amt:2});
+      if(!fvSaveFood(D)) bad.push('SAVE refused a legitimate 2 oz of blueberries');
+      else {
+        const rows = entryRows((logEntries(D).bf||[])[0] || {});
+        const last = rows[rows.length - 1];
+        if(!last || last.f !== 'blueberries' || last.u !== 'oz' || last.n !== 2)
+          bad.push('SAVE wrote ' + JSON.stringify(last) + ', not 2 oz of blueberries');
+      }
+      fvClose(); store.set('qpcut.fv', fv0);
+    }
     /* the added foods are DIARY LINES now, each with its own amount box and remove control */
     if(!/data-diq="bf\\|0\\|3"/.test(html)) bad.push('the diary does not expose the added foods as editable lines');
     if(!/data-dix="bf\\|0\\|3"/.test(html)) bad.push('the diary offers no way to remove an added food');
@@ -2066,8 +2117,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const bad = r.bad.slice();
   if (bad.length) fail('food-log', bad.length + ' fault(s): ' + bad.join(' | '));
   else ok('food-log', 'an empty slot takes foods with no meal behind them, four of them append to one ' +
-    'entry (' + r.t + '), a per-gram food added by count logs as PIECES, the search sits inside the slot ' +
-    'with an amount box per result, and the row editor picks them up for editing');
+    'entry (' + r.t + '), a per-gram food added by count logs as PIECES, the slot opens a food PAGE with ' +
+    'All / Favorites / Your dishes, the food screen asks amount + serving size + group and SAVEs the unit ' +
+    'it showed, no food opens at an absurd default, and the diary lines stay editable');
 }
 
 /* ==== [gen-build] — mode ② of the generator: foods in, a solved plate out ====================
@@ -2406,8 +2458,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
  * His complaint, verbatim: the app "only lets me choose the meals we made before and i cant even use
  * one meals for another." What was there was a lunch⇄dinner swap and nothing else, because those two
  * budgets happen to sit close together — a rule about two slots rather than about him.
- * The pill must carry the DELTA against the slot he is putting it in, so the trade is visible before
- * he taps instead of discovered in the hero afterwards.
+ *
+ * ⛔ RETARGETED 2026-09-06, and the move is the point. This used to read a nested <details> inside a
+ * slot ("↔ any other meal, logged here"). He threw that shape out — "there's so many more tabs to open
+ * after that and it gets hard to use and messy" — so the capability now lives in the food page's
+ * "Your dishes" tab. The GUARD had to follow the capability rather than the markup: a guard left
+ * pointing at deleted markup fails loudly, which is honest, but a guard quietly rewritten to check
+ * something easier would have let the capability itself disappear. So every clause below is the same
+ * claim as before, asked of the new screen — including the DELTA, which is the one that matters:
+ * the trade has to be visible before he taps, not discovered in the hero afterwards.
  */
 {
   const r = run(`
@@ -2415,37 +2474,54 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const D = isoToday();
     const eat0 = store.get('qpcut.eaten',{});
     store.set('qpcut.eaten', Object.assign({},eat0,{[D]:{}}));
-    const before = expandSlot; expandSlot = 'bf'; render();
-    const html = document.body.innerHTML;
-    const det = (html.match(/<details[^>]*data-acc="other-bf"[\\s\\S]*?<\\/details>/)||[''])[0];
+    const fv0 = store.get('qpcut.fv',{});
 
-    if(!det) bad.push('the cross-slot section does not render');
-    if(/data-acc="other-bf" open/.test(html)) bad.push('the cross-slot section time-seeds itself open');
-    const offered = (det.match(/data-opt="([^"]+)"/g)||[]).map(x=>x.slice(10,-1));
+    fvSet({slot:'bf', tab:'dishes', q:'', pick:null});
+    const html = foodPageHTML(D);
+    if(!html) bad.push('the food page does not render on the dishes tab');
+
+    const offered = (html.match(/data-fvdish="([^"]+)"/g)||[]).map(x=>x.slice(13,-1));
+    const allIds = SLOTS.reduce((a,s)=>a.concat(s.opts.map(o=>o.id)), []);
+    if(offered.length < allIds.length)
+      bad.push('only ' + offered.length + ' of ' + allIds.length + ' meals are offered');
     const bfIds = new Set(SLOTS.find(s=>s.key==='bf').opts.map(o=>o.id));
-    const otherIds = SLOTS.filter(s=>s.key!=='bf').reduce((a,s)=>a.concat(s.opts.map(o=>o.id)), []);
-    if(offered.length < otherIds.length) bad.push('only ' + offered.length + ' of ' + otherIds.length + ' other-slot meals are offered');
-    if(offered.some(id=>bfIds.has(id))) bad.push('a breakfast meal is duplicated into the cross-slot list');
-    /* the delta must be printed, or the trade is invisible until after the tap */
-    if(!/·\\s*[+-]\\d+</.test(det)) bad.push('the pills do not print the delta against this slot budget');
+    if(!offered.some(id=>!bfIds.has(id)))
+      bad.push('no meal from another slot is offered — this is the whole feature');
 
-    /* and it must actually LOG — a dinner into breakfast, priced as itself */
-    logToggleMeal(D, 'bf', 'd1');
+    /* the delta against THIS slot budget must be printed on the row */
+    if(!/·\\s*[+-]\\d+/.test(html)) bad.push('the rows do not print the delta against this slot budget');
+    /* and it must be the delta for the slot he is adding TO, not the meal's home slot */
+    {
+      const bud = SLOTS.find(s=>s.key==='bf').b[0];
+      const row = (html.match(/data-fvdish="d1"[\\s\\S]*?<\\/button>/)||[''])[0];
+      const cal = OPTBYID['d1'].vars[0].t[0];
+      const want = Math.round(cal) - bud;
+      if(row && row.indexOf((want>=0?'+':'') + want) < 0)
+        bad.push('a dinner offered on breakfast shows the wrong delta — wanted ' + want + ' vs the bf budget');
+    }
+    /* the page must not be reachable by accident: closed unless a slot is set */
+    fvClose();
+    if(foodPageHTML(D) !== '') bad.push('the food page renders even with no slot open');
+
+    /* and it must actually LOG, through the button's own function, priced as itself */
+    fvSet({slot:'bf', tab:'dishes'});
+    fvAddDish(D, 'd1');
     const got = eatenIds(D).bf;
     if(got !== 'd1') bad.push('logging a dinner into breakfast did not stick: ' + JSON.stringify(eatenIds(D)));
     const m = entryMacros((logEntries(D).bf||[])[0]).map(Math.round);
-    const want = OPTBYID['d1'].vars[0].t;
-    if(m[0] !== want[0]) bad.push('the cross-slot meal priced ' + m[0] + ', not its own ' + want[0]);
+    const want2 = OPTBYID['d1'].vars[0].t;
+    if(m[0] !== want2[0]) bad.push('the cross-slot meal priced ' + m[0] + ', not its own ' + want2[0]);
 
-    expandSlot = before;
+    store.set('qpcut.fv', fv0);
     store.set('qpcut.eaten', eat0);
     return {bad, offered: offered.length};
   `);
   const bad = r.bad.slice();
-  if (!r.offered) bad.push('no cross-slot meals were offered at all — this guard ran vacuous');
+  if (!r.offered) bad.push('no meals were offered at all — this guard ran vacuous');
   if (bad.length) fail('cross-slot', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('cross-slot', r.offered + ' meals from other slots are offered on breakfast, each printing its ' +
-    'delta against that slot budget, the section starts closed, and a dinner logged into breakfast prices as itself');
+  else ok('cross-slot', r.offered + ' meals — every slot\'s — are offered in the food page\'s "Your dishes" tab, ' +
+    'each printing its delta against the budget of the slot being added to, the page stays closed until a slot ' +
+    'is opened, and a dinner logged into breakfast prices as itself');
 }
 
 /* ==== [meal-drafts] — the bridge from his phone to the guarded library ========================
@@ -2485,14 +2561,34 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(draftSave('bf', '',   {id:'b1'})) bad.push('draftSave accepted an unnamed draft');
     if(draftSave('bf', 'x',  null))      bad.push('draftSave accepted a null entry');
 
-    /* (d) the card exists, starts CLOSED, and says on its face that nothing guards a draft */
-    const before = expandSlot; expandSlot = 'bf'; render();
-    const html = document.body.innerHTML;
-    expandSlot = before;
-    if(!/data-acc="drafts"/.test(html))        bad.push('the drafts card does not render');
-    if(/data-acc="drafts" open/.test(html))    bad.push('the drafts card time-seeds itself open');
-    if(!/nothing guards them/.test(html))      bad.push('the drafts card no longer warns that a draft is unguarded');
-    if(!/data-dlog="bf\\|/.test(html))          bad.push('the draft does not appear as a loggable pill in its slot');
+    /* (d) ⛔ RETARGETED 2026-09-06 along with [cross-slot]: his drafts are listed in the food page's
+       "Your dishes" tab now, beside the repo meals, rather than in a nested card of their own.
+       Showing them in ONE list with guarded meals is exactly why the warning still has to be there —
+       a repo meal is priced by [priced]/[slot-fit]/[row-math] and a draft he typed on his phone is
+       priced by nothing, and the list is the only place that difference is visible. */
+    const fv0 = store.get('qpcut.fv',{});
+    fvSet({slot:'bf', tab:'dishes', q:'', pick:null});
+    const html = foodPageHTML(isoToday());
+    if(!/data-fvdish="/.test(html))       bad.push('the dishes tab lists nothing at all');
+    if(html.indexOf(id) < 0)              bad.push('the draft does not appear in the dishes tab');
+    if(!/nothing guards them/.test(html)) bad.push('the dishes tab no longer warns that a draft is unguarded');
+    if(!/fv-tag/.test(html))              bad.push('the draft is not marked apart from the guarded repo meals');
+    /* and adding it must carry the draft's own rows, not a stale copy of its macros */
+    {
+      const D = isoToday(), eat0 = store.get('qpcut.eaten',{});
+      store.set('qpcut.eaten', Object.assign({},eat0,{[D]:{}}));
+      fvAddDish(D, id);
+      const e = (logEntries(D).bf||[])[0];
+      if(!e) bad.push('adding the draft from the dishes tab logged nothing');
+      else {
+        const gotRows = JSON.stringify(entryRows(e));
+        if(gotRows.indexOf('"f":"blueberries"') < 0) bad.push('the logged draft lost its ingredient specs');
+        const lm = entryMacros(e).map(Math.round).join('/');
+        if(lm !== want) bad.push('the logged draft prices ' + lm + ' but the draft is ' + want);
+      }
+      store.set('qpcut.eaten', eat0);
+    }
+    store.set('qpcut.fv', fv0);
 
     const n = Object.keys(draftAll()).length;
     store.set('qpcut.mealdrafts', d0);
