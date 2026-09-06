@@ -184,9 +184,15 @@ const PLANTS = [
      EXISTS, while the plant removes it from the render DISPATCH. The function stayed perfectly
      healthy and was simply never called — every button on the tab inert. That is exactly how the tab
      was passive for its whole life. The guard now reads the dispatch out of the source. */
+  /* ⚠️ RETARGETED 2026-09-05. This anchored on the map-literal dispatch
+     `({today:wireToday, meals:wireMeals, …})`, which stopped existing the moment the Meals hub
+     needed BOTH wireMeals and wireToday and the dispatch became an if/else. The case reported
+     BROKEN CASE — anchor not unique/found — which is the harness catching its own staleness, again.
+     The defect is the same one either way: the hub loses its wiring and every control on it dies
+     while the page still looks perfectly normal. */
   { guard: 'my-meals', name: 'the Meals tab loses its wiring, so nothing on it is tappable',
-    edits: [{ from: '({today:wireToday, meals:wireMeals, prep:wirePrep',
-              to:   '({today:wireToday, prep:wirePrep' }] },
+    edits: [{ from: "if(current === 'meals'){ wireMeals(); wireToday(); }",
+              to:   "if(false){ wireMeals(); wireToday(); }" }] },
   { guard: 'my-meals', name: 'the log-it-as row stops printing the delta against the slot budget',
     edits: [{ from: "+ sl.slot + '<span class=\"rem\">' + (d>0?'+':'') + d + '</span></button>';",
               to:   "+ sl.slot + '</button>';" }] },
