@@ -367,6 +367,55 @@
   .ditem .di-m{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
   .ditem .di-x{color:var(--meat);text-decoration:none;text-align:right;font-size:13px}
   .ditem .di-free{font-style:italic}
+  /* ---- the food PAGE: a screen that takes the tab over ---- */
+  .dgadd{width:100%;margin-top:10px;padding:11px;border:1px dashed var(--brass);border-radius:10px;
+         background:transparent;color:var(--brass);font-weight:700;font-size:14px}
+  .fvpage{min-height:60vh}
+  .fvhead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .fvx{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+       background:var(--panel2);color:var(--text);font-size:15px}
+  .fvhead input{flex:1 1 auto;min-width:0;padding:10px 12px;font-size:14px;border:1px solid var(--line);
+       border-radius:99px;background:var(--panel2);color:var(--text)}
+  .fvtitle{flex:1 1 auto;min-width:0;font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+  .fvsub{font-size:12px;color:var(--muted);margin:0 2px 8px}
+  .fvtabs{display:flex;gap:4px;background:var(--panel2);border-radius:99px;padding:3px;margin-bottom:10px}
+  .fvtab{flex:1;padding:8px 4px;border:0;border-radius:99px;background:transparent;color:var(--muted);
+         font-size:12.5px;font-weight:700}
+  .fvtab.on{background:var(--brass);color:var(--brass-ink)}
+  .fvlist{max-height:none}
+  .fvrow{display:grid;grid-template-columns:1fr auto 22px 26px;gap:4px 8px;width:100%;text-align:left;
+         padding:11px 2px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text)}
+  .fvrow .fv-n{grid-area:1/1/2/3;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fv-c{grid-area:1/4/3/5;align-self:center;justify-self:end;width:22px;height:22px;box-sizing:border-box;
+        display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);
+        border-radius:6px;font-size:13px;font-weight:800;color:transparent}
+  .fv-c.on{border-color:var(--brass);background:var(--brass);color:var(--brass-ink)}
+  /* ⛔ bottom:86px, not 0. The tab bar is position:fixed over the last ~80px of the viewport, so a
+     bar stuck to the bottom would sit UNDER it and read as missing. */
+  .fvbar{position:sticky;bottom:86px;z-index:5;margin-top:14px;padding-top:10px}
+  .fvadd-c{opacity:.72;font-weight:700;margin-left:8px;letter-spacing:0}
+  .fvadd{width:100%;padding:15px;border:0;border-radius:12px;background:var(--brass);
+         color:var(--brass-ink);font-weight:800;font-size:15px;letter-spacing:.04em;
+         box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .fvrow .fv-s{grid-area:2/1/3/3;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+  /* ⛔ NOT SCOPED TO .fvrow. The detail page's star sits in .fvtitle, so a .fvrow-scoped rule left
+     it inheriting the title colour — every food looked already-favourited on its own screen. */
+  .fv-f{color:var(--line);font-size:15px}
+  .fv-f.on{color:var(--brass)}
+  .fvrow .fv-f{grid-area:1/3/3/4;align-self:center}
+  .fv-tag{margin-left:6px;font-size:10px;color:var(--brass);border:1px solid var(--brass);
+          border-radius:99px;padding:1px 5px;vertical-align:middle}
+  .fvfield{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 2px;
+           border-bottom:1px solid var(--line);font-size:14px}
+  .fvfield input,.fvfield select{width:120px;padding:8px 9px;font-size:14px;text-align:right;
+           border:1px solid var(--brass);border-radius:8px;background:var(--panel2);color:var(--text)}
+  .fvenergy{display:flex;align-items:center;gap:16px;padding:16px 2px}
+  .fve-k{font-size:30px;font-weight:800;font-family:var(--mono)}
+  .fve-k small{font-size:12px;font-weight:400;color:var(--muted);margin-left:4px}
+  .fve-m{display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+  .fve-p{color:#7fbf7f} .fve-c{color:#7fb6d9} .fve-f{color:#c79ad9}
+  .fvsave{width:100%;margin-top:12px;padding:15px;border:0;border-radius:12px;
+          background:var(--brass);color:var(--brass-ink);font-weight:800;font-size:15px;letter-spacing:.04em}
   /* ---- row editor: what he ACTUALLY ate, per ingredient ----
      ⛔ GRID, NOT FLEX, and that is the whole point. This repo has already shipped a card whose title
      collapsed to "..." with a chip stacked one letter per line, because flex shrinks whatever it can
@@ -1550,14 +1599,6 @@ function wireRowEdit(ld){
     try{ await navigator.clipboard.writeText(draftPayload()); b.textContent='✓ Copied — paste it to Claude'; }
     catch(e){ b.textContent='copy failed — select the text below'; }
   }));
-  { const fq = document.getElementById('foodQ');
-    if(fq) fq.addEventListener('input', ()=>{
-      store.set('qpcut.foodq', fq.value);
-      /* keep the section open and the cursor alive: re-render, then restore focus + caret */
-      const pos = fq.selectionStart; render();
-      const n = document.getElementById('foodQ');
-      if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
-    }); }
   /* one diary line: change its amount, or take it out. ⛔ REMOVING A LINE IS ALLOWED EVEN WHEN IT
      CAME FROM A RECIPE — in a diary he must be able to delete something he did not eat. What that
      costs is honest and stated: the entry stops being that meal and becomes his own list, which is
@@ -1584,14 +1625,63 @@ function wireRowEdit(ld){
     logWrite(ld, slot, kept);
     openAcc.add('dg-'+slot); render();
   }));
-  document.querySelectorAll('[data-fadd]').forEach(a=>a.addEventListener('click',ev=>{
-    ev.preventDefault();
-    const p = String(a.dataset.fadd).split('|'), slot = p[0], key = p.slice(1).join('|');
-    const box = document.querySelector('[data-fqty="' + key.replace(/"/g,'') + '"]');
-    const n = parseFloat(box && box.value);
-    if(!logAddFood(ld, slot, key, n)) return;
-    openAcc.add('foodadd-'+slot); openAcc.add('erow-'+slot);
-    render();
+  /* ---- the food page ---- */
+  document.querySelectorAll('[data-fvopen]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({slot:b.dataset.fvopen, q:'', tab:'all', pick:null, amt:null, unit:null});
+    current = 'meals'; render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-fvclose]').forEach(b=>b.addEventListener('click',()=>{ fvClose(); render(); }));
+  document.querySelectorAll('[data-fvback]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({pick:null, amt:null, unit:null}); render();
+  }));
+  document.querySelectorAll('[data-fvtab]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({tab:b.dataset.fvtab}); render();
+  }));
+  { const q = document.getElementById('fvQ');
+    if(q) q.addEventListener('input', ()=>{
+      const pos = q.selectionStart; fvSet({q:q.value}); render();
+      const n = document.getElementById('fvQ');
+      if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
+    }); }
+  /* ⛔ THE STAR MUST NOT OPEN THE FOOD. It sits inside the row button, so without stopPropagation
+     every favourite tap would also navigate to the detail page — two actions from one tap. */
+  document.querySelectorAll('[data-fvfav]').forEach(el=>el.addEventListener('click',ev=>{
+    ev.preventDefault(); ev.stopPropagation();
+    favToggle(el.dataset.fvfav); render();
+  }));
+  document.querySelectorAll('[data-fvpick]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({pick:b.dataset.fvpick, amt:null, unit:null}); render(); window.scrollTo(0,0);
+  }));
+  /* ⛔ SAME stopPropagation AS THE STAR, for the same reason: the tick sits inside the row button, so
+     without it one tap would select the food AND navigate away from the list it just selected in. */
+  document.querySelectorAll('[data-fvsel]').forEach(el=>el.addEventListener('click',ev=>{
+    ev.preventDefault(); ev.stopPropagation();
+    const y = window.scrollY;
+    fvSelToggle(el.dataset.fvsel); render(); window.scrollTo(0, y);
+  }));
+  document.querySelectorAll('[data-fvaddsel]').forEach(b=>b.addEventListener('click',()=>{
+    const slot = fvState().slot;
+    if(!fvAddSelected(ld)) return;
+    openAcc.add('dg-'+slot); fvClose(); render();
+  }));
+  document.querySelectorAll('[data-fvdish]').forEach(b=>b.addEventListener('click',()=>{
+    const slot = fvState().slot;
+    if(!fvAddDish(ld, b.dataset.fvdish)) return;
+    openAcc.add('dg-'+slot); fvClose(); render();
+  }));
+  { const a = document.getElementById('fvAmt'), u = document.getElementById('fvUnit');
+    if(a) a.addEventListener('input', ()=>{ fvSet({amt: parseFloat(a.value)}); render(); });
+    /* ⛔ CLEAR THE AMOUNT ON A UNIT CHANGE. 100 g reinterpreted as 100 oz is a 12x error that
+       looks like a typo, not a bug. Dropping it re-derives the default for the NEW unit. */
+    if(u) u.addEventListener('change', ()=>{ fvSet({unit: u.value, amt: null}); render(); }); }
+  { const g = document.getElementById('fvSlot');
+    if(g) g.addEventListener('change', ()=>{ fvSet({slot: g.value}); render(); }); }
+  document.querySelectorAll('[data-fvsave]').forEach(b=>b.addEventListener('click',()=>{
+    const slot = fvState().slot;
+    if(!fvSaveFood(ld)) return;
+    openAcc.add('dg-'+slot);
+    /* back to the SEARCH, not out of the page — he is usually adding several things at once */
+    fvSet({pick:null, amt:null, unit:null, q:''}); render(); window.scrollTo(0,0);
   }));
   document.querySelectorAll('[data-eadd]').forEach(btn=>btn.addEventListener('click',()=>{
     const slot = btn.dataset.eadd;
@@ -5424,6 +5514,11 @@ function logEntries(ld){ return normDaySlots((store.get('qpcut.eaten',{}))[ld]);
 /* {date: {slot:id}} for the consumers that walk history rather than one day. Same first-entry-wins
    rule as eatenIds, and it normalises every day, so a date written in the new shape shows up in the
    Creami counter and the COR history exactly like a legacy one. */
+/* Every date he has logged anything on. foodUseCounts needed to walk his whole history and reached
+   for store.get('qpcut.eaten') to do it; [log-access] caught that on the next run, which is the
+   guard doing precisely its job — the rule is that this key has ONE reader, and 'my case is small'
+   is how a second one always starts. */
+function logDates(){ return Object.keys(store.get('qpcut.eaten', {})); }
 function eatenIdsAll(){
   const raw = store.get('qpcut.eaten',{}), out = {};
   Object.keys(raw).forEach(d=>{
@@ -5873,7 +5968,7 @@ function gen2CardHTML(ld){
   }
 
   return '<details class="acc innerrow" data-acc="genbuild"' + (openAcc.has('genbuild') ? ' open' : '') + '>'
-    + '<summary><span>🍳 Build me a plate</span><span class="statline">'
+    + '<summary><span>🍳 Build a plate</span><span class="statline">'
     + (keys.length ? keys.length + ' food' + (keys.length>1?'s':'') : 'pick foods') + '</span></summary>'
     + '<div class="sub" style="margin-top:4px">Pick what you want to eat. The app works out how much.</div>'
     + '<div class="erow" style="margin-top:6px"><span><select id="g2add" style="width:100%;padding:5px 6px;font-size:13px">'
@@ -5969,7 +6064,7 @@ function genCardHTML(ld){
   }
 
   return '<details class="acc innerrow" data-acc="genfit"' + (openAcc.has('genfit') ? ' open' : '') + '>'
-    + '<summary><span>🧪 Fit a recipe to my macros</span><span class="statline">'
+    + '<summary><span>🧪 Fit a recipe</span><span class="statline">'
     + (rows.length ? rows.length + ' lines · ' + unmatched.length + ' to fix' : 'paste one') + '</span></summary>'
     + '<div class="sub" style="margin-top:4px">Paste the ingredients, one per line. Amounts in g, mL, oz or counts.</div>'
     + '<textarea id="genText" rows="5" placeholder="80g Elev8 CoR&#10;155g blueberries&#10;175g Fage 0%&#10;1 Biscoff" '
@@ -6068,66 +6163,374 @@ function foodDefaultAmount(key){
   return FOOD_DEFAULT_N[f.unit] != null ? FOOD_DEFAULT_N[f.unit] : 1;
 }
 /* Append a food to whatever is in the slot, creating the entry if the slot is empty. */
-function logAddFood(ld, slot, key, n){
+/* `unit` is optional and defaults to how this food is counted when nobody says otherwise: a piece
+   for an ea-food, its own unit for everything else. The food page passes the unit shown on screen.
+   ⛔ ONE function builds the row spec. fvSaveFood had its own copy of these two lines for a few
+   minutes, which is the same two-copies-of-one-rule bug the pricing engine exists to delete —
+   the copy that is not the one being read goes stale silently. */
+function logAddFood(ld, slot, key, n, unit){
   const f = FOOD_FACTS[key];
   if(!f || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
-  const spec = (f.ea) ? {f:key, n:n, u:'each'} : {f:key, n:n};
+  const u = unit || (f.ea ? 'each' : f.unit);
+  const spec = (u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
   const cur = (logEntries(ld)[slot] || [])[0];
   if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }
   const rows = copyRows(cur).concat([spec]);
   logWrite(ld, slot, [Object.assign({}, cur, {rows: rows})]);
   return 'appended';
 }
-/* the search itself — name match over the price list, his own foods first */
+/* ==== THE FOOD PAGE — a screen, not another accordion ======================================
+   His words, 2026-09-06: "when I open one of the meal tabs like breakfast, there's so many more
+   tabs to open after that and it gets hard to use and messy."
+
+   He was right. A group opened to reveal a search accordion AND a meals accordion, each of which
+   opened further. Four levels of disclosure to add a food. The app he showed me does it in one
+   move: tap ＋ on a group and a PAGE takes over — search, three tabs, a list; tap a food and a
+   second page asks Amount / Serving Size / Group and offers SAVE. Nothing nests at all.
+
+   So this is a view state, not a <details>. While FV.slot is set the Meals tab renders THIS
+   instead of the diary, and ✕ goes back. */
+/* ⛔ THIS IS SESSION STATE, NOT SAVED STATE, and the difference is not cosmetic. It lived in
+   localStorage for an afternoon, which meant closing the app with a food open reopened it on a
+   search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
+   on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
+   pressed is, and that stays in the store. */
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[]};
+function fvState(){ return FV; }
+function fvSet(p){ FV = Object.assign({}, FV, p); }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[]}; }
+function favs(){ return store.get('qpcut.favs', []); }
+function favToggle(k){
+  const f = favs(), i = f.indexOf(k);
+  if(i < 0) f.push(k); else f.splice(i, 1);
+  store.set('qpcut.favs', f);
+}
+/* ⛔ SEARCH THE PROVENANCE, NOT JUST THE KEY. Measured 2026-09-06: "cream of rice", "honey maid",
+   "wholly", "ryse" and "smuckers" all returned NOTHING, and every one of those brand names is
+   sitting in the food's own src text — 'Elev8 Foods Creamy Rice (his Cream of Rice)',
+   'Honey Maid Original label', 'Wholly Guacamole Classic Minis'. The keys are internal shorthand;
+   the src is where the food is called what he calls it. Key hits still rank above src hits, so
+   typing "cor" still lands on elev8 cor rather than something whose paragraph merely says COR. */
+/* punctuation out, so "smuckers" reaches a label that spells it Smucker's */
+function fsNorm(x){ return String(x||'').toLowerCase().replace(/[^a-z0-9 ]+/g, ''); }
+/* the singular he did not type. Measured 2026-09-06: "eggs", "pickles", "carrots" and "smuckers"
+   all found NOTHING while egg, pickle, carrot and smucker were all sitting in the price list. */
+function fsStem(w){
+  if(w.length > 4 && /(ches|shes|sses|xes)$/.test(w)) return w.slice(0, -2);
+  if(w.length > 3 && /[^s]s$/.test(w)) return w.slice(0, -1);
+  return w;
+}
 function foodSearch(q, limit){
-  const s = String(q||'').toLowerCase().trim();
+  const raw = fsNorm(q).trim();
   const keys = Object.keys(FOOD_FACTS);
-  if(!s) return keys.slice(0, limit||12);
-  const hit = keys.filter(k=>k.indexOf(s) >= 0);
-  /* ⛔ WHOLE WORD BEATS MERE PREFIX, and "cor" is why. Ranking on a string prefix alone put
-     'cornish hen roasted skin not eaten' above 'elev8 cor' — and COR is what he calls his Cream of
-     Rice every single day. Three of sixteen probe queries reorder under this rule, and it is the one
-     that decides them: an exact word ("cor" in "elev8 cor") outranks a word that merely starts with
-     the query ("cornish"), which outranks a match buried mid-word ("alm" inside "salmon"). Length
-     breaks the remaining ties, which is what puts blueberries above buffin blueberry. */
+  const use = foodUseCounts();
+  /* nothing typed yet: lead with what he actually eats, then the rest alphabetically */
+  if(!raw) return keys.slice().sort(function(a,b){
+    const ua = use[a]||0, ub = use[b]||0;
+    return ua !== ub ? ub - ua : a.localeCompare(b);
+  }).slice(0, limit||40);
+  /* try what he typed AND its singular, so neither spelling is a dead end */
+  const forms = [raw]; const st = raw.split(' ').map(fsStem).join(' ');
+  if(st !== raw) forms.push(st);
   const rank = k => {
-    const w = k.split(' ');
-    if(w.indexOf(s) >= 0) return 0;                 /* an exact word */
-    if(w.some(x=>x.indexOf(s) === 0)) return 1;     /* a word starts with it */
-    return 2;                                        /* buried mid-word */
+    const nk = fsNorm(k), w = nk.split(' ');
+    const src = fsNorm(FOOD_FACTS[k].src);
+    let best = 99;
+    forms.forEach(function(s, fi){
+      const pen = fi;   /* an exact-spelling hit always beats the same hit via the stem */
+      let r = 99;
+      if(w.indexOf(s) >= 0) r = 0;                                    /* a whole word of the key */
+      else if(w.some(x=>x.indexOf(s) === 0)) r = 4;                   /* a key word starts with it */
+      else if(w.some(x=>fsStem(x) === s)) r = 8;                      /* key word is the plural of it */
+      else if(nk.indexOf(s) >= 0) r = 12;                             /* buried mid-word in the key */
+      else if(src.indexOf(s) >= 0) r = 16;                            /* named in its source */
+      if(r + pen < best) best = r + pen;
+    });
+    return best;
   };
-  hit.sort((a,b)=>{
-    const ra = rank(a), rb = rank(b);
-    return ra !== rb ? ra - rb : a.length - b.length;
+  /* rank first, then HIS USAGE, then the shorter name. Usage as the tiebreak is why 'alm' lands on
+     almond butter (36 logs) rather than whichever almond product has the shortest name. */
+  return keys.map(k=>({k, r:rank(k)})).filter(x=>x.r < 99)
+    .sort(function(a,b){
+      if(a.r !== b.r) return a.r - b.r;
+      const ua = use[a.k]||0, ub = use[b.k]||0;
+      if(ua !== ub) return ub - ua;
+      return a.k.length - b.k.length;
+    })
+    .slice(0, limit||40).map(x=>x.k);
+}
+/* ⛔ THE AMOUNT MUST BE READ IN THE UNIT ON SCREEN. Caught in render 2026-09-06: the detail page for
+   a graham cracker opened at 6,495 kcal. foodDefaultAmount() answers in the FACT's unit — 100, because
+   the fact is per-gram — while fvUnits() had put 'each' first, so the page proposed ONE HUNDRED CRACKERS.
+   Neither function was wrong alone; they disagreed about what the number meant. So the default takes the
+   unit as an argument now and there is no unit-less version left to reach for. */
+/* ⛔ THE DEFAULT LIST WAS INSERTION ORDER, which is to say no order at all. Opening the page showed
+   him tuna packet, mayonnaise, light mayo, romaine lettuce, celery, tomato paste — an accident of how
+   FOOD_FACTS happens to be written, with the five things he eats every single morning nowhere in
+   sight. His log already knows the answer: 43 logged days, 54 distinct foods, and mixed berries /
+   almond butter / elev8 cor / kodiak protein oats / oikos triple zero at the top of it. Counting his
+   own rows is better than any list I could rank by hand, and it keeps being right as he changes.
+   Counted fresh per render — 43 days of rows is trivial to walk, and a cache would go stale the
+   moment he logged something, which is exactly when this matters most. */
+/* ⛔ A FLAT 100 g IS A GUESS, AND FOR HALF HIS FOODS IT IS A BAD ONE. FOOD_DEFAULT_N proposes 100 g
+   for everything with a per-gram fact, which means opening almond butter offered him 594 cal (he eats
+   32 g = 190), elev8 cor offered 340 (he eats 25 = 85), kodiak oats 380 (he eats 25 = 95) and fairlife
+   milk 33 (he drinks 320 mL = 107). It matters most on the bulk path, where he never sees the number
+   before it lands. His log has answered this 36 times over for some of these foods, so the median of
+   what he has actually logged is the default now — median rather than mean because one mis-typed
+   amount should not move it, and per UNIT because a banana is 1 each to him and 118 g to the fact.
+   Falls back to FOOD_DEFAULT_N for anything he has never logged. */
+function foodHistory(){
+  const by = {};
+  const push = p => {
+    if(!p || !p.f || typeof p.n !== 'number' || !isFinite(p.n) || p.n <= 0) return;
+    const f = FOOD_FACTS[p.f]; if(!f) return;
+    const u = p.u || f.unit;
+    const rec = by[p.f] || (by[p.f] = {});
+    (rec[u] || (rec[u] = [])).push(p.n);
+  };
+  logDates().forEach(function(d){
+    const es = logEntries(d);
+    Object.keys(es).forEach(function(sl){
+      (es[sl]||[]).forEach(function(e){
+        entryRows(e).forEach(function(sp){ push(sp); if(sp && sp.parts) sp.parts.forEach(push); });
+      });
+    });
   });
-  return hit.slice(0, limit||12);
+  return by;
 }
-function foodAddHTML(ld, slotKey){
-  const q = store.get('qpcut.foodq', '');
-  const hits = foodSearch(q, 12);
-  const rows = hits.map(k=>{
-    const n = foodDefaultAmount(k), f = FOOD_FACTS[k];
-    const m = priceRow([null,null, f.ea ? {f:k,n:n,u:'each'} : {f:k,n:n}]) || [0,0,0,0];
-    return '<div class="erow">'
-      + '<span class="en">' + esc(k) + '<span class="eu">' + esc(f.unit) + '</span></span>'
-      + '<span><input type="number" inputmode="decimal" step="any" min="0" data-fqty="' + esc(k) + '"'
-      + ' value="' + n + '" aria-label="' + esc(k) + ' amount"></span>'
-      + '<span class="em">' + Math.round(m[0]) + ' · ' + Math.round(m[1]) + 'P'
-      + ' <a href="#" data-fadd="' + slotKey + '|' + esc(k) + '" style="color:var(--brass);text-decoration:none;font-weight:700">＋</a></span>'
-      + '</div>';
-  }).join('');
-  return '<details class="acc innerrow" data-acc="foodadd-' + slotKey + '"'
-    + (openAcc.has('foodadd-'+slotKey) ? ' open' : '') + '>'
-    + '<summary><span>🔍 Add foods directly</span><span class="statline">'
-    + Object.keys(FOOD_FACTS).length + ' on the list</span></summary>'
-    + '<div class="sub" style="margin-top:4px">No meal needed — pick what you ate and the amount.</div>'
-    + '<input type="search" id="foodQ" placeholder="search foods…" value="' + esc(q) + '" '
-    + 'style="width:100%;margin-top:6px;padding:7px 8px;font-size:13px;border:1px solid var(--line);'
-    + 'border-radius:8px;background:var(--panel2);color:var(--text)">'
-    + '<div style="margin-top:6px">' + rows + '</div>'
-    + (hits.length === 12 ? '<div class="sub" style="margin-top:6px">Showing 12 — type to narrow it.</div>' : '')
-    + '</details>';
+/* the unit he actually records this food in — a banana is 'each' to him, 'g' to the fact */
+function foodTypicalUnit(key){
+  const rec = foodHistory()[key]; if(!rec) return null;
+  return Object.keys(rec).sort(function(a,b){ return rec[b].length - rec[a].length; })[0] || null;
 }
+function foodTypicalAmount(key, unit){
+  const rec = foodHistory()[key]; if(!rec) return null;
+  const a = rec[unit]; if(!a || !a.length) return null;
+  const srt = a.slice().sort(function(x,y){ return x - y; });
+  return srt[Math.floor(srt.length / 2)];
+}
+function foodUseCounts(){
+  const cnt = {};
+  const bump = sp => {
+    if(!sp) return;
+    if(sp.f) cnt[sp.f] = (cnt[sp.f]||0) + 1;
+    if(sp.parts) sp.parts.forEach(p=>{ if(p && p.f) cnt[p.f] = (cnt[p.f]||0) + 1; });
+  };
+  logDates().forEach(function(d){
+    const es = logEntries(d);
+    Object.keys(es).forEach(function(sl){
+      (es[sl]||[]).forEach(function(e){ entryRows(e).forEach(bump); });
+    });
+  });
+  return cnt;
+}
+function fvDefaultAmount(key, unit){
+  const f = FOOD_FACTS[key]; if(!f) return 1;
+  const u = unit || fvUnits(key)[0];
+  const mine = foodTypicalAmount(key, u);
+  if(mine != null) return mine;             /* what he actually eats beats any table */
+  if(u === 'each') return 1;
+  if(u === 'oz') return 4;
+  return FOOD_DEFAULT_N[u] != null ? FOOD_DEFAULT_N[u] : 1;
+}
+/* the units a food can sensibly be entered in — the fact's OWN unit first, so the default amount and
+   the default unit always describe the same quantity. Deduped: 'egg' is already per-each and was
+   offering the word twice. */
+function fvUnits(key){
+  const f = FOOD_FACTS[key]; if(!f) return ['g'];
+  let u = [f.unit];
+  if(f.unit === 'g') u.push('oz');
+  if(f.ea) u.push('each');            /* f.ea is the gram weight of one piece */
+  u = u.filter((x,i)=>x && u.indexOf(x) === i);
+  /* lead with the unit he records this food in, so the amount beside it is his amount */
+  const mine = foodTypicalUnit(key);
+  if(mine && u.indexOf(mine) > 0) u = [mine].concat(u.filter(x=>x !== mine));
+  return u;
+}
+function fvMacros(key, n, u){
+  const f = FOOD_FACTS[key]; if(!f) return [0,0,0,0];
+  const spec = (u && u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
+  return priceRow([null,null,spec]) || [0,0,0,0];
+}
+/* ---- page 1: search ---- */
+function fvSearchHTML(ld){
+  const st = fvState(), F = favs();
+  const slot = SLOTS.find(s=>s.key === st.slot);
+  const TABS = [['all','All'],['fav','Favorites'],['dishes','Your dishes']];
+  const tabs = '<div class="fvtabs">' + TABS.map(t=>
+    '<button class="fvtab' + (st.tab===t[0]?' on':'') + '" data-fvtab="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
+
+  let list;
+  if(st.tab === 'dishes'){
+    /* ⭐ ANY MEAL, ANY SLOT, and his own drafts beside them. This tab is where the two nested
+       accordions went — 'any other meal, logged here' and the drafts card — so everything they
+       carried has to survive the move, not just the buttons. Two things in particular:
+       ① THE DELTA against the budget of the slot he is adding to, so the trade is visible BEFORE he
+         taps rather than discovered in the hero afterwards;
+       ② the warning that a draft is unguarded. A repo meal is priced by [priced]/[slot-fit]/[row-math];
+         a draft he typed on his phone is priced by nothing until it reaches the repo, and the tab
+         shows them in one list, so the list itself has to say which is which. */
+    const dAll = draftAll();
+    const rows = Object.keys(dAll).map(k=>({id:k, name:dAll[k].name, t:entryMacros({id:k, rows:dAll[k].rows}), draft:true}))
+      .concat(SLOTS.reduce((a,x)=>a.concat(x.opts.map(o=>({id:o.id, name:o.name, t:o.vars[0].t, from:x.slot}))), []));
+    const q = fsNorm(st.q).trim();
+    const bud = slot ? slot.b[0] : 0;
+    const nDraft = Object.keys(dAll).length;
+    list = (nDraft ? '<div class="sub" style="padding:8px 2px">Your own saved meals are marked '
+        + '<span class="fv-tag">yours</span> — nothing guards them until you send one over and it '
+        + 'lands in the repo.</div>' : '')
+      + rows.filter(r=>!q || fsNorm(r.name).indexOf(q) >= 0).map(function(r){
+        const d = Math.round(r.t[0]) - bud;
+        /* ⛔ data-fvdish ONLY. This row must not also carry data-dlog: that attribute has its own
+           live listener, so a draft row would fire two handlers and log itself twice. */
+        return '<button class="fvrow" data-fvdish="' + esc(r.id) + '">'
+          + '<span class="fv-n">' + esc(r.name) + (r.draft?'<span class="fv-tag">yours</span>':'') + '</span>'
+          + '<span class="fv-s">' + Math.round(r.t[0]) + ' cal · ' + Math.round(r.t[1]) + 'P'
+          + (bud ? ' · ' + (d>=0?'+':'') + d + '' : '')
+          + (r.from && slot && r.from !== slot.slot ? ' · from ' + esc(r.from) : '') + '</span></button>';
+      }).join('');
+  } else {
+    let keys = foodSearch(st.q, 60);
+    /* ⛔ AN EMPTY FAVORITES TAB IS A DEAD TAB. He asked for "favorites for things I use often" — so
+       until he has starred anything, that is exactly what it shows: the foods his own log says he
+       uses most. It says so on the tab rather than pretending he chose them. */
+    let favAuto = false;
+    if(st.tab === 'fav'){
+      if(F.length) keys = keys.filter(k=>F.indexOf(k) >= 0);
+      else { const u = foodUseCounts(); keys = keys.filter(k=>(u[k]||0) > 0); favAuto = true; }
+    }
+    const sel = st.sel || [];
+    list = keys.map(k=>{
+      /* ⛔ ONE UNIT, USED FOR ALL THREE OF: the amount, the label, and the price. This line took the
+         amount from his typical unit and then labelled and priced it in the FACT's unit, so banana
+         read "1 g · 1 cal" while meaning 1 each · 105, and salmon read "6 g" meaning 6 oz. Seven foods
+         were wrong. The unit is resolved once, above, and everything downstream uses that. */
+      const uu = fvUnits(k)[0];
+      const n = fvDefaultAmount(k, uu), m = fvMacros(k, n, uu);
+      return '<button class="fvrow" data-fvpick="' + esc(k) + '">'
+        + '<span class="fv-n">' + esc(k) + '</span>'
+        + '<span class="fv-s">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'
+        + '<span class="fv-f' + (F.indexOf(k)>=0?' on':'') + '" data-fvfav="' + esc(k) + '">★</span>'
+        + '<span class="fv-c' + (sel.indexOf(k)>=0?' on':'') + '" data-fvsel="' + esc(k) + '">✓</span></button>';
+    }).join('');
+    if(!list) list = '<div class="sub" style="padding:14px 2px">Nothing on the price list matches that. '
+      + 'Tell Claude the brand and he will add it.</div>';
+    else if(favAuto) list = '<div class="sub" style="padding:8px 2px">You have not starred anything yet, '
+      + 'so these are the foods you log most. Tap a ★ to pin your own.</div>' + list;
+  }
+  /* the bar exists only when something is ticked — an ADD button with nothing to add is a dead
+     control, and it would sit over the list on every single render. */
+  /* ⛔ THE BAR CARRIES THE TOTAL, because the bulk path is the one place he commits an amount he
+     never saw. A food he has logged before arrives at HIS median; one he has not falls back to a flat
+     100 g, which for olive oil is 884 cal. I am not going to invent an amount for a food he has never
+     eaten — so the number goes on the button instead, and an absurd one is obvious before he taps.
+     Same rule as the cross-slot delta: the cost is visible before the commit, not after. */
+  const nSel = (st.sel||[]).length;
+  let selCal = 0;
+  (st.sel||[]).forEach(function(k){
+    if(!FOOD_FACTS[k]) return;
+    const uu = fvUnits(k)[0];
+    selCal += fvMacros(k, fvDefaultAmount(k, uu), uu)[0] || 0;
+  });
+  const bar = nSel ? '<div class="fvbar"><button class="fvadd" data-fvaddsel="1">ADD ' + nSel
+    + ' TO DIARY <span class="fvadd-c">' + Math.round(selCal) + ' cal</span></button></div>' : '';
+  return '<div class="fvpage">'
+    + '<div class="fvhead"><button class="fvx" data-fvclose="1">✕</button>'
+    + '<input type="search" id="fvQ" placeholder="Search all foods…" value="' + esc(st.q) + '">'
+    + '</div>'
+    + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
+    + tabs
+    + '<div class="fvlist">' + list + '</div>' + bar + '</div>';
+}
+/* ---- page 2: the food, its amount, its unit, its group ---- */
+/* The provenance, cut at a WORD. A hard slice(0,150) ended almond butter mid-token — "basis is the
+   low end (190/" — which reads as a rendering fault rather than an abbreviation. Prefer the end of
+   a sentence when one falls in range, since the first sentence is nearly always the label itself. */
+function srcBlurb(src){
+  const t = String(src || '').trim();
+  if(t.length <= 160) return t;
+  const dot = t.lastIndexOf('. ', 160);
+  if(dot > 70) return t.slice(0, dot + 1);
+  const sp = t.lastIndexOf(' ', 160);
+  return t.slice(0, sp > 70 ? sp : 160).replace(/[s,;:(/-]+$/, '') + '…';
+}
+function fvDetailHTML(ld){
+  const st = fvState(), k = st.pick, f = FOOD_FACTS[k];
+  if(!f) return fvSearchHTML(ld);
+  const units = fvUnits(k);
+  const u = st.unit || units[0];
+  const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
+  const m = fvMacros(k, n, u);
+  const kcal = Math.round(m[0]) || 0;
+  const pct = i => kcal ? Math.round((m[i] * (i===3?9:4)) / kcal * 100) : 0;
+  const F = favs();
+  return '<div class="fvpage">'
+    + '<div class="fvhead"><button class="fvx" data-fvback="1">✕</button>'
+    + '<span class="fvtitle"><span class="fv-f' + (F.indexOf(k)>=0?' on':'') + '" data-fvfav="' + esc(k) + '">★</span> ' + esc(k) + '</span></div>'
+    + '<div class="fvfield"><span>Amount</span>'
+    + '<input type="number" inputmode="decimal" step="any" min="0" id="fvAmt" value="' + n + '"></div>'
+    + '<div class="fvfield"><span>Serving Size</span><select id="fvUnit">'
+    + units.map(x=>'<option value="' + esc(x) + '"' + (x===u?' selected':'') + '>' + esc(x) + '</option>').join('') + '</select></div>'
+    + '<div class="fvfield"><span>Group</span><select id="fvSlot">'
+    + SLOTS.map(s=>'<option value="' + esc(s.key) + '"' + (s.key===st.slot?' selected':'') + '>' + esc(s.slot) + '</option>').join('')
+    + '</select></div>'
+    + '<div class="fvenergy"><div class="fve-k">' + kcal + '<small>kcal</small></div>'
+    + '<div class="fve-m">'
+    + '<span class="fve-p">Protein (' + pct(1) + '%) — <b>' + (Math.round(m[1]*10)/10) + ' g</b></span>'
+    + '<span class="fve-c">Carbs (' + pct(2) + '%) — <b>' + (Math.round(m[2]*10)/10) + ' g</b></span>'
+    + '<span class="fve-f">Fat (' + pct(3) + '%) — <b>' + (Math.round(m[3]*10)/10) + ' g</b></span>'
+    + '</div></div>'
+    + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
+    + '<button class="fvsave" data-fvsave="1">SAVE</button>'
+    + '</div>';
+}
+/* Tick a food without leaving the list. The checkbox and the row are the same button in the markup,
+   so the handler stops propagation — otherwise one tap would both select the food AND navigate to it. */
+function fvSelToggle(k){
+  const sel = (FV.sel||[]).slice(), i = sel.indexOf(k);
+  if(i < 0) sel.push(k); else sel.splice(i, 1);
+  fvSet({sel: sel});
+  return sel.length;
+}
+/* ⛔ EVERY SELECTED FOOD GOES IN AT ITS OWN DEFAULT, IN ITS OWN UNIT. This is the bulk path: it is
+   for the five things he ate without wanting to type a number for each. Anything he needs to weigh,
+   he opens and weighs — that is what the detail page is for. Adding them one at a time through
+   logAddFood rather than building the rows here keeps the row-spec rule in exactly one place. */
+function fvAddSelected(ld){
+  const st = fvState(); if(!st.slot) return 0;
+  const sel = (st.sel||[]).filter(k=>FOOD_FACTS[k]);
+  let n = 0;
+  sel.forEach(function(k){
+    const u = fvUnits(k)[0];
+    if(logAddFood(ld, st.slot, k, fvDefaultAmount(k, u), u)) n++;
+  });
+  if(n) fvSet({sel: []});
+  return n;
+}
+/* Add a whole dish — a repo meal or one of his drafts — into the slot the page is set to.
+   Named, not inline, so [cross-slot] and [meal-drafts] can drive the button's own code path. */
+function fvAddDish(ld, id){
+  const st = fvState(); if(!st.slot || !id) return null;
+  const d = draftAll()[id];
+  if(d){ logWrite(ld, st.slot, [{id:id, name:d.name, rows:copyRows({rows:d.rows})}]); return 'draft'; }
+  if(OPTBYID[id]){ logSetMeal(ld, st.slot, id); return 'meal'; }
+  return null;
+}
+/* Commit the detail page: append this food, in the unit on screen, to the chosen group. */
+function fvSaveFood(ld){
+  const st = fvState(), k = st.pick;
+  if(!FOOD_FACTS[k] || !st.slot) return null;
+  const u = st.unit || fvUnits(k)[0];
+  const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
+  return logAddFood(ld, st.slot, k, n, u);
+}
+function foodPageHTML(ld){
+  const st = fvState();
+  if(!st.slot) return '';
+  return st.pick ? fvDetailHTML(ld) : fvSearchHTML(ld);
+}
+
 
 /* ---- ROW EDITOR: what he ACTUALLY ate, per ingredient -------------------------------------
    The reason the whole log refactor happened. On 2026-09-04 he made a breakfast with 155 g of
@@ -7164,7 +7567,14 @@ let zbTab = null, mealQ = '', mealKF = null, expandSlot = null;
 function renderZoneBar(){
   const zb = document.getElementById('zoneBar'); if(!zb) return;
   /* rebuild on tab change OR when the time-aware zone order shifts — chips mirror the page */
-  const sig = current==='today'? 'today|'+zoneOrder().join() : current;
+  /* ⛔ THE FOOD PAGE IS PART OF THE SIGNATURE. This function returns early unless the signature
+     changes, and for Meals the signature was the bare string 'meals' — so opening the food page
+     never rebuilt the bar and the hide-it branch below sat behind a return that could not fire.
+     The screenshots were byte-identical after the fix, which is the only reason I caught it: a
+     change that alters nothing looks exactly like a change that was not needed. */
+  const sig = current==='today'? 'today|'+zoneOrder().join()
+            : current==='meals'? 'meals|'+(fvState().slot ? 'fv' : '-')
+            : current;
   if(zbTab===sig){ return; }
   zbTab = sig;
   if(current==='today'){
@@ -7174,6 +7584,11 @@ function renderZoneBar(){
       ${zoneOrder().map(k=>`<button class="zchip" data-jump="z-${k}">${LBL[k]}</button>`).join('')}
       <span class="zbrest" id="zbRest"></span>`;
   } else if(current==='meals'){
+    /* ⛔ A PAGE TAKES THE SCREEN. With the food page open this bar put a SECOND search box directly
+       above its own — 'Search meals & ingredients…' over 'Search all foods…', with the kosher chips
+       between them — which is precisely the crowding he threw the nested accordions out for. The bar
+       belongs to the meal library, and while the food page is up the library is not on screen. */
+    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */
     zb.innerHTML = `
       <input class="zsearch" id="mealSearch" type="search" placeholder="Search meals &amp; ingredients…" autocomplete="off" value="${esc(mealQ)}">
       <span class="chip kf${mealKF==='meat'?' on':''}" data-kf="meat">Meat</span>
@@ -7801,11 +8216,11 @@ function diaryHTML(ld){
       + '<span class="dg-v">' + val + '</span></summary>'
       + '<div class="dg-body">'
       + items.map(function(i){ return diaryItemHTML(s.key, i); }).join('')
-      + foodAddHTML(ld, s.key)
+      /* ⛔ ONE BUTTON, NOT TWO MORE ACCORDIONS. The food search and the meal picker were both
+         <details> inside this one, so adding a food took four levels of disclosure. They are a PAGE
+         now — ＋ opens it, and 'Your dishes' inside it is where the meals went. */
+      + '<button class="dgadd" data-fvopen="' + s.key + '">＋ Add food</button>'
       + slotTimeRowHTML(ld, s.key)
-      + '<details class="acc innerrow" data-acc="dmore-' + s.key + '"' + (openAcc.has('dmore-'+s.key)?' open':'') + '>'
-      + '<summary><span>🍽 Add a whole meal instead</span><span class="statline">recipes · drafts</span></summary>'
-      + slotMealPicksHTML(ld, s.key) + '</details>'
       + '</div></details>';
   }).join('');
 
@@ -7838,65 +8253,6 @@ function slotTimeRowHTML(ld, slotKey){
     timeRow = `<div class="mrow" style="margin-top:10px"><span class="nm">⏱ Ate at</span><input type="time" id="eatTime" data-slot="${slotKey}" value="${et}" style="font-size:15px;padding:5px 7px"></div>${badTime}${sugLine}`;
   }
   return timeRow;
-}
-function slotMealPicksHTML(ld, slotKey){
-  const s = SLOTS.find(function(x){ return x.key === slotKey; });
-  if(!s) return '';
-  const counts = store.get('qpcut.menucounts', {});
-  const todayEaten = eatenIds(ld);
-  const noMeat = isNoMeat(ld);
-  const pill = function(oo){
-    const rem = Math.max(0, (counts[oo.id]||0) - eatenCountThisWeek(oo.id, s.key));
-    const on = todayEaten[s.key] === oo.id;
-    const meatBlock = noMeat && isMeatOpt(oo) && !on;
-    return '<button class="mealpick' + (on?' on':'') + (meatBlock?' nomeat':'') + '" data-slot="' + s.key
-      + '" data-opt="' + oo.id + '">' + (meatBlock?'🚫 ':'') + oo.name
-      + (meatBlock ? '<span class="rem">Nine Days</span>'
-        : (counts[oo.id] ? '<span class="rem">' + (on?'✓':rem + ' left') + '</span>' : '')) + '</button>';
-  };
-  let sOpts = s.opts;
-  if(s.key === 'bf'){
-    const keep = bowlOfDay(ld), bowls = new Set(bowlIdsAll());
-    sOpts = s.opts.filter(function(oo){ return !bowls.has(oo.id) || oo.id === keep || todayEaten[s.key] === oo.id; });
-  }
-  const picks = sOpts.filter(function(oo){ return (counts[oo.id]||0) > 0 || todayEaten[s.key] === oo.id || oo.noPrep; });
-  const list = (picks.length ? picks : sOpts).map(pill).join('');
-
-  /* ⭐ ANY MEAL, ANY SLOT — his complaint that the app "only lets me choose the meals we made before
-     and i cant even use one meals for another". The pill carries the delta against THIS slot. */
-  const others = SLOTS.filter(function(x){ return x.key !== s.key; })
-    .map(function(x){ const mine = new Set(s.opts.map(function(o){ return o.id; }));
-                      return {s:x, opts:x.opts.filter(function(oo){ return !mine.has(oo.id); })}; })
-    .filter(function(g){ return g.opts.length; });
-  const n = others.reduce(function(a,g){ return a + g.opts.length; }, 0);
-  const otherRow = !others.length ? '' :
-    '<details class="acc innerrow" data-acc="other-' + s.key + '"' + (openAcc.has('other-'+s.key)?' open':'') + '>'
-    + '<summary><span>↔ any other meal, logged here</span><span class="statline"><b>' + n + '</b> · vs ' + s.b[0] + ' budget</span></summary>'
-    + others.map(function(g){
-        return '<div class="slotlbl" style="margin-top:6px">' + g.s.slot + '</div><div class="pickrow">'
-          + g.opts.map(function(oo){
-              const on = todayEaten[s.key] === oo.id;
-              const t = oo.vars[0].t, d = t[0] - s.b[0];
-              const meatBlock = noMeat && isMeatOpt(oo) && !on;
-              return '<button class="mealpick' + (on?' on':'') + (meatBlock?' nomeat':'') + '" data-slot="' + s.key
-                + '" data-opt="' + oo.id + '">' + (meatBlock?'🚫 ':'') + oo.name + '<span class="rem">'
-                + (meatBlock ? 'Nine Days' : t[0] + ' · ' + t[1] + 'P · ' + (d>0?'+':'') + d) + '</span></button>';
-            }).join('') + '</div>';
-      }).join('') + '</details>';
-
-  const dAll = draftAll();
-  const dIds = Object.keys(dAll).filter(function(k){ return dAll[k].slot === s.key; });
-  const cur = (logEntries(ld)[s.key]||[])[0];
-  const draftRow = !dIds.length ? '' :
-    '<div class="slotlbl" style="margin-top:8px">📝 your drafts</div><div class="pickrow">'
-    + dIds.map(function(k){
-        const d = dAll[k], on = cur && cur.id === k;
-        const m = entryMacros({id:k, rows:d.rows}).map(Math.round);
-        return '<button class="mealpick' + (on?' on':'') + '" data-dlog="' + s.key + '|' + k + '">'
-          + d.name + '<span class="rem">' + m[0] + ' · ' + m[1] + 'P</span></button>';
-      }).join('') + '</div>';
-
-  return '<div class="pickrow" style="margin-top:6px">' + list + '</div>' + otherRow + draftRow;
 }
 
 function viewToday(){
@@ -8665,12 +9021,15 @@ function viewMeals(){
      because browsing is the least frequent of the three. Today keeps schedule, lift, hydration,
      dials and the stack -- the things that are not food. */
   const hubLd = logDate || isoToday();
+  /* the food page takes the whole tab over while it is open — a page, not a panel */
+  if(fvState().slot) return `<div class="card">${foodPageHTML(hubLd)}</div>`;
   const hub = `<h2 class="sec" style="margin-top:14px">📓 Diary · ${hubLd===isoToday()?'today':hubLd}</h2>`
     + `<div class="card">${diaryHTML(hubLd)}</div>`
     + `<h2 class="sec">🧪 Make something</h2>`
     + `<div class="card">${genCardHTML(hubLd)}</div>`
     + `<div class="card">${gen2CardHTML(hubLd)}</div>`;
-  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals · tap a meal type to open it · search &amp; kosher filter up top · all weights RAW / dry</h2>` +
+  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals</h2>`
+    + `<div class="sub" style="margin:-6px 2px 8px">All weights RAW / dry. Search and the kosher filter are up top.</div>` +
   SLOTS.map(s=>`
    <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
    <summary>
@@ -8714,7 +9073,8 @@ function viewMeals(){
      </details>`;
    }).join('')}
    </details>`).join('') + `
-   <h2 class="sec">⚖️ Protein powder · weigh from the ziplock</h2>
+   <h2 class="sec">⚖️ Protein powder</h2>
+   <div class="sub" style="margin:-6px 2px 8px">Weigh from the ziplock.</div>
    <div class="card">
      <div class="sub" style="margin-top:0">No containers at the office — so <b>never scoop, always weigh</b>. 1 serving per flavor (½ scoop in any recipe = half this number):</div>
      <ul class="ing" style="margin-top:8px">
@@ -10330,7 +10690,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788662180';
+const BUILD = 'b1788712765';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
