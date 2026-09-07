@@ -693,40 +693,48 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           `row via .flavbreak, chip/statline pinned, title on a ${(titleRule[1].match(/1 1 (\d+)ch/)||[,'?'])[1]}ch basis`);
 }
 
-/* ---------- meal-row-wrap — a name must never be squeezed while the numbers hog the line ----------
+/* ---------- name-squeeze — a name must never be crushed while the numbers hog the line ----------
  * His screenshot Aug 13 2026: every Meals row broke into three lines — "Cream / of / Rice" with the
- * DAIRY chip floating beside the middle word. Nothing overlapped; the name was WRAPPING, because the
- * four-macro block is flex-shrink:0 and the name was `flex:1`, whose basis is 0. A zero basis is
- * invisible to flex line-breaking, so the numbers never wrap to a second line however narrow the
- * screen — the name eats the entire shortfall.
- * ⚠️ The basis MUST be on the inline style: these two <b>s carry style="flex:...", and an inline style
- * beats any stylesheet rule. My first attempt put it in the <style> block and did nothing at all.
- * Real geometry lives in tools/measure.js (Edge via puppeteer-core); this only pins the source facts.
+ * DAIRY chip beside the middle word. Nothing overlapped; the name was WRAPPING, because the four-macro
+ * block is flex-shrink:0 and the name was `flex:1`, whose basis is 0. A zero basis is invisible to flex
+ * line-breaking, so the numbers never wrap however narrow the screen — the name eats the shortfall.
+ *
+ * ⛔ RENAMED AND RE-AIMED 2026-09-06, because its subjects were deleted. It pinned two INLINE
+ * flex-basis values inside viewMeals; viewMeals is gone with the My Meals browser, so the guard was
+ * failing about markup nobody can bring back. The hazard did not go with it — the same shape (a
+ * variable-length name beside a fixed-width number block) is now the diary group header, the diary
+ * line, the food row and the dish title. So the clauses moved to those, stated as the RULE rather
+ * than as two line numbers: every such name needs min-width:0, and then either a ch-based basis or an
+ * ellipsis, or it will be the thing that collapses.
  */
 {
   const src = require('fs').readFileSync(SRC, 'utf8');
   const bad = [];
-  const basis = /<b style="flex:1 1 (\d+)ch;min-width:0">/g;
-  const found = [...src.matchAll(basis)].map(m => +m[1]);
-  if (found.length < 2)
-    bad.push(`expected 2 inline flex-basis names in viewMeals, found ${found.length} — a zero basis ` +
-             `means the macros never wrap and the name gets squeezed to nothing`);
-  /* ⚠️ Scoped to the two viewMeals names by their interpolation. A bare search for flex:1 also matched
-     the gym-timing row, where a zero basis is CORRECT — that row holds a name and a time input, with no
-     macro block to wrap away. The first version of this check failed on healthy code. */
-  if (/<b style="flex:1;min-width:0">\$\{m\.name\}/.test(src))
-    bad.push('the meal name is back to flex:1 (basis 0) — that is the squeeze his screenshot showed');
-  if (/<b style="flex:1;min-width:0">\$\{s\.slot\}/.test(src))
-    bad.push('the slot header name is back to flex:1 (basis 0)');
-  if (!/@media \(max-width:400px\)\{[\s\S]{0,260}?details\.slotsec \.mealcard\{padding-left/.test(src))
-    bad.push('the narrow-screen padding trim is gone — nested cards take 118px of a 320px screen, ' +
-             'leaving 202px for name + kosher + four macros');
+  const rule = (sel) => {
+    const m = src.match(new RegExp('\\' + '.' + sel + '\\{([^}]*)\\}'));
+    if (!m) { bad.push('.' + sel + ' has no rule at all — a name surface with no width behaviour'); return null; }
+    return m[1];
+  };
+  [['dg-n', 'the diary group name'], ['di-n', 'a diary food line'],
+   ['fv-n', 'a food search row'], ['fvtitle', 'the dish/food page title']].forEach(function (p) {
+    const css = rule(p[0]); if (css == null) return;
+    if (!/min-width:0/.test(css)) bad.push(p[1] + ' (.' + p[0] + ') has no min-width:0 — flex and grid both refuse to shrink it below content, so it pushes the numbers off screen');
+    const basis = /flex:1 1 \d+ch/.test(css);
+    const ellip = /text-overflow:ellipsis/.test(css) && /overflow:hidden/.test(css);
+    if (!basis && !ellip)
+      bad.push(p[1] + ' (.' + p[0] + ') has neither a ch-based flex-basis nor an ellipsis — it will wrap to three lines like his Aug 13 screenshot');
+  });
+  /* the one from the original guard whose subject is still here */
   const titleBasis = src.match(/details\[data-acc="cor-day"\]>summary>b,[^{]*\{\s*flex:1 1 (\d+)ch/);
   if (!titleBasis) bad.push('the flavor title has no ch-based flex-basis — at 320px it renders as "Death …"');
+  /* and the regression that started it: a bare flex:1 on a name next to a shrink-0 number block */
+  if (/<b style="flex:1;min-width:0">\$\{(m\.name|s\.slot|d\.name)\}/.test(src))
+    bad.push('a name is back to flex:1 (basis 0) — that is exactly the squeeze his screenshot showed');
 
-  if (bad.length) fail('meal-row-wrap', bad.join(' · '));
-  else ok('meal-row-wrap', `names carry a real flex-basis (${found.join('/')}ch), flavor title ` +
-          `${titleBasis[1]}ch, narrow-screen padding trimmed`);
+  if (bad.length) fail('name-squeeze', bad.join(' · '));
+  else ok('name-squeeze', 'the four surfaces that hold a name beside fixed-width numbers (diary group, ' +
+          'diary line, food row, page title) all carry min-width:0 plus a basis or an ellipsis; flavor ' +
+          'title ' + titleBasis[1] + 'ch; no name is back to a zero basis');
 }
 
 /* ---------- zone-placement — the two tools live in Tools, not Food ----------
@@ -1932,8 +1940,11 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'two entries in one slot sum (' + r.twice + '), and a null slot still reads empty');
 }
 
-/* ==== [meals-hub] — the Meals tab is where food lives now ===================================
+/* ==== [meals-hub] — one tab holds the whole day ============================================
  * His call, 2026-09-05: "I'm imagining this be the new meals tab with all these capabilities."
+ * And 2026-09-06: "Merge today and meals into 1 tab." So the tab this guard was written about no
+ * longer exists — the diary, the food page and both generators are ZONES of Today, ordered by the
+ * same clock as the rest of the day. Every clause below is the same claim asked of that one tab.
  * The diary, the food search, both generator cards and the library are one screen; Today keeps
  * schedule, lift, hydration, dials and the stack.
  *
@@ -1953,7 +1964,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const before = current, bex = expandSlot;
 
     /* (a) the hub carries the whole food workflow */
-    current = 'meals'; expandSlot = 'bf'; render();
+    current = 'today'; expandSlot = 'bf'; render();
     const m = document.body.innerHTML;
     /* ⚠️ the separate row editor is GONE on purpose: every diary line now carries its own amount box,
        so editing IS the list rather than an accordion underneath it. */
@@ -1961,9 +1972,13 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
        "there's so many more tabs to open after that and it gets hard to use and messy" — so what the
        group has to offer is the button that opens the page. Checking for the button rather than the
        panel is the same claim (he can reach a search from the group) asked of the shape he asked for. */
+    /* ⛔ 'the My Meals library' is GONE from this list on purpose, not by accident: the browser was
+       deleted on his instruction and [my-meals] now proves the recipes survived it. A clause left
+       here would fail forever; a clause deleted without a replacement would lose the cookbook. */
     const need = {'the diary':/class="diaryroot"/, 'a way into the food search':/data-fvopen="bf"/,
                   'editable food lines':/data-diq="bf\\|/, 'fit-a-recipe':/data-acc="genfit"/,
-                  'build-a-plate':/data-acc="genbuild"/, 'the My Meals library':/My Meals/};
+                  'build-a-plate':/data-acc="genbuild"/, 'the day hero':/id="z-now"/,
+                  'the lift zone moved off':/^(?![\\s\\S]*data-acc="gymtiming")/};
     Object.keys(need).forEach(k=>{ if(!need[k].test(m)) bad.push('the Meals hub is missing ' + k); });
     /* ⛔ AND THE NESTING HE COMPLAINED ABOUT MUST STAY GONE. A group holds its lines, one button and
        the eat time — nothing that opens further. This is the clause that would fail if someone
@@ -1979,14 +1994,21 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       bad.push('the hub does not show all ' + SLOT_SEQ.length + ' slots as diary groups');
     if(!/data-acc="dg-water"/.test(m)) bad.push('water is not a diary row');
 
-    /* (b) Today keeps the non-food cards and LOST the generator */
+    /* (b) ⛔ INVERTED BY THE MERGE, AND THAT IS THE POINT. This used to assert the generators had
+       LEFT Today. They are back, because Today is now the only food tab — so the claim flips to:
+       Today keeps its own cards AND holds the food ones, and the training cards are the things
+       that left. A guard whose sense reverses is a guard that has to be re-read, not re-pointed. */
     current = 'today'; render();
     const t = document.body.innerHTML;
     ['log-hydr','log-dials','log-stack'].forEach(a=>{
       if(!new RegExp('data-acc="' + a + '"').test(t)) bad.push('Today lost ' + a);
     });
-    if(/data-acc="genfit"/.test(t) || /data-acc="genbuild"/.test(t))
-      bad.push('the generator cards are still on Today — they moved to the hub');
+    if(!/data-acc="genfit"/.test(t) || !/data-acc="genbuild"/.test(t))
+      bad.push('the generator cards are not on Today — the merge was supposed to bring them');
+    if(/data-acc="gymtiming"/.test(t) || /data-acc="lift"/.test(t))
+      bad.push('the lift cards are still on Today — they moved to Train');
+    current = 'train'; render();
+    if(typeof liftZoneHTML !== 'function') bad.push('liftZoneHTML does not exist — the lift zone was lost, not moved');
 
     current = before; expandSlot = bex;
     store.set('qpcut.eaten', eat0);
@@ -1996,8 +2018,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   /* (c) the wiring, read from source: the hub needs BOTH, and every lookup must be optional */
   {
     const src = require('fs').readFileSync(SRC, 'utf8');
-    if (!/if\s*\(\s*current === 'meals'\s*\)\s*\{\s*wireMeals\(\);\s*wireToday\(\);/.test(src))
-      bad.push('the Meals hub no longer calls wireToday — every card it borrowed from Today would be inert');
+    /* ⛔ THE DISPATCH IS THE THING TO ASSERT, and the tab it names changed. wireMeals is deleted —
+       Today wires everything now — so this checks that TODAY is dispatched, and that no branch is
+       left pointing at a tab that no longer exists. The Meals tab was inert for its entire life
+       because nothing pointed at its wiring; that is the failure this clause exists to catch, and
+       it survives the rename. */
+    if (!/\{today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack\}\[current\]/.test(src))
+      bad.push('the render dispatch no longer wires today — every card on the merged tab would be inert');
+    if (/wireMeals/.test(src))
+      bad.push('wireMeals is referenced again — that tab is gone, so the reference is dead or wrong');
     if (/\$\('#mealLog'\)\.addEventListener/.test(src))
       bad.push("wireToday binds $('#mealLog') unguarded again — that element does not exist on the hub");
     if (/\$\('#suppList'\)\.addEventListener/.test(src))
@@ -2006,10 +2035,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       bad.push('the meal-pick handler no longer delegates from .diaryroot, so it only works on one tab');
   }
   if (bad.length) fail('meals-hub', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('meals-hub', 'the Meals tab carries the diary, a way into the food page, editable food lines, ' +
-    'both generator cards and the library; no diary group nests another accordion inside it; Today keeps ' +
-    'hydration, dials and the stack and has lost the generator; and the hub wires BOTH wireMeals and ' +
-    'wireToday with no unguarded Today-only lookups');
+  else ok('meals-hub', 'ONE tab holds the day: the hero, the diary, a way into the food page, editable ' +
+    'food lines and both generators, with no diary group nesting another accordion; hydration, dials ' +
+    'and the stack are still there; the lift cards have moved to Train and liftZoneHTML renders them ' +
+    'there; and the dispatch wires today, with no branch left pointing at the retired Meals tab');
 }
 
 /* ==== [food-log] — log foods with no meal at all ============================================
@@ -2070,13 +2099,14 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
       if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
-      /* ⛔ ONE SEARCH BOX. The tab's own zone bar carries 'Search meals & ingredients…' plus the
-         kosher chips, and with the page open it sat directly above the page's own box — two search
-         fields stacked, which is the crowding he threw the nested accordions out for. Worse, the fix
-         hid behind renderZoneBar's early return: its signature for this tab was the bare string
-         'meals', so opening the page never rebuilt the bar and the new branch could not run. The
-         screenshots came back BYTE-IDENTICAL, which is the only reason it surfaced. */
-      current = 'meals'; fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:[]});
+      /* ⛔ ONE SEARCH BOX. The zone bar belongs to the tab, the search box belongs to the page, and
+         with the page open they stacked — two search fields on one screen, the crowding he threw the
+         nested accordions out for. Worse, the first fix hid behind renderZoneBar's early return: its
+         signature was a bare tab name, so opening the page never rebuilt the bar and the new branch
+         could not fire. The screenshots came back BYTE-IDENTICAL, which is the only reason it
+         surfaced. The bar is now the day's zone chips rather than a meal search, and the claim is
+         unchanged: while a page is up, the page owns the screen. */
+      current = 'today'; fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:[]});
       renderZoneBar(); render();
       { const zb = document.getElementById('zoneBar');
         if(zb && zb.innerHTML.trim()) bad.push('the meal-library search bar is still on screen behind the food page');
@@ -2084,8 +2114,13 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         if(boxes !== 1) bad.push(boxes + ' search boxes are on screen at once — the page must own the screen');
         fvClose(); renderZoneBar(); render();
         const zb2 = document.getElementById('zoneBar');
-        if(!zb2 || zb2.innerHTML.indexOf('mealSearch') < 0)
-          bad.push('closing the food page did not bring the meal-library search bar back'); }
+        /* ⛔ THE BAR THAT COMES BACK IS NOT THE SAME BAR. It used to carry the meal-library search;
+           that library is deleted, so on the merged tab the zone bar carries the day's zone chips.
+           The claim is unchanged — closing the page gives the tab its own chrome back — but pointing
+           it at 'mealSearch' would have asserted the return of something I removed on purpose. */
+        if(!zb2 || zb2.innerHTML.indexOf('data-jump=') < 0)
+          bad.push('closing the food page did not bring the day zone bar back');
+      }
       fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:[]});
       /* ⛔ MULTI-SELECT — his ask, 2026-09-06: "Add it to", on the checkboxes and ADD TO DIARY he
          pointed at. Three things have to hold. The tick must not navigate (it lives inside the row
@@ -2284,7 +2319,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     });
 
     /* (c) the card renders, starts CLOSED, and lets him take a food back out */
-    const tab0 = current; current = 'meals';   /* the card lives on the hub now, not Today */
+    const tab0 = current; current = 'today';   /* the card lives on the hub now, not Today */
     store.set('qpcut.gen2', {keys:['chicken breast raw','white rice dry','broccoli'], target:'di'});
     openAcc.delete('genbuild'); render();
     let html = document.body.innerHTML;
@@ -2339,7 +2374,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
        nothing to trip. Check the default, THEN open it to inspect the contents. */
     /* ⛔ RENDER THE MEALS TAB. These cards moved off Today on 2026-09-05, and this guard kept
        rendering Today and reporting them missing — the guard working, pointed at the old address. */
-    const tab0 = current; current = 'meals';
+    const tab0 = current; current = 'today';
     openAcc.delete('genfit');
     store.set('qpcut.gen', {text:good, target:'bf', picks:{}});
     render();
@@ -2518,12 +2553,17 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     r.sawWhole + ' whole-unit rows all stayed whole, no negative amounts (' + r.anyMoved + ' amounts moved)');
 }
 
-/* ==== [my-meals] — the cookbook became a place he can act from ===============================
- * His ask: "have a My Meals section where all my meals that ive made before live." The Meals tab was
- * read-only — he could look a meal up and then had to go to Today, open the right slot and find it
- * again. It had no event wiring AT ALL, which is how a whole tab stays passive without anyone
- * noticing. Every meal now offers every slot with the delta against that slot's budget, and his own
- * saved drafts sit at the top, where "meals I've made before" actually means his.
+/* ==== [my-meals] — the cookbook survived losing its browser ==================================
+ * His ask, 2026-09-04: "have a My Meals section where all my meals that ive made before live."
+ * His instruction, 2026-09-06: get rid of that section.
+ *
+ * ⛔ THOSE TWO ARE NOT IN CONFLICT, AND THIS GUARD IS WHERE THE DIFFERENCE IS ENFORCED. What he
+ * threw out was the BROWSER — five nested slot accordions holding 51 meals. What was inside it was
+ * the cookbook: 306 ingredient rows and 158 cooking steps, rendered nowhere else in the app.
+ * Counted BEFORE the deletion, which is the only reason it is still here; "Your dishes" showed a
+ * name and a calorie count and nothing more. So this no longer checks that a section exists. It
+ * checks that every recipe is still reachable, still complete, and still loggable into any slot —
+ * the three things the browser actually did — from the dish page that replaced it.
  */
 {
   const r = run(`
@@ -2533,31 +2573,56 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     store.set('qpcut.mealdrafts', {});
     draftSave('bf', 'Test draft', {id:'b1', rows: addEntryRow({id:'b1'}, 'blueberries', 155)});
 
-    const before = current; current = 'meals'; render();
-    const html = document.body.innerHTML;
-    current = before;
+    /* (a) every meal opens as a recipe, with everything the browser used to show */
+    const ids = SLOTS.reduce((a,s)=>a.concat(s.opts.map(o=>o.id)), []);
+    let ing = 0, steps = 0, noIng = [], noHow = [], noLog = [];
+    ids.forEach(function(id){
+      fvSet({slot:'bf', tab:'dishes', dish:id, pick:null, sel:[]});
+      const h = foodPageHTML(D);
+      const nI = (h.match(/<li style="display:block/g)||[]).length;
+      const nS = (h.match(/<li><span class="t">/g)||[]).length;
+      ing += nI; steps += nS;
+      if(!nI) noIng.push(id);
+      if(HOWTO[id] && !nS) noHow.push(id);
+      if(h.indexOf('data-fvdishlog="' + id + '"') < 0) noLog.push(id);
+    });
+    if(noIng.length)  bad.push(noIng.length + ' meal(s) render no ingredients: ' + noIng.slice(0,3).join(', '));
+    if(noHow.length)  bad.push(noHow.length + ' meal(s) lost their method: ' + noHow.slice(0,3).join(', '));
+    if(noLog.length)  bad.push(noLog.length + ' meal(s) cannot be logged from their page: ' + noLog.slice(0,3).join(', '));
+    /* ⛔ COUNTED, NOT SPOT-CHECKED. The whole risk of that deletion was losing content quietly, and
+       a guard that opens one recipe and finds it fine would have said nothing about the other 50. */
+    if(ing < 300)   bad.push('only ' + ing + ' ingredient rows across every recipe — 306 were there before the browser went');
+    if(steps < 150) bad.push('only ' + steps + ' cooking steps across every recipe — 158 were there before the browser went');
 
-    if(!/My Meals/.test(html))                 bad.push('the section is not called My Meals');
-    if(/The cookbook/.test(html))              bad.push('the old read-only cookbook heading is still there');
-    if(!/data-acc="draft-/.test(html))         bad.push('his own drafts do not appear in My Meals');
-    if(!/Nothing guards it/.test(html))        bad.push('a draft card no longer says it is unguarded');
+    /* (b) his own drafts open the same way, and say plainly that nothing guards them */
+    const dIds = Object.keys(draftAll());
+    if(dIds.length !== 1) bad.push('the draft fixture did not save — this guard would run vacuous');
+    else {
+      fvSet({slot:'bf', tab:'dishes', dish:dIds[0], pick:null, sel:[]});
+      const dh = foodPageHTML(D);
+      if(!/fv-tag/.test(dh))              bad.push('a draft is not marked apart from a guarded repo meal');
+      if(!/Nothing guards them/.test(dh)) bad.push('a draft page no longer says it is unguarded');
+      if(!/<li style="display:block/.test(dh)) bad.push('a draft page shows none of its ingredients');
+    }
 
-    /* every meal AND every draft must offer every slot — that is the "use one meal for another" ask */
-    const meals = SLOTS.reduce((a,s)=>a+s.opts.length, 0);
-    const want = (meals + 1) * SLOT_SEQ.length;
-    const got = (html.match(/data-mlog="/g)||[]).length;
-    if(got !== want) bad.push('expected ' + want + ' log-it-as buttons (' + meals + ' meals + 1 draft x ' + SLOT_SEQ.length + ' slots), found ' + got);
-    /* and each must print the delta, or the trade is invisible */
-    if(!/data-mlog="[^"]*"[^>]*>[^<]*<span class="rem">[+-]?\\d+</.test(html))
-      bad.push('the log-it-as buttons do not print the delta against the slot budget');
+    /* (c) any dish into any slot, with the delta visible before the tap — the "use one meal for
+           another" ask, which is what the log-it-as row used to carry */
+    fvSet({slot:'bf', tab:'dishes', dish:null, q:'', pick:null, sel:[]});
+    const list = foodPageHTML(D);
+    const offered = (list.match(/data-fvdish="/g)||[]).length;
+    if(offered < ids.length) bad.push('only ' + offered + ' of ' + ids.length + ' meals are offered');
+    if(!/·\\s*[+-]\\d+/.test(list)) bad.push('the dish rows do not print the delta against the slot budget');
+    { fvSet({dish:'d1'});
+      const dp = foodPageHTML(D);
+      if(dp.indexOf('LOG IT TO BREAKFAST') < 0)
+        bad.push('a dinner opened from breakfast does not offer to log into breakfast'); }
 
-    if(typeof wireMeals !== 'function') bad.push('wireMeals does not exist');
-
+    fvClose();
     store.set('qpcut.eaten', eat0); store.set('qpcut.mealdrafts', d0);
-    return {bad, got, meals};
+    return {bad, got: offered, meals: ids.length, ing, steps};
   `);
   const bad = r.bad.slice();
-  if (!r.got) bad.push('no log-it-as buttons rendered at all — this guard ran vacuous');
+  if (!r.got) bad.push('no dishes were offered at all — this guard ran vacuous');
   /* ⛔ THE FUNCTION EXISTING IS NOT THE SAME AS THE TAB BEING WIRED, and my first version checked the
      wrong one. A plant that removed `meals:wireMeals` from the render dispatch left wireMeals defined
      and perfectly healthy — it was simply never called, every button on the tab was inert, and the
@@ -2565,15 +2630,17 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
      at it, so the DISPATCH is the thing to assert. */
   {
     const src = require('fs').readFileSync(SRC, 'utf8');
-    /* ⚠️ The dispatch stopped being a map literal on 2026-09-05: the hub needs BOTH wireMeals and
-       wireToday, so it became an if/else. This guard kept matching the old shape and reported the tab
-       inert when it was fine — a guard pointed at an address that moved. */
-    if (!/current === 'meals'\s*\)\s*\{\s*wireMeals\(\);\s*wireToday\(\);/.test(src))
-      bad.push('the render dispatch no longer calls wireMeals — the Meals tab is inert again');
+    /* ⛔ ONE TAB, ONE WIRE-UP. This clause has now been re-pointed twice — first when the hub needed
+       both wireMeals and wireToday, now that Meals is gone entirely — and each time for the same
+       reason: a guard that names an address instead of a claim goes stale the moment the address
+       moves. The claim is that the tab holding the food is actually wired. */
+    if (!/\{today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack\}\[current\]/.test(src))
+      bad.push('the render dispatch no longer wires today — the food tab would be inert');
   }
   if (bad.length) fail('my-meals', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('my-meals', r.meals + ' meals plus his own drafts, each offering all 5 slots with the delta ' +
-    'against that slot budget (' + r.got + ' buttons), drafts flagged unguarded, and the tab is wired');
+  else ok('my-meals', 'the browser is gone and the cookbook is not: all ' + r.meals + ' recipes open as ' +
+    'pages carrying ' + r.ing + ' ingredient rows and ' + r.steps + ' cooking steps, each loggable into any ' +
+    'slot with the delta shown first (' + r.got + ' offered), and his drafts open the same way marked unguarded');
 }
 
 /* ==== [cross-slot] — any meal can be logged into any slot ====================================

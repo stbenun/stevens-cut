@@ -102,7 +102,7 @@ const SCRIPTS = [...HTML.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1
 const APP_JS = SCRIPTS.reduce((a, b) => (a.length > b.length ? a : b), '');
 const SHELL = HTML.replace(APP_JS, '/* app script injected by probe */');
 
-const TABS = ['today', 'meals', 'prep', 'train', 'track'];
+const TABS = ['today', 'prep', 'train', 'track'];   /* 'meals' merged into today 2026-09-06 */
 const DAYNAME = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /* the live instance's problem list, so listener errors land against the right tab */
