@@ -732,6 +732,15 @@
   }
   @media (prefers-reduced-motion: reduce){*{transition:none!important}.anim-l,.anim-r{animation:none}}
 
+/* The archive date cell is the handle for editing that day. It must read as TEXT — a table full of
+   button chrome would wreck the density that makes this table scannable — while still being an
+   honest tap target: inherited type, a dotted underline as the only affordance, and a 30px min
+   height so it clears the touch minimum on his phone. */
+.wedbtn{background:none;border:0;padding:2px 0;min-height:30px;font:inherit;color:inherit;
+  text-align:left;cursor:pointer;border-bottom:1px dotted var(--line,#5a5a4a);}
+.wedbtn:active{color:var(--brass)}
+tr.arc-editing>td{background:rgba(200,160,60,.10)}
+tr.arc-ed>td{background:rgba(200,160,60,.06)}
 </style>
 
 <div class="app">
@@ -772,6 +781,10 @@ const tchip = t => `<span class="chip time">${t}</span>`;
 /* Sleep is entered clock-style "H.MM" (his ask): "4.10" = 4 h 10 min. Parse to decimal hours for storage;
    sleepFmt renders decimal hours back as "Hh Mm". Old decimal-hours data still displays right (4.5 → 4h 30m). */
 function sleepParse(v){ v=String(v==null?'':v).trim(); if(!v) return null; const p=v.split('.'); const H=parseInt(p[0],10); if(isNaN(H)) return null; const M=(p[1]!=null)?(parseInt(p[1],10)||0):0; return Math.round((H+M/60)*1000)/1000; }
+/* The INVERSE of sleepParse, for prefilling an edit box. sleepFmt gives '6h 31m', which is for
+   reading; typing that back in would parse as 6 hours flat. The edit field must round-trip. */
+function sleepDec(dec){ if(dec==null||isNaN(dec)) return ''; const H=Math.floor(dec+1e-9), M=Math.round((dec-H)*60);
+  return M? H+'.'+String(M).padStart(2,'0') : String(H); }
 function sleepFmt(dec){ if(dec==null||isNaN(dec)) return ''; const H=Math.floor(dec+1e-9), M=Math.round((dec-H)*60); return M? `${H}h ${M}m` : `${H}h`; }
 
 /* ---------- meals: named options ---------- */
@@ -1626,10 +1639,35 @@ function wireRowEdit(ld){
   }));
   document.querySelectorAll('[data-fvclose]').forEach(b=>b.addEventListener('click',()=>{ fvClose(); render(); }));
   document.querySelectorAll('[data-fvback]').forEach(b=>b.addEventListener('click',()=>{
-    fvSet({pick:null, amt:null, unit:null}); render();
+    /* ⚠ CLEAR `fact` TOO. foodPageHTML checks st.fact FIRST, so leaving it set made ✕ on the
+       editor look like a dead button — state changed, same screen redrawn. */
+    fvSet({fact:null, pick:null, amt:null, unit:null}); render();
   }));
   document.querySelectorAll('[data-fvtab]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({tab:b.dataset.fvtab}); render();
+  }));
+  /* ── his own food facts: open the editor, save it, undo it ── */
+  document.querySelectorAll('[data-ffnew]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({fact:true, pick:null}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-ffedit]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({fact:b.dataset.ffedit}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-ffsave]').forEach(b=>b.addEventListener('click',()=>{
+    /* ⚠ An error must NOT re-render: that would wipe the half-filled form he needs to correct.
+       The message is written into the page and the inputs are left exactly as they are. */
+    const err = fvFactSave();
+    const box = document.getElementById('ffErr');
+    if(err){ if(box){ box.textContent = err; box.style.display='block'; } return; }
+    const st = fvState();
+    const key = st.fact === true ? null : String(st.fact||'');
+    /* land on the food he just described, so the next tap is logging it */
+    fvSet({fact:null, pick: key || null, amt:null, unit:null});
+    render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-ffrevert]').forEach(b=>b.addEventListener('click',()=>{
+    fvFactRevert(b.dataset.ffrevert);
+    fvSet({fact:null, pick:null, amt:null, unit:null}); render();
   }));
   /* ⛔ SAME WOUND AS THE AMOUNT BOX, TREATED THE SAME WAY. This used to render() and then re-focus
      and restore the caret — a patch that only sometimes works: on iOS a programmatic focus() does not
@@ -4643,6 +4681,52 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} },
 };
 
+/* ==== HIS OWN FOOD FACTS — added and edited on the phone ====================================
+   Merged INTO FOOD_FACTS at boot, before anything reads it. Every one of the ~45 FOOD_FACTS[...]
+   lookups, the search index, the dropdowns and the pricing engine then work unchanged, because as
+   far as they are concerned the fact was always there. The alternative — an override lookup inside
+   priceRow — was rejected outright: check-food.js lifts the pricing engine VERBATIM between its
+   sentinels, so a localStorage read in that block would either break the guard or have to be
+   reimplemented inside it, and a guard that reimplements the rule it checks is the failure mode
+   this file has hit before.
+   ⚠ Safe only because every FOOD_FACTS enumeration happens inside a function at render time.
+   Verified before writing this: buffinList, the two generator dropdowns, foodSearch and the add
+   picker are all render-time. If a module-level table is ever derived from FOOD_FACTS, it must be
+   built AFTER this call or it will hold the pre-merge set.
+
+   ⛔ THE HONEST LIMIT, WHICH THE FORM ALSO TELLS HIM: this lives on the phone, not in the repo.
+   check-food.js prices every recipe row against the FOOD_FACTS in index.html, so editing a fact
+   that a RECIPE uses makes his app and the build guards disagree — the app shows his number, the
+   guard keeps verifying the old one, and nothing complains. That is why `used by a recipe` is
+   surfaced in the editor and why the original is kept for revert. Adding a NEW food has no such
+   problem: no recipe references it. */
+function userFacts(){ const v = store.get('qpcut.ffuser', {}); return (v && typeof v==='object' && !Array.isArray(v))? v : {}; }
+function setUserFacts(v){ store.set('qpcut.ffuser', v); }
+function applyUserFacts(){
+  const u = userFacts();
+  Object.keys(u).forEach(function(k){
+    const r = u[k];
+    if(!r || typeof r !== 'object' || !r.fact) return;
+    FOOD_FACTS[k] = Object.assign({}, r.fact);
+  });
+}
+/* Is this key one a recipe prices against? Recipe rows carry {f:key}; a combination row carries
+   parts. Used to warn him before he edits a number the build depends on. */
+function factUsedByRecipe(k){
+  let hit = false;
+  try{
+    SLOTS.forEach(function(sl){ sl.opts.forEach(function(o){ (o.vars||[]).forEach(function(v){
+      (v.ing||[]).forEach(function(row){
+        const sp = row && row[2];
+        if(!sp || Array.isArray(sp)) return;
+        if(sp.f === k) hit = true;
+        if(sp.parts && sp.parts.some(function(p){ return p.f === k; })) hit = true;
+      });
+    }); }); });
+  }catch(e){}
+  return hit;
+}
+
 /* ---------- cloud sync · phone ↔ computer via a secret GitHub gist ----------
    Every localStorage write stamps a per-key clock (qpcut.syncmeta). Sync pulls the
    gist, merges per key by newest stamp (deletes carry tombstones), and pushes back
@@ -4735,7 +4819,11 @@ async function syncNow(){
     }
     RAWSET('qpcut.sync.last', String(Date.now()));
     syncStatus('✓ synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
-    if(res.changed){ (typeof renderWhenIdle==='function') ? renderWhenIdle() : render(); }
+    /* ⛔ RE-MERGE BEFORE RENDERING. syncMerge has just rewritten localStorage from the gist, so
+       qpcut.ffuser may now hold foods this device has never seen -- added on another device, or
+       edited there. FOOD_FACTS still holds the pre-pull copy until this runs, and the render below
+       would price his food off it while the store says otherwise. */
+    if(res.changed){ applyUserFacts(); (typeof renderWhenIdle==='function') ? renderWhenIdle() : render(); }
   }catch(e){
     syncStatus('⚠ sync failed — check internet; it retries on the next edit or app-open');
   }
@@ -4857,6 +4945,34 @@ function allWeights(){
   user.forEach(e=>map.set(e.d,e));
   return [...map.values()].sort((a,b)=>a.d<b.d?-1:1);
 }
+/* ⭐ THE ONLY WRITER OF qpcut.weights. Both the Log form and the archive's inline row editor call
+   this. A second copy of the merge rule is precisely the defect this repo keeps re-growing — F_GUAC
+   drifting from the guac fact, the second slot-budget table — and here it would silently wipe the
+   two fields the caller did not happen to be editing.
+   ⚠ UNITS, because two of the three are not what they look like: w is POUNDS, s is THOUSANDS of
+   steps (9.91 = 9,910, matching the 'steps · k' input), sl is DECIMAL HOURS from sleepParse
+   (4.10 typed = 4.1667 stored). Pass null/NaN for a field to LEAVE IT ALONE, not to clear it.
+   Clearing a day is weightClear — a distinct action, because 'I left this box empty' and 'this
+   number is wrong, remove it' are different intentions and must not share a code path. */
+function weightWrite(d, w, sK, sl){
+  if(!d) return false;
+  const prev = allWeights().find(e=>e.d===d) || {};
+  const keep = (v, p) => (v==null || (typeof v==='number' && isNaN(v))) ? (p!=null?p:null) : v;
+  const user = store.get('qpcut.weights',[]).filter(e=>e.d!==d);
+  user.push({d, w: keep(w, prev.w), s: keep(sK, prev.s), sl: keep(sl, prev.sl)});
+  store.set('qpcut.weights', user);
+  return true;
+}
+/* Removes HIS entry for the day. If the date also exists in WPRE — the hardcoded prehistory that
+   predates the app — the row reappears with the WPRE value rather than disappearing, because
+   allWeights layers user entries OVER WPRE. That is correct: he cannot delete history he never
+   typed, only his own correction to it. */
+function weightClear(d){
+  store.set('qpcut.weights', store.get('qpcut.weights',[]).filter(e=>e.d!==d));
+}
+/* which archive row is open for editing; session-only, never persisted — an edit box that survived
+   a reload would be a stale form pointed at a day he has moved on from */
+let wEditDate = null;
 function weekOf(dISO){ return Math.floor((new Date(dISO+'T12:00:00').getTime()-W0)/(7*864e5))+1; }
 function eatenCountThisWeek(optId, slotKey){
   /* counts the option across ALL slots — a dinner eaten at lunch (slot swap) still
@@ -6377,10 +6493,10 @@ function logAddFood(ld, slot, key, n, unit){
    search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
    on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
    pressed is, and that stays in the store. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null};
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null};
 function fvState(){ return FV; }
 function fvSet(p){ FV = Object.assign({}, FV, p); }
-function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null}; }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);
@@ -6653,7 +6769,12 @@ function fvSearchHTML(ld){
     + '</div>'
     + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
     + tabs
-    + '<div class="fvlist">' + fvListHTML(ld) + '</div>' + fvBarHTML() + '</div>';
+    + '<div class="fvlist">' + fvListHTML(ld) + '</div>'
+    + (function(){ const n = Object.keys(userFacts()).length;
+        return '<button class="btn ghost" data-ffnew="1" style="width:100%;margin-top:10px">＋ New food</button>'
+          + (n ? '<div class="sub" style="margin:6px 2px">' + n + ' food' + (n===1?'':'s') + ' you added or edited yourself. Open one to change or undo it.</div>' : '');
+      })()
+    + fvBarHTML() + '</div>';
 }
 /* ---- page 2: the food, its amount, its unit, its group ---- */
 /* The provenance, cut at a WORD. A hard slice(0,150) ended almond butter mid-token — "basis is the
@@ -6711,6 +6832,7 @@ function fvDetailHTML(ld){
     + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     + '<button class="fvsave" data-fvsave="1">SAVE</button>'
+    + '<button class="btn ghost" data-ffedit="' + esc(k) + '" style="width:100%;margin-top:8px">✏️ Edit these numbers</button>'
     + '</div>';
 }
 /* Tick a food without leaving the list. The checkbox and the row are the same button in the markup,
@@ -6806,9 +6928,88 @@ function fvDishHTML(ld){
     + '<button class="fvsave" data-fvdishlog="' + esc(id) + '">LOG IT TO ' + esc(slot ? slot.slot.toUpperCase() : '') + '</button>'
     + '</div>';
 }
+/* ⭐ MACROS ARE ENTERED PER 100 g OR PER ITEM — NEVER IN THE STORED BASIS.
+   A FOOD_FACTS row with unit:'g' holds macros PER GRAM: apricot is cal:0.48, not 48. If this form
+   handed him the stored field he would type 48 for a food that then prices at 4,800 cal per 100 g,
+   and it would look completely reasonable on the way in. The graham-cracker bug earlier this week
+   was this exact class — a per-each default fed into a per-gram field, rendering 6,495 cal — so
+   the form talks in the units printed on a package and converts on save and on load.
+   per 100 g -> unit:'g', every macro divided by 100.   per item -> unit:'each', stored as typed. */
+function fvFactHTML(ld){
+  const st = fvState(), key = st.fact === true ? '' : String(st.fact || '');
+  const editing = !!key && !!FOOD_FACTS[key];
+  const f = editing ? FOOD_FACTS[key] : null;
+  const mine = editing ? userFacts()[key] : null;
+  const per100 = !f || f.unit === 'g';
+  const m = x => { if(!f) return ''; const v = f[x]; if(v==null) return ''; return per100 ? Math.round(v*1000)/10 : v; };
+  const used = editing && factUsedByRecipe(key);
+  const row = (lbl, id, val, ph) => '<div class="fvfield"><span>' + lbl + '</span>'
+    + '<input type="number" inputmode="decimal" step="any" min="0" id="' + id + '" value="' + val + '"'
+    + (ph?' placeholder="' + ph + '"':'') + '></div>';
+  return '<div class="fvpage">'
+    + '<div class="fvhead"><button class="fvx" data-fvback="1">✕</button>'
+    + '<span class="fvtitle">' + (editing ? 'Edit · ' + esc(key) : 'New food') + '</span></div>'
+    + (editing ? '' : '<div class="fvfield"><span>Name</span><input type="text" id="ffName" placeholder="chicken cutlet"></div>')
+    + '<div class="fvfield"><span>Macros are per</span><select id="ffBasis">'
+      + '<option value="g"' + (per100?' selected':'') + '>100 g</option>'
+      + '<option value="each"' + (per100?'':' selected') + '>1 item</option></select></div>'
+    + row('Calories', 'ffCal', m('cal'))
+    + row('Protein · g', 'ffP', m('p'))
+    + row('Carbs · g', 'ffC', m('c'))
+    + row('Fat · g', 'ffF', m('f'))
+    + '<div class="fvfield"><span>One item weighs · g</span><input type="number" inputmode="decimal" step="any" min="0" id="ffEa" value="' + (f&&f.ea!=null?f.ea:'') + '" placeholder="optional"></div>'
+    + '<div class="sub" style="margin:8px 2px">Fill “one item weighs” and you can log this by the piece as well as by weight.</div>'
+    + (used ? '<div class="note" style="margin:10px 0"><b>A recipe uses this food.</b> Changing it changes what those meals cost on your phone, but the build checks on the computer keep verifying the original number, so the two will disagree until I copy your change into the code. Tell me after you save and I will.</div>' : '')
+    + (mine ? '<div class="sub" style="margin:8px 2px">Yours · saved ' + esc(mine.at||'') + '</div>' : '')
+    + '<div class="note" id="ffErr" style="display:none;margin:10px 0"></div>'
+    + '<button class="fvsave" data-ffsave="1">SAVE</button>'
+    + (mine ? '<button class="btn ghost" data-ffrevert="' + esc(key) + '" style="width:100%;margin-top:8px">' + (mine.base ? 'Revert to the original' : 'Delete this food') + '</button>' : '')
+    + '</div>';
+}
+/* Reads the form and commits. Returns an error string, or null on success. */
+function fvFactSave(){
+  const st = fvState();
+  const editing = st.fact !== true && !!FOOD_FACTS[String(st.fact||'')];
+  const el = id => document.getElementById(id);
+  const num = id => { const e = el(id); if(!e || e.value.trim()==='') return null; const v = parseFloat(e.value); return isNaN(v)? null : v; };
+  const key = editing ? String(st.fact) : String((el('ffName')||{}).value||'').trim().toLowerCase();
+  if(!key) return 'Give it a name first.';
+  if(!editing && FOOD_FACTS[key]) return 'There is already a food called “' + key + '”. Open it to edit it.';
+  const cal = num('ffCal');
+  if(cal == null) return 'Calories are needed.';
+  const basis = (el('ffBasis')||{}).value === 'each' ? 'each' : 'g';
+  const d = basis === 'g' ? 100 : 1;
+  const fact = {unit: basis, cal: cal/d, p: (num('ffP')||0)/d, c: (num('ffC')||0)/d, f: (num('ffF')||0)/d};
+  const ea = num('ffEa');
+  if(ea != null && ea > 0) fact.ea = ea;
+  /* ⛔ THE src STRING IS NOT DECORATION. Every other row in this file names where its numbers came
+     from, and the rule is that a row NAMES a source rather than copying macros from nowhere. A
+     fact he typed has a real source — him — and saying so is what stops it being read later as a
+     USDA or label figure by me or by him. */
+  const today = isoToday();
+  fact.src = 'YOUR OWN entry, typed into the app on ' + today + (basis==='g' ? ' as per-100 g values.' : ' as per-item values.')
+    + ' Not from a label or a database — recheck it against the package before trusting it for anything that matters.';
+  const u = userFacts();
+  const prior = u[key];
+  /* keep the ORIGINAL repo fact the first time he overwrites one, so Revert is possible without me */
+  const base = prior ? prior.base : (editing ? Object.assign({}, FOOD_FACTS[key]) : null);
+  u[key] = {fact: fact, at: today, base: base};
+  setUserFacts(u);
+  applyUserFacts();
+  return null;
+}
+/* Undo: back to the repo's fact if there was one, otherwise the food goes away entirely. */
+function fvFactRevert(key){
+  const u = userFacts(), r = u[key];
+  if(!r) return;
+  if(r.base) FOOD_FACTS[key] = Object.assign({}, r.base); else delete FOOD_FACTS[key];
+  delete u[key];
+  setUserFacts(u);
+}
 function foodPageHTML(ld){
   const st = fvState();
   if(!st.slot) return '';
+  if(st.fact) return fvFactHTML(ld);
   if(st.dish) return fvDishHTML(ld);
   return st.pick ? fvDetailHTML(ld) : fvSearchHTML(ld);
 }
@@ -7542,6 +7743,26 @@ function cardOrder(z){ const v = store.get('qpcut.cardorder.'+z, []); return Arr
 function setCardHidden(v){ store.set('qpcut.cardhidden', v); }
 function setCardOrder(z, v){ store.set('qpcut.cardorder.'+z, v.length? v : null); }
 let cardEditing = false;
+/* ⭐ THE FOUR TODAY SECTIONS, AND HIS OWN ORDER FOR THEM.
+   zoneOrder() picks an order from the clock — diary leads, food leads while cooking, and so on.
+   That stays the DEFAULT, but a pinned order wins over it outright, because the whole point of him
+   pinning one is that he disagrees with what the clock chose.
+   ⚠ A pin is a PREFERENCE, NOT A MANIFEST — same rule as cardOrder above, and for the same reason.
+   Zones he has ordered come first in his order; any zone the app adds later keeps its natural spot
+   at the end instead of vanishing. A stored order must never be able to delete a section outright;
+   hiding is what the hide button is for. */
+const ZONE_LABEL = {diary:'\u{1F4D3} Diary', food:'\u{1F37D} Food', log:'\u270F\uFE0F Log', tools:'\u{1F9F0} Tools'};
+const ZONE_ALL = ['diary','food','log','tools'];
+function zonePin(){ const v = store.get('qpcut.zonepin', null); return Array.isArray(v) && v.length? v : null; }
+function setZonePin(v){ store.set('qpcut.zonepin', (v && v.length)? v : null); }
+/* the order actually rendered: his pin if he has one, else the clock's pick, always completed
+   with any zone the stored list does not mention. */
+function zoneSeq(fallback){
+  const pin = zonePin();
+  const base = pin || fallback || ZONE_ALL;
+  const seen = base.filter(function(z){ return ZONE_ALL.indexOf(z) >= 0; });
+  return seen.concat(ZONE_ALL.filter(function(z){ return seen.indexOf(z) < 0; }));
+}
 /* the effective order arrangeZone last computed per zone, so a move on a zone he has never
    reordered still has a full list to swap inside — cardOrder() is empty until the first move. */
 const ZONESEQ = {};
@@ -7583,6 +7804,28 @@ function cardEditWrap(z, id, seq, html){
     (hid ? '<span class="sub" style="font-size:11.5px">hidden</span>' : '') +
     '</div>' + (hid ? '<div style="opacity:.35">' + html + '</div>' : html);
 }
+/* Sits at the TOP of Today in Cards mode, above every section, because it reorders the sections
+   themselves — putting it inside one of them would make the control a child of the thing it moves. */
+function zoneEditHTML(seq){
+  const pinned = !!zonePin();
+  const rows = seq.map(function(z, i){
+    return '<div style="display:flex;gap:6px;align-items:center;padding:3px 0">' +
+      '<button class="btn ghost" data-zup="' + esc(z) + '" ' + (i<=0?'disabled ':'') +
+        'style="padding:3px 9px;font-size:12px" aria-label="Move ' + esc(z) + ' up">\u2191</button>' +
+      '<button class="btn ghost" data-zdn="' + esc(z) + '" ' + (i>=seq.length-1?'disabled ':'') +
+        'style="padding:3px 9px;font-size:12px" aria-label="Move ' + esc(z) + ' down">\u2193</button>' +
+      '<span style="font-weight:600">' + (ZONE_LABEL[z]||z) + '</span></div>';
+  }).join('');
+  return '<div class="card" style="margin:0 0 10px">' +
+    '<div class="slotlbl">Section order</div>' + rows +
+    '<div style="display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap">' +
+      '<button class="btn' + (pinned?'':' ghost') + '" id="zonePinBtn" style="font-size:12.5px;padding:5px 10px">' +
+        (pinned ? '\u{1F4CC} Pinned' : '\u{1F4CC} Pin this order') + '</button>' +
+      '<span class="sub" style="font-size:11.5px">' + (pinned
+        ? 'This order is fixed all day.'
+        : 'Right now the order changes with the time of day. Moving a section pins it.') + '</span>' +
+    '</div></div>';
+}
 function cardEditBarHTML(){
   const nh = cardHidden().length;
   if(!cardEditing) return '<button class="btn ghost" id="cardEditBtn" style="font-size:12.5px;padding:5px 10px">\u270f\ufe0f Cards</button>';
@@ -7597,8 +7840,33 @@ function wireCardEdit(){
   if(sa) sa.addEventListener('click', function(){ setCardHidden([]); render(); });
   const ro = document.getElementById('cardResetOrder');
   if(ro) ro.addEventListener('click', function(){
-    ['lift','food','log','tools'].forEach(function(z){ setCardOrder(z, []); }); render();
+    /* ⚠ 'diary' WAS MISSING FROM THIS LIST and 'lift' has not been a Today zone since the reorganize
+       — so Reset order silently left the diary's cards exactly where they were while claiming to
+       have reset everything. Built from ZONE_ALL now, so a new section cannot be forgotten here. */
+    ZONE_ALL.forEach(function(z){ setCardOrder(z, []); });
+    setZonePin(null);
+    render();
   });
+  const zp = document.getElementById('zonePinBtn');
+  if(zp) zp.addEventListener('click', function(){
+    /* unpinning hands the order back to the clock; pinning freezes whatever is on screen now */
+    setZonePin(zonePin() ? null : zoneSeq(zoneOrder())); render();
+  });
+  function zmove(attr, delta){
+    document.querySelectorAll('[' + attr + ']').forEach(function(el){
+      el.addEventListener('click', function(){
+        const z = el.getAttribute(attr);
+        /* a move is an explicit statement about order, so it PINS — otherwise the section would
+           slide back the moment the clock crossed into the cook window and read as a bug */
+        const seq = zoneSeq(zoneOrder()).slice();
+        const i = seq.indexOf(z); if(i < 0) return;
+        const j = i + delta; if(j < 0 || j >= seq.length) return;
+        const t = seq[i]; seq[i] = seq[j]; seq[j] = t;
+        setZonePin(seq); render();
+      });
+    });
+  }
+  zmove('data-zup', -1); zmove('data-zdn', 1);
   function move(attr, delta){
     document.querySelectorAll('[' + attr + ']').forEach(function(el){
       el.addEventListener('click', function(){
@@ -7960,9 +8228,14 @@ function zoneOrder(){
      always sinks to the bottom. */
   const isFri = wd===5;
   const cook = (!isFri && m>=960 && m<1140) || (isFri && m>=870 && m<1200);
-  /* cooking needs lead time, so Food leads then; otherwise the DIARY leads, because logging the
-     meal he is about to eat is the default next action and it should sit under the hero. */
-  return cook ? ['food','diary','log','tools'] : ['diary','log','food','tools'];
+  /* ⭐ DIARY IS ABOVE FOOD IN EVERY BRANCH — his instruction 2026-09-07, "move the diary above
+     food on the today tab", with no window carved out. It used to be conditional: cooking needs
+     lead time, so the cook window led with Food. That intent is KEPT but demoted — during the cook
+     window Food still outranks the log and the tools, it just no longer outranks the diary.
+     ⚠ Do not restore ['food','diary',...] on the reasoning that cooking needs lead time. That is
+     the argument this edit overruled, and he overruled it knowing the app behaves that way.
+     [zone-order] in check-app asserts diary-before-food on every branch, so a revert fails loudly. */
+  return cook ? ['diary','food','log','tools'] : ['diary','log','food','tools'];
 }
 
 /* -- tiny sparkline -- */
@@ -9246,7 +9519,7 @@ function viewToday(){
      every other check still passed. [food-log] caught it by counting search boxes and finding none. */
   if(fvState().slot) return `<div class="card">${foodPageHTML(ld)}</div>`;
   const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};
-  const order = backfill? ['diary','food','log','tools'] : zoneOrder();
+  const order = zoneSeq(backfill? ['diary','food','log','tools'] : zoneOrder());
   return `
   <div class="pickrow" style="margin:0 0 10px;align-items:center;gap:8px">
     <input type="date" id="viewDate" value="${ld}" style="padding:6px 9px;font-size:13px" aria-label="View any day — past or upcoming">
@@ -9263,6 +9536,7 @@ function viewToday(){
   ${bagAtTop(backfill) ? bagCard(ld, wd) : ''}
   ${dayPlanCard(ld)}
   ${nowZone}
+  ${cardEditing? zoneEditHTML(order) : ''}
   ${order.map(k=>arrangeZone(k, Z[k])).join('\n')}
   ${bagAtTop(backfill) ? '' : bagCard(ld, wd)}`;
 }
@@ -9765,11 +10039,28 @@ function viewTrack(){
         /* a blank cell gets .arc-none so it reads as ABSENT rather than as a value — five em-dashes
            at full contrast were a big part of why this table felt noisy */
         const cell = (v, has) => `<td${has?'':' class="arc-none"'}>${has? v : '—'}</td>`;
-        return `<tr${e.d===isoToday()?' class="arc-today"':''}><td>${dn} ${mdy(e.d)}</td>
+        /* ⚠ THE INPUTS MUST NOT RE-RENDER ON KEYSTROKE. His report Aug 2026 — "whenever I write a
+           number into one of these boxes, the keyboard goes away" — was render() rebuilding the DOM
+           under a focused field. Nothing here listens to input or change; only the three BUTTONS
+           re-render, and they do it after the values have been read. */
+        const ed = wEditDate===e.d ? `<tr class="arc-ed"><td colspan="5" style="padding:8px 0">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end">
+            <label style="font-size:11.5px">lbs<br><input type="number" step="0.1" inputmode="decimal" class="wed-w" value="${e.w!=null?e.w:''}" style="width:72px"></label>
+            <label style="font-size:11.5px">steps · k<br><input type="number" step="0.1" inputmode="decimal" class="wed-s" value="${e.s!=null?e.s:''}" style="width:72px"></label>
+            <label style="font-size:11.5px">sleep · h.mm<br><input type="text" inputmode="decimal" class="wed-sl" value="${e.sl!=null?sleepDec(e.sl):''}" placeholder="6.31" style="width:84px"></label>
+            <button class="btn" data-wsave="${e.d}" style="padding:5px 10px;font-size:12.5px">Save</button>
+            <button class="btn ghost" data-wcancel="1" style="padding:5px 10px;font-size:12.5px">Cancel</button>
+            <button class="btn ghost" data-wclear="${e.d}" style="padding:5px 10px;font-size:12.5px">Clear day</button>
+          </div>
+          <div class="sub" style="font-size:11.5px;margin-top:6px">Leave a box empty to keep what is there. Clear day removes your entry for ${mdy(e.d)}.</div>
+        </td></tr>` : '';
+        const rcls = [e.d===isoToday()?'arc-today':'', wEditDate===e.d?'arc-editing':''].filter(Boolean).join(' ');
+        return `<tr${rcls?` class="${rcls}"`:''}>
+          <td><button class="wedbtn" data-wed="${e.d}" aria-label="Edit ${mdy(e.d)}">${dn} ${mdy(e.d)}</button></td>
           ${cell(e.w!=null?e.w.toFixed(1):'', e.w!=null)}
           ${cell(e.s!=null?e.s.toFixed(1)+'k':'', e.s!=null)}
           ${cell(e.sl!=null?sleepFmt(e.sl):'', e.sl!=null)}
-          ${cell(nm+'/5', !!nm)}</tr>`;
+          ${cell(nm+'/5', !!nm)}</tr>${ed}`;
       }).join('');
       const key = `trk-w-${mk}-${n}`;
       const isNow = n === weekOf(isoToday());
@@ -10689,6 +10980,8 @@ function wireTrack(){
       wDays.querySelectorAll('.mealpick').forEach(x=>x.classList.toggle('on', x.dataset.wd===$('#wDate').value));
     });
   }
+  /* the archive's own edit controls are delegated once at boot, not wired here -- see the
+     [data-wed] handler in the v14 boot block and the note on why */
   $('#wAdd').addEventListener('click',()=>{
     const btn = $('#wAdd');
     const d = $('#wDate').value;
@@ -10698,13 +10991,7 @@ function wireTrack(){
       setTimeout(()=>{ if($('#wAdd')) $('#wAdd').textContent='Log'; },1600);
       return;
     }
-    const prev = allWeights().find(e=>e.d===d) || {};
-    const user = store.get('qpcut.weights',[]).filter(e=>e.d!==d);
-    user.push({d,
-      w: isNaN(w) ? (prev.w!=null?prev.w:null) : w,
-      s: isNaN(s) ? (prev.s!=null?prev.s:null) : s,
-      sl: (sl==null||isNaN(sl)) ? (prev.sl!=null?prev.sl:null) : sl});
-    store.set('qpcut.weights',user);
+    weightWrite(d, w, s, sl);
     render();
   });
   $('#wkCopy').addEventListener('click',async()=>{
@@ -10825,9 +11112,17 @@ function wireTrack(){
 }
 /* one-time: watch for the on-screen keyboard so the fixed tab bar can get out of the way */
 kbdWatch();
+/* ⛔ BEFORE THE FIRST render(), NOT AFTER. Everything that enumerates FOOD_FACTS does so at render
+   time, so merging his own foods in here is enough for search, the dropdowns and the pricing engine
+   to see them — but only if it happens first. Merging after would leave the opening screen priced
+   off the repo's facts while every later screen used his. */
+applyUserFacts();
 render();
 /* register the push service worker on boot (harmless where unsupported / not served) */
 if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
+/* ⚠ A PULL REWRITES qpcut.ffuser, SO THE MERGE MUST RUN AGAIN. applyUserFacts copies from
+   localStorage into FOOD_FACTS once; after a pull brings his phone's facts down to another device
+   (or vice versa) the in-memory copy is behind the store until something re-merges it. */
 /* cloud sync: pull on open, then again whenever the app is left or re-entered
    (the 8 s edit-debounce inside syncTouch covers mid-session pushes) */
 if(syncCfg().gist) syncNow();
@@ -10847,6 +11142,34 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
       }
     });
   }
+  /* ⭐ THE ARCHIVE'S INLINE DAY EDITOR, DELEGATED ONCE. Every logged day renders a tappable date,
+     so per-render wiring attached one listener PER DAY OF HIS LOG -- 94 today and growing by one a
+     day, re-attached on every render. It cost him nothing visible, and it ran the exhaustive click
+     sweep out of heap after 38 minutes, which is the harness saying the shape is wrong before the
+     phone does. Delegation is flat in the size of his history.
+     ⚠ The three buttons are matched BEFORE the row, because Save and Clear sit inside the editor
+     row that the date cell opened -- closest() from a Save click would otherwise find a [data-wed]
+     ancestor first on some layouts and reopen the editor instead of saving. */
+  document.addEventListener('click', e=>{
+    const sv = e.target.closest('[data-wsave]');
+    if(sv){
+      const cell = sv.closest('td');
+      const g = c => { const i = cell && cell.querySelector(c); return i? i.value.trim() : ''; };
+      const num = v => v===''? null : parseFloat(v);
+      weightWrite(sv.getAttribute('data-wsave'), num(g('.wed-w')), num(g('.wed-s')), sleepParse(g('.wed-sl')));
+      wEditDate = null; render(); return;
+    }
+    const cl = e.target.closest('[data-wclear]');
+    if(cl){ weightClear(cl.getAttribute('data-wclear')); wEditDate = null; render(); return; }
+    if(e.target.closest('[data-wcancel]')){ wEditDate = null; render(); return; }
+    const ed = e.target.closest('[data-wed]');
+    if(ed){
+      /* tapping the open row's own date closes it again, so the control is its own undo */
+      const d = ed.getAttribute('data-wed');
+      wEditDate = (wEditDate === d) ? null : d;
+      render(); return;
+    }
+  });
   /* RIR chips delegated once — refreshGuides() swaps their DOM, delegation survives it */
   document.addEventListener('click', e=>{
     const b = e.target.closest('[data-rir]'); if(!b) return;
@@ -10895,7 +11218,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788808124';
+const BUILD = 'b1788814385';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

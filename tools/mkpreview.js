@@ -69,7 +69,11 @@ const setup = `
   if(FV_){
     const tabs = ['all','fav','dishes'];
     /* --fv "sel:a,b,c" ticks those foods, which is the only way to see the ADD TO DIARY bar */
-    if(FV_.indexOf('sel:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, sel:FV_.slice(4).split(',')});
+    /* --fv 'fact:new' opens the blank New-food form; 'fact:<key>' opens that food's editor. Same
+       prefix convention as sel:, because the fact editor is a THIRD view state alongside the search
+       screen and the detail page, and none of the existing spellings can express it. */
+    if(FV_.indexOf('fact:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, fact: FV_.slice(5)==='new' ? true : FV_.slice(5)});
+    else if(FV_.indexOf('sel:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, sel:FV_.slice(4).split(',')});
     else if(tabs.indexOf(FV_) >= 0) fvSet({slot:SLOT_, tab:FV_, q:'', pick:null});
     else                       fvSet({slot:SLOT_, tab:'all', q:'', pick:FV_, amt:null, unit:null});
     current = 'meals';

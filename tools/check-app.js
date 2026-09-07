@@ -11,6 +11,7 @@
  *   meal-collision      Tuesday scheduled the snack at 6:31 PM with dinner at 6:30 PM
  *   kashrut-timing      the dairy Creami was suggested 3 h 45 after a chicken lunch, 3 separate days
  *   slot-budget-sum     the five slot budgets summed to 2240 against a 2220 target
+ *   zone-order          the cook window put Food above the Diary on Today
  *   option-fits-slot    b19 sat 165 cal over the breakfast slot
  *   clock-copy          a row reading "Bed by 10:30" rendered at 10:00 PM
  *   rotation-headroom   the Shabbat feast rotation wraps to a repeat next Friday
@@ -592,6 +593,43 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   });
   if (bad.length) fail('time-picker', bad.join(' · '));
   else ok('time-picker', `${ids.length} time input(s): save on change, render on blur`);
+}
+
+/* ---------- zone-order — the diary outranks food on Today, in EVERY branch ----------
+ * His instruction 2026-09-07: "move the diary above food on the today tab". It was already true in
+ * two of zoneOrder()'s three branches; the cook window led with Food on the reasoning that cooking
+ * needs lead time. He overruled that, so the ordering is now unconditional.
+ *
+ * READS SOURCE, NOT BEHAVIOUR, AND THAT IS DELIBERATE. zoneOrder() branches on nowMin() and
+ * new Date().getDay(), both scoped consts a test cannot stub — the same wall bagAtTop hit, where an
+ * attempt to patch globalThis.nowMin changed nothing and cheerfully reported the card as leading at
+ * 1 PM. A rule about time that can only be exercised at the current time is a rule that passes by
+ * accident 22 hours a day. Every RETURN in the function is checked instead, so a branch that only
+ * fires between 4 and 7 PM is covered at 9 AM.
+ */
+{
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const at = src.indexOf('function zoneOrder()');
+  const bad = [];
+  if (at < 0) bad.push('zoneOrder() is gone — this guard has nothing to read');
+  else {
+    /* bounded at the next top-level function so a later one's arrays are never scanned */
+    const nxt = src.indexOf('\nfunction ', at + 10);
+    const body = src.slice(at, nxt > at ? nxt : at + 4000);
+    const arrays = [...body.matchAll(/\[((?:\s*'[a-z]+'\s*,?)+)\]/g)]
+      .map(m => m[1].split(',').map(x => x.trim().replace(/'/g, '')))
+      .filter(a => a.indexOf('diary') >= 0 || a.indexOf('food') >= 0);
+    if (!arrays.length) bad.push('no zone arrays found in zoneOrder() — did it stop returning literals?');
+    arrays.forEach(a => {
+      const d = a.indexOf('diary'), f = a.indexOf('food');
+      if (d < 0) bad.push(`[${a.join()}] has no diary zone`);
+      else if (f >= 0 && f < d) bad.push(`[${a.join()}] puts food above diary`);
+    });
+    if (!bad.length && arrays.length < 3)
+      bad.push(`only ${arrays.length} zone ordering(s) found; zoneOrder has three branches, so one is unchecked`);
+  }
+  if (bad.length) fail('zone-order', bad.join(' · '));
+  else ok('zone-order', 'every zoneOrder branch puts the diary above food');
 }
 
 /* ---------- cor-repeat — the `next ›` stepper must not serve a combo he just ate ----------
