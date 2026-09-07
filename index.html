@@ -745,7 +745,7 @@
       <div class="coach">Cut Companion</div>
     </div>
     <div class="macrostrip" id="macroStrip">
-      <div class="mcell"><div class="n">2220</div><div class="l">kcal</div></div>
+      <div class="mcell"><div class="n">2250</div><div class="l">kcal</div></div>
       <div class="mcell"><div class="n">187</div><div class="l">protein</div></div>
       <div class="mcell"><div class="n">227</div><div class="l">carbs</div></div>
       <div class="mcell"><div class="n">64</div><div class="l">fat</div></div>
@@ -2239,7 +2239,8 @@ SLOTS.forEach(function(s){
    His instruction, 2026-09-07: "use whatever is stated in the excell sheet from Q." So Q's numbers
    stand, the gap is stated rather than absorbed, and the guard asserts THIS gap exactly — any new
    drift still fails. Ask Q which line he meant. */
-const SLOT_SUM_GAP = [20, 4, 11, -1];   /* slots minus PLAN_T, from Q's sheet as written */
+const SLOT_SUM_GAP = [-10, 4, 11, -1];  /* slots minus PLAN_T. Was [20,4,11,-1] against a 2220
+     target; his 2250 on 2026-09-07 turned a 20-cal overshoot into a 10-cal undershoot. */
 /* off-plan snack repair options — single source of truth */
 const FIXPOOL = [
  ['Breakfast: almond butter 32 g → 16 g', 95],
@@ -5394,7 +5395,18 @@ function winsHTML(){
    Contract: tickers NEVER call render(). tickNow patches #nowStrip (zero inputs inside)
    + toggles classes on timeline rows; tickRest patches textContent on chips. The lift
    card (.prw2/.repin/EG_REG) is a sealed component — nothing here touches its DOM. */
-const PLAN_T = [2220,187,227,64];
+/* ⭐ 2250 IS HIS NUMBER, NOT Q'S SHEET'S. Asked whether to raise the 2240-vs-2220 discrepancy with
+   Q, he closed it himself, 2026-09-07: "Leave it. It’s 2250." That figure appears nowhere in
+   MEALS.xlsx — the sheet is dated Jul 1 and says 2220 — so this is him stating a current target that
+   has moved since, and he is the authority on his own plan. Recorded as his, with the date, because
+   in three weeks the only way to know why this says 2250 will be this comment.
+   ⚠ CALORIES ONLY. He gave one number, so protein, carbs and fat are untouched at 187/227/64. Do
+   not "fix" those to fit: 187P + 227C + 64F comes to 2232 by Atwater, and a target is a target, not
+   the output of a sum. Ask him before moving any of the three.
+   ⚠ AND THE SLOT GAP FLIPPED SIGN. Q's five meals total 2240, so against 2220 they ran 20 OVER and
+   against 2250 they run 10 UNDER — which is the more sensible shape, but SLOT_SUM_GAP had to be
+   recomputed and the guard now asserts the new vector. */
+const PLAN_T = [2250,187,227,64];
 /* ---- Dynamic daily macro target ----
    Base is PLAN_T. Days that legitimately run higher/lower (rebuild, refeed, feast, fast) carry an
    explicit delta on their override: OVERRIDES[date].madj = [dCal,dP,dC,dF] + .mwhy (short reason).
@@ -8019,10 +8031,24 @@ const PRO_JIBEN  = {id:'jiben',  label:'Eggs ×2 · egg whites 100 g · cottage 
    the sum of those four rows, so the copy cannot drift from its source again. */
 const PRO_YOG    = {id:'yogurt', label:'FAGE 2% Greek yogurt',           unit:'g',      per:[0.705,0.10,0.03,0.02], lo:150, hi:500, step:10};
 const C_RICE  = {id:'rice',   label:'White rice, dry',      unit:'g',     per:[3.45,0.073,0.836,0],  lo:25, hi:115, step:5};
-const C_POT   = {id:'potato', label:'Potatoes, ¾" cubes',   unit:'g',     per:[0.727,0.018,0.164,0], lo:80, hi:420, step:10};
+/* ⛔ hi WENT 420 -> 520 BECAUSE THE DAY GOT BIGGER, NOT TO MAKE A TEST PASS, and the distinction is
+   the whole point. His target moved 2220 -> 2250 on 2026-09-07, so the worst single-sitting hole the
+   Final Meal has to close grew with it, and the meat lane's ceiling (3 patties + 420 g potato + 3 guac
+   = 1400) fell 40 short of a 1510 hole. [final-meal] holds a 25-cal tolerance that was deliberately
+   ratcheted 60 -> 25 on his instruction — "we shouldnt be overfeeding or underfeeding. we should be
+   on target always" — and its comment says to tighten it, never loosen it. So the tolerance stayed
+   and the LANE got the headroom, on the cheapest axis: 520 g of potato is a big plate, and a plate
+   that IS his whole remaining day is supposed to be. Verified as the binding constraint by raising
+   this one cap and watching all 12 hole x lane combos close. */
+const C_POT   = {id:'potato', label:'Potatoes, ¾" cubes',   unit:'g',     per:[0.727,0.018,0.164,0], lo:80, hi:520, step:10};
 const C_EZEK  = {id:'ezek',   label:'Ezekiel bread',        unit:'slice', per:[80,5,15,0.5],         lo:1,  hi:4,   step:1};
 const F_SES   = {id:'ses',    label:'Toasted sesame oil',   unit:'tsp',   per:[40,0,0,4.5],          lo:0.5, hi:3,  step:0.5};
-const F_GUAC  = {id:'guac',   label:'Mini guac cups',       unit:'cup',   per:[100,1,6,8],           lo:1,  hi:3,   step:1};
+/* ⛔ THIS PER[] IS A SECOND COPY OF A FOOD_FACTS NUMBER, and it went stale the moment the fact moved.
+   The guac cup went 105 -> 110 (Wholly's published panel, on his instruction to carry each brand
+   separately) and this axis still said 100, so the Final Meal solver was building plates off a number
+   the rest of the app had stopped using. Nothing failed — it just quietly under-fed by up to 30 cal on
+   a three-cup plate. Kept in sync by hand for now; the axes should be derived from FOOD_FACTS. */
+const F_GUAC  = {id:'guac',   label:'Mini guac cups',       unit:'cup',   per:[110,1,5,9.5],         lo:1,  hi:3,   step:1};
 const F_AB    = {id:'ab',     label:'Almond butter',        unit:'g',     per:[5.94,0.219,0.219,0.531], lo:6, hi:40, step:2};
 const F_MAYO  = {id:'mayo',   label:'Hellmann’s Real mayo, weighed', unit:'g', per:[7.5,0,0.125,0.75], lo:6, hi:28, step:2};
 
