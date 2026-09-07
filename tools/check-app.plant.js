@@ -496,7 +496,10 @@ const PLANTS = [
   { guard: 'slot-budget-sum', name: "the recorded reason the slots do not sum to the target is deleted",
     /* Q's sheet does not add up; that is stated rather than absorbed. Delete the statement and the
        check has nothing to compare against, which must fail loudly rather than pass quietly. */
-    edits: [{ from: "const SLOT_SUM_GAP = [20, 4, 11, -1];",
+    /* ⚠ anchor re-read from index.html 2026-09-07: the vector changed from [20,4,11,-1] to
+       [-10,4,11,-1] when his target moved 2220 -> 2250, and this plant went BROKEN CASE on the next
+       run — the harness reporting, correctly, that it was testing nothing here. */
+    edits: [{ from: "const SLOT_SUM_GAP = [-10, 4, 11, -1];  /* slots minus PLAN_T. Was [20,4,11,-1] against a 2220",
               to:   "/* removed */" }] },
   { guard: 'slot-budget-sum', name: "SLOTS[].b stops being derived, so the two budget tables can diverge again",
     /* this is the ORIGINAL bug: someone shaved 5 cal off four slots so the arithmetic closed, and the
