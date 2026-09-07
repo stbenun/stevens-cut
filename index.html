@@ -1631,11 +1631,24 @@ function wireRowEdit(ld){
   document.querySelectorAll('[data-fvtab]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({tab:b.dataset.fvtab}); render();
   }));
+  /* ⛔ SAME WOUND AS THE AMOUNT BOX, TREATED THE SAME WAY. This used to render() and then re-focus
+     and restore the caret — a patch that only sometimes works: on iOS a programmatic focus() does not
+     reliably reopen the keyboard, and when it does the caret jumps. Nothing about the input depends on
+     what he typed, so the input is left alone and only the results are rewritten. */
   { const q = document.getElementById('fvQ');
     if(q) q.addEventListener('input', ()=>{
-      const pos = q.selectionStart; fvSet({q:q.value}); render();
-      const n = document.getElementById('fvQ');
-      if(n){ n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} }
+      fvSet({q: q.value});
+      const holder = document.querySelector('.fvlist');
+      if(!holder){ render(); return; }        /* shape changed under us — fall back to a full render */
+      holder.innerHTML = fvListHTML(ld);
+      const bar = document.querySelector('.fvbar');
+      if(bar) bar.outerHTML = fvBarHTML();     /* the ADD bar counts selections, not the query */
+      wireFvRows();
+      document.querySelectorAll('[data-fvaddsel]').forEach(b=>b.addEventListener('click',()=>{
+        const slot = fvState().slot;
+        if(!fvAddSelected(ld)) return;
+        openAcc.add('dg-'+slot); fvClose(); render();
+      }));
     }); }
   /* ⛔ THE STAR MUST NOT OPEN THE FOOD. It sits inside the row button, so without stopPropagation
      every favourite tap would also navigate to the detail page — two actions from one tap. */
@@ -1643,6 +1656,10 @@ function wireRowEdit(ld){
     ev.preventDefault(); ev.stopPropagation();
     favToggle(el.dataset.fvfav); render();
   }));
+  /* ⛔ NAMED, BECAUSE THE LIST CAN BE REPLACED WITHOUT A RENDER. When he types in the search box we
+     rewrite only .fvlist — the input itself must survive, or iOS drops the keyboard — and the new
+     rows need their handlers back. One binder, called from both places. */
+  function wireFvRows(){
   document.querySelectorAll('[data-fvpick]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({pick:b.dataset.fvpick, amt:null, unit:null}); render(); window.scrollTo(0,0);
   }));
@@ -1672,8 +1689,22 @@ function wireRowEdit(ld){
     if(!fvAddDish(ld, b.dataset.fvdishlog)) return;
     openAcc.add('dg-'+slot); fvClose(); render();
   }));
+  }
+  wireFvRows();
   { const a = document.getElementById('fvAmt'), u = document.getElementById('fvUnit');
-    if(a) a.addEventListener('input', ()=>{ fvSet({amt: parseFloat(a.value)}); render(); });
+    /* ⛔ NO render() HERE. It would tear out the very input he is typing in and iOS would drop the
+       keyboard on every keystroke — which is exactly what he reported. Only the energy block
+       depends on this value, so only the energy block is rewritten. */
+    if(a) a.addEventListener('input', ()=>{
+      const v = parseFloat(a.value);
+      fvSet({amt: isFinite(v) ? v : null});
+      const st2 = fvState(), k2 = st2.pick;
+      if(!FOOD_FACTS[k2]) return;
+      const u2 = st2.unit || fvUnits(k2)[0];
+      const n2 = (st2.amt != null) ? st2.amt : fvDefaultAmount(k2, u2);
+      const box = document.querySelector('.fvenergy');
+      if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);
+    });
     /* ⛔ CLEAR THE AMOUNT ON A UNIT CHANGE. 100 g reinterpreted as 100 oz is a 12x error that
        looks like a typo, not a bug. Dropping it re-derives the default for the NEW unit. */
     if(u) u.addEventListener('change', ()=>{ fvSet({unit: u.value, amt: null}); render(); }); }
@@ -6345,13 +6376,15 @@ function fvMacros(key, n, u){
   return priceRow([null,null,spec]) || [0,0,0,0];
 }
 /* ---- page 1: search ---- */
-function fvSearchHTML(ld){
+/* ⛔ THREE PIECES, ON PURPOSE. The page SHELL holds the search input, and while he is typing that
+   element must not be replaced — iOS closes the keyboard the moment a focused element leaves the
+   DOM, which is the bug he reported. So the list and the bar are separately renderable, and a
+   keystroke rewrites only the list. One source for each; the shell calls the same two functions
+   the live patch does, so they cannot drift.
+   His words: "Whenever I write a number into one of these boxes, the keyboard goes away." */
+function fvListHTML(ld){
   const st = fvState(), F = favs();
   const slot = SLOTS.find(s=>s.key === st.slot);
-  const TABS = [['all','All'],['fav','Favorites'],['dishes','Your dishes']];
-  const tabs = '<div class="fvtabs">' + TABS.map(t=>
-    '<button class="fvtab' + (st.tab===t[0]?' on':'') + '" data-fvtab="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
-
   let list;
   if(st.tab === 'dishes'){
     /* ⭐ ANY MEAL, ANY SLOT, and his own drafts beside them. This tab is where the two nested
@@ -6412,6 +6445,10 @@ function fvSearchHTML(ld){
   }
   /* the bar exists only when something is ticked — an ADD button with nothing to add is a dead
      control, and it would sit over the list on every single render. */
+  return list;
+}
+function fvBarHTML(){
+  const st = fvState();
   /* ⛔ THE BAR CARRIES THE TOTAL, because the bulk path is the one place he commits an amount he
      never saw. A food he has logged before arrives at HIS median; one he has not falls back to a flat
      100 g, which for olive oil is 884 cal. I am not going to invent an amount for a food he has never
@@ -6426,13 +6463,21 @@ function fvSearchHTML(ld){
   });
   const bar = nSel ? '<div class="fvbar"><button class="fvadd" data-fvaddsel="1">ADD ' + nSel
     + ' TO DIARY <span class="fvadd-c">' + Math.round(selCal) + ' cal</span></button></div>' : '';
+  return bar;
+}
+function fvSearchHTML(ld){
+  const st = fvState();
+  const slot = SLOTS.find(s=>s.key === st.slot);
+  const TABS = [['all','All'],['fav','Favorites'],['dishes','Your dishes']];
+  const tabs = '<div class="fvtabs">' + TABS.map(t=>
+    '<button class="fvtab' + (st.tab===t[0]?' on':'') + '" data-fvtab="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvclose="1">✕</button>'
     + '<input type="search" id="fvQ" placeholder="Search all foods…" value="' + esc(st.q) + '">'
     + '</div>'
     + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
     + tabs
-    + '<div class="fvlist">' + list + '</div>' + bar + '</div>';
+    + '<div class="fvlist">' + fvListHTML(ld) + '</div>' + fvBarHTML() + '</div>';
 }
 /* ---- page 2: the food, its amount, its unit, its group ---- */
 /* The provenance, cut at a WORD. A hard slice(0,150) ended almond butter mid-token — "basis is the
@@ -6446,15 +6491,36 @@ function srcBlurb(src){
   const sp = t.lastIndexOf(' ', 160);
   return t.slice(0, sp > 70 ? sp : 160).replace(/[s,;:(/-]+$/, '') + '…';
 }
+/* ==== TYPING MUST NOT DESTROY THE BOX BEING TYPED IN =======================================
+   His report, 2026-09-07: "Whenever I write a number into one of these boxes, the keyboard goes
+   away. Fix it."
+
+   The Amount field called render() on every keystroke. render() replaces the whole view, so the
+   input he had focus in was torn out of the DOM and a fresh one put in its place — and iOS closes
+   the keyboard when the focused element stops existing. Every keystroke cost him the keyboard.
+
+   ⛔ THE FIX IS NOT TO RE-FOCUS AFTERWARDS. That is what the search box does, and it is a patch over
+   the same wound: on iOS a programmatic focus() does not reliably reopen the keyboard, and even when
+   it works the caret jumps and the field flickers. The fix is to STOP DESTROYING THE ELEMENT — update
+   only the part that actually changed. These two functions exist so the live patch and the first
+   render share one source; a second copy of this markup would drift the moment either changed. */
+function fvEnergyHTML(k, n, u){
+  const m = fvMacros(k, n, u);
+  const kcal = Math.round(m[0]) || 0;
+  const pct = i => kcal ? Math.round((m[i] * (i===3?9:4)) / kcal * 100) : 0;
+  return '<div class="fve-k">' + kcal + '<small>kcal</small></div>'
+    + '<div class="fve-m">'
+    + '<span class="fve-p">Protein (' + pct(1) + '%) — <b>' + (Math.round(m[1]*10)/10) + ' g</b></span>'
+    + '<span class="fve-c">Carbs (' + pct(2) + '%) — <b>' + (Math.round(m[2]*10)/10) + ' g</b></span>'
+    + '<span class="fve-f">Fat (' + pct(3) + '%) — <b>' + (Math.round(m[3]*10)/10) + ' g</b></span>'
+    + '</div>';
+}
 function fvDetailHTML(ld){
   const st = fvState(), k = st.pick, f = FOOD_FACTS[k];
   if(!f) return fvSearchHTML(ld);
   const units = fvUnits(k);
   const u = st.unit || units[0];
   const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
-  const m = fvMacros(k, n, u);
-  const kcal = Math.round(m[0]) || 0;
-  const pct = i => kcal ? Math.round((m[i] * (i===3?9:4)) / kcal * 100) : 0;
   const F = favs();
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvback="1">✕</button>'
@@ -6466,12 +6532,7 @@ function fvDetailHTML(ld){
     + '<div class="fvfield"><span>Group</span><select id="fvSlot">'
     + SLOTS.map(s=>'<option value="' + esc(s.key) + '"' + (s.key===st.slot?' selected':'') + '>' + esc(s.slot) + '</option>').join('')
     + '</select></div>'
-    + '<div class="fvenergy"><div class="fve-k">' + kcal + '<small>kcal</small></div>'
-    + '<div class="fve-m">'
-    + '<span class="fve-p">Protein (' + pct(1) + '%) — <b>' + (Math.round(m[1]*10)/10) + ' g</b></span>'
-    + '<span class="fve-c">Carbs (' + pct(2) + '%) — <b>' + (Math.round(m[2]*10)/10) + ' g</b></span>'
-    + '<span class="fve-f">Fat (' + pct(3) + '%) — <b>' + (Math.round(m[3]*10)/10) + ' g</b></span>'
-    + '</div></div>'
+    + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     + '<button class="fvsave" data-fvsave="1">SAVE</button>'
     + '</div>';

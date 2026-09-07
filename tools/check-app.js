@@ -2150,6 +2150,49 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/id="fvUnit"/.test(p2))   bad.push('the food page offers no serving size');
       if(!/id="fvSlot"/.test(p2))   bad.push('the food page offers no group to file it under');
       if(!/data-fvsave/.test(p2))   bad.push('the food page has no SAVE');
+      /* ⛔ TYPING MUST NOT DESTROY THE BOX BEING TYPED IN. His report, 2026-09-07: "Whenever I write
+         a number into one of these boxes, the keyboard goes away." The Amount field called render()
+         on every keystroke, which replaces the whole view — so the focused input was torn out and a
+         fresh one put in its place, and iOS closes the keyboard when the focused element stops
+         existing. Re-focusing afterwards is NOT the fix and is what the search box was doing: a
+         programmatic focus() does not reliably reopen the keyboard on iOS.
+         So the claim is about DOM IDENTITY, and it is tested by holding the node and typing into it.
+         A render-based check would pass while the bug was live. */
+      { const D2 = isoToday();
+        fvSet({slot:'bf', tab:'all', q:'', pick:'blueberries', sel:[]}); render();
+        const amt = document.getElementById('fvAmt');
+        if(!amt) bad.push('the amount box does not render');
+        else {
+          const kcal0 = (document.querySelector('.fve-k')||{textContent:''}).textContent;
+          amt.value = '15';
+          amt.dispatchEvent(new window.Event('input', {bubbles:true}));
+          if(document.getElementById('fvAmt') !== amt)
+            bad.push('typing in the amount box replaced the input — the keyboard closes on every keystroke');
+          if(!document.body.contains(amt))
+            bad.push('the amount box left the document while he was typing in it');
+          const kcal1 = (document.querySelector('.fve-k')||{textContent:''}).textContent;
+          if(kcal1 === kcal0) bad.push('the calories did not follow the amount he typed');
+        }
+        fvSet({tab:'all', q:'', pick:null, sel:[]}); render();
+        const box = document.getElementById('fvQ');
+        if(!box) bad.push('the search box does not render');
+        else {
+          const n0 = document.querySelectorAll('[data-fvpick]').length;
+          box.value = 'blue';
+          box.dispatchEvent(new window.Event('input', {bubbles:true}));
+          if(document.getElementById('fvQ') !== box)
+            bad.push('typing in the search box replaced the input — same keyboard bug, different field');
+          if(box.value !== 'blue') bad.push('the search box lost what he typed');
+          const n1 = document.querySelectorAll('[data-fvpick]').length;
+          if(n1 >= n0) bad.push('the results did not narrow as he typed (' + n0 + ' -> ' + n1 + ')');
+          /* ⛔ AND THE NEW ROWS MUST STILL BE TAPPABLE. Patching innerHTML throws the old listeners
+             away; forgetting to re-bind gives a list that looks right and does nothing. */
+          const row = document.querySelector('[data-fvpick]');
+          if(!row) bad.push('typing left no results at all');
+          else { row.click();
+            if(!fvState().pick) bad.push('a result rendered after typing is not tappable — the patch did not re-wire it'); }
+        }
+        fvSet({slot:'bf', tab:'all', q:'', pick:'blueberries', sel:[]}); }
       /* ⛔ ONE SEARCH BOX. The zone bar belongs to the tab, the search box belongs to the page, and
          with the page open they stacked — two search fields on one screen, the crowding he threw the
          nested accordions out for. Worse, the first fix hid behind renderZoneBar's early return: its

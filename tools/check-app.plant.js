@@ -475,6 +475,19 @@ const PLANTS = [
   { guard: 'tab-bar-fit', name: 'a tab button exists that ORDER does not know, so tapping it lands nowhere',
     edits: [{ from: "<button class=\"tab\" data-tab=\"prep\">",
               to:   "<button class=\"tab\" data-tab=\"meals\">" }] },
+  { guard: 'food-log', name: "the amount box re-renders on every keystroke — the keyboard closes as he types",
+    /* his exact report, 2026-09-07. render() replaces the view, so the focused input is torn out
+       and iOS drops the keyboard. Re-focusing afterwards is not a fix. */
+    edits: [{ from: "      const box = document.querySelector('.fvenergy');\n      if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);",
+              to:   "      render();" }] },
+  { guard: 'food-log', name: "the search box goes back to re-rendering the whole page as he types",
+    /* same wound, other field — it used to render then re-focus and restore the caret. */
+    edits: [{ from: "      holder.innerHTML = fvListHTML(ld);",
+              to:   "      render(); return;" }] },
+  { guard: 'food-log', name: "the patched result rows are never re-wired, so a filtered list is dead to the touch",
+    /* patching innerHTML throws the listeners away; a list that looks right and does nothing. */
+    edits: [{ from: "      wireFvRows();\n      document.querySelectorAll('[data-fvaddsel]')",
+              to:   "      document.querySelectorAll('[data-fvaddsel]')" }] },
 ];
 
 function main() {
