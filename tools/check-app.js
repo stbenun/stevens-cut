@@ -693,6 +693,44 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           `row via .flavbreak, chip/statline pinned, title on a ${(titleRule[1].match(/1 1 (\d+)ch/)||[,'?'])[1]}ch basis`);
 }
 
+/* ---------- tab-bar-fit — the bottom bar divides by the tabs that EXIST ----------
+ * He spotted it the day the Meals tab was retired: "Can you fix the bottom bar. It's not aligned."
+ * The rule said grid-template-columns:repeat(5,1fr) and there were four tabs, so the buttons packed
+ * into the first four columns of five and the whole bar sat shifted left with a dead column on the
+ * right. Nothing threw, nothing wrapped, every check passed — a hard-coded count simply stopped
+ * describing reality the moment the reality changed.
+ * ⛔ SO THIS CHECKS THE ABSENCE OF A COUNT, NOT A PARTICULAR COUNT. Pinning it to 4 would be the same
+ * bug with a different number, waiting for the next tab. Real geometry is measured in a browser —
+ * 4 equal columns filling the bar at 320 and 400px with every label centred — and this pins the
+ * source fact that makes that true for any number of tabs.
+ */
+{
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const bad = [];
+  const row = (src.match(/nav\.tabs \.row\{[^}]*\}/) || [''])[0];
+  const btns = (src.match(/data-tab="([a-z]+)"/g) || []).map(x => x.slice(10, -1));
+  if (!row) bad.push('nav.tabs .row has no rule at all');
+  else {
+    const fixed = row.match(/grid-template-columns:\s*repeat\((\d+)/);
+    if (fixed) bad.push('the tab bar hard-codes ' + fixed[1] + ' columns but there are ' + btns.length +
+      ' tabs — the two drift apart silently and the bar sits off to one side');
+    if (!/grid-auto-flow:\s*column/.test(row) || !/grid-auto-columns:\s*1fr/.test(row))
+      bad.push('the tab bar no longer divides itself by its children (grid-auto-flow:column + grid-auto-columns:1fr)');
+  }
+  /* and the buttons must match the tabs the router knows: a button ORDER does not list lands nowhere */
+  const order = (src.match(/const ORDER = \[([^\]]*)\]/) || [null, ''])[1]
+    .split(',').map(x => x.trim().split("'").join('')).filter(Boolean);
+  const missing = order.filter(t => btns.indexOf(t) < 0);
+  const extra = btns.filter(t => order.indexOf(t) < 0);
+  if (missing.length) bad.push('ORDER lists ' + missing.join(', ') + ' with no button in the bar');
+  if (extra.length) bad.push('the bar has a button for ' + extra.join(', ') + ' which ORDER does not know — tapping it lands nowhere');
+  if (!btns.length) bad.push('no tab buttons found at all — this guard ran vacuous');
+
+  if (bad.length) fail('tab-bar-fit', bad.join(' · '));
+  else ok('tab-bar-fit', 'the bottom bar divides by its own children rather than a hard-coded count, and its ' +
+          btns.length + ' buttons match ORDER exactly (' + order.join(', ') + ')');
+}
+
 /* ---------- name-squeeze — a name must never be crushed while the numbers hog the line ----------
  * His screenshot Aug 13 2026: every Meals row broke into three lines — "Cream / of / Rice" with the
  * DAIRY chip beside the middle word. Nothing overlapped; the name was WRAPPING, because the four-macro

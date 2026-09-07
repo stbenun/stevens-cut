@@ -598,7 +598,13 @@
      is worse than no tab bar while he is typing one line. */
   body.kbdopen nav.tabs{display:none}
   body.kbdopen .zonebar{display:none}
-  nav.tabs .row{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+  /* ⛔ COUNT THE TABS, DO NOT HARD-CODE THEM. This said repeat(5,1fr) and there are four tabs since
+     Meals was merged into Today — so the four buttons sat in the first four columns of five and the
+     whole bar was pushed left, with a dead column on the right. He spotted it immediately.
+     grid-auto-flow:column with auto-columns:1fr divides the bar by however many buttons are actually
+     there, so the next tab added or removed cannot reintroduce this. */
+  nav.tabs .row{max-width:520px;margin:0 auto;display:grid;
+       grid-auto-flow:column;grid-auto-columns:1fr}
   .tab{position:relative;background:none;border:none;color:var(--faint);
        display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px}
   .tab svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.7;

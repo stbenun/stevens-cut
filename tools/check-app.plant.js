@@ -467,6 +467,14 @@ const PLANTS = [
   { guard: 'meals-hub', name: 'the lift zone comes back to Today as well as Train, so the set logger exists twice',
     edits: [{ from: "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};",
               to:   "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone + liftZoneHTML(ld)};" }] },
+  { guard: 'tab-bar-fit', name: 'the tab bar hard-codes a column count again — the bug he reported',
+    /* it was repeat(5,1fr) with four tabs: the buttons packed into four of five columns and the whole
+       bar sat shifted left with a dead column on the right. Nothing threw; every check passed. */
+    edits: [{ from: "  nav.tabs .row{max-width:520px;margin:0 auto;display:grid;\n       grid-auto-flow:column;grid-auto-columns:1fr}",
+              to:   "  nav.tabs .row{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}" }] },
+  { guard: 'tab-bar-fit', name: 'a tab button exists that ORDER does not know, so tapping it lands nowhere',
+    edits: [{ from: "<button class=\"tab\" data-tab=\"prep\">",
+              to:   "<button class=\"tab\" data-tab=\"meals\">" }] },
 ];
 
 function main() {
