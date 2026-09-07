@@ -622,3 +622,38 @@ present. The VISUAL result is not, and could not be here: headless Edge has no o
 visual viewport never shrinks, so the bug is not reproducible on this machine by any tool available. If it
 still misbehaves on his phone, the next lever is dropping the `backdrop-filter` blur and the layer
 promotion, which removes the cause rather than working around it.
+
+---
+
+## 2026-09-04 — he overrides the testosterone tripwire and runs the cut to goal weight
+
+**His words:** *"im not ending the cut until i reach the weight goal."*
+
+**Context.** The Aug 31 Rythm draw came back with **total testosterone under the 350 line he himself set**
+as the binding condition for pushing through at the current macros instead of easing. The tripwire fired.
+He was shown the number and the reasoning twice — once on the panel, once on a direct re-examination when
+he asked why I thought he should stop — and he chose to continue. **That is his decision and it is
+recorded as his.** The exact markers and deltas are in memory, not here; the tripwire text lives in the
+protocol file.
+
+**My position, recorded because a decisions log that only holds agreement is worthless:** I recommended
+ending it, and I still do. My primary reason was never the bloodwork — it is that **the cut can no longer
+reach its own stated target inside its own window**, at any rate he has ever actually sustained. The blood
+was the weakest of my three arguments and I said so. He has heard it; it is not to be re-litigated at him.
+
+**⛔ WHAT THIS DECISION DOES *NOT* OVERRIDE — do not quietly treat these as also waived:**
+- **Working weights down >10% still ends the cut.** He spoke to the testosterone limb only.
+- **Dizziness returning still ends the cut**, and **anything happening DURING exercise is still a
+  same-week push for a doctor.** That one is a medical line, not a body-composition line, and no
+  weight goal touches it.
+- The **eGFR-under-90 creatine condition** Q set is likewise untouched.
+
+**⚠️ THE CONSEQUENCE HE NEEDS TO OWN, stated once and not repeated:** "until I reach the weight goal"
+is a materially longer cut than the plan it replaces — **weeks longer at the rate he is actually
+losing**, not the days remaining in the old window. The arithmetic is in the session log; it is not
+restated here because a number copied into a document goes stale.
+
+**⏳ OPEN AND NOT YET HIS CALL: what ends this cut now?** The old plan had a date and a biomarker floor.
+His decision replaces the date with a weight. **It has left no stopping condition on the biological
+side except the two above, and no revised deadline.** Ask him for a floor — a date, a marker, or both —
+rather than running an open-ended deficit with the only exit being a number on a scale.
