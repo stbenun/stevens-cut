@@ -640,9 +640,6 @@
   .exdone{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;
        color:var(--pareve);flex-shrink:0;white-space:nowrap}
   /* Meals tab: each SLOT is a big collapsible section; meal cards nest inside it */
-  details.slotsec{background:var(--panel);border-color:var(--line2)}
-  details.slotsec>summary{min-height:34px}
-  details.slotsec>summary b{font-size:16px}
   /* ⛔ HIS SCREENSHOT Aug 13 2026: on the Meals tab every row broke into three lines — "Cream / of /
      Rice" with the DAIRY chip floating beside the middle word, and "Breakfast" sitting next to the
      macros with "· 10:30 AM" dumped onto the next line. Nothing was overlapping: the NAME WAS WRAPPING.
@@ -659,8 +656,6 @@
      breakpoint either misses his phone or restyles everyone else's. Basis-driven wrapping adapts to
      whatever width he actually has.
      ⚠️ min-width:0 must STAY: it lets the name shrink below its basis on the line it does get. */
-  details.slotsec>summary>span, details.mealcard>summary>span{flex-wrap:wrap}
-  details.slotsec>summary>span>.r, details.mealcard>summary>span>.r{margin-left:auto}
   /* ⭐ AND THE BIGGER HALF OF THE SAME BUG: the row had almost no width to begin with. Measured with
      tools/measure.js at 320 px, a meal row's usable width was 202 px —
        320 − 28 (.app) − 34 (slot card) − 34 (meal card) − 22 (the ▾ marker) = 202
@@ -672,14 +667,9 @@
      and tools/measure.js verifies 320 / 360 / 390 / 430 every run. */
   @media (max-width:400px){
     .app{padding-left:10px;padding-right:10px}
-    details.slotsec{padding-left:10px;padding-right:10px}
-    details.slotsec .mealcard{padding-left:10px;padding-right:10px}
   }
-  /* the flex-basis itself lives on the element's INLINE style in viewMeals — an inline style beats a
+  /* the flex-basis itself lives on the element's INLINE style — an inline style beats a
      stylesheet rule, and these two <b>s carry one. Guarded by [meal-row-wrap] in check-app.js. */
-  details.slotsec[open]{padding-bottom:6px}
-  details.slotsec .mealcard{background:var(--panel2);margin-top:8px}
-  details.slotsec .mealcard:first-of-type{margin-top:10px}
   details.menudone>summary{opacity:.5}
   details.menudone>summary h3{text-decoration:line-through}
   details.innerrow{border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);
@@ -764,7 +754,6 @@
 <div id="printZone"></div>
 <nav class="tabs" aria-label="Sections"><div class="row">
   <button class="tab on" data-tab="today"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></svg><span class="tlbl">Today</span><span class="bdot"></span></button>
-  <button class="tab" data-tab="meals"><svg viewBox="0 0 24 24"><path d="M7 2.5v8M4.5 2.5v5.2a2.5 2.5 0 0 0 5 0V2.5M7 10.5v11M16.5 2.5c-1.9 1.2-3 3.4-3 6v4h3.5m0-10v19"/></svg><span class="tlbl">Meals</span><span class="bdot"></span></button>
   <button class="tab" data-tab="prep"><svg viewBox="0 0 24 24"><path d="M4 7h16l-1.5 13.5a1.8 1.8 0 0 1-1.8 1.5H7.3a1.8 1.8 0 0 1-1.8-1.5L4 7z"/><path d="M8.5 9.5V6a3.5 3.5 0 0 1 7 0v3.5"/></svg><span class="tlbl">Prep</span><span class="bdot"></span></button>
   <button class="tab" data-tab="train"><svg viewBox="0 0 24 24"><path d="M2.5 12h2.2M19.3 12h2.2M6 8.2v7.6M18 8.2v7.6M9 6.5v11M15 6.5v11M9 12h6"/></svg><span class="tlbl">Train</span><span class="bdot"></span></button>
   <button class="tab" data-tab="track"><svg viewBox="0 0 24 24"><path d="M3.5 20.5v-17M3.5 20.5h17"/><path d="M6.5 15.5l4-5 3.5 3 5-6.5"/></svg><span class="tlbl">Track</span><span class="bdot"></span></button>
@@ -1628,7 +1617,7 @@ function wireRowEdit(ld){
   /* ---- the food page ---- */
   document.querySelectorAll('[data-fvopen]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({slot:b.dataset.fvopen, q:'', tab:'all', pick:null, amt:null, unit:null});
-    current = 'meals'; render(); window.scrollTo(0,0);
+    current = 'today'; render(); window.scrollTo(0,0);
   }));
   document.querySelectorAll('[data-fvclose]').forEach(b=>b.addEventListener('click',()=>{ fvClose(); render(); }));
   document.querySelectorAll('[data-fvback]').forEach(b=>b.addEventListener('click',()=>{
@@ -1664,9 +1653,18 @@ function wireRowEdit(ld){
     if(!fvAddSelected(ld)) return;
     openAcc.add('dg-'+slot); fvClose(); render();
   }));
+  /* ⛔ A DISH OPENS, IT DOES NOT LOG. It used to add on tap, which was fine when the row was all
+     there was; now the row leads to the recipe — ingredients and method — and LOG IT is the button
+     at the bottom of it. Same shape as a food: tap, read, act. */
   document.querySelectorAll('[data-fvdish]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({dish:b.dataset.fvdish}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-fvdishback]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({dish:null}); render();
+  }));
+  document.querySelectorAll('[data-fvdishlog]').forEach(b=>b.addEventListener('click',()=>{
     const slot = fvState().slot;
-    if(!fvAddDish(ld, b.dataset.fvdish)) return;
+    if(!fvAddDish(ld, b.dataset.fvdishlog)) return;
     openAcc.add('dg-'+slot); fvClose(); render();
   }));
   { const a = document.getElementById('fvAmt'), u = document.getElementById('fvUnit');
@@ -1713,19 +1711,7 @@ function wireRowEdit(ld){
 }
 /* The Meals tab had NO wiring whatsoever until now — it was a read-only cookbook, so there was
    nothing to bind. Same toggle semantics as the Today picker, through the same writer. */
-function wireMeals(){
-  const ld = logDate || isoToday();
-  document.querySelectorAll('[data-mlog]').forEach(b=>b.addEventListener('click',()=>{
-    const p = String(b.dataset.mlog).split('|'), slot = p[0], id = p[1];
-    const d = draftAll()[id];
-    if(d){
-      const cur = (logEntries(ld)[slot]||[])[0];
-      if(cur && cur.id === id) logWrite(ld, slot, []);
-      else logWrite(ld, slot, [{id:id, name:d.name, rows:copyRows({rows:d.rows})}]);
-    } else logToggleMeal(ld, slot, id);
-    render();
-  }));
-}
+
 function wireWeights(){
   document.querySelectorAll('input.prw2').forEach(inp=>inp.addEventListener('change',()=>{
     const p = store.get('qpcut.prset',{});
@@ -6195,10 +6181,10 @@ function logAddFood(ld, slot, key, n, unit){
    search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
    on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
    pressed is, and that stays in the store. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[]};
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null};
 function fvState(){ return FV; }
 function fvSet(p){ FV = Object.assign({}, FV, p); }
-function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[]}; }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);
@@ -6525,9 +6511,63 @@ function fvSaveFood(ld){
   const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
   return logAddFood(ld, st.slot, k, n, u);
 }
+/* ==== THE DISH PAGE — where the cookbook went =============================================
+   His instruction, 2026-09-06: get rid of the old My Meals section. That section was the ONLY
+   thing rendering 51 recipes — 306 ingredient rows and 158 cooking steps — so deleting it as it
+   stood would have taken the cookbook with it. Measured before touching anything, which is the
+   only reason it was not lost: 'Your dishes' showed the name and the macros and nothing else.
+   His call when shown the count: put the recipes inside the dish page. So a dish opens the way a
+   food does — tap the row, read the thing, act on it — and the browse list is gone rather than
+   the content. Every renderer below is the library's own (ingRow, macros, chip, sideDishesHTML):
+   a recipe rendered by a second implementation is two copies of one rule, which is the bug this
+   file exists to delete. */
+function fvDishHTML(ld){
+  const st = fvState(), id = st.dish;
+  const slot = SLOTS.find(x=>x.key === st.slot);
+  const draft = draftAll()[id];
+  const m = OPTBYID[id];
+  if(!m && !draft) return fvSearchHTML(ld);
+
+  const t = draft ? entryMacros({id:id, rows:draft.rows}).map(Math.round) : m.vars[0].t;
+  const d = slot ? Math.round(t[0]) - slot.b[0] : null;
+  const head = '<div class="fvhead"><button class="fvx" data-fvdishback="1">✕</button>'
+    + '<span class="fvtitle">' + esc(draft ? draft.name : m.name) + '</span></div>'
+    + '<div class="fvsub">' + (draft ? '<span class="fv-tag">yours</span> ' : '')
+    + (m ? m.k.map(c=>chip(c[0], c[1])).join(' ') : '')
+    + (slot ? ' &nbsp;vs <b>' + esc(slot.slot) + '</b> budget <span class="mono">'
+              + (d >= 0 ? '+' : '') + d + '</span>' : '') + '</div>';
+
+  let body;
+  if(draft){
+    /* a draft has rows he assembled, no method — price the rows and say plainly what it is */
+    body = '<div class="sub" style="margin:6px 2px 8px">Saved off a meal you logged. Nothing guards them '
+      + 'until you send one over and it lands in the repo.</div>'
+      /* ⛔ foodLabel is what the diary already uses to name a row spec. My first pass invented
+         rowLabel/rowQty, which do not exist — the draft branch would have thrown the moment he
+         opened one of his own saved meals. One namer for a row, not two. */
+      + '<ul class="ing">' + entryRows({rows:draft.rows}).map(function(sp){
+          const u = (sp && sp.u) || (FOOD_FACTS[sp && sp.f] || {}).unit || '';
+          const q = (sp && typeof sp.n === 'number') ? (sp.n + ' ' + u) : '';
+          return ingRow([foodLabel(sp), q, sp]);
+        }).join('') + '</ul>' + macros(t);
+  } else {
+    body = m.vars.map(function(v){
+      return (v.label ? '<div class="varlbl">' + v.label + '</div>' : '')
+        + '<ul class="ing">' + v.ing.map(ingRow).join('') + '</ul>' + macros(v.t);
+    }).join('');
+    if(HOWTO[id]) body += '<div class="slotlbl" style="margin-top:12px">👨‍🍳 How to make it</div>'
+      + '<ul class="sched" style="margin-top:4px">'
+      + HOWTO[id].map(function(x, i){ return '<li><span class="t">' + (i+1) + '</span><span>' + x + '</span></li>'; }).join('')
+      + '</ul>' + sideDishesHTML(id);
+  }
+  return '<div class="fvpage">' + head + body
+    + '<button class="fvsave" data-fvdishlog="' + esc(id) + '">LOG IT TO ' + esc(slot ? slot.slot.toUpperCase() : '') + '</button>'
+    + '</div>';
+}
 function foodPageHTML(ld){
   const st = fvState();
   if(!st.slot) return '';
+  if(st.dish) return fvDishHTML(ld);
   return st.pick ? fvDetailHTML(ld) : fvSearchHTML(ld);
 }
 
@@ -7555,7 +7595,9 @@ function refreshTabBadges(){
   const act = nextAction();
   const badges = {
     today: !!act && wd!==6,
-    prep: wd===0 && (store.get('qpcut.wiz.'+dkey(t),[]).length < 7),
+    /* the Prep dot used to mean "Sunday wizard unfinished". With the wizard gone it means what it
+       says on the tab: it is Sunday and the week's menu is not set yet. */
+    prep: wd===0 && !Object.keys(store.get('qpcut.menucounts',{})).length,
     track: m>=440 && m<720 && wd!==6 && !allWeights().some(e=>e.d===t && e.w!=null),
     meals:false, train:false,
   };
@@ -7563,7 +7605,7 @@ function refreshTabBadges(){
 }
 
 /* -- zone bar (outside #view, rebuilt only on tab change) -- */
-let zbTab = null, mealQ = '', mealKF = null, expandSlot = null;
+let zbTab = null, expandSlot = null;
 function renderZoneBar(){
   const zb = document.getElementById('zoneBar'); if(!zb) return;
   /* rebuild on tab change OR when the time-aware zone order shifts — chips mirror the page */
@@ -7572,28 +7614,26 @@ function renderZoneBar(){
      never rebuilt the bar and the hide-it branch below sat behind a return that could not fire.
      The screenshots were byte-identical after the fix, which is the only reason I caught it: a
      change that alters nothing looks exactly like a change that was not needed. */
-  const sig = current==='today'? 'today|'+zoneOrder().join()
-            : current==='meals'? 'meals|'+(fvState().slot ? 'fv' : '-')
+  /* ⛔ THE FOOD PAGE IS PART OF THE SIGNATURE — now on TODAY, since that is the only food tab. This
+     function returns early unless the signature changes, and the branch below cannot fire without it.
+     That exact trap already cost a round once: the fix sat behind an unchanged signature and the
+     screenshots came back byte-identical. */
+  const sig = current==='today'? 'today|'+(fvState().slot ? 'fv' : zoneOrder().join())
             : current;
   if(zbTab===sig){ return; }
   zbTab = sig;
   if(current==='today'){
-    const LBL = {lift:'🏋 Lift', food:'🍽 Food', log:'✏️ Log', tools:'🧰 Tools'};
+    /* a page owns the screen: no zone chips over a full-screen food search */
+    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */
+    const LBL = {diary:'📓 Diary', food:'🍽 Food', log:'✏️ Log', tools:'🧰 Tools'};
     zb.innerHTML = `
       <button class="zchip" data-jump="z-now">⏱ Now</button>
       ${zoneOrder().map(k=>`<button class="zchip" data-jump="z-${k}">${LBL[k]}</button>`).join('')}
       <span class="zbrest" id="zbRest"></span>`;
-  } else if(current==='meals'){
-    /* ⛔ A PAGE TAKES THE SCREEN. With the food page open this bar put a SECOND search box directly
-       above its own — 'Search meals & ingredients…' over 'Search all foods…', with the kosher chips
-       between them — which is precisely the crowding he threw the nested accordions out for. The bar
-       belongs to the meal library, and while the food page is up the library is not on screen. */
-    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */
-    zb.innerHTML = `
-      <input class="zsearch" id="mealSearch" type="search" placeholder="Search meals &amp; ingredients…" autocomplete="off" value="${esc(mealQ)}">
-      <span class="chip kf${mealKF==='meat'?' on':''}" data-kf="meat">Meat</span>
-      <span class="chip kf${mealKF==='dairy'?' on':''}" data-kf="dairy">Dairy</span>
-      <span class="chip kf${mealKF==='pareve'?' on':''}" data-kf="pareve">Pareve</span>`;
+  /* ⛔ THE MEALS ZONE BAR IS GONE WITH ITS TAB. It carried 'Search meals & ingredients…' and the
+     Meat/Dairy/Pareve chips, both of which filtered the My Meals browser. That browser is deleted,
+     so the filter had nothing left to filter — a search box over no list is worse than no search
+     box, because it looks like it works. Searching foods and dishes is the food page's job now. */
   } else if(current==='prep'){
     zb.innerHTML = `
       <button class="zchip" data-jump="p-menu">① Menu</button>
@@ -7602,26 +7642,6 @@ function renderZoneBar(){
       <button class="zchip" data-jump="p-creami">④ Creami</button>
       <button class="zchip" data-jump="p-cor">⑤ Flavors</button>`;
   } else zb.innerHTML = '';
-}
-function applyMealFilter(){
-  if(current!=='meals') return;
-  const q = mealQ.trim().toLowerCase();
-  const filtering = !!(q || mealKF);
-  document.querySelectorAll('#view details[data-search]').forEach(d=>{
-    const okQ = !q || d.dataset.search.includes(q);
-    const okK = !mealKF || (d.dataset.kosher||'').includes(mealKF);
-    d.style.display = (okQ && okK)? '' : 'none';
-  });
-  window.__filterOpening = true; /* suppress openAcc persistence for the programmatic opens below */
-  document.querySelectorAll('#view [data-slotsec]').forEach(sec=>{
-    const any = [...sec.querySelectorAll('details[data-search]')].some(d=>d.style.display!=='none');
-    sec.style.display = any? '' : 'none';
-    /* while filtering, force matching slots OPEN so results aren't hidden inside a collapsed slot.
-       Not persisted to openAcc — it's a transient search state that clears when the query does. */
-    if(filtering && any) sec.open = true;
-    else if(!filtering) sec.open = openAcc.has('meals-'+sec.dataset.slotsec); /* no filter → restore user's toggle */
-  });
-  window.__filterOpening = false;
 }
 
 /* -- accordion open state: EVERYTHING STARTS CLOSED --
@@ -7689,14 +7709,18 @@ function zoneOrder(){
   const inWindow = !!wo && !ended && lift!=null && wd!==6 && m>=lift-75 && m<=lift+150;
   const upcoming = !!wo && !ended && lift!=null && wd!==6 && m<lift-75;
   const liftDone = !wo || ended || wd===6 || (lift!=null && m>lift+150);
-  if(!liftDone && (liftLive || inWindow || upcoming)) return ['lift','log','food','tools'];
+  /* ⛔ 'lift' IS NO LONGER A ZONE HERE — it lives on Train. What its window still decides is
+     whether FOOD or the DIARY leads: around a lift he is eating to a clock, so the log goes up. */
+  if(!liftDone && (liftLive || inWindow || upcoming)) return ['diary','log','food','tools'];
   /* COOK window → Food leads (cooking needs lead time): weekday dinner prep 4–7 PM, or Friday Shabbat-feast
      prep ~2:30 PM until the feast. OTHERWISE Log leads — logging the meal you're about to eat is the default
      next action, so the Log card (with that meal marked "next") sits right under the NOW hero. A done lift
      always sinks to the bottom. */
   const isFri = wd===5;
   const cook = (!isFri && m>=960 && m<1140) || (isFri && m>=870 && m<1200);
-  return cook ? ['food','log','tools','lift'] : ['log','food','tools','lift'];
+  /* cooking needs lead time, so Food leads then; otherwise the DIARY leads, because logging the
+     meal he is about to eat is the default next action and it should sit under the hero. */
+  return cook ? ['food','diary','log','tools'] : ['diary','log','food','tools'];
 }
 
 /* -- tiny sparkline -- */
@@ -8255,6 +8279,106 @@ function slotTimeRowHTML(ld, slotKey){
   return timeRow;
 }
 
+/* ==== 🏋 THE LIFT ZONE — moved to Train, 2026-09-06 ======================================
+   His call when asked where it should go after Today and Meals merged: Train. It is the gym-timing
+   row and the working-set logger, and it sat on a food tab only because Today used to be the only
+   place with a clock. Train already holds the split, the Shabbat card and the PR log, so this is
+   the workout in one place instead of two.
+   ⛔ EXTRACTED, NOT REWRITTEN. It was an IIFE inside viewToday and borrowed exactly one thing from
+   that scope — `backfill` — which is one line to derive. Everything else it touches is top level.
+   Rewriting it against Train's locals would have been a second copy of the set logger. */
+function liftZoneHTML(ld){
+  const backfill = ld !== isoToday();   /* not today = preview/backfill: no live "now" behaviour */
+    const loc = store.get('qpcut.loc','deal');
+    const wd = new Date(ld+'T12:00:00').getDay();
+    const wo = workoutFor(wd, loc);
+    if(!wo) return '';
+    const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[wd]||[];
+    /* loads the prescribed weights into the boxes BEFORE anything reads qpcut.prset below */
+    prefillLoads(ld, wo, wmap, loc);
+    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
+    const sesh = seshGet(ld);
+    /* date-aware leave/lift time (per-date override beats the weekday default) + done detection, so a
+       shifted AM lift reads correctly and a FINISHED lift stops advertising "leave at 3:30". */
+    const glMap = store.get('qpcut.gymleave',{});
+    const leave = (OVERRIDES[ld]&&OVERRIDES[ld].gymleave) || glMap[wd] || GYM_DEF[wd];
+    const leaveMin = leave? (+leave.slice(0,2))*60+(+leave.slice(3,5)) : null;
+    const liftMin = leaveMin!=null? leaveMin+15 : null;
+    const liftDone = !!(sesh && sesh.end) || setsDone(ld)>0 || (!backfill && liftMin!=null && nowMin()>liftMin+150);
+    /* show the real lift time in the tag/zonebar, not the static "3:30 PM" baked into WORKOUTS */
+    const woTag = (liftMin!=null && !backfill) ? wo.tag.replace(/·\s*\d{1,2}:\d{2}\s*[AP]M/i, '· '+fmtMin(liftMin)) : wo.tag;
+    let timingHTML = '';
+    if(!backfill && !liftDone && leave && wd!==6){
+        /* Aug 28 2026 — THE PRE-WORKOUT TIMELINE IS GONE. His words: "i dont need the card that
+           tells me when to take pre workout snack and drink." It printed two rows: the pre-workout
+           meal time and when to start sipping.
+           ⛔ WHAT STAYS, AND WHY IT HAD TO: the leave-time input. It is not decoration on this card,
+           it is the ONLY place qpcut.gymleave is set, and that value drives gymLeaveMin() -> the lift
+           window in zoneOrder(), the generated day rows, the lift card's own tag and the zonebar.
+           Deleting the card wholesale would have taken his gym clock with it. So the accordion
+           collapses to the one control that earns its place: a row with the time in it.
+           `caps` and inMinyan() went with the timeline — nothing else read them. */
+        timingHTML = `
+  <div class="card" data-acc="gymtiming" style="margin-bottom:10px">
+    <div class="mrow" style="margin:0">
+      <span class="nm">🚗 Leaving for the gym</span>
+      <input type="time" id="gymLeave" value="${leave}" style="font-size:15px;padding:5px 7px;flex-shrink:0">
+    </div>
+  </div>`;
+    }
+    const seshRow = backfill? '' : `
+    <div class="timer-row" style="margin-top:4px">
+      ${!sesh? `<button class="btn ghost" data-sesh="start">▶ Start session</button>`
+        : !sesh.end? `<button class="btn" data-sesh="end">■ Finish session</button><span class="daytag">started ${new Date(sesh.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>`
+        : `<span class="daytag">✅ done in ${Math.max(1,Math.round((sesh.end-sesh.start)/60000))} min</span>`}
+      <span class="restchip" id="restChip"></span>
+      <button class="btn ghost" data-rest="90" style="padding:6px 10px;font-size:12px">90s</button>
+      <button class="btn ghost" data-rest="120" style="padding:6px 10px;font-size:12px">120s</button>
+    </div>`;
+    return `
+  <section class="zone" id="z-lift">
+  <div class="zhead"><span class="zt">🏋 Lift</span><span class="zn">${backfill?ld:woTag.toLowerCase()}</span></div>
+  ${seshSummaryHTML(ld, wo)}
+  ${timingHTML}
+  <details class="card acc" data-acc="lift"${openAcc.has('lift')?' open':''} id="liftLog">
+    <summary><span class="daytag">${woTag}</span><span class="statline"><b>${setsDone(ld)}</b>/${setsPlanned(wo)} sets</span></summary>
+    ${seshRow}
+    <ul class="ex">${wo.ex.map(([n,r],i)=>{
+      const t = parseTargets(r);
+      const sets = t? t.sets : (parseInt(r)||3);
+      const reps = repLog[i]||[];
+      /* the badge carries the GATED verdict: while the card is asking why the load dropped, the rolled-up
+         row must not still be flashing 🎉 GO UP — that is the mismatch he screenshotted */
+      const scId = resolvePrId(wmap[i]||[], `${loc}|${wd}|${i}`);
+      const sc = (t && scId)? sessionScore(i, scId, t, sets, ld) : {v:verdict(reps, t)};
+      const v = sc.v;
+      /* Rolled up, the summary still has to answer "did I do this one, and what did I get?" — otherwise
+         collapsing loses the at-a-glance the lift card exists for. */
+      const logged = reps.filter(x=>x!=null&&x!=='');
+      const tally = logged.length
+        ? `<span class="exdone">${logged.length>=sets?'✓ ':''}${logged.join('·')}</span>`
+        : '';
+      const foldKey = `${ld}|${i}`;
+      return `<li style="display:block">
+        <details class="exfold" data-exfold="${esc(foldKey)}"${exFolded(foldKey)?'':' open'}>
+          <summary>
+            <span class="exnm"${v?' style="color:var(--muted)"':''}>${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}${(sc.gate||sc.wild||sc.fixme)?' <span class="upflag" style="background:var(--meat);color:#fff">⏸ why?</span>':''}</span>
+            ${tally}<span class="r">${r}</span>
+          </summary>
+          ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
+        </details>
+      </li>`;
+    }).join('')}</ul>
+    ${(()=>{
+      const rpe = store.get('qpcut.rpe.'+dkey(ld), 0);
+      return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
+        <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
+    })()}
+    <div class="sub" style="margin-top:8px">Grey number = target. <b>The weight boxes are pre-loaded with what you should be lifting</b> — change any of them and yours sticks. Logging a set auto-starts the rest clock. Weights sync with Train → PRs.</div>
+  </details>
+  </section>`;
+}
+
 function viewToday(){
   const now = new Date();
   const ld = logDate || isoToday();            /* the day being VIEWED (global date picker) */
@@ -8345,112 +8469,17 @@ function viewToday(){
   ${timelineCardHTML()}
   ${d.note?`<div class="note">${d.note}</div>`:''}`}
   ${errandsCardHTML()}
-  ${(!backfill && now.getDay()===0)?(()=>{
-    const wsteps = ['⚖️ Weigh in + log it','📋 Copy week report → paste to Claude','🍽 Set this week’s menu (Prep)','🛒 Groceries — list is auto-built','🔥 Cook flow + rice (Prep)','🍦 Blend the Creami batch + hit “start counting”','📤 Export backup file (Track)'];
-    const wdone = store.get('qpcut.wiz.'+dkey(isoToday()),[]);
-    return `
-  <h2 class="sec">Sunday wizard · ${wdone.length}/${wsteps.length}</h2>
-  <div class="card" id="wizList">
-    ${wsteps.map((s,i)=>`
-      <button class="suppitem${wdone.includes(i)?' done':''}" data-wz="${i}">
-        <span class="box">${wdone.includes(i)?'✓':''}</span><span class="nm">${s}</span>
-      </button>`).join('')}
-    ${wdone.length===wsteps.length?'<div class="note" style="margin-top:8px">🎉 Sunday handled. Week’s on rails.</div>':''}
-  </div>`;
-  })():''}
+  ${/* ⛔ THE SUNDAY WIZARD IS GONE — his instruction, 2026-09-06: "Get rid of the Sunday wizard card
+       for good." It was a 7-step Sunday checklist. Checked before deleting rather than after: the
+       only two runs in his storage were 2026-07-12 (all 7) and 2026-07-19 (5 of 7), nothing in the
+       seven Sundays since. Every step it listed is a thing the app already surfaces where the work
+       actually happens — the weigh-in on Track, the menu and cook flow on Prep, the Creami batch in
+       its own card, the backup on Track — so it was a second copy of five other screens' jobs, and
+       the copy is what went stale. The stored qpcut.wiz.* keys are left alone: they are two dated
+       facts about what he did, and nothing reads them now. */''}
   </section>`;
 
   /* ---- LIFT zone ---- */
-  const liftZone = (()=>{
-    const loc = store.get('qpcut.loc','deal');
-    const wd = new Date(ld+'T12:00:00').getDay();
-    const wo = workoutFor(wd, loc);
-    if(!wo) return '';
-    const wmap = (WMAP[loc==='deal'?'deal':'bk']||{})[wd]||[];
-    /* loads the prescribed weights into the boxes BEFORE anything reads qpcut.prset below */
-    prefillLoads(ld, wo, wmap, loc);
-    const repLog = store.get('qpcut.reps.'+dkey(ld), {});
-    const sesh = seshGet(ld);
-    /* date-aware leave/lift time (per-date override beats the weekday default) + done detection, so a
-       shifted AM lift reads correctly and a FINISHED lift stops advertising "leave at 3:30". */
-    const glMap = store.get('qpcut.gymleave',{});
-    const leave = (OVERRIDES[ld]&&OVERRIDES[ld].gymleave) || glMap[wd] || GYM_DEF[wd];
-    const leaveMin = leave? (+leave.slice(0,2))*60+(+leave.slice(3,5)) : null;
-    const liftMin = leaveMin!=null? leaveMin+15 : null;
-    const liftDone = !!(sesh && sesh.end) || setsDone(ld)>0 || (!backfill && liftMin!=null && nowMin()>liftMin+150);
-    /* show the real lift time in the tag/zonebar, not the static "3:30 PM" baked into WORKOUTS */
-    const woTag = (liftMin!=null && !backfill) ? wo.tag.replace(/·\s*\d{1,2}:\d{2}\s*[AP]M/i, '· '+fmtMin(liftMin)) : wo.tag;
-    let timingHTML = '';
-    if(!backfill && !liftDone && leave && wd!==6){
-        /* Aug 28 2026 — THE PRE-WORKOUT TIMELINE IS GONE. His words: "i dont need the card that
-           tells me when to take pre workout snack and drink." It printed two rows: the pre-workout
-           meal time and when to start sipping.
-           ⛔ WHAT STAYS, AND WHY IT HAD TO: the leave-time input. It is not decoration on this card,
-           it is the ONLY place qpcut.gymleave is set, and that value drives gymLeaveMin() -> the lift
-           window in zoneOrder(), the generated day rows, the lift card's own tag and the zonebar.
-           Deleting the card wholesale would have taken his gym clock with it. So the accordion
-           collapses to the one control that earns its place: a row with the time in it.
-           `caps` and inMinyan() went with the timeline — nothing else read them. */
-        timingHTML = `
-  <div class="card" data-acc="gymtiming" style="margin-bottom:10px">
-    <div class="mrow" style="margin:0">
-      <span class="nm">🚗 Leaving for the gym</span>
-      <input type="time" id="gymLeave" value="${leave}" style="font-size:15px;padding:5px 7px;flex-shrink:0">
-    </div>
-  </div>`;
-    }
-    const seshRow = backfill? '' : `
-    <div class="timer-row" style="margin-top:4px">
-      ${!sesh? `<button class="btn ghost" data-sesh="start">▶ Start session</button>`
-        : !sesh.end? `<button class="btn" data-sesh="end">■ Finish session</button><span class="daytag">started ${new Date(sesh.start).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}</span>`
-        : `<span class="daytag">✅ done in ${Math.max(1,Math.round((sesh.end-sesh.start)/60000))} min</span>`}
-      <span class="restchip" id="restChip"></span>
-      <button class="btn ghost" data-rest="90" style="padding:6px 10px;font-size:12px">90s</button>
-      <button class="btn ghost" data-rest="120" style="padding:6px 10px;font-size:12px">120s</button>
-    </div>`;
-    return `
-  <section class="zone" id="z-lift">
-  <div class="zhead"><span class="zt">🏋 Lift</span><span class="zn">${backfill?ld:woTag.toLowerCase()}</span></div>
-  ${seshSummaryHTML(ld, wo)}
-  ${timingHTML}
-  <details class="card acc" data-acc="lift"${openAcc.has('lift')?' open':''} id="liftLog">
-    <summary><span class="daytag">${woTag}</span><span class="statline"><b>${setsDone(ld)}</b>/${setsPlanned(wo)} sets</span></summary>
-    ${seshRow}
-    <ul class="ex">${wo.ex.map(([n,r],i)=>{
-      const t = parseTargets(r);
-      const sets = t? t.sets : (parseInt(r)||3);
-      const reps = repLog[i]||[];
-      /* the badge carries the GATED verdict: while the card is asking why the load dropped, the rolled-up
-         row must not still be flashing 🎉 GO UP — that is the mismatch he screenshotted */
-      const scId = resolvePrId(wmap[i]||[], `${loc}|${wd}|${i}`);
-      const sc = (t && scId)? sessionScore(i, scId, t, sets, ld) : {v:verdict(reps, t)};
-      const v = sc.v;
-      /* Rolled up, the summary still has to answer "did I do this one, and what did I get?" — otherwise
-         collapsing loses the at-a-glance the lift card exists for. */
-      const logged = reps.filter(x=>x!=null&&x!=='');
-      const tally = logged.length
-        ? `<span class="exdone">${logged.length>=sets?'✓ ':''}${logged.join('·')}</span>`
-        : '';
-      const foldKey = `${ld}|${i}`;
-      return `<li style="display:block">
-        <details class="exfold" data-exfold="${esc(foldKey)}"${exFolded(foldKey)?'':' open'}>
-          <summary>
-            <span class="exnm"${v?' style="color:var(--muted)"':''}>${n}${v==='up'?' <span class="upflag">🎉 GO UP</span>':v==='down'?' <span class="upflag" style="background:var(--meat);color:#fff">lighten</span>':''}${(sc.gate||sc.wild||sc.fixme)?' <span class="upflag" style="background:var(--meat);color:#fff">⏸ why?</span>':''}</span>
-            ${tally}<span class="r">${r}</span>
-          </summary>
-          ${exBlockHTML({ids:wmap[i], sets, t, rd:ld, ex:i, day:new Date(ld+'T12:00:00').getDay(), selKey:`${loc}|${new Date(ld+'T12:00:00').getDay()}|${i}`})}
-        </details>
-      </li>`;
-    }).join('')}</ul>
-    ${(()=>{
-      const rpe = store.get('qpcut.rpe.'+dkey(ld), 0);
-      return `<div class="mrow" style="margin-top:10px"><span class="nm">Session effort <span class="daytag">1 = easy · 5 = war</span></span>
-        <span style="display:flex;gap:6px">${[1,2,3,4,5].map(v=>`<button class="setdot${rpe>=v?' on':''}" data-rpe="${v}" aria-label="effort ${v}"></button>`).join('')}</span></div>`;
-    })()}
-    <div class="sub" style="margin-top:8px">Grey number = target. <b>The weight boxes are pre-loaded with what you should be lifting</b> — change any of them and yours sticks. Logging a set auto-starts the rest clock. Weights sync with Train → PRs.</div>
-  </details>
-  </section>`;
-  })();
 
   /* ---- FOOD zone ---- */
   /* ⬆️ HOISTED OUT OF THE foodZone IIFE. The Final Meal and Tonight's-dinner cards moved to the Tools
@@ -8613,9 +8642,13 @@ function viewToday(){
     return `
   <section class="zone" id="z-log">
   <div class="zhead"><span class="zt">✏️ Log</span><span class="zn">${backfill?`backfill ${ld}`:'today'}</span></div>
+  ${/* ⛔ THE DIARY LEFT THIS CARD AND BECAME ITS OWN ZONE. It was rendering twice after the merge —
+       once here, once in the new diary zone — and the guard counting diary groups is what caught it:
+       12 groups where there should be 6. Two live copies of the log is worse than an ugly one; an
+       edit in the wrong one would look like it had silently failed.
+       It sits above rather than inside now, which is also the better shape: this card is hydration,
+       dials and the stack — the things he ticks off — and the food log is not one of those. */''}
   <div class="card" id="mealLog">
-    ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
-    ${diaryHTML(ld)}
     <details class="acc innerrow" data-acc="log-hydr"${openAcc.has('log-hydr')?' open':''}>
       <summary><span>💧 Hydration</span><span class="statline"><span class="pbar mini"><span class="pfill" style="width:${ht.oz?Math.min(100,oz/ht.oz*100):100}%"></span></span><b>${oz}</b>/${ht.oz} oz</span></summary>
       ${ht.why.length?`<div class="note" style="margin:2px 0 9px">${ht.fast?'':`Today’s target: <b>${ht.oz} oz</b> (base gallon ${ht.base}). `}${ht.why.join(' ')}</div>`:''}
@@ -8661,6 +8694,24 @@ function viewToday(){
   })();
 
   /* ---- TOOLS zone ---- */
+  /* everything the Meals tab was: the log, the two generators, and his own saved meals */
+  const diaryZone = (()=>{
+    const hubLd = ld;
+    /* ⛔ NO SEPARATE DRAFTS SECTION. It listed his saved meals with their rows, macros, the
+       unguarded warning and a log-it row — every one of which the dish page now shows when he opens
+       one from "Your dishes". The copy-for-Claude and delete controls were never in it anyway; they
+       live in draftsCardHTML inside the diary, which is still here. A second browse view of the same
+       objects is exactly the clutter he asked to be rid of. */
+    return `
+  <section class="zone" id="z-diary">
+    <h2 class="sec">📓 Diary${hubLd===isoToday()?'':' · '+hubLd}</h2>
+    ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
+    <div class="card">${diaryHTML(hubLd)}</div>
+    <h2 class="sec">🧪 Make something</h2>
+    <div class="card">${genCardHTML(hubLd)}</div>
+    <div class="card">${gen2CardHTML(hubLd)}</div>
+  </section>`;
+  })();
   const toolsZone = (()=>{
     const eo = (store.get('qpcut.eatout',{}))[ld];
     const ops = (store.get('qpcut.offplan',{}))[ld]||[];
@@ -8927,8 +8978,19 @@ function viewToday(){
   /* zones reorder with the clock — lift hours put Lift on top, meal windows put Log/Food up.
      NOW always leads; backfill keeps the neutral order. Order refreshes on every render
      (any tap, tab switch, or return to foreground). */
-  const Z = {lift:liftZone, food:foodZone, log:logZone, tools:toolsZone};
-  const order = backfill? ['lift','food','log','tools'] : zoneOrder();
+  /* ⛔ ONE TAB FOR THE DAY. His instruction, 2026-09-06: "Merge today and meals into 1 tab."
+     The diary comes in as a ZONE rather than being pasted on the end, so it inherits the ordering
+     the day already had — the zones reshuffle with the clock, and the log he is about to write in
+     rises with them. Pasting it on would have made the one thing he opens the app for the thing he
+     scrolls furthest to reach.
+     Lift is NOT in here any more: it moved to Train, where the split and the PR log already live. */
+  /* ⛔ THE PAGE TAKES THE TAB, AND THIS LINE IS THE ONLY THING THAT LETS IT. The takeover used to
+     live at the top of viewMeals; deleting that function took it with it, so for a few minutes the
+     ＋ Add food button set a state that nothing rendered — a dead button on the main screen, and
+     every other check still passed. [food-log] caught it by counting search boxes and finding none. */
+  if(fvState().slot) return `<div class="card">${foodPageHTML(ld)}</div>`;
+  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};
+  const order = backfill? ['diary','food','log','tools'] : zoneOrder();
   return `
   <div class="pickrow" style="margin:0 0 10px;align-items:center;gap:8px">
     <input type="date" id="viewDate" value="${ld}" style="padding:6px 9px;font-size:13px" aria-label="View any day — past or upcoming">
@@ -8985,104 +9047,6 @@ function ingRow(row){
    then had to go to Today, open the right slot, and find it again.
    Every slot is offered with the DELTA against that slot's budget, so putting a dinner in a
    breakfast is a visible trade rather than a surprise in the hero afterwards. */
-function logAsRow(id, t, rows){
-  const ld = logDate || isoToday();
-  const on = eatenIds(ld);
-  return '<div class="slotlbl" style="margin-top:10px">✏️ Log it as</div><div class="pickrow">'
-    + SLOT_SEQ.map(function(k){
-        const sl = SLOTS.find(x=>x.key===k), d = t[0] - sl.b[0];
-        return '<button class="mealpick' + (on[k]===id ? ' on' : '') + '" data-mlog="' + k + '|' + id + '">'
-             + sl.slot + '<span class="rem">' + (d>0?'+':'') + d + '</span></button>';
-      }).join('')
-    + '</div>';
-}
-function viewMeals(){
-  const dAll = draftAll(), dIds = Object.keys(dAll);
-  const draftSec = dIds.length ? `<h2 class="sec" style="margin-top:14px">📝 Yours · saved off a meal you logged</h2>`
-    + dIds.map(k=>{
-        const d = dAll[k], t = entryMacros({id:k, rows:d.rows}).map(Math.round);
-        return `<details class="card acc mealcard" data-acc="draft-${k}"${openAcc.has('draft-'+k)?' open':''}`
-          + ` data-search="${esc((d.name+' '+d.rows.map(r=>r&&r.f||'').join(' ')).toLowerCase())}" data-kosher="">`
-          + `<summary><span style="display:flex;align-items:center;gap:8px;width:100%">`
-          + `<b style="flex:1 1 12ch;min-width:0">${d.name}</b>`
-          + `<span class="chip notetag">draft</span>`
-          + `<span class="r" style="flex-shrink:0;font-family:var(--mono)">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span>`
-          + `</span></summary>`
-          + `<ul class="ing">${d.rows.map(r=>`<li><span>${foodLabel(r)}</span><span class="q">${
-               r && r.n != null ? r.n + ' ' + ((r.u)||(FOOD_FACTS[r.f]||{}).unit||'') : '—'}</span></li>`).join('')}</ul>`
-          + macros(t)
-          + `<div class="note" style="margin-top:8px">Saved on this phone. <b>Nothing guards it</b> until Claude puts it in the library — send it from Today → Meal drafts.</div>`
-          + logAsRow(k, t, d.rows)
-          + `</details>`;
-      }).join('') : '';
-  /* ⭐ THE MEALS TAB IS THE FOOD HUB. His call, 2026-09-05: "I'm imagining this be the new meals
-     tab with all these capabilities." The diary sits at the top because logging is what he opens
-     this for; the generator next because that is where a new meal comes from; the library last
-     because browsing is the least frequent of the three. Today keeps schedule, lift, hydration,
-     dials and the stack -- the things that are not food. */
-  const hubLd = logDate || isoToday();
-  /* the food page takes the whole tab over while it is open — a page, not a panel */
-  if(fvState().slot) return `<div class="card">${foodPageHTML(hubLd)}</div>`;
-  const hub = `<h2 class="sec" style="margin-top:14px">📓 Diary · ${hubLd===isoToday()?'today':hubLd}</h2>`
-    + `<div class="card">${diaryHTML(hubLd)}</div>`
-    + `<h2 class="sec">🧪 Make something</h2>`
-    + `<div class="card">${genCardHTML(hubLd)}</div>`
-    + `<div class="card">${gen2CardHTML(hubLd)}</div>`;
-  return hub + draftSec + `<h2 class="sec" style="margin-top:14px">My Meals</h2>`
-    + `<div class="sub" style="margin:-6px 2px 8px">All weights RAW / dry. Search and the kosher filter are up top.</div>` +
-  SLOTS.map(s=>`
-   <details class="card acc slotsec" data-slotsec="${s.key}" data-acc="meals-${s.key}"${openAcc.has('meals-'+s.key)?' open':''}>
-   <summary>
-     <span style="display:flex;align-items:baseline;gap:8px;width:100%">
-       ${/* flex-basis 14ch, NOT flex:1 (basis 0) — a zero basis is invisible to flex line-breaking, so
-             the four macros never wrapped and this name absorbed the whole shortfall, wrapping to 3
-             lines on his phone. Inline because an inline style beats the stylesheet rule. */''}
-       <b style="flex:1 1 14ch;min-width:0">${s.slot} <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">· ${slotTimeLabel(s.key, isoToday())}${s.key==='sn'?' · skip Friday':''}</span></b>
-       ${/* his ask Aug 10 2026: "id like the numbers on the right to be cals, protein, carbs, fats" —
-            this is the slot BUDGET, all four macros, not just cal+protein. The option count stays but
-            drops to a chip on the left of it, because the four numbers are what he came to read. */''}
-       <span class="r" style="flex-shrink:0;color:var(--muted)"><span style="opacity:.55">${s.opts.length}</span> · <span style="font-family:var(--mono)">${s.b[0]} · ${s.b[1]}P · ${s.b[2]}C · ${s.b[3]}F</span></span>
-     </span>
-   </summary>
-   ${s.opts.map(m=>{
-     const t = m.vars[0].t;
-     const hay = (m.name+' '+m.vars.map(v=>v.ing.map(x=>x[0]).join(' ')).join(' ')).toLowerCase().replace(/<[^>]*>/g,'');
-     return `
-     <details class="card acc mealcard" data-acc="opt-${m.id}"${openAcc.has('opt-'+m.id)?' open':''} data-search="${esc(hay)}" data-kosher="${m.k.map(c=>c[0]).join(' ')}">
-       <summary>
-         <span style="display:flex;align-items:center;gap:8px;width:100%">
-           ${/* basis 12ch, NOT flex:1 — see the [meal-row-wrap] note. Tuned by measurement: 12ch and
-                16ch are identical, 20ch is WORSE (it wraps the kosher chip onto its own line and adds
-                a line to four rows). */''}
-           <b style="flex:1 1 12ch;min-width:0">${m.name}</b>
-           ${m.k.map(c=>chip(c[0],c[1])).join(' ')}
-           ${/* same change as the slot header above, one level down: all four macros, not cal+P. These
-                are the numbers he picks a meal ON, so they matter more here than on the header. */''}
-           <span class="r" style="flex-shrink:0;font-family:var(--mono)">${t[0]} · ${t[1]}P · ${t[2]}C · ${t[3]}F</span>
-         </span>
-       </summary>
-       ${m.vars.map(v=>`
-         ${v.label?`<div class="varlbl">${v.label}</div>`:''}
-         <ul class="ing">${v.ing.map(ingRow).join('')}</ul>
-         ${macros(v.t)}`).join('')}
-       ${HOWTO[m.id]?`
-       <div class="slotlbl" style="margin-top:10px">👨‍🍳 How to make it</div>
-       <ul class="sched" style="margin-top:4px">${HOWTO[m.id].map((x,i)=>`<li><span class="t">${i+1}</span><span>${x}</span></li>`).join('')}</ul>
-       ${sideDishesHTML(m.id)}`:''}
-       ${logAsRow(m.id, t)}
-     </details>`;
-   }).join('')}
-   </details>`).join('') + `
-   <h2 class="sec">⚖️ Protein powder</h2>
-   <div class="sub" style="margin:-6px 2px 8px">Weigh from the ziplock.</div>
-   <div class="card">
-     <div class="sub" style="margin-top:0">No containers at the office — so <b>never scoop, always weigh</b>. 1 serving per flavor (½ scoop in any recipe = half this number):</div>
-     <ul class="ing" style="margin-top:8px">
-       ${PP_G.filter(([,g])=>g!=null).filter(([n])=>!PP_G.some(([m])=>m!==n && m.includes(n))).map(([n,g])=>`<li><span>${n}</span><span class="q"><b>${g} g</b> · ½ = ${Math.round(g/2*10)/10} g</span></li>`).join('')}
-     </ul>
-     ${(()=>{ const miss=PP_G.filter(([,g])=>g==null).map(([n])=>n); return miss.length?`<div class="sub" style="margin-top:8px">⚠ Missing labels: <b>${miss.join('</b>, <b>')}</b> — send Claude the serving sizes to fill in.</div>`:''; })()}
-   </div>`;
-}
 
 /* dinners with potato+asparagus sides get this week's side recipes attached */
 function sideDishesHTML(optId){
@@ -9450,7 +9414,12 @@ function viewTrain(){
         <li><span class="t">Oct 11</span><span>🏁 Race day (target — not registered yet)</span></li>
       </ul>
     </div>`;
-  return `
+  /* ⛔ TODAY'S LIFT LEADS THE TRAIN TAB. It moved here when Today and Meals merged, and it goes at
+     the TOP rather than under the program: on a lifting day this is the live thing — the gym-timing
+     row and the set logger — while the split and the PR tables are reference he scrolls to. On a rest
+     day liftZoneHTML returns '' and Train opens on the program exactly as it always did. */
+  const trainLd = logDate || isoToday();
+  return liftZoneHTML(trainLd) + `
    <div class="seg" role="group" aria-label="Location" style="margin-top:16px">
      <button data-loc="deal" class="${loc==='deal'?'on':''}">Deal · Alpha Gym</button>
      <button data-loc="bk" class="${loc==='bk'?'on':''}">Brooklyn · Home</button>
@@ -9921,12 +9890,19 @@ async function drawPhotos(){
 }
 
 /* ---------- wiring ---------- */
-const ORDER = ['today','meals','prep','train','track'];
-const VIEWS = {today:viewToday, meals:viewMeals, prep:viewPrep, train:viewTrain, track:viewTrack};
+/* ⛔ FOUR TABS. His instruction, 2026-09-06: "Merge today and meals into 1 tab." Meals is not
+   hidden or emptied — it is gone, and everything it held is a zone of Today, ordered by the same
+   clock as the rest of the day. A tab that still exists but redirects is the worst of both. */
+const ORDER = ['today','prep','train','track'];
+const VIEWS = {today:viewToday, prep:viewPrep, train:viewTrain, track:viewTrack};
 let current = 'today';
 let timerInt = null;
 function setTab(t, dir){
-  current = t;
+  /* ⛔ AN UNKNOWN TAB LANDS ON TODAY, IT DOES NOT THROW. 'meals' was a real tab until 2026-09-06,
+     and a stale deep link, a cached shortcut or an old service-worker page can still name it. The
+     failure without this line is not subtle — VIEWS[current] is undefined and the whole screen is
+     an error card — which is a bad way to find out a tab was renamed. */
+  current = VIEWS[t] ? t : 'today';
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===t));
   render();
   if(dir){
@@ -9958,11 +9934,13 @@ function render(){
   if(timerInt){ clearInterval(timerInt); timerInt=null; }
   const _pt = planTarget(logDate||renderDay);
   $('#macroStrip').innerHTML = [['kcal',0],['protein',1],['carbs',2],['fat',3]].map(([lbl,i])=>`<div class="mcell"><div class="n">${_pt.t[i]}${_pt.adj[i]?'<span style="color:var(--brass);font-size:.55em;vertical-align:super">▲</span>':''}</div><div class="l">${lbl}</div></div>`).join('');
-  $('#macroStrip').style.display = (current==='meals'||current==='prep') ? 'grid' : 'none';
+  $('#macroStrip').style.display =
+    (current==='prep' || (current==='today' && fvState().slot)) ? 'grid' : 'none';
   /* A throw in a view used to leave the PREVIOUS tab's HTML in #view, so a broken Today silently
      showed whatever tab he was on last. That is indistinguishable from a layout bug and it cost him
      an afternoon. Show the failure, name the tab, and keep the app usable. */
   try{
+    if(!VIEWS[current]) current = 'today';   /* same belt as setTab, for anything that set it directly */
     $('#view').innerHTML = VIEWS[current]();
   }catch(err){
     try{ console.error('view render failed:', current, err); }catch(e){}
@@ -9973,25 +9951,15 @@ function render(){
       Screenshot this and send it to Claude; the message above tells him exactly where to look.</span></div>`;
   }
   try{
-        /* ⛔ THE MEALS TAB RENDERS TODAY'S CARDS NOW, SO IT NEEDS TODAY'S HANDLERS. The diary, the food
-       search, the row editor and both generator cards all moved here, and every one of them binds
-       by selector after render. Wiring only wireMeals would leave the whole hub inert -- which is
-       exactly the state the Meals tab was in for its entire life before this. */
-    if(current === 'meals'){ wireMeals(); wireToday(); }
-    else ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
+    /* ⛔ ONE WIRE-UP PER TAB, AND TODAY OWNS THE FOOD NOW. The diary, the food page, the row editor
+       and both generators are zones of Today, and every one of them binds by selector after render.
+       This dispatch is the thing that must not be forgotten: the Meals tab was inert for its whole
+       life because nothing pointed at its wiring, and the guard checks the DISPATCH for that reason,
+       not whether the function exists. */
+    ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();
   }catch(err){ try{ console.error('wiring failed:', current, err); }catch(e){} }
   document.querySelectorAll('details.acc').forEach(d=>d.addEventListener('toggle',()=>{
     if(window.__filterOpening) return; /* transient search force-open — don't persist */
-    if(d.dataset.slotsec){
-      /* Meal slots are SESSION-ONLY and filter-owned. The <details> "toggle" event fires ASYNCHRONOUSLY
-         (after __filterOpening resets), so while a filter is active — which force-opens matches — we must
-         ignore the event here, else the programmatic opens get saved and the slot stays stuck open after
-         the filter clears. And we never persist meal slots to acctoggled, so they always start clean on
-         reload and can't carry a stale open state. */
-      if(mealKF || mealQ.trim()) return;
-      if(d.open) openAcc.add(d.dataset.acc); else openAcc.delete(d.dataset.acc);
-      return;
-    }
     if(d.open) openAcc.add(d.dataset.acc); else openAcc.delete(d.dataset.acc);
     if(d.dataset.acc==='schedule') setSchedOpen(d.open); /* schedule persists across reloads */
     markToggled(d.dataset.acc, d.open); /* remember today's explicit toggles so a reload won't re-seed them open */
@@ -10005,7 +9973,6 @@ function render(){
   renderZoneBar();
   const sToday = seshGet(isoToday());
   document.body.classList.toggle('sesh-on', current==='today' && !!(sToday && sToday.start && !sToday.end));
-  if(current==='meals') applyMealFilter();
   tickNow(); tickRest();
 }
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
@@ -10045,15 +10012,6 @@ function wireToday(){
   wireRowEdit(logDate || isoToday());
   wireExSel();
   wireArm();
-  const wiz = $('#wizList');
-  if(wiz) wiz.addEventListener('click',e=>{
-    const it = e.target.closest('[data-wz]'); if(!it) return;
-    const key = 'qpcut.wiz.'+dkey(isoToday());
-    let done = store.get(key,[]);
-    const i = +it.dataset.wz;
-    done = done.includes(i)? done.filter(x=>x!==i) : [...done,i];
-    store.set(key,done); render();
-  });
   const pbtn = $('#printSat');
   if(pbtn) pbtn.addEventListener('click', printSatCard);
   const dc = $('#dialCard');
@@ -10631,15 +10589,6 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
         if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
         return;
       }
-      const kf = e.target.closest('[data-kf]');
-      if(kf){
-        mealKF = mealKF===kf.dataset.kf? null : kf.dataset.kf;
-        zb.querySelectorAll('[data-kf]').forEach(c=>c.classList.toggle('on', c.dataset.kf===mealKF));
-        applyMealFilter();
-      }
-    });
-    zb.addEventListener('input', e=>{
-      if(e.target && e.target.id==='mealSearch'){ mealQ = e.target.value; applyMealFilter(); }
     });
   }
   /* RIR chips delegated once — refreshGuides() swaps their DOM, delegation survives it */
@@ -10690,7 +10639,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788712765';
+const BUILD = 'b1788788788';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
