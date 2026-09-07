@@ -6767,12 +6767,21 @@ function fvSearchHTML(ld){
     + '<div class="fvhead"><button class="fvx" data-fvclose="1">✕</button>'
     + '<input type="search" id="fvQ" placeholder="Search all foods…" value="' + esc(st.q) + '">'
     + '</div>'
+    /* ⭐ DIRECTLY UNDER THE SEARCH BAR, his instruction 2026-09-07. It used to sit under the list,
+       on the argument that "it is not in here" only becomes interesting after he has looked. He
+       asked for it up top and he is the one using the screen; the old placement also meant scrolling
+       past 200 foods to reach the one control that adds the food that is not among them.
+       ⚠ It stays ABOVE the "Adding to <slot>" line rather than below it, so the search box and the
+       button read as one block of actions and the slot line stays attached to the tabs and list it
+       actually describes. */
+    + '<button class="btn ghost" data-ffnew="1" style="width:100%;margin:8px 0 0">＋ New food</button>'
     + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
     + tabs
     + '<div class="fvlist">' + fvListHTML(ld) + '</div>'
+    /* the count of his own foods stays at the BOTTOM. It is a reference note, not an action, and
+       putting it under the search bar would push the list down on every screen he opens. */
     + (function(){ const n = Object.keys(userFacts()).length;
-        return '<button class="btn ghost" data-ffnew="1" style="width:100%;margin-top:10px">＋ New food</button>'
-          + (n ? '<div class="sub" style="margin:6px 2px">' + n + ' food' + (n===1?'':'s') + ' you added or edited yourself. Open one to change or undo it.</div>' : '');
+        return n ? '<div class="sub" style="margin:10px 2px 0">' + n + ' food' + (n===1?'':'s') + ' you added or edited yourself. Open one to change or undo it.</div>' : '';
       })()
     + fvBarHTML() + '</div>';
 }
@@ -11218,7 +11227,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788814385';
+const BUILD = 'b1788823468';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
