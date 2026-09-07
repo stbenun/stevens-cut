@@ -2239,8 +2239,11 @@ SLOTS.forEach(function(s){
    His instruction, 2026-09-07: "use whatever is stated in the excell sheet from Q." So Q's numbers
    stand, the gap is stated rather than absorbed, and the guard asserts THIS gap exactly — any new
    drift still fails. Ask Q which line he meant. */
-const SLOT_SUM_GAP = [-10, 4, 11, -1];  /* slots minus PLAN_T. Was [20,4,11,-1] against a 2220
-     target; his 2250 on 2026-09-07 turned a 20-cal overshoot into a 10-cal undershoot. */
+/* Slots minus PLAN_T. Was [20,4,11,-1] against a 2220 target; his 2250 on 2026-09-07 turned a
+   20-cal overshoot into a 10-cal undershoot. Kept on its OWN line with the comment ABOVE it,
+   because a plant has to be able to delete it cleanly: as a trailing comment that wrapped,
+   removing the code left the comment tail behind and crashed the suite instead of failing it. */
+const SLOT_SUM_GAP = [-10, 4, 11, -1];
 /* off-plan snack repair options — single source of truth */
 const FIXPOOL = [
  ['Breakfast: almond butter 32 g → 16 g', 95],
