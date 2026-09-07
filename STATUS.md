@@ -7,10 +7,10 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 881,909 bytes, 10,808 lines, one file |
+| app | `index.html`, 887,941 bytes, 10,852 lines, one file |
 | build | `b1788798426` |
-| foods on the price list | 190 |
-| provenance | 101 USDA · 58 label · 29 derived · 2 unverified |
+| foods on the price list | 197 |
+| provenance | 109 USDA · 58 label · 28 derived · 2 unverified |
 
 ## Ingredient rows
 
@@ -44,8 +44,8 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b5` | Banana Cream Protein Bowl | 560 / 44 / 62 / 17 | +20 cal · |
 | `di/d1` | Burger | 594 / 55 / 62 / 19 | +14 cal |
 | `bf/b25` | Blueberry Muffin Bowl | 553 / 48 / 58 / 16 | +13 cal |
-| `lu/l10` | Salad+Bagel | 588 / 73 / 70 / 17 | +13 cal |
 | `bf/b27` | Almond Croissant Bowl | 551 / 45 / 46 / 22 | +11 cal |
+| `lu/l10` | Salad+Bagel | 586 / 73 / 70 / 17 | +11 cal |
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
 | `di/d3` | Blackened Salmon Plate | 589 / 54 / 58 / 15 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |

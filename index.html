@@ -860,7 +860,7 @@ const SLOTS = [
    {id:'l6', name:'Salmon Shawarma Bowl', k:[['pareve']], vars:[{ing:[['Salmon (any — cooked, raw weight)','6 oz',{f:'salmon',n:6,u:'oz'}],['Rice (dry)','48 g',{f:'white rice dry',n:48}],['Edamame','85 g',{f:'edamame',n:85}],['Israeli salad, piled — tomato, cucumber, lemon, sumac','300 g',{parts:[{f:'tomato',n:150},{f:'cucumber',n:150}]}],['Shawarma rub: cumin ½ tsp · paprika ½ tsp · turmeric ¼ tsp · garlic ¼ tsp · salt','—',{free:1}]], t:[574,53,57,15]}]},
    {id:'l7', name:'Spicy Tuna Crunch Bowl', k:[['pareve']], vars:[{ing:[['Tuna packets','3',{f:'tuna packet',n:3,u:'each'}],['Rice (dry)','40 g',{f:'white rice dry',n:40}],['Mayo, weighed, plus sriracha — 20 g light mayo swaps for the 8 g real','8 g mayo + 5 g sriracha',{parts:[{f:'mayonnaise',n:8},{f:'sriracha',n:5}]}],['Edamame','85 g',{f:'edamame',n:85}],['Cucumber','75 g',{f:'cucumber',n:75}],['Soy sauce','15 mL',{f:'soy sauce',n:15}],['Rice cake, crushed on top','1',{f:'rice cake',n:1}]], t:[569,65,51,12]}]},
    {id:'l8', name:'Salmon Smash Patties', k:[['pareve']], vars:[{ing:[['Salmon, pulsed to patties (raw weight — 2 patties)','6 oz',{f:'salmon',n:6,u:'oz'}],['Egg whites (binder)','15 g',{f:'egg whites',n:15}],['Keto bun','1',{f:'keto bun',n:1}],['Hummus and sriracha, the schmear','25 g hummus + 5 g sriracha',{parts:[{f:'hummus',n:25},{f:'sriracha',n:5}]}],['Potatoes','280 g',{f:'potatoes',n:280}],['Pickles','free',{free:1}],['Patty spices: garlic ½ tsp · paprika ½ tsp · salt ¼ tsp · pepper','—',{free:1}]], t:[578,51,70,14]}]},
-   {id:'l10', name:'Salad+Bagel', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets, pressed dry','3',{f:'tuna packet',n:3,u:'each'}],['Sola everything bagel, split and toasted dark','1',{f:'sola everything bagel',n:1}],['Mini guac cup, mashed with the vinegar and sriracha as the dressing','1 cup + 12 g sriracha + 15 g vinegar',{parts:[{f:'mini guac cup',n:1,u:'each'},{f:'sriracha',n:12},{f:'rice vinegar',n:15}]}],['Cucumber, salted and drained','300 g',{f:'cucumber',n:300}],['Romaine lettuce, torn as the bed (not mixed)','150 g',{f:'romaine lettuce',n:150}],['Tomato, seeded then diced','1 med',{f:'tomato',n:1,u:'each'}],['Celery, small dice','100 g',{f:'celery',n:100}],['Scallion, sliced','30 g',{f:'scallion',n:30}]], t:[588,73,70,17]}]},
+   {id:'l10', name:'Salad+Bagel', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets, pressed dry','3',{f:'tuna packet',n:3,u:'each'}],['Sola everything bagel, split and toasted dark','1',{f:'sola everything bagel',n:1}],['Mini guac cup, mashed with the vinegar and sriracha as the dressing','1 cup + 12 g sriracha + 15 g vinegar',{parts:[{f:'mini guac cup',n:1,u:'each'},{f:'sriracha',n:12},{f:'rice vinegar',n:15}]}],['Cucumber, salted and drained','300 g',{f:'cucumber',n:300}],['Romaine lettuce, torn as the bed (not mixed)','150 g',{f:'romaine lettuce',n:150}],['Tomato, seeded then diced','1 med',{f:'tomato',n:1,u:'each'}],['Celery, small dice','100 g',{f:'celery',n:100}],['Scallion, sliced','30 g',{f:'scallion',n:30}]], t:[586,73,70,17]}]},
    {id:'l9', name:'Cold Crunch Bowl', noPrep:true, k:[['pareve']], vars:[{ing:[['Tuna packets','3',{f:'tuna packet',n:3,u:'each'}],['Mayo, weighed, with sriracha and vinegar to stretch it','10 g mayo + 5 g sriracha + 5 g vinegar',{parts:[{f:'mayonnaise',n:10},{f:'sriracha',n:5},{f:'rice vinegar',n:5}]}],['Mini guac cup','1',{f:'mini guac cup',n:1,u:'each'}],['Rice cakes','5',{f:'rice cake',n:5}],['Cucumber, quick-pickled in rice vinegar with a pinch of Lakanto','75 g',{f:'cucumber',n:75}],['Scallion, sliced','1',{f:'scallion',n:1,u:'each'}],['Everything-bagel seasoning','½ tsp',{free:1}]], t:[581,54,45,18]}]},
  ]},
  {key:'sn', slot:'Snack', time:'~8:00 PM · skip Friday', b:[325,33,28,8], opts:[
@@ -2258,7 +2258,7 @@ const FOOD_FACTS = {
   'mayonnaise':     {unit:'g',            cal:6.92, p:0,   c:0,    f:0.77, src:"Hellmann's Real label: 1 tbsp (13 g) = 90 cal / 0 P / 0 C / 10 F -> per gram. Fetched Aug 18 2026."},
   'light mayo':     {unit:'g',            cal:2.67, p:0,   c:0.067, f:0.267, src:"Hellmann's Light label: 1 tbsp (15 g) = 40 cal / 0 P / 1 C / 4 F -> per gram. Fetched Aug 18 2026. Older panels said 35/3.5; this is the current one."},
   'romaine lettuce':{unit:'g',            cal:0.17, p:0.012, c:0.033, f:0.003, src:'USDA romaine, raw: 100 g = 17 cal / 1.2 P / 3.3 C / 0.3 F -> per gram. Fetched Aug 18 2026.'},
-  'celery':         {unit:'g',            cal:0.16, p:0.0069, c:0.0297, f:0.0017, src:'USDA celery, raw: 100 g = 16 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. Fetched Aug 18 2026.'},
+  'celery':         {unit:'g',            cal:0.14, p:0.0069, c:0.0297, f:0.0017, src:'USDA FoodData Central SR Legacy "Celery, raw": 100 g = 14 cal / 0.69 P / 2.97 C / 0.17 F -> per gram. ⚠ CORRECTED 2026-09-07 from 0.16: the protein, carb and fat here have always been USDA’s, but the calorie figure was 16 and USDA says 14. His call when shown the gap. Re-fetched from the FDC API and parsed from raw JSON.'},
   /* ~5x denser than raw tomato, which is why the row matcher has always DENIED that pairing. An early
      subset matcher did pair them and would have corrupted a correct row by a factor of five. */
   'tomato paste': {unit:'g', cal:0.82, p:0.0428, c:0.1888, f:0.0047, src:"USDA tomato paste, canned, without salt added: 100 g = 82 cal / 4.28 P / 18.88 C / 0.47 F -> per gram. Fetched Aug 18 2026. His d15 row states 33 g = 27 cal and this gives 27.1 — it was already right."},
@@ -2606,7 +2606,6 @@ const FOOD_FACTS = {
   'bare coconut chips': {unit:'g',         cal:6.07, p:0.07, c:0.5, f:0.43, src:'Bare Baked Crunchy Toasted Coconut Chips label, his brand confirmed Aug 11 2026: 28 g = 170 cal / 2 P / 14 C / 12 F -> per gram. Sat fat 11 g per 28 g.'},
   'tuna sashimi':   {unit:'piece (20 g)', cal:22,   p:4.9, c:0,  f:0.1, src:'yellowfin, 109 cal / 24.4 P per 100 g raw'},
   'salmon sashimi': {unit:'piece (20 g)', cal:42,   p:4.1, c:0,  f:2.7, src:'Atlantic farmed, 208 cal / 20.4 P per 100 g raw'},
-  'tuna roll':      {unit:'6-pc roll',    cal:190,  p:11,  c:32, f:1.5, src:'EATOUT_ORDER sushi carb anchor'},
   'arak 40%':       {unit:'mL',           cal:2.21, p:0,   c:0,  f:0,   src:'0.40 ABV x 0.789 g/mL x 7 kcal/g — pure distillate, no sugar. 1.5 oz = 44.4 mL = 98 cal'},
   'eye of round':   {unit:'oz cooked',    cal:40.5, p:7.7, c:0,  f:1.0, src:'lean roast beef, 143 cal / 27 P per 100 g'},
   'brisket flat':   {unit:'oz cooked',    cal:70,   p:8.2, c:0,  f:4.0, src:'248 cal / 29 P per 100 g — his own Southside figure'},
@@ -2670,45 +2669,50 @@ const FOOD_FACTS = {
      list (on the word orange) along with farro and barley (on "pea" inside "pearled"), and chose
      apples WITHOUT skin and cucumber PEELED as the generic forms. Each row below names the exact
      USDA description it wants. */
-  'apricot':             {unit:'g', cal:0.48, p:0.014, c:0.111, f:0.004, src:'USDA FoodData Central SR Legacy #171697 "Apricots, raw": 100 g = 48 cal / 1.4 P / 11.1 C / 0.39 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'avocado':             {unit:'g', cal:1.6, p:0.02, c:0.085, f:0.147, src:'USDA FoodData Central SR Legacy #171705 "Avocados, raw, all commercial varieties": 100 g = 160 cal / 2 P / 8.53 C / 14.7 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'cantaloupe':          {unit:'g', cal:0.34, p:0.008, c:0.082, f:0.002, src:'USDA FoodData Central SR Legacy #169092 "Melons, cantaloupe, raw": 100 g = 34 cal / 0.84 P / 8.16 C / 0.19 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'apricot':             {unit:'g', ea:35, cal:0.48, p:0.014, c:0.111, f:0.004, src:'USDA FoodData Central SR Legacy #171697 "Apricots, raw": 100 g = 48 cal / 1.4 P / 11.1 C / 0.39 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'avocado':             {unit:'g', ea:201, cal:1.6, p:0.02, c:0.085, f:0.147, src:'USDA FoodData Central SR Legacy #171705 "Avocados, raw, all commercial varieties": 100 g = 160 cal / 2 P / 8.53 C / 14.7 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'cantaloupe':          {unit:'g', ea:552, cal:0.34, p:0.008, c:0.082, f:0.002, src:'USDA FoodData Central SR Legacy #169092 "Melons, cantaloupe, raw": 100 g = 34 cal / 0.84 P / 8.16 C / 0.19 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'cherries':            {unit:'g', cal:0.63, p:0.011, c:0.16, f:0.002, src:'USDA FoodData Central SR Legacy #171719 "Cherries, sweet, raw": 100 g = 63 cal / 1.06 P / 16 C / 0.2 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'clementine':          {unit:'g', cal:0.47, p:0.009, c:0.12, f:0.002, src:'USDA FoodData Central SR Legacy #168195 "Clementines, raw": 100 g = 47 cal / 0.85 P / 12 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'clementine':          {unit:'g', ea:74, cal:0.47, p:0.009, c:0.12, f:0.002, src:'USDA FoodData Central SR Legacy #168195 "Clementines, raw": 100 g = 47 cal / 0.85 P / 12 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'cranberries':         {unit:'g', cal:0.46, p:0.005, c:0.12, f:0.001, src:'USDA FoodData Central SR Legacy #171722 "Cranberries, raw": 100 g = 46 cal / 0.46 P / 12 C / 0.13 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'figs':                {unit:'g', cal:0.74, p:0.008, c:0.192, f:0.003, src:'USDA FoodData Central SR Legacy #173021 "Figs, raw": 100 g = 74 cal / 0.75 P / 19.2 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'figs':                {unit:'g', ea:50, cal:0.74, p:0.008, c:0.192, f:0.003, src:'USDA FoodData Central SR Legacy #173021 "Figs, raw": 100 g = 74 cal / 0.75 P / 19.2 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'grapefruit':          {unit:'g', cal:0.32, p:0.006, c:0.082, f:0.001, src:'USDA FoodData Central SR Legacy #173034 "Grapefruit, raw, white, Florida": 100 g = 32 cal / 0.63 P / 8.19 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'grapes':              {unit:'g', cal:0.772, p:0.009, c:0.202, f:0.002, src:'USDA FoodData Central Foundation #2346412 "Grapes, red, seedless, raw": 100 g = 77.2 cal / 0.914 P / 20.2 C / 0.164 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  /* ⛔ GRAPES ARE NOT ONE FOOD. He asked for the varieties by name and he is right that they differ:
+     red seedless is 77.2 cal/100 g and green seedless 71.9 — 7% apart, which on a 150 g bowl is 8 cal.
+     The single generic row that was here has been replaced. */
+  'grapes red':        {unit:'g', cal:0.772, p:0.009, c:0.202, f:0.002, src:'USDA FoodData Central Foundation #2346412 "Grapes, red, seedless, raw": 100 g = 77.2 cal / 0.914 P / 20.2 C / 0.164 F -> per gram. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'grapes green':      {unit:'g', cal:0.719, p:0.009, c:0.186, f:0.002, src:'USDA FoodData Central Foundation #2346413 "Grapes, green, seedless, raw": 100 g = 71.9 cal / 0.899 P / 18.6 C / 0.232 F -> per gram. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'grapes muscadine':  {unit:'g', cal:0.57, p:0.008, c:0.139, f:0.005, src:'USDA FoodData Central SR Legacy #173040 "Grapes, muscadine, raw": 100 g = 57 cal / 0.81 P / 13.9 C / 0.47 F -> per gram. Fetched Sept 7 2026, parsed from raw JSON.'},
   'honeydew':            {unit:'g', cal:0.36, p:0.005, c:0.091, f:0.001, src:'USDA FoodData Central SR Legacy #169911 "Melons, honeydew, raw": 100 g = 36 cal / 0.54 P / 9.09 C / 0.14 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'kiwi':                {unit:'g', cal:0.61, p:0.011, c:0.147, f:0.005, src:'USDA FoodData Central SR Legacy #168153 "Kiwifruit, green, raw": 100 g = 61 cal / 1.14 P / 14.7 C / 0.52 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'lemon':               {unit:'g', cal:0.29, p:0.011, c:0.093, f:0.003, src:'USDA FoodData Central SR Legacy #167746 "Lemons, raw, without peel": 100 g = 29 cal / 1.1 P / 9.32 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'lime':                {unit:'g', cal:0.3, p:0.007, c:0.105, f:0.002, src:'USDA FoodData Central SR Legacy #168155 "Limes, raw": 100 g = 30 cal / 0.7 P / 10.5 C / 0.2 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'mandarin orange':     {unit:'g', cal:0.53, p:0.008, c:0.133, f:0.003, src:'USDA FoodData Central SR Legacy #169105 "Tangerines, (mandarin oranges), raw": 100 g = 53 cal / 0.81 P / 13.3 C / 0.31 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'kiwi':                {unit:'g', ea:69, cal:0.61, p:0.011, c:0.147, f:0.005, src:'USDA FoodData Central SR Legacy #168153 "Kiwifruit, green, raw": 100 g = 61 cal / 1.14 P / 14.7 C / 0.52 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'lemon':               {unit:'g', ea:58, cal:0.29, p:0.011, c:0.093, f:0.003, src:'USDA FoodData Central SR Legacy #167746 "Lemons, raw, without peel": 100 g = 29 cal / 1.1 P / 9.32 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'lime':                {unit:'g', ea:67, cal:0.3, p:0.007, c:0.105, f:0.002, src:'USDA FoodData Central SR Legacy #168155 "Limes, raw": 100 g = 30 cal / 0.7 P / 10.5 C / 0.2 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'mandarin orange':     {unit:'g', ea:88, cal:0.53, p:0.008, c:0.133, f:0.003, src:'USDA FoodData Central SR Legacy #169105 "Tangerines, (mandarin oranges), raw": 100 g = 53 cal / 0.81 P / 13.3 C / 0.31 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'mango':               {unit:'g', cal:0.6, p:0.008, c:0.15, f:0.004, src:'USDA FoodData Central SR Legacy #169910 "Mangos, raw": 100 g = 60 cal / 0.82 P / 15 C / 0.38 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'nectarine':           {unit:'g', cal:0.44, p:0.011, c:0.106, f:0.003, src:'USDA FoodData Central SR Legacy #169914 "Nectarines, raw": 100 g = 44 cal / 1.06 P / 10.6 C / 0.32 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'nectarine':           {unit:'g', ea:142, cal:0.44, p:0.011, c:0.106, f:0.003, src:'USDA FoodData Central SR Legacy #169914 "Nectarines, raw": 100 g = 44 cal / 1.06 P / 10.6 C / 0.32 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'orange':              {unit:'g', cal:0.47, p:0.009, c:0.118, f:0.002, src:'USDA FoodData Central Foundation #746771 "Oranges, raw, navels": 100 g = 47 cal / 0.91 P / 11.8 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'papaya':              {unit:'g', cal:0.43, p:0.005, c:0.108, f:0.003, src:'USDA FoodData Central SR Legacy #169926 "Papayas, raw": 100 g = 43 cal / 0.47 P / 10.8 C / 0.26 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'peach':               {unit:'g', cal:0.39, p:0.009, c:0.095, f:0.003, src:'USDA FoodData Central SR Legacy #169928 "Peaches, yellow, raw": 100 g = 39 cal / 0.91 P / 9.54 C / 0.25 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'pear':                {unit:'g', cal:0.57, p:0.004, c:0.152, f:0.001, src:'USDA FoodData Central SR Legacy #169118 "Pears, raw": 100 g = 57 cal / 0.36 P / 15.2 C / 0.14 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'plum':                {unit:'g', cal:0.46, p:0.007, c:0.114, f:0.003, src:'USDA FoodData Central SR Legacy #169949 "Plums, raw": 100 g = 46 cal / 0.7 P / 11.4 C / 0.28 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'pomegranate':         {unit:'g', cal:0.83, p:0.017, c:0.187, f:0.012, src:'USDA FoodData Central SR Legacy #169134 "Pomegranates, raw": 100 g = 83 cal / 1.67 P / 18.7 C / 1.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'papaya':              {unit:'g', ea:157, cal:0.43, p:0.005, c:0.108, f:0.003, src:'USDA FoodData Central SR Legacy #169926 "Papayas, raw": 100 g = 43 cal / 0.47 P / 10.8 C / 0.26 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'peach':               {unit:'g', ea:150, cal:0.39, p:0.009, c:0.095, f:0.003, src:'USDA FoodData Central SR Legacy #169928 "Peaches, yellow, raw": 100 g = 39 cal / 0.91 P / 9.54 C / 0.25 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'pear':                {unit:'g', ea:178, cal:0.57, p:0.004, c:0.152, f:0.001, src:'USDA FoodData Central SR Legacy #169118 "Pears, raw": 100 g = 57 cal / 0.36 P / 15.2 C / 0.14 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'plum':                {unit:'g', ea:66, cal:0.46, p:0.007, c:0.114, f:0.003, src:'USDA FoodData Central SR Legacy #169949 "Plums, raw": 100 g = 46 cal / 0.7 P / 11.4 C / 0.28 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'pomegranate':         {unit:'g', ea:282, cal:0.83, p:0.017, c:0.187, f:0.012, src:'USDA FoodData Central SR Legacy #169134 "Pomegranates, raw": 100 g = 83 cal / 1.67 P / 18.7 C / 1.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'watermelon':          {unit:'g', cal:0.3, p:0.006, c:0.076, f:0.002, src:'USDA FoodData Central SR Legacy #167765 "Watermelon, raw": 100 g = 30 cal / 0.61 P / 7.55 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'artichoke':           {unit:'g', cal:0.47, p:0.033, c:0.105, f:0.002, src:'USDA FoodData Central SR Legacy #169205 "Artichokes, (globe or french), raw": 100 g = 47 cal / 3.27 P / 10.5 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'arugula':             {unit:'g', cal:0.25, p:0.026, c:0.037, f:0.007, src:'USDA FoodData Central SR Legacy #169387 "Arugula, raw": 100 g = 25 cal / 2.58 P / 3.65 C / 0.66 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'beets':               {unit:'g', cal:0.43, p:0.016, c:0.096, f:0.002, src:'USDA FoodData Central SR Legacy #169145 "Beets, raw": 100 g = 43 cal / 1.61 P / 9.56 C / 0.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'bell pepper red':     {unit:'g', cal:0.26, p:0.01, c:0.06, f:0.003, src:'USDA FoodData Central SR Legacy #170108 "Peppers, sweet, red, raw": 100 g = 26 cal / 0.99 P / 6.03 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'bell pepper green':   {unit:'g', cal:0.2, p:0.009, c:0.046, f:0.002, src:'USDA FoodData Central SR Legacy #170427 "Peppers, sweet, green, raw": 100 g = 20 cal / 0.86 P / 4.64 C / 0.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'artichoke':           {unit:'g', ea:128, cal:0.47, p:0.033, c:0.105, f:0.002, src:'USDA FoodData Central SR Legacy #169205 "Artichokes, (globe or french), raw": 100 g = 47 cal / 3.27 P / 10.5 C / 0.15 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'arugula':             {unit:'g', ea:2, cal:0.25, p:0.026, c:0.037, f:0.007, src:'USDA FoodData Central SR Legacy #169387 "Arugula, raw": 100 g = 25 cal / 2.58 P / 3.65 C / 0.66 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'beets':               {unit:'g', ea:82, cal:0.43, p:0.016, c:0.096, f:0.002, src:'USDA FoodData Central SR Legacy #169145 "Beets, raw": 100 g = 43 cal / 1.61 P / 9.56 C / 0.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'bell pepper red':     {unit:'g', ea:119, cal:0.26, p:0.01, c:0.06, f:0.003, src:'USDA FoodData Central SR Legacy #170108 "Peppers, sweet, red, raw": 100 g = 26 cal / 0.99 P / 6.03 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'bell pepper green':   {unit:'g', ea:119, cal:0.2, p:0.009, c:0.046, f:0.002, src:'USDA FoodData Central SR Legacy #170427 "Peppers, sweet, green, raw": 100 g = 20 cal / 0.86 P / 4.64 C / 0.17 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'bok choy':            {unit:'g', cal:0.17, p:0.01, c:0.035, f:0.002, src:'USDA FoodData Central Foundation #2685572 "Cabbage, bok choy, raw": 100 g = 17 cal / 1.02 P / 3.51 C / 0.234 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'brussels sprouts':    {unit:'g', cal:0.43, p:0.034, c:0.09, f:0.003, src:'USDA FoodData Central SR Legacy #170383 "Brussels sprouts, raw": 100 g = 43 cal / 3.38 P / 8.95 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'brussels sprouts':    {unit:'g', ea:19, cal:0.43, p:0.034, c:0.09, f:0.003, src:'USDA FoodData Central SR Legacy #170383 "Brussels sprouts, raw": 100 g = 43 cal / 3.38 P / 8.95 C / 0.3 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'butternut squash':    {unit:'g', cal:0.45, p:0.01, c:0.117, f:0.001, src:'USDA FoodData Central SR Legacy #169295 "Squash, winter, butternut, raw": 100 g = 45 cal / 1 P / 11.7 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'cabbage green':       {unit:'g', cal:0.25, p:0.013, c:0.058, f:0.001, src:'USDA FoodData Central SR Legacy #169975 "Cabbage, raw": 100 g = 25 cal / 1.28 P / 5.8 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'cabbage red':         {unit:'g', cal:0.31, p:0.014, c:0.074, f:0.002, src:'USDA FoodData Central SR Legacy #169977 "Cabbage, red, raw": 100 g = 31 cal / 1.43 P / 7.37 C / 0.16 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'carrots':             {unit:'g', cal:0.41, p:0.009, c:0.096, f:0.002, src:'USDA FoodData Central SR Legacy #170393 "Carrots, raw": 100 g = 41 cal / 0.93 P / 9.58 C / 0.24 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'cauliflower':         {unit:'g', cal:0.25, p:0.019, c:0.05, f:0.003, src:'USDA FoodData Central SR Legacy #169986 "Cauliflower, raw": 100 g = 25 cal / 1.92 P / 4.97 C / 0.28 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'cabbage green':       {unit:'g', ea:908, cal:0.25, p:0.013, c:0.058, f:0.001, src:'USDA FoodData Central SR Legacy #169975 "Cabbage, raw": 100 g = 25 cal / 1.28 P / 5.8 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'cabbage red':         {unit:'g', ea:839, cal:0.31, p:0.014, c:0.074, f:0.002, src:'USDA FoodData Central SR Legacy #169977 "Cabbage, red, raw": 100 g = 31 cal / 1.43 P / 7.37 C / 0.16 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'carrots':             {unit:'g', ea:61, cal:0.41, p:0.009, c:0.096, f:0.002, src:'USDA FoodData Central SR Legacy #170393 "Carrots, raw": 100 g = 41 cal / 0.93 P / 9.58 C / 0.24 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'cauliflower':         {unit:'g', ea:588, cal:0.25, p:0.019, c:0.05, f:0.003, src:'USDA FoodData Central SR Legacy #169986 "Cauliflower, raw": 100 g = 25 cal / 1.92 P / 4.97 C / 0.28 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'collard greens':      {unit:'g', cal:0.32, p:0.03, c:0.054, f:0.006, src:'USDA FoodData Central SR Legacy #170406 "Collards, raw": 100 g = 32 cal / 3.02 P / 5.42 C / 0.61 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'corn sweet':          {unit:'g', cal:0.86, p:0.033, c:0.187, f:0.014, src:'USDA FoodData Central SR Legacy #169998 "Corn, sweet, yellow, raw": 100 g = 86 cal / 3.27 P / 18.7 C / 1.35 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'corn sweet':          {unit:'g', ea:73, cal:0.86, p:0.033, c:0.187, f:0.014, src:'USDA FoodData Central SR Legacy #169998 "Corn, sweet, yellow, raw": 100 g = 86 cal / 3.27 P / 18.7 C / 1.35 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'eggplant':            {unit:'g', cal:0.25, p:0.01, c:0.059, f:0.002, src:'USDA FoodData Central SR Legacy #169228 "Eggplant, raw": 100 g = 25 cal / 0.98 P / 5.88 C / 0.18 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
-  'garlic':              {unit:'g', cal:1.49, p:0.064, c:0.331, f:0.005, src:'USDA FoodData Central SR Legacy #169230 "Garlic, raw": 100 g = 149 cal / 6.36 P / 33.1 C / 0.5 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+  'garlic':              {unit:'g', ea:3, cal:1.49, p:0.064, c:0.331, f:0.005, src:'USDA FoodData Central SR Legacy #169230 "Garlic, raw": 100 g = 149 cal / 6.36 P / 33.1 C / 0.5 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'green beans':         {unit:'g', cal:0.31, p:0.018, c:0.07, f:0.002, src:'USDA FoodData Central SR Legacy #169961 "Beans, snap, green, raw": 100 g = 31 cal / 1.83 P / 6.97 C / 0.22 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'iceberg lettuce':     {unit:'g', cal:0.145, p:0.007, c:0.034, f:0.001, src:'USDA FoodData Central Foundation #2346388 "Lettuce, iceberg, raw": 100 g = 14.5 cal / 0.742 P / 3.37 C / 0.0738 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'jalapeno':            {unit:'g', cal:0.29, p:0.009, c:0.065, f:0.004, src:'USDA FoodData Central SR Legacy #168576 "Peppers, jalapeno, raw": 100 g = 29 cal / 0.91 P / 6.5 C / 0.37 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
@@ -2729,6 +2733,27 @@ const FOOD_FACTS = {
   'turnips':             {unit:'g', cal:0.28, p:0.009, c:0.064, f:0.001, src:'USDA FoodData Central SR Legacy #170465 "Turnips, raw": 100 g = 28 cal / 0.9 P / 6.43 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'watercress':          {unit:'g', cal:0.11, p:0.023, c:0.013, f:0.001, src:'USDA FoodData Central SR Legacy #170068 "Watercress, raw": 100 g = 11 cal / 2.3 P / 1.29 C / 0.1 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
   'zucchini':            {unit:'g', cal:0.16, p:0.01, c:0.033, f:0.002, src:'USDA FoodData Central Foundation #2685568 "Squash, summer, green, zucchini, includes skin, raw": 100 g = 16 cal / 0.984 P / 3.27 C / 0.205 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page.'},
+
+  /* ==== SUSHI ROLLS — his ask, 2026-09-07: rolls he can log "by rolls or pieces" =============
+     ⛔ THE PIECE WEIGHT AND THE PIECES-PER-ROLL ARE USDA'S, NOT MINE. FNDDS publishes a portion
+     table for each of these: 30 g = 1 piece and 180 g = one roll, which is where pc:6 comes from.
+     Inventing "a roll is about six pieces" would have been the guess this file exists to delete.
+     ⚠️ The web is useless here and was checked first: one page says a tuna roll is 190 cal, another
+     200, and "salmon roll" ranges 329-400 because some of them are spicy rolls with mayo. These are
+     USDA Survey (FNDDS) figures instead, fetched from the API and parsed from raw JSON.
+     ⚠️ CUCUMBER ROLL USES USDA'S "vegetable" ROLL, and its piece is 22 g rather than 30 — a cucumber
+     roll is a thinner hosomaki, and USDA's own portion table says so. Its numbers are identical to
+     the avocado roll per 100 g, which is FNDDS not distinguishing the two fillings.
+     ⛔ WHAT IS NOT HERE, DELIBERATELY: salmon-avocado, tuna-avocado, salmon-cucumber and
+     tuna-cucumber. USDA has no combination rolls, and the way to fake one would be to assume a
+     filling split and add it up — a number that would look sourced and be invented. Asked him
+     instead. */
+  'avocado roll':      {unit:'piece (30 g)', pc:6, cal:27.9, p:0.54, c:5.28, f:0.44, src:'USDA FoodData Central Survey (FNDDS) #2708960 "Sushi roll, avocado": 93 cal / 1.8 P / 17.6 C / 1.47 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'california roll':   {unit:'piece (30 g)', pc:6, cal:28.2, p:0.88, c:5.52, f:0.2, src:'USDA FoodData Central Survey (FNDDS) #2708961 "Sushi roll, California": 94 cal / 2.92 P / 18.4 C / 0.67 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'cucumber roll':     {unit:'piece (22 g)', pc:6, cal:20.46, p:0.4, c:3.87, f:0.32, src:'USDA FoodData Central Survey (FNDDS) #2708966 "Sushi roll, vegetable": 93 cal / 1.8 P / 17.6 C / 1.47 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 22 g, one roll = 132 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'salmon roll':       {unit:'piece (30 g)', pc:6, cal:30.9, p:2.06, c:4.59, f:0.38, src:'USDA FoodData Central Survey (FNDDS) #2708963 "Sushi roll, salmon": 103 cal / 6.88 P / 15.3 C / 1.28 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'shrimp roll':       {unit:'piece (30 g)', pc:6, cal:30, p:2.1, c:4.71, f:0.17, src:'USDA FoodData Central Survey (FNDDS) #2708964 "Sushi roll, shrimp": 100 cal / 7.01 P / 15.7 C / 0.55 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'tuna roll':         {unit:'piece (30 g)', pc:6, cal:29.1, p:2.22, c:4.59, f:0.08, src:'USDA FoodData Central Survey (FNDDS) #2708965 "Sushi roll tuna": 97 cal / 7.4 P / 15.3 C / 0.26 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
 };
 /* ============ PRICING — a row's numbers are LOOKED UP, never stored =============================
    Built Aug 18 2026 on his instruction, verbatim: "Every recipe should be FACT checked when being
@@ -2867,7 +2892,10 @@ const EATOUT_ORDER = {
         {n:'Edamame, 1 side',cal:130,p:11,c:10,f:5,sp:'one edamame'}],
   anchor:{n:'Sashimi pieces — TUNA (these numbers are tuna; salmon is different, see swaps)',cal:22,p:4.7,c:0,f:.3,min:6,max:16,
           sp:'% pieces of tuna sashimi'},
-  carb:{n:'Tuna roll (6 pc)',cal:190,p:11,c:32,f:1.5,min:1,max:3,sp:'% tuna roll#'},
+  /* ⛔ WAS 190/11/32/1.5, WHICH WAS A GUESS. FOOD_FACTS now carries a sourced tuna roll (USDA
+     FNDDS, per piece) and [anchors] cross-checks this card against it — which is how the old number
+     surfaced the moment a real one existed. 6 pieces x 29.1/2.22/4.59/0.08. */
+  carb:{n:'Tuna roll (6 pc)',cal:175,p:13,c:28,f:0.5,min:1,max:3,sp:'% tuna roll#'},
   swaps:['Salmon instead of tuna sashimi: <b>+20 cal and +2.6 g fat per piece, and slightly LESS protein</b> (20 g slice: salmon 42 cal / 4.1 P, tuna 22 cal / 4.9 P). Fine to order — the fat is omega-3 — but 12 pieces of salmon is <b>240 cal over</b> 12 of tuna, so count it, do not treat them as the same thing.',
    'Naruto roll (cucumber-wrapped, NO rice) ≈145 cal · 21 P — swap it for a tuna roll (+45 cal) to trade 30 g carbs for 10 g protein.',
    'Salmon-avocado roll ≈245 cal · 11 P · 8 F — costs 55 cal and 6 g fat over the tuna roll.',
@@ -6271,7 +6299,7 @@ function logAddFood(ld, slot, key, n, unit){
   const f = FOOD_FACTS[key];
   if(!f || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
   const u = unit || (f.ea ? 'each' : f.unit);
-  const spec = (u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
+  const spec = fvSpec(key, n, u);
   const cur = (logEntries(ld)[slot] || [])[0];
   if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }
   const rows = copyRows(cur).concat([spec]);
@@ -6427,6 +6455,7 @@ function foodUseCounts(){
 function fvDefaultAmount(key, unit){
   const f = FOOD_FACTS[key]; if(!f) return 1;
   const u = unit || fvUnits(key)[0];
+  if(u === 'roll') return 1;                /* nobody eats 100 rolls */
   const mine = foodTypicalAmount(key, u);
   if(mine != null) return mine;             /* what he actually eats beats any table */
   if(u === 'each') return 1;
@@ -6441,6 +6470,14 @@ function fvUnits(key){
   let u = [f.unit];
   if(f.unit === 'g') u.push('oz');
   if(f.ea) u.push('each');            /* f.ea is the gram weight of one piece */
+  /* ⛔ A ROLL IS A UI UNIT, NOT A STORED ONE. His ask: "allow me to adjust the quantity by rolls
+     or pieces." The pricing engine already normalises 'piece' to 'each' and matches a generic
+     count against a per-piece fact, so PIECES are what gets written to the log and nothing in the
+     engine had to learn a new word. 'roll' is offered here and multiplied out at save time.
+     ⛔ AND THE FACT IS PER PIECE FOR A REASON. Declaring it per ROLL would have been worse than it
+     looks: 'piece' is an alias of 'each', and a generic 'each' row matches ANY discrete fact unit,
+     so logging "6 pieces" against a per-roll fact would have quietly priced SIX ROLLS. */
+  if(f.pc) u.push('roll');
   u = u.filter((x,i)=>x && u.indexOf(x) === i);
   /* lead with the unit he records this food in, so the amount beside it is his amount */
   const mine = foodTypicalUnit(key);
@@ -6449,8 +6486,15 @@ function fvUnits(key){
 }
 function fvMacros(key, n, u){
   const f = FOOD_FACTS[key]; if(!f) return [0,0,0,0];
-  const spec = (u && u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
+  const spec = fvSpec(key, n, u);
   return priceRow([null,null,spec]) || [0,0,0,0];
+}
+/* ⛔ ONE PLACE TURNS WHAT IS ON SCREEN INTO A ROW. The preview, the SAVE and the bulk add all go
+   through this, so a roll cannot price as one thing and log as another. */
+function fvSpec(key, n, u){
+  const f = FOOD_FACTS[key];
+  if(u === 'roll' && f && f.pc) return {f:key, n:n * f.pc, u:'each'};   /* rolls are stored as pieces */
+  return (u && u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
 }
 /* ---- page 1: search ---- */
 /* ⛔ THREE PIECES, ON PURPOSE. The page SHELL holds the search input, and while he is typing that

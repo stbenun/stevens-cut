@@ -66,7 +66,11 @@ function build() {
      a row written as a COUNT can price off a per-gram fact. Adding it to 'egg' made that one fact
      invisible here, and [food-doc-parse] caught it on the next run, exactly as it did for sp. Any new
      optional field must be added to this gap or its fact silently vanishes from FOOD_FACTS.md. */
-  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?(?:ea:[\d.]+,\s*(?:\/\*(?:[^*]|\*(?!\/))*\*\/\s*)?)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*(?:nut:[01],\s*)?src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
+  /* `pc:` is optional and sits in the same gap — pieces per roll, so the food page can offer a
+     'roll' unit against a per-piece fact. Adding it made the six sushi rows invisible here and
+     [food-doc-parse] caught it on the very next run, exactly as it did for sp, nut and ea. That is
+     four times this guard has paid for itself on an added field. */
+  const rx = /'([^']+)':\s*\{unit:'([^']*)',\s*(?:sp:\[([\d.]+),\s*([\d.]+)\],\s*)?(?:ea:[\d.]+,\s*(?:\/\*(?:[^*]|\*(?!\/))*\*\/\s*)?)?(?:pc:[\d.]+,\s*)?cal:([\d.]+),\s*p:([\d.]+),\s*c:([\d.]+),\s*f:([\d.]+),\s*(?:nut:[01],\s*)?src:(?:'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)")/g;
   let m;
   while ((m = rx.exec(ffBlock))) {
     facts.push({ name: m[1], unit: m[2],

@@ -275,18 +275,27 @@ const ALT = /\bor\b|\/|\beither\b/i;
   if (!EATOUT_ORDER || !EATOUT_ORDER.sushi) return;
   const checks = [
     ['sushi anchor (sashimi)', EATOUT_ORDER.sushi.anchor, 'tuna sashimi'],
-    ['sushi carb (roll)', EATOUT_ORDER.sushi.carb, 'tuna roll'],
+    /* ⚠ THE CARD IS A WHOLE ROLL, THE FACT IS ONE PIECE. It used to be per-roll on both sides; the
+       fact became per-piece when USDA's own portion table (1 piece = 30 g, one roll = 180 g) replaced
+       a guessed total. Comparing them directly now would fail forever on a units mismatch rather
+       than on a wrong number, so the multiplier is stated. */
+    ['sushi carb (roll)', EATOUT_ORDER.sushi.carb, 'tuna roll', 6],
     ['southside anchor (half chicken)', (EATOUT_ORDER.southside || {}).anchor, 'smoked half chicken'],
     /* the base items were the gap: he questioned the miso number and it turned out to have no
        source anywhere. Anything he can be told to order gets checked against FOOD_FACTS. */
     ['sushi base (miso)', (EATOUT_ORDER.sushi.base || []).find(b => /miso/i.test(b.n)), 'miso soup'],
   ];
   let bad = 0;
-  checks.forEach(([label, item, key]) => {
+  checks.forEach(([label, item, key, mult]) => {
     if (!item || !FOOD_FACTS[key]) return;
+    /* ⚠ A CARD MAY QUOTE A WHOLE ROLL AGAINST A PER-PIECE FACT. Both sides used to be per-roll;
+       the fact became per-piece when USDA's own portion table replaced a guessed total. Without
+       this the guard would fail forever on a units mismatch instead of on a wrong number, which
+       is the fastest way to teach someone to ignore it. */
+    const m = mult || 1;
     ['cal', 'p'].forEach(k => {
-      if (Math.abs(item[k] - FOOD_FACTS[key][k]) > 0.5) {
-        bad++; fail('anchors', label + '.' + k + ' = ' + item[k] + ' but FOOD_FACTS["' + key + '"].' + k + ' = ' + FOOD_FACTS[key][k]);
+      if (Math.abs(item[k] - FOOD_FACTS[key][k] * m) > 0.5) {
+        bad++; fail('anchors', label + '.' + k + ' = ' + item[k] + ' but FOOD_FACTS["' + key + '"].' + k + (m > 1 ? ' x ' + m : '') + ' = ' + (FOOD_FACTS[key][k] * m));
       }
     });
   });
