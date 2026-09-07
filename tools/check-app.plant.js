@@ -488,6 +488,21 @@ const PLANTS = [
     /* patching innerHTML throws the listeners away; a list that looks right and does nothing. */
     edits: [{ from: "      wireFvRows();\n      document.querySelectorAll('[data-fvaddsel]')",
               to:   "      document.querySelectorAll('[data-fvaddsel]')" }] },
+  { guard: 'slot-budget-sum', name: "a slot budget drifts from Q’s sheet and nobody records why",
+    /* the gap between the slots and the daily target is asserted exactly, not to a tolerance — a
+       tolerance wide enough to swallow Q's known 20 would swallow the next drift too. */
+    edits: [{ from: "const SLOT_BUDGET = {bf:[545,'breakfast',36,54,21]",
+              to:   "const SLOT_BUDGET = {bf:[560,'breakfast',36,54,21]" }] },
+  { guard: 'slot-budget-sum', name: "the recorded reason the slots do not sum to the target is deleted",
+    /* Q's sheet does not add up; that is stated rather than absorbed. Delete the statement and the
+       check has nothing to compare against, which must fail loudly rather than pass quietly. */
+    edits: [{ from: "const SLOT_SUM_GAP = [20, 4, 11, -1];",
+              to:   "/* removed */" }] },
+  { guard: 'slot-budget-sum', name: "SLOTS[].b stops being derived, so the two budget tables can diverge again",
+    /* this is the ORIGINAL bug: someone shaved 5 cal off four slots so the arithmetic closed, and the
+       shaved copy became a second table that disagreed with the first for months. */
+    edits: [{ from: "SLOTS.forEach(function(s){\n  const b = SLOT_BUDGET[s.key];\n  if(b) s.b = [b[0], b[2], b[3], b[4]];\n});",
+              to:   "SLOTS.forEach(function(s){ const b = SLOT_BUDGET[s.key]; if(b) s.b = [b[0]-5, b[2], b[3], b[4]]; });" }] },
 ];
 
 function main() {

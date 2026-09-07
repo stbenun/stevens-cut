@@ -7,10 +7,10 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 887,941 bytes, 10,852 lines, one file |
+| app | `index.html`, 893,696 bytes, 10,892 lines, one file |
 | build | `b1788798426` |
-| foods on the price list | 197 |
-| provenance | 109 USDA · 58 label · 28 derived · 2 unverified |
+| foods on the price list | 203 |
+| provenance | 113 USDA · 60 label · 28 derived · 2 unverified |
 
 ## Ingredient rows
 
@@ -42,17 +42,18 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 |---|---|---|---:|
 | `bf/b3#0` | Kodiak Breakfast | 560 / 35 / 64 / 21 | +20 cal · |
 | `bf/b5` | Banana Cream Protein Bowl | 560 / 44 / 62 / 17 | +20 cal · |
+| `lu/l10` | Salad+Bagel | 591 / 73 / 70 / 17 | +16 cal · |
 | `di/d1` | Burger | 594 / 55 / 62 / 19 | +14 cal |
 | `bf/b25` | Blueberry Muffin Bowl | 553 / 48 / 58 / 16 | +13 cal |
 | `bf/b27` | Almond Croissant Bowl | 551 / 45 / 46 / 22 | +11 cal |
-| `lu/l10` | Salad+Bagel | 586 / 73 / 70 / 17 | +11 cal |
+| `lu/l9` | Cold Crunch Bowl | 586 / 54 / 45 / 19 | +11 cal |
 | `bf/b3#1` | Kodiak Breakfast | 550 / 38 / 51 / 22 | +10 cal |
+| `lu/l4` | Tuna Melt Stack | 585 / 51 / 62 / 18 | +10 cal |
 | `di/d3` | Blackened Salmon Plate | 589 / 54 / 58 / 15 | +9 cal |
 | `bf/b4` | Oikos Power Parfait — no scale / no co | 548 / 36 / 76 / 12 | +8 cal |
 | `bf/b28#2` | Buffin + Greek Yogurt | 546 / 48 / 57 / 13 | +6 cal |
 | `bf/b28#8` | Buffin + Greek Yogurt | 546 / 45 / 59 / 14 | +6 cal |
 | `bf/b28#9` | Buffin + Greek Yogurt | 546 / 45 / 59 / 14 | +6 cal |
-| `lu/l9` | Cold Crunch Bowl | 581 / 54 / 45 / 18 | +6 cal |
 | `di/d15` | Tomato Beef | 586 / 56 / 62 / 19 | +6 cal |
 | `bf/b1` | Cream of Rice | 545 / 38 / 52 / 22 | +5 cal |
 | `bf/b28#1` | Buffin + Greek Yogurt | 545 / 55 / 54 / 11 | +5 cal |
@@ -61,7 +62,6 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b28#5` | Buffin + Greek Yogurt | 545 / 47 / 61 / 12 | +5 cal |
 | `bf/b28#6` | Buffin + Greek Yogurt | 545 / 46 / 57 / 14 | +5 cal |
 | `bf/b28#7` | Buffin + Greek Yogurt | 545 / 45 / 61 / 13 | +5 cal |
-| `lu/l4` | Tuna Melt Stack | 580 / 51 / 62 / 17 | +5 cal |
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
 | `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
 | `bf/b28#0` | Buffin + Greek Yogurt | 544 / 56 / 55 / 10 | +4 cal |
@@ -70,6 +70,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b23` | Pumpkin Pie Bowl | 543 / 46 / 51 / 19 | +3 cal |
 | `lu/l8` | Salmon Smash Patties | 578 / 51 / 70 / 14 | +3 cal |
 | `di/d17` | Sweet-Chili Salmon Plate (air fryer) | 583 / 56 / 45 / 20 | +3 cal |
+| `lu/l1r` | Chicken Meal — Rice | 576 / 52 / 56 / 15 | +1 cal |
 | `pre/p2` | Rice Cakes + Tuna | 200 / 18 / 27 / 1 | 0 cal |
 | `pre/p6` | Tuna + Banana | 200 / 19 / 33 / 1 | 0 cal |
 | `bf/b8` | Piña Colada Bowl | 540 / 44 / 55 / 18 | 0 cal |
@@ -89,7 +90,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b21` | Mocha Cookie Bowl | 537 / 44 / 55 / 18 | -3 cal |
 | `lu/l2` | Broccoli Jiben | 572 / 55 / 45 / 21 | -3 cal |
 | `bf/b22` | Orange Creamsicle Bowl | 536 / 43 / 53 / 17 | -4 cal |
-| `lu/l1r` | Chicken Meal — Rice | 571 / 52 / 56 / 15 | -4 cal |
+| `lu/l1` | Chicken Meal — Sweet Potato | 571 / 52 / 57 / 15 | -4 cal |
 | `pre/p3` | Rice Cakes + Yogurt | 195 / 16 / 27 / 0 | -5 cal |
 | `pre/p5` | Yogurt + Banana | 195 / 16 / 33 / 0 | -5 cal |
 | `bf/b2` | Bagel w/ Berries | 535 / 49 / 73 / 20 | -5 cal |
@@ -97,7 +98,6 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `lu/l7` | Spicy Tuna Crunch Bowl | 569 / 65 / 51 / 12 | -6 cal |
 | `di/d2` | Poke Bowl | 573 / 53 / 53 / 17 | -7 cal |
 | `sn/s4` | The Brookie | 317 / 30 / 38 / 6 | -8 cal |
-| `lu/l1` | Chicken Meal — Sweet Potato | 566 / 52 / 57 / 15 | -9 cal |
 | `sn/s1` | Ninja Creami | 315 / 32 / 30 / 7 | -10 cal |
 | `di/d16` | Teriyaki-Glaze Salmon Bowl (fresh · se | 569 / 55 / 51 / 15 | -11 cal |
 | `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |

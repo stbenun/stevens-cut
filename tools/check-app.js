@@ -142,9 +142,22 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   `);
   const { sum, plan, over } = JSON.parse(res);
   const diff = sum.map((v, i) => v - plan[i]);
-  if (diff.some((d, i) => Math.abs(d) > (i === 0 ? 25 : 8)))
-    fail('slot-budget-sum', `slots sum to ${sum.join('/')} but the plan target is ${plan.join('/')} ` +
-                            `(off by ${diff.join('/')}) — he cannot hit the target by eating the plan`);
+  /* ⛔ ASSERT THE KNOWN GAP, NOT A TOLERANCE. Q's sheet does not add up: his meal totals come to
+     2240 and the MACROS line on the same sheet says 2220. The app used to hide that by shaving 5 cal
+     off four slots, and that shaved copy became the SECOND budget table that then disagreed with the
+     first for months — this guard's own header records the 2240-vs-2220 event that started it.
+     His instruction 2026-09-07 was to use Q's sheet, so Q's numbers stand and the discrepancy is
+     stated in index.html as SLOT_SUM_GAP. Checking against that exact vector rather than a loose
+     tolerance means the known gap passes and any NEW drift — a slot edited, a target changed — still
+     fails. A tolerance wide enough to swallow this would have swallowed the next one too. */
+  const KNOWN = JSON.parse(run('return JSON.stringify(typeof SLOT_SUM_GAP!=="undefined"?SLOT_SUM_GAP:null);'));
+  if (!KNOWN)
+    fail('slot-budget-sum', 'SLOT_SUM_GAP is gone from index.html — the recorded reason the slots do ' +
+                            'not sum to the target went with it, so this check has nothing to compare against');
+  else if (diff.some((d, k) => d !== KNOWN[k]))
+    fail('slot-budget-sum', `slots sum to ${sum.join('/')} against a ${plan.join('/')} target, off by ` +
+                            `${diff.join('/')} — but the recorded gap from Q's sheet is ${KNOWN.join('/')}. ` +
+                            `Something moved that nobody wrote down.`);
   else ok('slot-budget-sum', `slot budgets sum to ${sum.join('/')} against a ${plan.join('/')} target`);
 
   if (over.length) fail('option-fits-slot', over.join(' · '));
