@@ -2005,8 +2005,21 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     });
     if(!/data-acc="genfit"/.test(t) || !/data-acc="genbuild"/.test(t))
       bad.push('the generator cards are not on Today — the merge was supposed to bring them');
-    if(/data-acc="gymtiming"/.test(t) || /data-acc="lift"/.test(t))
-      bad.push('the lift cards are still on Today — they moved to Train');
+    /* ⛔ ON A DAY HE ACTUALLY LIFTS. liftZoneHTML returns '' on a rest day, and the probe boots on a
+       Thursday — so checking this on the default date asserted nothing, and the plant that put the
+       lift zone back on Today sailed through. A guard that can only fail on some dates has to pick
+       one of those dates itself. */
+    { const ld0 = logDate; logDate = '2026-08-10';   /* Monday — Legs */
+      current = 'today'; render();
+      const tl = document.body.innerHTML;
+      if(/data-acc="lift"/.test(tl))
+        bad.push('the lift cards are still on Today — they moved to Train');
+      if(/data-acc="gymtiming"/.test(tl))
+        bad.push('the gym-timing card is still on Today — it moved to Train');
+      current = 'train'; render();
+      if(!/data-acc="lift"/.test(document.body.innerHTML))
+        bad.push('Train does not render the lift zone on a lifting day — it was lost, not moved');
+      logDate = ld0; }
     current = 'train'; render();
     if(typeof liftZoneHTML !== 'function') bad.push('liftZoneHTML does not exist — the lift zone was lost, not moved');
 
@@ -2600,6 +2613,16 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     else {
       fvSet({slot:'bf', tab:'dishes', dish:dIds[0], pick:null, sel:[]});
       const dh = foodPageHTML(D);
+      /* ⛔ AND IT MUST BE IN THE LIST. Opening a draft by id worked even when the dishes list had
+         stopped offering any — fvDishHTML reads draftAll() directly — so a plant that dropped his
+         drafts from the list passed. Reaching a thing and finding a thing are different claims. */
+      { fvSet({slot:'bf', tab:'dishes', dish:null, q:'', pick:null, sel:[]});
+        const dl = foodPageHTML(D);
+        if(dl.indexOf('data-fvdish="' + dIds[0] + '"') < 0)
+          bad.push('his own drafts are not listed in Your dishes');
+        if(!/nothing guards them/.test(dl))
+          bad.push('the dishes list no longer warns that a draft is unguarded');
+        fvSet({dish:dIds[0]}); }
       if(!/fv-tag/.test(dh))              bad.push('a draft is not marked apart from a guarded repo meal');
       if(!/Nothing guards them/.test(dh)) bad.push('a draft page no longer says it is unguarded');
       if(!/<li style="display:block/.test(dh)) bad.push('a draft page shows none of its ingredients');
