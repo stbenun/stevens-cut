@@ -126,8 +126,8 @@ const PLANTS = [
     /* the shape of the original bug: renderZoneBar returns early on an unchanged signature, and for
        this tab the signature was the bare string 'meals'. The fix sat behind a return that could not
        fire, and the screenshots came back byte-identical. */
-    edits: [{ from: "            : current==='meals'? 'meals|'+(fvState().slot ? 'fv' : '-')",
-              to:   "            : current==='meals'? 'meals'" }] },
+    edits: [{ from: "  const sig = current==='today'? 'today|'+(fvState().slot ? 'fv' : zoneOrder().join())",
+              to:   "  const sig = current==='today'? 'today' : current;" }] },
   { guard: 'food-log', name: 'the tick boxes vanish from the search rows',
     edits: [{ from: "        + '<span class=\"fv-c' + (sel.indexOf(k)>=0?' on':'') + '\" data-fvsel=\"' + esc(k) + '\">✓</span></button>';",
               to:   "        + '</button>';" }] },
@@ -233,17 +233,26 @@ const PLANTS = [
      BROKEN CASE — anchor not unique/found — which is the harness catching its own staleness, again.
      The defect is the same one either way: the hub loses its wiring and every control on it dies
      while the page still looks perfectly normal. */
-  { guard: 'my-meals', name: 'the Meals tab loses its wiring, so nothing on it is tappable',
-    edits: [{ from: "if(current === 'meals'){ wireMeals(); wireToday(); }",
-              to:   "if(false){ wireMeals(); wireToday(); }" }] },
-  { guard: 'my-meals', name: 'the log-it-as row stops printing the delta against the slot budget',
-    edits: [{ from: "+ sl.slot + '<span class=\"rem\">' + (d>0?'+':'') + d + '</span></button>';",
-              to:   "+ sl.slot + '</button>';" }] },
-  { guard: 'my-meals', name: "only the meal's own slot is offered, so cross-slot use dies here too",
-    edits: [{ from: '    + SLOT_SEQ.map(function(k){',
-              to:   "    + SLOT_SEQ.filter(k=>k==='bf').map(function(k){" }] },
-  { guard: 'my-meals', name: 'his own drafts vanish from My Meals',
-    edits: [{ from: '  const draftSec = dIds.length ?', to: '  const draftSec = false ?' }] },
+  { guard: 'my-meals', name: 'the merged tab loses its wiring, so nothing on it is tappable',
+    /* retargeted 2026-09-06: there is one tab now and it owns the food handlers. The Meals tab was
+       inert for its whole life because nothing pointed at its wiring — same defect, new address. */
+    edits: [{ from: "    ({today:wireToday, prep:wirePrep, train:wireTrain, track:wireTrack}[current]||(()=>{}))();",
+              to:   "    ({}[current]||(()=>{}))();" }] },
+  { guard: 'my-meals', name: 'the dish rows stop printing the delta against the slot budget',
+    /* logAsRow went with the My Meals browser; the delta it carried is on the dish row now, and it
+       is still the clause that matters — the trade has to be visible before he taps. */
+    edits: [{ from: "          + (bud ? ' · ' + (d>=0?'+':'') + d + '' : '')",
+              to:   "          + ''" }] },
+  { guard: 'my-meals', name: 'a recipe page offers no way to log it, so the cookbook goes read-only again',
+    /* the browser was read-only and that was his original complaint: he could look a meal up and
+       then had to go find it again somewhere else. LOG IT is what stops the dish page repeating it. */
+    edits: [{ from: "    + '<button class=\"fvsave\" data-fvdishlog=\"' + esc(id) + '\">LOG IT TO ' + esc(slot ? slot.slot.toUpperCase() : '') + '</button>'",
+              to:   "    + ''" }] },
+  { guard: 'my-meals', name: 'his own drafts vanish from Your dishes',
+    /* they had a section of their own; now they sit in the dishes list beside the repo meals, which
+       is also why the unguarded warning has to be there. Drop them from the list and both go. */
+    edits: [{ from: "    const rows = Object.keys(dAll).map(k=>({id:k, name:dAll[k].name, t:entryMacros({id:k, rows:dAll[k].rows}), draft:true}))",
+              to:   "    const rows = []" }] },
 
   /* ---- [cross-slot]: any meal can be logged into any slot ----
      ⚠️ The open-by-default plant is built by CONCATENATION below rather than written inline, because
@@ -442,7 +451,22 @@ const PLANTS = [
 
   { guard: 'creami-shop', name: 'the next-batch branch goes back behind a constant-false guard',
     edits: [{ from: "    const nextBatch = cs.next;",
-              to:   "    const nextBatch = cs.next; const done = false;" }] }
+              to:   "    const nextBatch = cs.next; const done = false;" }] },
+  { guard: 'my-meals', name: "the recipes vanish from the dish page — the cookbook is lost silently",
+    edits: [{ from: "    body = m.vars.map(function(v){",
+              to:   "    body = '';" }] },
+  { guard: 'my-meals', name: "a recipe loses its method, keeping only the ingredient list",
+    edits: [{ from: "    if(HOWTO[id]) body += '<div class=\"slotlbl\" style=\"margin-top:12px\">👨‍🍳 How to make it</div>'",
+              to:   "    if(false) body += '';" }] },
+  { guard: 'food-log', name: "the food page loses its takeover, so + Add food sets a state nothing renders",
+    edits: [{ from: "  if(fvState().slot) return `<div class=\"card\">${foodPageHTML(ld)}</div>`;",
+              to:   "  if(false) return '';" }] },
+  { guard: 'meals-hub', name: "the diary goes back to rendering twice — once in its zone, once in the Log card",
+    edits: [{ from: "  <div class=\"card\" id=\"mealLog\">",
+              to:   "  <div class=\"card\" id=\"mealLog\">${diaryHTML(ld)}" }] },
+  { guard: 'meals-hub', name: "the lift zone comes back to Today as well as Train, so the set logger exists twice",
+    edits: [{ from: "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};",
+              to:   "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone + liftZoneHTML(ld)};" }] },
 ];
 
 function main() {
