@@ -3,7 +3,7 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 103 / 132 foods in the meal plan (**78%**)
+## Coverage: 112 / 142 foods in the meal plan (**79%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
@@ -223,7 +223,7 @@ Provenance of the 211 rows: **114** USDA · **67** label · **28** derived · **
 | `yellow mustard` | g | 0 | 0 | 0 | 0 | label | HIS OWN BOTTLE — Heinz Yellow Mustard, panel photographed Sept 8 2026: 0 cal a serving, 0 F / 0 C / 0 P, sodium 60 mg, 79 servings per 14 oz. Serving weight derived the same way as the Dijon: 14 oz = 396.9 g over 79 = 5.02 g. Genuinely a zero row — the panel itself is badged "Zero calories" — so this prices as nothing at any sane dose. Ingredients: distilled white vinegar, mustard seed, water, salt, turmeric, spices, natural flavor: no wine, so none of the Dijon\'s kashrut question applies to it. |
 | `zucchini` | g | 0.16 | 0.01 | 0.033 | 0.002 | USDA | USDA FoodData Central Foundation #2685568 "Squash, summer, green, zucchini, includes skin, raw": 100 g = 16 cal / 0.984 P / 3.27 C / 0.205 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page. |
 
-## Still to source — 29 foods, most-used first
+## Still to source — 30 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -252,6 +252,7 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | cinnamon spice extract | 1 |
 | israeli salad, piled | 1 |
 | everything-bagel seasoning | 1 |
+| salt, pepper, extra dill | 1 |
 | brownie wet | 1 |
 | brownie dry | 1 |
 | cookie dough, thick and scoopable, brown-sugar flavor | 1 |

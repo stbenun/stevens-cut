@@ -7,8 +7,8 @@ section of CLAUDE.md that had gone quietly wrong by the time anyone noticed.
 
 | | |
 |---|---|
-| app | `index.html`, 941,089 bytes, 11,480 lines, one file |
-| build | `b1788892686` |
+| app | `index.html`, 945,220 bytes, 11,502 lines, one file |
+| build | `b1788897345` |
 | foods on the price list | 211 |
 | provenance | 114 USDA · 67 label · 28 derived · 2 unverified |
 
@@ -19,8 +19,8 @@ carries a hand-typed copy of its macros. The second kind is the one that can be 
 
 | | rows | |
 |---|---:|---|
-| priced from FOOD_FACTS | **247** | 81% of 306 |
-| deliberately zero (`{free:1}`) | 55 | spices, rubs, a free garnish |
+| priced from FOOD_FACTS | **256** | 81% of 316 |
+| deliberately zero (`{free:1}`) | 56 | spices, rubs, a free garnish |
 | still hand-typed | **4** | ceiling 4, only ever falls |
 | broken | 0 | any number here fails the build |
 
@@ -62,6 +62,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b28#5` | Buffin + Greek Yogurt | 545 / 47 / 61 / 12 | +5 cal |
 | `bf/b28#6` | Buffin + Greek Yogurt | 545 / 46 / 57 / 14 | +5 cal |
 | `bf/b28#7` | Buffin + Greek Yogurt | 545 / 45 / 61 / 13 | +5 cal |
+| `lu/l11` | Cucumber-Apple-Date Salad | 580 / 51 / 64 / 15 | +5 cal |
 | `sn/s2` | Protein Cookie | 330 / 34 / 32 / 7 | +5 cal |
 | `bf/b7` | Cookies & Cream Bowl | 544 / 43 / 47 / 22 | +4 cal |
 | `bf/b28#0` | Buffin + Greek Yogurt | 544 / 56 / 55 / 10 | +4 cal |
@@ -103,7 +104,7 @@ moves — never the budget. `[slot-fit]` fails the build on anything more than 2
 | `bf/b24` | Red Velvet Bowl | 527 / 44 / 49 / 19 | -13 cal |
 | `pre/p4` | Ezekiel + Jelly | 179 / 8 / 39 / 1 | -21 cal · |
 
-**0 of 62 variants over budget.**
+**0 of 63 variants over budget.**
 
 ## Waiting on him
 
