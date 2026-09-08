@@ -74,6 +74,11 @@ const setup = `
        screen and the detail page, and none of the existing spellings can express it. */
     if(FV_.indexOf('fact:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, fact: FV_.slice(5)==='new' ? true : FV_.slice(5)});
     else if(FV_.indexOf('sel:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, sel:FV_.slice(4).split(',')});
+    /* --fv 'rev:a,b,c' opens the REVIEW SELECTED ITEMS page on those foods — the fourth view state,
+       added 2026-09-08 with the page itself. sel: shows the ticked rows at the head of the LIST;
+       this shows the page the counted REVIEW button opens, and they have different widths to get
+       wrong (the page has no ★ column pressure from 200 unticked rows below it). */
+    else if(FV_.indexOf('rev:') === 0) fvSet({slot:SLOT_, tab:'all', q:'', pick:null, review:true, sel:FV_.slice(4).split(',')});
     else if(tabs.indexOf(FV_) >= 0) fvSet({slot:SLOT_, tab:FV_, q:'', pick:null});
     else                       fvSet({slot:SLOT_, tab:'all', q:'', pick:FV_, amt:null, unit:null});
     current = 'meals';

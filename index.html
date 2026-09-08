@@ -392,12 +392,29 @@
   .fv-c.on{border-color:var(--brass);background:var(--brass);color:var(--brass-ink)}
   /* ⛔ bottom:86px, not 0. The tab bar is position:fixed over the last ~80px of the viewport, so a
      bar stuck to the bottom would sit UNDER it and read as missing. */
-  .fvbar{position:sticky;bottom:86px;z-index:5;margin-top:14px;padding-top:10px}
+  .fvbar{position:sticky;bottom:86px;z-index:5;margin-top:14px;padding-top:10px;display:flex;gap:8px}
+  .fvrev{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:15px 14px;border:0;
+         border-radius:12px;background:var(--panel2);color:var(--text);font-weight:800;font-size:12.5px;
+         letter-spacing:.04em;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+  .fvrev-n{display:flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+           border-radius:99px;background:var(--brass);color:var(--brass-ink);font-size:11.5px;
+           font-weight:800;letter-spacing:0}
   .fvadd-c{opacity:.72;font-weight:700;margin-left:8px;letter-spacing:0}
-  .fvadd{width:100%;padding:15px;border:0;border-radius:12px;background:var(--brass);
+  /* on its own line the chip needs no left margin — it is first, not appended to the label */
+  .fvadd-m{display:block;margin-top:3px;font-family:var(--mono);font-size:11.5px;font-weight:700;
+           opacity:.72;letter-spacing:0}
+  .fvadd-m .fvadd-c{margin-left:0;opacity:1}
+  .fvadd{flex:1 1 auto;min-width:0;width:100%;padding:15px;border:0;border-radius:12px;background:var(--brass);
          color:var(--brass-ink);font-weight:800;font-size:15px;letter-spacing:.04em;
          box-shadow:0 6px 20px rgba(0,0,0,.45)}
   .fvrow .fv-s{grid-area:2/1/3/3;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+  /* a ticked row's numbers: same slot, same size, brighter — it is the line he is checking.
+     ⛔ A CLASS OF ITS OWN, not .fv-s with a modifier: [food-log] reads a list row's numbers by
+     scanning for fv-s, and a ticked row carrying four macros must not be what that finds. */
+  .fvrow .fv-s2{grid-area:2/1/3/3;font-size:11.5px;color:var(--text);font-family:var(--mono)}
+  /* the ticked block at the head of the list gets a hairline under it, so "these are the ones you
+     picked" is visible without a second container around them */
+  .fvrow.fv-last{border-bottom:2px solid var(--brass)}
   /* ⛔ NOT SCOPED TO .fvrow. The detail page's star sits in .fvtitle, so a .fvrow-scoped rule left
      it inheriting the title colour — every food looked already-favourited on its own screen. */
   .fv-f{color:var(--line);font-size:15px}
@@ -1688,16 +1705,28 @@ function wireRowEdit(ld){
         openAcc.add('dg-'+slot); fvClose(); render();
       }));
     }); }
-  /* ⛔ THE STAR MUST NOT OPEN THE FOOD. It sits inside the row button, so without stopPropagation
-     every favourite tap would also navigate to the detail page — two actions from one tap. */
-  document.querySelectorAll('[data-fvfav]').forEach(el=>el.addEventListener('click',ev=>{
-    ev.preventDefault(); ev.stopPropagation();
-    favToggle(el.dataset.fvfav); render();
-  }));
   /* ⛔ NAMED, BECAUSE THE LIST CAN BE REPLACED WITHOUT A RENDER. When he types in the search box we
      rewrite only .fvlist — the input itself must survive, or iOS drops the keyboard — and the new
      rows need their handlers back. One binder, called from both places. */
   function wireFvRows(){
+  /* ⛔ THE STAR MUST NOT OPEN THE FOOD. It sits inside the row button, so without stopPropagation
+     every favourite tap would also navigate to the detail page — two actions from one tap.
+     ⚠ MOVED IN HERE 2026-09-08. It was bound in the render pass, which typing does not run: one
+     keystroke replaces .fvlist and every ★ in the new rows was dead until the next full render.
+     Nothing said so — the tap simply did nothing. The detail page's star uses this same selector
+     and wireFvRows runs on every wiring pass, so it keeps working. */
+  document.querySelectorAll('[data-fvfav]').forEach(el=>el.addEventListener('click',ev=>{
+    ev.preventDefault(); ev.stopPropagation();
+    favToggle(el.dataset.fvfav); render();
+  }));
+  /* the counted REVIEW button, and ✕ back out of it. Bound HERE rather than in the render pass
+     because the bar is re-rendered on every keystroke, same reason as the rows. */
+  document.querySelectorAll('[data-fvreview]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({review:true, pick:null}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-fvreviewback]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({review:false}); render();
+  }));
   document.querySelectorAll('[data-fvpick]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({pick:b.dataset.fvpick, amt:null, unit:null}); render(); window.scrollTo(0,0);
   }));
@@ -6493,10 +6522,10 @@ function logAddFood(ld, slot, key, n, unit){
    search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
    on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
    pressed is, and that stays in the store. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null};
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null, review:false};
 function fvState(){ return FV; }
 function fvSet(p){ FV = Object.assign({}, FV, p); }
-function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null}; }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null, review:false}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);
@@ -6667,6 +6696,41 @@ function fvSpec(key, n, u){
   if(u === 'roll' && f && f.pc) return {f:key, n:n * f.pc, u:'each'};   /* rolls are stored as pieces */
   return (u && u !== f.unit) ? {f:key, n:n, u:u} : {f:key, n:n};
 }
+/* ⛔ ONE PLACE SAYS WHAT A TICK MEANS. Three derived it separately: the ADD bar summed its own
+   amounts, fvAddSelected resolved its own, and the ticked rows + the review page now PRINT them —
+   so the number he reads before tapping and the number that lands in the diary would come from
+   three copies of one rule. Those rows exist precisely so he can check the amount before
+   committing it, which makes a drift between them worse than showing no number at all. Same
+   argument as fvSpec, one function up. */
+function fvSelPick(k){
+  const u = fvUnits(k)[0], n = fvDefaultAmount(k, u);
+  return {k:k, n:n, u:u, m:fvMacros(k, n, u)};
+}
+function fvSelPicks(){
+  return (fvState().sel || []).filter(function(k){ return !!FOOD_FACTS[k]; }).map(fvSelPick);
+}
+function fvSelTotal(){
+  return fvSelPicks().reduce(function(a,p){
+    return [a[0]+p.m[0], a[1]+p.m[1], a[2]+p.m[2], a[3]+p.m[3]];
+  }, [0,0,0,0]);
+}
+/* ⭐ ALL FOUR MACROS, HIS ORDER — cal · P · C · F. Not cal + protein: a selection that fits on
+   calories and blows the fat is invisible in a two-number line, and this is the line he checks a
+   bulk add against. His ask, 2026-09-08: "have it say how the cals, macros, and amount of how much
+   i selected there in its box." */
+function fvMacLine(m){
+  return Math.round(m[0]) + ' cal · ' + Math.round(m[1]) + 'P · '
+       + Math.round(m[2]) + 'C · ' + Math.round(m[3]) + 'F';
+}
+/* one ticked row, printed the same way wherever it appears — the list and the review page both
+   call this rather than each spelling out the markup. */
+function fvSelRowHTML(p, F, last){
+  return '<button class="fvrow' + (last ? ' fv-last' : '') + '" data-fvpick="' + esc(p.k) + '">'
+    + '<span class="fv-n">' + esc(p.k) + '</span>'
+    + '<span class="fv-s2">' + p.n + ' ' + esc(p.u) + ' · ' + fvMacLine(p.m) + '</span>'
+    + '<span class="fv-f' + (F.indexOf(p.k)>=0?' on':'') + '" data-fvfav="' + esc(p.k) + '">★</span>'
+    + '<span class="fv-c on" data-fvsel="' + esc(p.k) + '">✓</span></button>';
+}
 /* ---- page 1: search ---- */
 /* ⛔ THREE PIECES, ON PURPOSE. The page SHELL holds the search input, and while he is typing that
    element must not be replaced — iOS closes the keyboard the moment a focused element leaves the
@@ -6717,6 +6781,18 @@ function fvListHTML(ld){
       else { const u = foodUseCounts(); keys = keys.filter(k=>(u[k]||0) > 0); favAuto = true; }
     }
     const sel = st.sel || [];
+    /* ⭐ TICKED FOODS SORT TO THE TOP OF THIS LIST. His instruction, 2026-09-08, off the app he
+       showed me: the selected items ride at the head of the same list, still checked, instead of
+       staying wherever the search left them. IN PLACE, not in a box of their own — he pointed at a
+       list that reorders, and a second container would be a different thing that merely resembles
+       it. The review page behind the REVIEW button is where the boxed-up version lives.
+       ⛔ AND THEY RIDE THE QUERY OUT. A selection the current query does not match still shows, so
+       typing one letter cannot make four ticked foods vanish while the bar goes on counting them. */
+    const pinned = sel.filter(function(k){ return !!FOOD_FACTS[k]; });
+    const nMatch = keys.length;
+    const rest = keys.filter(function(k){ return pinned.indexOf(k) < 0; });
+    const lastPin = rest.length ? pinned[pinned.length - 1] : null;
+    keys = pinned.concat(rest);
     list = keys.map(k=>{
       /* ⛔ ONE UNIT, USED FOR ALL THREE OF: the amount, the label, and the price. This line took the
          amount from his typical unit and then labelled and priced it in the FACT's unit, so banana
@@ -6724,13 +6800,21 @@ function fvListHTML(ld){
          were wrong. The unit is resolved once, above, and everything downstream uses that. */
       const uu = fvUnits(k)[0];
       const n = fvDefaultAmount(k, uu), m = fvMacros(k, n, uu);
+      /* ⭐ A TICKED ROW CARRIES ALL FOUR MACROS AND ITS AMOUNT; an unticked one stays cal-only. The
+         list is 200 rows long and four numbers on every row is noise — the numbers appear on the
+         rows he is actually about to commit. */
+      if(sel.indexOf(k) >= 0) return fvSelRowHTML(fvSelPick(k), F, k === lastPin);
       return '<button class="fvrow" data-fvpick="' + esc(k) + '">'
         + '<span class="fv-n">' + esc(k) + '</span>'
         + '<span class="fv-s">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'
         + '<span class="fv-f' + (F.indexOf(k)>=0?' on':'') + '" data-fvfav="' + esc(k) + '">★</span>'
-        + '<span class="fv-c' + (sel.indexOf(k)>=0?' on':'') + '" data-fvsel="' + esc(k) + '">✓</span></button>';
+        + '<span class="fv-c" data-fvsel="' + esc(k) + '">✓</span></button>';
     }).join('');
-    if(!list) list = '<div class="sub" style="padding:14px 2px">Nothing on the price list matches that. '
+    /* ⛔ nMatch, NOT list. The ticked rows are appended above regardless of the query, so an empty
+       result now still renders rows — printing nothing would leave him staring at four foods with
+       no explanation of why his search found nothing, and printing the message INSTEAD of them
+       would drop the selection off the screen. Both, in that order. */
+    if(!nMatch) list += '<div class="sub" style="padding:14px 2px">Nothing on the price list matches that. '
       + 'Tell Claude the brand and he will add it.</div>';
     else if(favAuto) list = '<div class="sub" style="padding:8px 2px">You have not starred anything yet, '
       + 'so these are the foods you log most. Tap a ★ to pin your own.</div>' + list;
@@ -6738,6 +6822,39 @@ function fvListHTML(ld){
   /* the bar exists only when something is ticked — an ADD button with nothing to add is a dead
      control, and it would sit over the list on every single render. */
   return list;
+}
+/* ==== REVIEW SELECTED ITEMS — the page behind the counted button ==========================
+   His instruction, 2026-09-08, with two screenshots of another tracker: "i like how this app does
+   it. make my app do this." What that app does is a REVIEW ITEMS button carrying the count, opening
+   a sheet that lists only what is ticked, with each amount, and adds from there.
+   ⛔ WHAT IT DOES NOT COPY: that sheet prints a source tag and no numbers at all. His own ask two
+   messages earlier was the numbers — so every row here carries its amount and all four macros, and
+   the page totals them against the slot's budget. The shape is theirs; the content is his.
+   It is a PAGE, not a modal over the list: the picker is already a full-screen page in this app and
+   every other step of it (a food, a dish, the fact editor) is one too. A sheet would be a fourth
+   disclosure mechanism for the sake of matching a screenshot. */
+function fvReviewHTML(ld){
+  const st = fvState(), F = favs();
+  const picks = fvSelPicks();
+  /* untick the last one from in here and there is nothing to review — fall back rather than
+     stranding him on an empty page whose only control is ✕ */
+  if(!picks.length) return fvSearchHTML(ld);
+  const slot = SLOTS.find(function(s){ return s.key === st.slot; });
+  const t = fvSelTotal();
+  const d = slot ? Math.round(t[0]) - slot.b[0] : null;
+  return '<div class="fvpage">'
+    + '<div class="fvhead"><button class="fvx" data-fvreviewback="1">✕</button>'
+    + '<span class="fvtitle">Review selected items</span></div>'
+    + '<div class="fvsub">' + picks.length + ' item' + (picks.length===1?'':'s')
+    + (slot ? ' → <b>' + esc(slot.slot) + '</b> · <span class="mono">' + (d>=0?'+':'') + d
+              + '</span> vs its ' + slot.b[0] + ' budget' : '') + '</div>'
+    + picks.map(function(p){ return fvSelRowHTML(p, F); }).join('')
+    + macros(t.map(Math.round))
+    + '<button class="fvsave" data-fvaddsel="1">ADD ' + picks.length + ' TO '
+    + esc(slot ? slot.slot.toUpperCase() : 'DIARY') + '</button>'
+    + '<div class="sub" style="margin:8px 2px 0">Tap a row to change its amount before adding. '
+    + 'The ✓ takes it back off the list.</div>'
+    + '</div>';
 }
 function fvBarHTML(){
   const st = fvState();
@@ -6747,14 +6864,18 @@ function fvBarHTML(){
      eaten — so the number goes on the button instead, and an absurd one is obvious before he taps.
      Same rule as the cross-slot delta: the cost is visible before the commit, not after. */
   const nSel = (st.sel||[]).length;
-  let selCal = 0;
-  (st.sel||[]).forEach(function(k){
-    if(!FOOD_FACTS[k]) return;
-    const uu = fvUnits(k)[0];
-    selCal += fvMacros(k, fvDefaultAmount(k, uu), uu)[0] || 0;
-  });
-  const bar = nSel ? '<div class="fvbar"><button class="fvadd" data-fvaddsel="1">ADD ' + nSel
-    + ' TO DIARY <span class="fvadd-c">' + Math.round(selCal) + ' cal</span></button></div>' : '';
+  const t = fvSelTotal();
+  /* ⛔ THE NUMBERS GO ON THEIR OWN LINE. At 390 px the first line is already "ADD 3 TO DIARY", and
+     this bar now holds a second button beside it; four numbers pushed into the same row is the
+     squeeze that once made a card title render as "..." with its chip stacked one letter per line.
+     A full-width span is a DETERMINISTIC break — CLAUDE.md's own prescription — rather than a bet
+     on how flex will divide the row. */
+  const bar = nSel ? '<div class="fvbar">'
+    + '<button class="fvrev" data-fvreview="1"><span class="fvrev-n">' + nSel + '</span>REVIEW</button>'
+    + '<button class="fvadd" data-fvaddsel="1">ADD ' + nSel + ' TO DIARY'
+    + '<span class="fvadd-m"><span class="fvadd-c">' + Math.round(t[0]) + ' cal</span> · '
+    + Math.round(t[1]) + 'P · ' + Math.round(t[2]) + 'C · ' + Math.round(t[3]) + 'F</span>'
+    + '</button></div>' : '';
   return bar;
 }
 function fvSearchHTML(ld){
@@ -6849,7 +6970,9 @@ function fvDetailHTML(ld){
 function fvSelToggle(k){
   const sel = (FV.sel||[]).slice(), i = sel.indexOf(k);
   if(i < 0) sel.push(k); else sel.splice(i, 1);
-  fvSet({sel: sel});
+  /* ⛔ THE REVIEW PAGE CANNOT OUTLIVE THE SELECTION. Unticking the last row there leaves a page
+     with nothing on it and a bar that no longer renders, so the state goes with it. */
+  fvSet({sel: sel, review: sel.length ? FV.review : false});
   return sel.length;
 }
 /* ⛔ EVERY SELECTED FOOD GOES IN AT ITS OWN DEFAULT, IN ITS OWN UNIT. This is the bulk path: it is
@@ -6858,11 +6981,13 @@ function fvSelToggle(k){
    logAddFood rather than building the rows here keeps the row-spec rule in exactly one place. */
 function fvAddSelected(ld){
   const st = fvState(); if(!st.slot) return 0;
-  const sel = (st.sel||[]).filter(k=>FOOD_FACTS[k]);
+  const sel = fvSelPicks();
   let n = 0;
-  sel.forEach(function(k){
-    const u = fvUnits(k)[0];
-    if(logAddFood(ld, st.slot, k, fvDefaultAmount(k, u), u)) n++;
+  sel.forEach(function(p){
+    /* ⛔ fvSelPick, NOT a fresh fvUnits/fvDefaultAmount pair. This function and the ticked rows
+       log-and-print the same tick; two derivations of one amount is how a row could read 155 g
+       while the diary took 100, with nothing on screen to say which one was lying. */
+    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;
   });
   if(n) fvSet({sel: []});
   return n;
@@ -7020,7 +7145,11 @@ function foodPageHTML(ld){
   if(!st.slot) return '';
   if(st.fact) return fvFactHTML(ld);
   if(st.dish) return fvDishHTML(ld);
-  return st.pick ? fvDetailHTML(ld) : fvSearchHTML(ld);
+  /* ⛔ pick BEFORE review, deliberately: tapping a row on the review page opens that food's amount
+     screen, and ✕ there clears pick and lands back on the review page rather than the list. */
+  if(st.pick) return fvDetailHTML(ld);
+  if(st.review) return fvReviewHTML(ld);
+  return fvSearchHTML(ld);
 }
 
 
@@ -8770,14 +8899,32 @@ function diaryHTML(ld){
       : items.length ? items.slice(0,3).map(function(i){ return i.label; }).join(', ')
                        + (items.length > 3 ? ' +' + (items.length-3) + ' more' : '')
       : '';
-    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P'
+    /* ⭐ ALL FOUR MACROS ON THE COLLAPSED ROW. His ask, 2026-09-08: "i want to be able to see what
+       my macros and cals were per meal so put it in the section of the meal." Every section starts
+       closed, so this badge is the only number a closed meal shows — cal + protein alone hid a meal
+       that landed on calories and blew its fat. An empty slot still shows its budget instead. */
+    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P · '
+                               + Math.round(t[2]) + 'C · ' + Math.round(t[3]) + 'F'
                              : '<span class="dg-b">' + s.b[0] + '</span>';
+    /* ⛔ macros() IS THE LIBRARY'S OWN TOTALS RENDERER — the one every recipe card uses. A second
+       one here would be two spellings of one row, which is the bug this file exists to delete.
+       The vs-budget line under it is per macro, because s.b is [cal,P,C,F] and a slot that lands on
+       calories by trading 12 g of protein for fat is exactly the case four numbers are FOR. */
+    const dv = s.b.map(function(b, i){ return Math.round(t[i]) - b; });
+    const sgn = function(v){ return (v >= 0 ? '+' : '') + v; };
+    const totalRow = items.length
+      ? macros(t.map(Math.round))
+        + '<div class="sub" style="margin-top:5px">vs the ' + esc(s.slot.toLowerCase())
+        + ' budget — <span class="mono">' + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · '
+        + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'
+      : '';
     return '<details class="acc dgroup' + (skip?' skipped':'') + '" data-acc="dg-' + s.key + '"'
       + (openAcc.has('dg-'+s.key)?' open':'') + '>'
       + '<summary><span class="dg-n">' + s.slot + (sub ? '<span class="dg-s">' + esc(sub) + '</span>' : '') + '</span>'
       + '<span class="dg-v">' + val + '</span></summary>'
       + '<div class="dg-body">'
       + items.map(function(i){ return diaryItemHTML(s.key, i); }).join('')
+      + totalRow
       /* ⛔ ONE BUTTON, NOT TWO MORE ACCORDIONS. The food search and the meal picker were both
          <details> inside this one, so adding a food took four levels of disclosure. They are a PAGE
          now — ＋ opens it, and 'Your dishes' inside it is where the meals went. */
@@ -11227,7 +11374,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788823468';
+const BUILD = 'b1788876141';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

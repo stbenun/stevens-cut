@@ -657,3 +657,37 @@ restated here because a number copied into a document goes stale.
 His decision replaces the date with a weight. **It has left no stopping condition on the biological
 side except the two above, and no revised deadline.** Ask him for a floor — a date, a marker, or both —
 rather than running an open-ended deficit with the only exit being a number on a scale.
+
+## 2026-09-08 — the ticked foods ride at the top, and every meal shows all four macros
+
+**His words:** *"i want the already selected foods to show up first here (checked off of course) and
+have it say how the cals, macros, and amount of how much i selected there in its box"* — then, with two
+screenshots of another tracker: *"i like how this app does it. make my app do this."*
+
+**What he pointed at**, and what was built from it: that app sorts the ticked rows to the head of the
+SAME list rather than boxing them off, and puts a counted **REVIEW ITEMS** button beside ADD TO DIARY
+which opens a sheet holding only the selection. Both are in now — as a page rather than a sheet, because
+the picker is already a full-screen page in this app and every step of it (a food, a dish, the fact
+editor) is one too; a sheet would have been a fourth disclosure mechanism bought for a screenshot.
+
+**⛔ WHAT WAS DELIBERATELY NOT COPIED.** That app's review sheet prints a source tag and *no numbers at
+all* — no amount total, no macros. His own ask one message earlier was the numbers. So the shape is
+theirs and the content is his: every ticked row carries its amount and **cal · P · C · F**, and the
+review page totals them against the slot budget. Where the two conflicted, his ask won.
+
+**Two decisions inside it that are mine and should be reversed if he disagrees:**
+- **An unticked row stays cal-only.** The list runs to 203 foods and four numbers on every row is
+  noise; the numbers appear on the rows he is about to commit.
+- **A ticked food rides the query out.** It stays at the top even when the current search does not
+  match it, so typing one letter cannot make four ticked foods vanish while the bar still counts them.
+
+**And the second half of the ask, on the diary:** *"i want to be able to see what my macros and cals
+were per meal so put it in the section of the meal."* The collapsed meal row was cal + protein; it is
+all four now, and opening a meal gives a TOTAL line plus the per-macro trade against that slot's budget.
+Every section starts closed, so that badge is the only number a closed meal shows — cal + protein hid a
+meal that landed on calories and blew its fat, which is exactly the case he asked to be able to see.
+
+**Guarded, not asserted:** six new plants in `check-app.plant.js` and clauses in [food-log] and
+[log-shape] that check the printed numbers against `fvSelPick` and against what he actually ate,
+rather than checking that the markup exists. Measured at 390 px with `tools/mkpreview.js` (and 430;
+at 320 the diary badge stacks under the meal name, which is below any width he owns).

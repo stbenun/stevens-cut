@@ -2011,11 +2011,23 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       const before = expandSlot; expandSlot = 'bf'; render();
       const grp = (document.body.innerHTML.match(/data-acc="dg-bf"[\\s\\S]*?<\\/summary>/)||[''])[0];
       expandSlot = before;
-      const shown = (grp.match(/class="dg-v">(\\d+) · (\\d+)P/)||[]);
-      if(!shown.length) bad.push('could not read the bf group header — clause (i) is vacuous');
-      else if(+shown[1] !== want[0] || +shown[2] !== want[1])
-        bad.push('the group header prints ' + shown[1] + ' · ' + shown[2] + 'P but he ate ' + want[0] + ' · ' + want[1] + 'P');
+      /* ⭐ ALL FOUR, since 2026-09-08 — his ask: "see what my macros and cals were per meal".
+         Every section starts closed, so this badge is the only number a closed meal shows. */
+      const shown = (grp.match(/class="dg-v">(\\d+) · (\\d+)P · (\\d+)C · (\\d+)F/)||[]);
+      if(!shown.length) bad.push('could not read all four macros off the bf group header — clause (i) is vacuous');
+      else { const got = [+shown[1], +shown[2], +shown[3], +shown[4]];
+        if(got.join('/') !== want.join('/'))
+          bad.push('the group header prints ' + got.join(' · ') + ' but he ate ' + want.join(' · ')); }
       if(grp && !/elev8 cor/.test(grp)) bad.push('the group header does not name the FOODS in it: ' + grp.slice(0,140));
+      /* and the OPEN meal carries the total plus the per-macro trade against the slot's budget */
+      { const body = (document.body.innerHTML.match(/data-acc="dg-bf"[\\s\\S]*?<\\/details>/)||[''])[0];
+        const tot = (body.match(/class="totals"><span><b>(\\d+)<\\/b> kcal/)||[])[1];
+        if(tot == null) bad.push('the open meal has no TOTAL line');
+        else if(+tot !== want[0]) bad.push('the meal TOTAL says ' + tot + ' but he ate ' + want[0]);
+        const sb = (SLOTS.filter(function(x){ return x.key === 'bf'; })[0] || {b:[0]}).b;
+        const dd = want[0] - sb[0];
+        if(body.indexOf((dd>=0?'+':'') + dd + ' cal · ') < 0)
+          bad.push('the open meal does not print its delta against the ' + sb[0] + ' budget'); }
     }
 
     store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
@@ -2304,12 +2316,79 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       if(!/ADD 2 TO DIARY/.test(p4)) bad.push('the ADD bar does not say how many are selected');
       {
         const shown = +((p4.match(/fvadd-c">(\\d+) cal/)||[])[1] || -1);
-        let want = 0;
+        let want = [0,0,0,0];
         ['elev8 cor','mixed berries'].forEach(function(k){
-          const uu = fvUnits(k)[0]; want += fvMacros(k, fvDefaultAmount(k, uu), uu)[0];
+          const uu = fvUnits(k)[0], mm = fvMacros(k, fvDefaultAmount(k, uu), uu);
+          want = want.map(function(v,i){ return v + mm[i]; });
         });
-        if(shown !== Math.round(want))
-          bad.push('the ADD bar shows ' + shown + ' cal but the selection is ' + Math.round(want));
+        if(shown !== Math.round(want[0]))
+          bad.push('the ADD bar shows ' + shown + ' cal but the selection is ' + Math.round(want[0]));
+        /* ⭐ AND THE MACROS, 2026-09-08. A selection that fits on calories and blows the fat was
+           invisible on the old cal-only bar. */
+        const wm = Math.round(want[1]) + 'P · ' + Math.round(want[2]) + 'C · ' + Math.round(want[3]) + 'F';
+        if(p4.indexOf(wm) < 0) bad.push('the ADD bar does not print the selection macros (' + wm + ')');
+      }
+      /* ==== HIS INSTRUCTION, 2026-09-08, with two screenshots of another tracker: "i like how this
+         app does it. make my app do this." The ticked foods ride at the TOP of the same list, still
+         checked, each printing the amount and all four macros the add will actually commit — and a
+         counted REVIEW button opens a page holding only them.
+         ⛔ NEARLY EVERY CLAUSE HERE IS ABOUT A NUMBER OR AN ORDER rather than about markup being
+         present: the failure it defends against is a row that looks right and prices something
+         else, which is the class that has cost him real accuracy twice. */
+      {
+        const sf = [];
+        const pos = function(k){ return p4.indexOf('data-fvpick="' + k + '"'); };
+        const TICK = ['elev8 cor','mixed berries'];
+        /* ① order: every ticked food sits above every unticked one */
+        if(TICK.map(pos).some(function(x){ return x < 0; })) sf.push('a ticked food is not in the list at all');
+        else {
+          const un = foodSearch('', 60).filter(function(k){ return TICK.indexOf(k) < 0 && pos(k) >= 0; });
+          const worst = Math.max.apply(null, TICK.map(pos));
+          const above = un.filter(function(k){ return pos(k) < worst; });
+          if(above.length) sf.push(above.length + ' unticked food(s) sit above a ticked one: ' + above.slice(0,3).join(', '));
+          if(!un.length) sf.push('nothing unticked rendered — the ordering clause ran vacuous');
+        }
+        /* ② a ticked food appears ONCE. Pinning it while leaving it in the list would put one food
+           on screen twice with two ticks that have to agree. */
+        TICK.forEach(function(k){
+          const n = p4.split('data-fvpick="' + k + '"').length - 1;
+          if(n !== 1) sf.push(k + ' renders ' + n + ' times, not once');
+        });
+        /* ③ the ticked row prints the amount and all four macros fvSelPick resolved — the same
+           values fvAddSelected logs. Asserted against fvSelPick, not against a literal, so the
+           clause cannot go stale when his median amount for a food moves. */
+        TICK.forEach(function(k){
+          const p = fvSelPick(k);
+          const wantRow = p.n + ' ' + p.u + ' · ' + fvMacLine(p.m);
+          const at = pos(k), row = p4.slice(at, p4.indexOf('</button>', at));
+          const si = row.indexOf('fv-s2">');
+          const said = si < 0 ? '(no numbers at all)' : row.slice(si + 7, row.indexOf('<', si + 7));
+          if(said !== wantRow) sf.push('the ticked row for ' + k + ' says "' + said + '" but the add will log "' + wantRow + '"');
+          if(row.indexOf('fv-c on') < 0) sf.push(k + ' is selected but its box is not ticked');
+        });
+        /* ④ the REVIEW button carries the count, and its page lists ONLY the ticked foods, totals
+           them, and adds through the same fvAddSelected the bar uses */
+        if(!/data-fvreview/.test(p4)) sf.push('the bar offers no way to review the selection');
+        if(p4.indexOf('fvrev-n">2<') < 0) sf.push('the REVIEW button does not carry the count');
+        fvSet({review:true});
+        const rv = foodPageHTML(D);
+        if(!/Review selected items/.test(rv)) sf.push('the REVIEW button does not open a review page');
+        TICK.forEach(function(k){
+          if(rv.indexOf('data-fvpick="' + k + '"') < 0) sf.push('the review page is missing ' + k);
+        });
+        { const stray = foodSearch('', 60).filter(function(k){
+            return TICK.indexOf(k) < 0 && rv.indexOf('data-fvpick="' + k + '"') >= 0; });
+          if(stray.length) sf.push('the review page lists ' + stray.length + ' food(s) he never ticked'); }
+        { const rt = (rv.match(/class="totals"><span><b>(\\d+)<\\/b> kcal/)||[])[1];
+          if(rt == null) sf.push('the review page shows no total');
+          else if(+rt !== Math.round(fvSelTotal()[0]))
+            sf.push('the review page totals ' + rt + ' but the selection is ' + Math.round(fvSelTotal()[0])); }
+        if(!/data-fvaddsel/.test(rv)) sf.push('the review page cannot add what it is reviewing');
+        /* ⑤ and it dies with the selection rather than stranding him on an empty page */
+        fvSelToggle('elev8 cor'); fvSelToggle('mixed berries');
+        if(fvState().review) sf.push('the review page outlived the selection');
+        fvSet({review:false, sel:TICK.slice()});
+        if(sf.length) bad.push(sf.length + ' selection fault(s): ' + sf.join(' | '));
       }
       /* it must actually add BOTH, at his own amounts, through the button's own function */
       {
@@ -2421,7 +2500,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('food-log', 'an empty slot takes foods with no meal behind them, four of them append to one ' +
     'entry (' + r.t + '), a per-gram food added by count logs as PIECES, the slot opens a food PAGE with ' +
     'All / Favorites / Your dishes, the food screen asks amount + serving size + group and SAVEs the unit ' +
-    'it showed, no food opens at an absurd default, and the diary lines stay editable');
+    'it showed, no food opens at an absurd default, the diary lines stay editable, and a ticked food ' +
+    'sorts to the TOP of the list exactly once printing the amount and all four macros the add will ' +
+    'commit, with a counted REVIEW page holding only the selection and dying with it');
 }
 
 /* ==== [gen-build] — mode ② of the generator: foods in, a solved plate out ====================
