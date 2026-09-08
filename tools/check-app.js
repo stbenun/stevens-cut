@@ -2101,9 +2101,18 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
        that left. A guard whose sense reverses is a guard that has to be re-read, not re-pointed. */
     current = 'today'; render();
     const t = document.body.innerHTML;
-    ['log-hydr','log-dials','log-stack'].forEach(a=>{
+    ['log-dials','log-stack'].forEach(a=>{
       if(!new RegExp('data-acc="' + a + '"').test(t)) bad.push('Today lost ' + a);
     });
+    /* ⭐ HYDRATION IS ONE UI AND IT LIVES IN THE DIARY — his instruction 2026-09-08: "hydration is in
+       2 places. keep the one in the Diary card." log-hydr used to be in the list above; it was a
+       second full hydration accordion in the log card, steppers and all. Asserted as a COUNT rather
+       than an absence, because the failure he reported is the duplicate EXISTING, and "log-hydr is
+       gone" would not catch a third copy appearing somewhere else. */
+    { const waterUIs = (t.match(/data-acc="dg-water"/g) || []).length
+                     + (t.match(/data-acc="log-hydr"/g) || []).length;
+      if(waterUIs !== 1) bad.push('Today shows ' + waterUIs + ' hydration UIs — he asked for exactly one, in the diary');
+      if(!/data-acc="dg-water"/.test(t)) bad.push('the one hydration UI is not the diary water group'); }
     if(!/data-acc="genfit"/.test(t) || !/data-acc="genbuild"/.test(t))
       bad.push('the generator cards are not on Today — the merge was supposed to bring them');
     /* ⛔ ON A DAY HE ACTUALLY LIFTS. liftZoneHTML returns '' on a rest day, and the probe boots on a
@@ -2150,7 +2159,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   }
   if (bad.length) fail('meals-hub', bad.length + ' fault(s): ' + bad.join(' | '));
   else ok('meals-hub', 'ONE tab holds the day: the hero, the diary, a way into the food page, editable ' +
-    'food lines and both generators, with no diary group nesting another accordion; hydration, dials ' +
+    'food lines and both generators, with no diary group nesting another accordion; hydration lives ONCE and in the diary, dials ' +
     'and the stack are still there; the lift cards have moved to Train and liftZoneHTML renders them ' +
     'there; and the dispatch wires today, with no branch left pointing at the retired Meals tab');
 }
@@ -3144,8 +3153,11 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
      wrong reason on an unrelated plant — a proxy, not the claim. The claim is that every place
      which shows the day's ounces gets them from the helper: the hero, the diary badge and the
      hydration card each assign it the same way. */
+  /* ⚠️ TWO READOUTS SINCE 2026-09-08, not three: the log card's Hydration accordion was deleted on
+     his instruction, and the consts that fed it went with it. What remains is the hero and the diary
+     badge, and they must still take the same number from the same helper. */
   const views = (src.match(/const oz = drinksOz\(drinks\);/g) || []).length;
-  if (views !== 3) bad.push(views + ' of the 3 ounce readouts use drinksOz — the hero, the diary badge and the hydration card must all take the same number');
+  if (views !== 2) bad.push(views + ' of the 2 ounce readouts use drinksOz — the hero and the diary badge must take the same number');
   /* ⚠️ THE MINUS CONTROL IS CHECKED ON THE RENDERED PAGE TOO, not only here — an earlier version of
      this clause asked SOURCE for data-dozq="-8", which is assembled at runtime, and so failed on
      correct code. Same [time-picker] lesson, one screen up.
@@ -3155,12 +3167,13 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
      is unchanged: any amount, either direction, in both places. */
   if (!/data-ozgo="-1"/.test(src)) bad.push('nothing renders a subtract control — he can only add ounces again');
   if (!/class="ozn"/.test(src)) bad.push('the oz control has no amount input, so "as many oz as i want" is not expressible');
-  /* ⚠️ THE TWO CALL SITES BY THEIR SYNTAX, not the bare name — counting the name reads 3, because
-     the function DEFINITION matches too, and the first version of this clause failed on correct
-     code for exactly that. The diary's water group concatenates the control; the Hydration card
-     interpolates it. Those two forms are the two callers. */
-  if (!/\+ ozRowsHTML\(drinks\)/.test(src) || !/\$\{ozRowsHTML\(drinks\)\}/.test(src))
-    bad.push('the oz control is not rendered from one function in both places — a control added to one would miss the other');
+  /* ⚠️ ONE CALL SITE SINCE 2026-09-08, and that is the point of the change: the control is rendered
+     in the diary's water group and nowhere else. Counted, not merely required, so a second hydration
+     UI reappearing FAILS here too — the duplicate is the defect he reported. The definition's own
+     text is excluded by matching the concatenation form. */
+  const ozCalls = (src.match(/\+ ozRowsHTML\(drinks\)/g) || []).length
+                + (src.match(/\$\{ozRowsHTML\(drinks\)\}/g) || []).length;
+  if (ozCalls !== 1) bad.push('the oz control renders from ' + ozCalls + ' place(s) — he asked for exactly one, in the diary');
   /* ⛔ AND NOT BY id. The box renders twice; #ozAdd would collide and one of the two would be dead. */
   if (/id="ozAdd"|id="ozAddBtn"|id="ozSubBtn"/.test(src))
     bad.push('the oz control is back on ids — it renders in two places and duplicate ids leave one set dead');
@@ -3176,11 +3189,14 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     current = 'today'; render();
     const html = document.body.innerHTML;
     const badge = (html.match(/class="dg-v">(\\d+) \\/ (\\d+) oz/) || [])[1];
-    const card  = (html.match(/<b>(\\d+)<\\/b>\\/(\\d+) oz/) || [])[1];
+    /* ⚠️ THE SECOND READOUT IS THE HERO NOW. It used to be the log card's Hydration statline, and
+       that card is gone — so the two numbers that must agree on one screen are the hero's water
+       figure and the diary badge. Same claim, surviving readout. */
+    const hero  = (html.match(/class="gwater"><i style="width:[^"]*"><\\/i><\\/span>(\\d+)<small/) || [])[1];
     if(badge == null) bad.push('could not read the diary water badge — clause ① is vacuous');
-    if(card == null)  bad.push('could not read the hydration card total — clause ① is vacuous');
-    if(badge != null && card != null && badge !== card)
-      bad.push('the diary badge says ' + badge + ' oz and the hydration card says ' + card + ' — one day, two numbers');
+    if(hero == null)  bad.push('could not read the hero water figure — clause ① is vacuous');
+    if(badge != null && hero != null && badge !== hero)
+      bad.push('the diary badge says ' + badge + ' oz and the hero says ' + hero + ' — one day, two numbers');
     if(badge != null && +badge !== want)
       bad.push('the badge says ' + badge + ' but the day is ' + want);
     /* the minus buttons must be ON SCREEN, and in BOTH renderers of the control — the diary's
@@ -3188,8 +3204,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
        exactly the failure the shared ozRowsHTML exists to prevent. */
     const minus = (html.match(/data-ozgo="-1"/g) || []).length;
     const boxes = (html.match(/class="ozn"/g) || []).length;
-    if(minus < 2) bad.push('only ' + minus + ' subtract control(s) on screen — the diary water group and the Hydration card should each have one');
-    if(boxes < 2) bad.push('only ' + boxes + ' oz input(s) on screen — one per renderer, or a control he was given is missing from where he actually looks');
+    /* EXACTLY ONE OF EACH: zero means he cannot subtract, two means the duplicate hydration UI he
+       asked to have removed is back. */
+    if(minus !== 1) bad.push(minus + ' subtract control(s) on screen — exactly one, in the diary, is what he asked for');
+    if(boxes !== 1) bad.push(boxes + ' oz input(s) on screen — exactly one, in the diary, is what he asked for');
+    /* ⭐ AND THE REASONING SURVIVED THE MOVE. ht.why is the only place the app says WHY the target is
+       not a flat gallon; it lived in the deleted card, and a number that moves with no reason
+       attached is what he calls noise. Asserted on a day the target actually flexes. */
+    if(hydrTarget(D).why.length && !/base gallon/.test(html))
+      bad.push('the target moved today and the diary does not say why — the ht.why note was lost with the card');
     /* ② − removes ounces that live in the BOTTLE counter, which the old zero clamp could not */
     /* ⛔ THE APP'S OWN FUNCTION, NOT A COPY OF IT. This clause used to reimplement the clamp,
        which meant it passed a planted defect that let the day go negative — it was testing the
@@ -3207,7 +3230,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   bad.push.apply(bad, r.bad);
   if (bad.length) fail('water-oz', bad.length + ' fault(s): ' + bad.join(' | '));
   else ok('water-oz', 'one ounce formula (' + views + ' readouts, ' + sums + ' copy of the sum), the diary badge ' +
-    'and the hydration card agree on a diet-soda day, − removes ounces logged as bottles, and the day floors at zero');
+    'and the hero agree on a diet-soda day, − removes ounces logged as bottles, the day floors at zero, and the why-note that explains a flexed target survived the card being deleted');
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');

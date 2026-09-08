@@ -548,6 +548,16 @@ const PLANTS = [
     /* the reason it is data-ozgo at all: the control renders twice and $('#id') finds one. */
     edits: [{ from: "        + '<button class=\"step\" data-ozgo=\"1\" aria-label=\"add that many ounces\">+</button>'",
               to:   "        + '<button class=\"step\" id=\"ozAddBtn\">+</button>'" }] },
+  { guard: 'water-oz', name: 'the why-note is lost when the hydration card is consolidated',
+    /* the real risk in deleting a duplicate UI: the copy being removed was not identical. ht.why
+       lived ONLY in the log card, and the flat-diary rewrite already lost the eat-time row this way. */
+    edits: [{ from: "    + (ht.why.length ? '<div class=\"note\" style=\"margin:2px 0 9px\">'",
+              to:   "    + (false ? '<div class=\"note\" style=\"margin:2px 0 9px\">" }] },
+  { guard: 'meals-hub', name: 'a second hydration UI comes back to the log card',
+    /* his complaint, 2026-09-08: "hydration is in 2 places." The guard must catch the duplicate
+       RETURNING, not just the survivor going missing. */
+    edits: [{ from: "    <details class=\"acc innerrow\" data-acc=\"log-dials\"",
+              to:   "    <details class=\"acc innerrow\" data-acc=\"log-hydr\"" }] },
   { guard: 'water-oz', name: 'the day is allowed to go negative',
     edits: [{ from: "  d.custom = Math.max(floor, (d.custom||0) + n);",
               to:   "  d.custom = (d.custom||0) + n;" }] },
