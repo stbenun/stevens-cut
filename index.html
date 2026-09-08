@@ -2672,6 +2672,16 @@ const FOOD_FACTS = {
   'pina colada protein': {unit:'g', cal:3.5484, p:0.8065, c:0.0645, f:0.0323, src:"Per gram, from the app's own half-serving row (15.5 g = 55/12.5/1/0.5) which is exactly half the PP_G scoop weight of 31 g. RAW brand, not Ryse. PP_G 31 g a scoop; the leanest per scoop at 110 cal. Fetched/derived Aug 18 2026."},
   'apple pie protein': {unit:'g', cal:3.8235, p:0.7353, c:0.0588, f:0.0735, src:"Per gram, from the app's own half-serving row (17 g = 65/12.5/1/1.25) which is exactly half the PP_G scoop weight of 34.1 g. RAW Grandma's Apple Pie. PP_G 34.1 g a scoop. Fetched/derived Aug 18 2026."},
   'strawberry shortcake protein': {unit:'g', cal:3.8012, p:0.731, c:0.0877, f:0.0731, src:"Per gram, from the app's own half-serving row (17.1 g = 65/12.5/1.5/1.25) which is exactly half the PP_G scoop weight of 34.2 g. Little Debbie Strawberry Shortcake Rolls collab; published 130 cal / 25 P a scoop, PP_G 34.2 g. Fetched/derived Aug 18 2026."},
+  /* ⭐ THE FOUR POWDERS THE FOOD LIST WAS MISSING — his question, 2026-09-08: "why aren't all the
+     protein powders in the food list?" The list is FOOD_FACTS, and a flavour only got a row when a
+     recipe needed to price it; these four existed only as scoop weights in PP_G, which labels grams
+     and does not feed the picker. Per GRAM = label ÷ the PP_G scoop weight, round-tripped back to
+     the label before being written. All four are MILK + SOY, no nuts (Birthday Cake's MCT is palm
+     kernel + coconut, which he eats). */
+  'milk chocolate protein': {unit:'g', cal:3.7838, p:0.6757, c:0.1081, f:0.0811, src:"Per gram, from his own tub label — Ryse Loaded Milk Chocolate, 37 g scoop = 140/25/4/3, photographed Aug 4 2026 and carried in the generic 'protein' row's provenance. Independently re-fetched Sept 8 2026 from published retail listings (Walmart / mynetdiary): 140 cal, 25 P, 4 C, 3 F per scoop — exact agreement with his label. PP_G Milk Chocolate 37 g. 27 servings, 2 g fiber, MILK + SOY, no nuts."},
+  'jet-puffed marshmallow protein': {unit:'g', cal:3.7143, p:0.7143, c:0.0857, f:0.0714, src:"Per gram, from his own tub label — Ryse Loaded x Jet-Puffed Marshmallow, 35 g scoop = 130/25/3/2.5, photographed Aug 6 2026 and carried in the generic 'protein' row's provenance. Independently re-fetched Sept 8 2026 (Amazon / mynetdiary listings): 130 cal, 25 P, 3 C, 2.5 F per scoop — exact agreement on macros. ⚠️ Those listings state a 33.9 g scoop against his label's 35 g; PP_G follows HIS tub, which is the one he scoops from. 1 g sugar, MILK + SOY, no nuts."},
+  'jet-puffed birthday cake protein': {unit:'g', cal:3.7356, p:0.7184, c:0.1149, f:0.0718, src:"Per gram, from his own tub label — Ryse Loaded x Jet-Puffed Birthday Cake, 34.8 g scoop = 130/25/4/2.5, photographed Aug 6 2026 and carried in the generic 'protein' row's provenance. Independently re-fetched Sept 8 2026 (fitia / eatthismuch / mynetdiary listings): 130 cal, 25 P, 4 C, 2.5 F at a 34.8 g scoop — exact agreement on both. Sprinkles are IN the powder (Carnival Blend Decorettes). MCT from palm kernel + coconut. MILK + SOY, no nuts."},
+  'blueberry muffin protein': {unit:'g', cal:4.0115, p:0.7163, c:0.1146, f:0.0716, src:"Per gram, from his own tub label — Ryse Loaded Blueberry Muffin, 34.9 g scoop = 140/25/4/2.5, photographed Jul 27 2026 and carried in the generic 'protein' row's provenance. ⛔ THE ONE THAT DISAGREES: published listings re-fetched Sept 8 2026 (fitia / mynetdiary / eatthismuch) say 130 cal at a 33.6 g scoop. HIS LABEL IS THE BASIS — the app's own rule after the Oikos incident is that pricing at an aggregator's lower figure quietly cuts calories out of a meal, and a photo of the tub he scoops from outranks a database. Worth one re-read of the tub to close it; if his label now reads 130, this row and PP_G both move. MILK + SOY, no nuts."},
   'protein':           {unit:'scoop',       sp:[130,140],       cal:137,  p:25,    c:4,     f:2.7,   src:'Ryse Loaded / RAW, per 1 scoop. Label-verified flavors in PP_G comments: Milk Chocolate 37 g = 140/25/4/3 (Aug 4), Jet-Puffed Marshmallow 35 g = 130/25/3/2.5 (Aug 6), Jet-Puffed Birthday Cake 34.8 g = 130/25/4/2.5 (Aug 6), Blueberry Muffin 34.9 g = 140/25/4/2.5 (Jul 27). Macros per scoop barely vary; the GRAM WEIGHT does (30-41 g) and PP_G is the source for that. Always weigh from the ziplock.'},
   /* ⚠️⚠️ THE BIGGEST OPEN NUMBER IN THE APP. His rows price 6 oz (170 g) at 250 cal / 37 P / 10 F,
      i.e. 1.47 cal/g and 0.059 F/g — that is WILD salmon almost exactly (USDA wild Atlantic raw:
@@ -11435,7 +11445,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788879639';
+const BUILD = 'b1788879937';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
