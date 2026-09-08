@@ -36,6 +36,10 @@ const os = require('os');
 const path = require('path');
 const { execSync } = require('child_process');
 const P = 'index.html';
+/* --only <substring>: run just the plants whose guard or name contains it. See the note at the
+   bottom of this file — a filtered run cannot report a pass. */
+const ONLY = (function(){ const i = process.argv.indexOf('--only');
+  return i > -1 && process.argv[i+1] ? String(process.argv[i+1]).toLowerCase() : null; })();
 
 const numstat = () => {
   try { return execSync('git diff --numstat -- ' + P, { encoding: 'utf8' }).trim(); }
@@ -92,8 +96,14 @@ const PLANTS = [
   /* ⚠️ RETARGETED 2026-09-05: the tile became a diary GROUP HEADER. Same defect either way — the
      header printing the recipe's own total instead of the foods actually in the group. */
   { guard: 'log-shape', name: 'the group header goes back to printing the RECIPE total instead of what he ate',
-    edits: [{ from: "    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P'",
-              to:   "    const val = items.length ? (OPTBYID[(logEntries(ld)[s.key]||[])[0].id]||{vars:[{t:[0,0]}]}).vars[0].t[0] + ' · ' + (OPTBYID[(logEntries(ld)[s.key]||[])[0].id]||{vars:[{t:[0,0]}]}).vars[0].t[1] + 'P'" }] },
+    /* ⚠ RE-ANCHORED 2026-09-08: the badge went from cal + protein to all four macros on his
+       instruction, and this plant went BROKEN CASE on the next run — the harness reporting,
+       correctly, that it was testing nothing here. The defect is the same one: print the RECIPE's
+       total rather than what he ate, which was identical to the truth right up until the row
+       editor shipped. It must still produce four numbers, or the guard's regex would miss and the
+       plant would be caught for the wrong reason. */
+    edits: [{ from: "    const val = items.length ? Math.round(t[0]) + ' · ' + Math.round(t[1]) + 'P · '\n                               + Math.round(t[2]) + 'C · ' + Math.round(t[3]) + 'F'",
+              to:   "    const val = items.length ? (function(){ const rt = (OPTBYID[(logEntries(ld)[s.key]||[])[0].id]||{vars:[{t:[0,0,0,0]}]}).vars[0].t; return rt[0] + ' · ' + rt[1] + 'P · ' + rt[2] + 'C · ' + rt[3] + 'F'; })()" }] },
 
   /* ---- [food-log]: log foods with no meal at all ----
      His correction holding up Cronometer: "When Im logging a food/meal I also need the ability to
@@ -162,7 +172,9 @@ const PLANTS = [
   { guard: 'log-shape', name: 'the open meal loses its TOTAL line and its vs-budget delta',
     edits: [{ from: "      + totalRow\n", to: "" }] },
   { guard: 'food-log', name: 'ADD TO DIARY adds only the first food he ticked',
-    edits: [{ from: '  sel.forEach(function(k){', to: '  sel.slice(0,1).forEach(function(k){' }] },
+    /* ⚠ RE-ANCHORED 2026-09-08: fvAddSelected iterates fvSelPicks() now, so the callback takes a
+       resolved pick rather than a key. Same defect — only the first ticked food reaches the diary. */
+    edits: [{ from: '  sel.forEach(function(p){', to: '  sel.slice(0,1).forEach(function(p){' }] },
   { guard: 'food-log', name: 'the selection survives the add, so the next one double-logs it',
     edits: [{ from: '  if(n) fvSet({sel: []});', to: '  /* kept */' }] },
   { guard: 'food-log', name: 'the ADD bar stops showing what the selection costs',
@@ -518,6 +530,21 @@ const PLANTS = [
     /* patching innerHTML throws the listeners away; a list that looks right and does nothing. */
     edits: [{ from: "      wireFvRows();\n      document.querySelectorAll('[data-fvaddsel]')",
               to:   "      document.querySelectorAll('[data-fvaddsel]')" }] },
+  /* ---- [water-oz]: his 2026-09-08 ask, and the three-way drift it exposed ---- */
+  { guard: 'water-oz', name: 'the diary water badge goes back to its own copy of the ounce sum, minus the sodas',
+    /* the real defect, verbatim from what was in the file: the badge under-counted a diet-soda day
+       by 24 oz against the hydration card two cards below it. */
+    edits: [{ from: "  const oz = drinksOz(drinks);\n\n  /* ⭐ WATER IS A DIARY ROW.",
+              to:   "  const oz = (drinks.bottle||0)*30 + (drinks.stick||0)*14 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.seltzer||0)*12 + (drinks.custom||0);\n\n  /* ⭐ WATER IS A DIARY ROW." }] },
+  { guard: 'water-oz', name: 'taking oz off clamps at zero again, so − is a no-op on ounces logged as bottles',
+    edits: [{ from: "    const floor = -drinksOz(Object.assign({}, d, {custom: 0}));",
+              to:   "    const floor = 0;" }] },
+  { guard: 'water-oz', name: 'the negative quick buttons disappear',
+    edits: [{ from: "    + wrap('➖ Take oz back off', amts.map(function(n){ return btn(-n, '−' + n); }).join(''))",
+              to:   "    + ''" }] },
+  { guard: 'water-oz', name: 'the day is allowed to go negative',
+    edits: [{ from: "    d.custom = Math.max(floor, (d.custom||0) + n);",
+              to:   "    d.custom = (d.custom||0) + n;" }] },
   { guard: 'slot-budget-sum', name: "a slot budget drifts from Q’s sheet and nobody records why",
     /* the gap between the slots and the daily target is asserted exactly, not to a tolerance — a
        tolerance wide enough to swallow Q's known 20 would swallow the next drift too. */
@@ -555,7 +582,14 @@ function main() {
   const env = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
   let all = true;
 
-  PLANTS.forEach(function (p, i) {
+  const RUN = ONLY ? PLANTS.filter(function(p){
+    return (p.guard + ' ' + p.name).toLowerCase().indexOf(ONLY) >= 0; }) : PLANTS;
+  if (ONLY) {
+    console.log('PARTIAL RUN — ' + RUN.length + ' of ' + PLANTS.length + ' plants match "' + ONLY + '"');
+    if (!RUN.length) { console.log('nothing matched — this run tested NOTHING'); process.exitCode = 1; return; }
+  }
+
+  RUN.forEach(function (p, i) {
     let s = orig, ok = true;
     for (const e of p.edits) {
       if (s.split(e.from).length - 1 !== 1) {
@@ -595,6 +629,16 @@ function main() {
   console.log('');
   console.log('index.html never written: ' + untouched + '   git diff --numstat: ' + (ns === '' ? '(empty — clean)' : ns));
   const good = all && untouched && ns === '';
+  /* ⛔ A FILTERED RUN NEVER REPORTS A PASS, and never exits 0. It skipped plants by construction, and
+     the failure this whole file circles is a harness that tests less than it appears to — so the
+     narrow run is for debugging one plant, and only the full run can say the guards are load-bearing.
+     The deploy sequence in CLAUDE.md means the full one; do not paste an --only line in its place. */
+  if (ONLY) {
+    console.log(all ? 'the ' + RUN.length + ' matched plant(s) were caught — PARTIAL, run without --only before deploying'
+                    : 'PLANT HARNESS FOUND A HOLE among the ' + RUN.length + ' matched plant(s)');
+    process.exitCode = 1;
+    return;
+  }
   console.log(good ? 'ALL PLANTS CAUGHT — the app-behaviour guards are load-bearing'
                    : 'PLANT HARNESS FOUND A HOLE (or the working tree moved under it)');
   process.exitCode = good ? 0 : 1;

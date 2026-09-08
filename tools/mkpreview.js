@@ -58,6 +58,9 @@ const setup = `
     rs = addEntryRow({id:'b1', rows:rs}, 'smucker sf breakfast syrup', 20);
     logSetMeal(D, ${JSON.stringify(SLOT)}, 'b1', rs); }
   openAcc.add('drafts');
+  /* the water group and the Hydration card, so the oz controls have geometry to measure — a closed
+     <details> gives every child a zero box and the tool then reports 'clean' about nothing. */
+  openAcc.add('dg-water'); openAcc.add('log-hydr');
   openAcc.add('meals-bf'); openAcc.add('opt-b28');
   openAcc.add('genfit');
   store.set('qpcut.gen', {text:['80g Elev8 CoR','155g blueberries','175g Fage 0%','1 Biscoff','200g wagyu ribeye'].join(String.fromCharCode(10)), target:'bf', picks:{}});

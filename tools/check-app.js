@@ -2366,6 +2366,28 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           if(said !== wantRow) sf.push('the ticked row for ' + k + ' says "' + said + '" but the add will log "' + wantRow + '"');
           if(row.indexOf('fv-c on') < 0) sf.push(k + ' is selected but its box is not ticked');
         });
+        /* ⛔ AND ON EVERY FOOD WHOSE OWN UNIT IS NOT THE FACT'S — salmon is 6 oz against a per-gram
+           fact, banana 1 each, the guac 1 cup. The two foods above are both per-gram foods he
+           records in grams, so a row printing FOOD_FACTS[k].unit would render identically and the
+           plant for that defect came back NOT CAUGHT: the harness reporting that this clause was
+           blind to the case it was written for. The set is derived at runtime, so it cannot go
+           stale when a food's typical unit moves. */
+        { const div = Object.keys(FOOD_FACTS).filter(function(k){
+            return fvUnits(k)[0] !== FOOD_FACTS[k].unit; });
+          if(div.length < 3) sf.push('only ' + div.length + ' unit-divergent food(s) — the unit clause is near-vacuous');
+          fvSet({sel: div.slice(), review: true});
+          const rvu = foodPageHTML(D);
+          div.forEach(function(k){
+            const p = fvSelPick(k);
+            const want = p.n + ' ' + p.u + ' · ' + fvMacLine(p.m);
+            const at = rvu.indexOf('data-fvpick="' + k + '"');
+            if(at < 0){ sf.push('the review page dropped ' + k); return; }
+            const row = rvu.slice(at, rvu.indexOf('</button>', at));
+            const si = row.indexOf('fv-s2">');
+            const said = si < 0 ? '(no numbers at all)' : row.slice(si + 7, row.indexOf('<', si + 7));
+            if(said !== want) sf.push('the ticked row for ' + k + ' says "' + said + '" but the add will log "' + want + '"');
+          });
+          fvSet({sel: TICK.slice(), review: false}); }
         /* ④ the REVIEW button carries the count, and its page lists ONLY the ticked foods, totals
            them, and adds through the same fvAddSelected the bar uses */
         if(!/data-fvreview/.test(p4)) sf.push('the bar offers no way to review the selection');
@@ -3095,6 +3117,84 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   if (bad.length) fail('log-access', bad.length + ' fault(s): ' + bad.join(' | '));
   else ok('log-access', 'qpcut.eaten is touched in exactly one place (' + stat + ') — every other ' +
     'consumer goes through logEntries / eatenIds / eatenIdsAll / logWrite');
+}
+
+/* ---------- [water-oz] one formula for the day's ounces, and − actually removes them ----------
+ * His ask 2026-09-08: "i need to be able to add or subtract oz of water. write now i can only add."
+ * Building it surfaced why this guard did not exist and should have: there were THREE copies of the
+ * ounce sum in index.html and they disagreed — the diary's water badge (written last) had dropped
+ * soda and diet soda while the hero and the hydration card counted both, so one day read up to
+ * 24 oz differently in two places on the same screen. Nothing tested any of the three.
+ * TWO HALVES, because each passes while the other is broken:
+ *   STRUCTURAL — the sum exists once, inside drinksOz, and every consumer calls it.
+ *   BEHAVIOURAL — a − button removes ounces that were logged as BOTTLES (the old clamp at zero made
+ *     that a silent no-op, since the ounces he wants back off are never in custom), and the day
+ *     floors at zero rather than going negative.
+ */
+{
+  const src = require('fs').readFileSync(SRC, 'utf8');
+  const bad = [];
+  /* ⛔ COUNT THE SUM, NOT THE HELPER. A second copy of the arithmetic is the defect; a second CALL
+     of drinksOz is the fix working. Matched on the *30 term because that is the part nobody
+     retypes differently — the omissions were all in the 12-oz tail. */
+  const sums = (src.match(/\(d(?:rinks)?\.bottle\|\|0\)\s*\*\s*30/g) || []).length;
+  if (sums === 0) bad.push('the ounce sum is gone entirely — drinksOz was renamed or removed and this guard is vacuous');
+  else if (sums > 1) bad.push(sums + ' copies of the ounce sum in index.html — they drifted by 24 oz the last time there were three');
+  const calls = (src.match(/drinksOz\(/g) || []).length;
+  if (calls < 5) bad.push('only ' + calls + ' drinksOz call(s) — the hero, the diary badge, the hydration card, the clamp and the definition should all be there');
+  /* ⚠️ THE NEGATIVE BUTTONS ARE CHECKED ON THE RENDERED PAGE, NOT HERE. data-dozq="-8" is
+     assembled from btn(-n) at runtime, so the literal is not in the source and the first version of
+     this clause failed on correct code — the [time-picker] lesson one screen up, repeated. */
+  if (!/id="ozSubBtn"/.test(src)) bad.push('the typed box has no Take off button');
+  if (!/btn\(-n,/.test(src)) bad.push('nothing builds a negative quick button — he can only add ounces again');
+  if (!/ozRowsHTML\(drinks, false\)/.test(src) || !/ozRowsHTML\(drinks, true\)/.test(src))
+    bad.push('the oz control is not rendered from one function in both places — a control added to one would miss the other');
+
+  const r = run(`
+    const bad = [];
+    const D = isoToday(), key = 'qpcut.drinks.' + dkey(D);
+    const before = store.get(key, {});
+    /* ① the two on-screen totals agree on a day the three copies used to disagree about */
+    store.set(key, {bottle:2, dietsoda:1});
+    const want = drinksOz(store.get(key, {}));
+    if(want !== 72) bad.push('2 bottles + a diet soda price to ' + want + ' oz, not 72');
+    current = 'today'; render();
+    const html = document.body.innerHTML;
+    const badge = (html.match(/class="dg-v">(\\d+) \\/ (\\d+) oz/) || [])[1];
+    const card  = (html.match(/<b>(\\d+)<\\/b>\\/(\\d+) oz/) || [])[1];
+    if(badge == null) bad.push('could not read the diary water badge — clause ① is vacuous');
+    if(card == null)  bad.push('could not read the hydration card total — clause ① is vacuous');
+    if(badge != null && card != null && badge !== card)
+      bad.push('the diary badge says ' + badge + ' oz and the hydration card says ' + card + ' — one day, two numbers');
+    if(badge != null && +badge !== want)
+      bad.push('the badge says ' + badge + ' but the day is ' + want);
+    /* the minus buttons must be ON SCREEN, and in BOTH renderers of the control — the diary's
+       water group and the Hydration card. Counted, because a control that reaches one of the two is
+       exactly the failure the shared ozRowsHTML exists to prevent. */
+    const minus = (html.match(/data-dozq="-\\d+"/g) || []).length;
+    if(minus < 8) bad.push('only ' + minus + ' negative oz button(s) on screen — 4 amounts in each of the two places is 8');
+    if(!/id="ozSubBtn"/.test(html)) bad.push('the typed Take off button did not render');
+    /* ② − removes ounces that live in the BOTTLE counter, which the old zero clamp could not */
+    const take = function(n){
+      const d = store.get(key, {});
+      const floor = -drinksOz(Object.assign({}, d, {custom:0}));
+      d.custom = Math.max(floor, (d.custom||0) + n);
+      store.set(key, d);
+      return drinksOz(store.get(key, {}));
+    };
+    store.set(key, {bottle:2});
+    const after = take(-30);
+    if(after !== 30) bad.push('taking 30 oz off a 60 oz day left ' + after + ' oz — the subtract is a no-op on logged bottles');
+    /* ③ and it floors at an empty day rather than going negative */
+    const floored = take(-500);
+    if(floored !== 0) bad.push('taking 500 oz off left ' + floored + ' oz — the day went negative');
+    store.set(key, before);
+    return {bad};
+  `);
+  bad.push.apply(bad, r.bad);
+  if (bad.length) fail('water-oz', bad.length + ' fault(s): ' + bad.join(' | '));
+  else ok('water-oz', 'one ounce formula (' + calls + ' consumers, ' + sums + ' copy of the sum), the diary badge ' +
+    'and the hydration card agree on a diet-soda day, − removes ounces logged as bottles, and the day floors at zero');
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
