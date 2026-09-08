@@ -148,6 +148,10 @@ const PLANTS = [
   { guard: 'food-log', name: 'the REVIEW button disappears from the bar',
     edits: [{ from: "    + '<button class=\"fvrev\" data-fvreview=\"1\"><span class=\"fvrev-n\">' + nSel + '</span>REVIEW</button>'",
               to:   "    + ''" }] },
+  { guard: 'food-log', name: 'SAVING a ticked food leaves it ticked, so ADD TO DIARY logs it twice',
+    /* tick five, open one, weigh it, SAVE, add the rest — the food lands at the weighed amount AND
+       at his median, in a slot he would not re-read for days. */
+    edits: [{ from: "  if(r && (st.sel||[]).indexOf(k) >= 0) fvSelToggle(k);", to: "  /* left ticked */" }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",

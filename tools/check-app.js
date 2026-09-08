@@ -2384,7 +2384,25 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           else if(+rt !== Math.round(fvSelTotal()[0]))
             sf.push('the review page totals ' + rt + ' but the selection is ' + Math.round(fvSelTotal()[0])); }
         if(!/data-fvaddsel/.test(rv)) sf.push('the review page cannot add what it is reviewing');
-        /* ⑤ and it dies with the selection rather than stranding him on an empty page */
+        /* ⑤ SAVING a ticked food takes it out of the selection. Tick five, open one, weigh it,
+           SAVE, ADD the rest — if the tick survived, that food lands twice: once at the weighed
+           amount and once at his median, in a slot he would not re-read for days. */
+        { const D3 = isoToday(), e1 = store.get('qpcut.eaten', {});
+          const r1 = store.get('qpcut.eaten', {}); delete r1[D3]; store.set('qpcut.eaten', r1);
+          fvSet({slot:'bf', sel:TICK.slice(), review:true, pick:'elev8 cor', unit:'g', amt:44});
+          if(!fvSaveFood(D3)) sf.push('SAVE refused 44 g of a ticked food');
+          if(fvState().sel.indexOf('elev8 cor') >= 0)
+            sf.push('SAVE left elev8 cor ticked — ADD TO DIARY would log it a second time');
+          fvSet({pick:null});
+          const n2 = fvAddSelected(D3);
+          const rows2 = entryRows((logEntries(D3).bf||[])[0] || {});
+          const cor2 = rows2.filter(function(x){ return x.f === 'elev8 cor'; });
+          if(cor2.length !== 1) sf.push('elev8 cor is in the diary ' + cor2.length + ' times after a SAVE then an ADD');
+          else if(cor2[0].n !== 44) sf.push('the diary kept ' + cor2[0].n + ' g of elev8 cor, not the 44 he weighed');
+          if(n2 !== 1) sf.push('the remaining selection added ' + n2 + ' food(s), not 1');
+          store.set('qpcut.eaten', e1); }
+        /* ⑥ and the review page dies with the selection rather than stranding him on an empty page */
+        fvSet({review:true, sel:TICK.slice()});
         fvSelToggle('elev8 cor'); fvSelToggle('mixed berries');
         if(fvState().review) sf.push('the review page outlived the selection');
         fvSet({review:false, sel:TICK.slice()});

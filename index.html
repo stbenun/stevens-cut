@@ -7007,7 +7007,15 @@ function fvSaveFood(ld){
   if(!FOOD_FACTS[k] || !st.slot) return null;
   const u = st.unit || fvUnits(k)[0];
   const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
-  return logAddFood(ld, st.slot, k, n, u);
+  const r = logAddFood(ld, st.slot, k, n, u);
+  /* ⛔ A FOOD THAT IS NOW IN THE DIARY MUST LEAVE THE SELECTION. Since 2026-09-08 a ticked row is
+     tappable from the top of the list and from the review page — whose own copy invites it ("tap a
+     row to change its amount before adding") — so the natural sequence is: tick five, open one,
+     weigh it, SAVE, then ADD the rest. If the tick survived that save, the food would be logged
+     twice: once at the amount he weighed, once at his median. He would find it as a slot 200 cal
+     over with a duplicate row, which is the class of bug that gets discovered days later. */
+  if(r && (st.sel||[]).indexOf(k) >= 0) fvSelToggle(k);
+  return r;
 }
 /* ==== THE DISH PAGE — where the cookbook went =============================================
    His instruction, 2026-09-06: get rid of the old My Meals section. That section was the ONLY
