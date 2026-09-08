@@ -537,14 +537,14 @@ const PLANTS = [
     edits: [{ from: "  const oz = drinksOz(drinks);\n\n  /* ⭐ WATER IS A DIARY ROW.",
               to:   "  const oz = (drinks.bottle||0)*30 + (drinks.stick||0)*14 + (drinks.pre||0)*9 + (drinks.eaa||0)*9 + (drinks.seltzer||0)*12 + (drinks.custom||0);\n\n  /* ⭐ WATER IS A DIARY ROW." }] },
   { guard: 'water-oz', name: 'taking oz off clamps at zero again, so − is a no-op on ounces logged as bottles',
-    edits: [{ from: "    const floor = -drinksOz(Object.assign({}, d, {custom: 0}));",
-              to:   "    const floor = 0;" }] },
+    edits: [{ from: "  const floor = -drinksOz(Object.assign({}, d, {custom: 0}));",
+              to:   "  const floor = 0;" }] },
   { guard: 'water-oz', name: 'the negative quick buttons disappear',
     edits: [{ from: "    + wrap('➖ Take oz back off', amts.map(function(n){ return btn(-n, '−' + n); }).join(''))",
               to:   "    + ''" }] },
   { guard: 'water-oz', name: 'the day is allowed to go negative',
-    edits: [{ from: "    d.custom = Math.max(floor, (d.custom||0) + n);",
-              to:   "    d.custom = (d.custom||0) + n;" }] },
+    edits: [{ from: "  d.custom = Math.max(floor, (d.custom||0) + n);",
+              to:   "  d.custom = (d.custom||0) + n;" }] },
   { guard: 'slot-budget-sum', name: "a slot budget drifts from Q’s sheet and nobody records why",
     /* the gap between the slots and the daily target is asserted exactly, not to a tolerance — a
        tolerance wide enough to swallow Q's known 20 would swallow the next drift too. */

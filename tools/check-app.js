@@ -3140,8 +3140,12 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const sums = (src.match(/\(d(?:rinks)?\.bottle\|\|0\)\s*\*\s*30/g) || []).length;
   if (sums === 0) bad.push('the ounce sum is gone entirely — drinksOz was renamed or removed and this guard is vacuous');
   else if (sums > 1) bad.push(sums + ' copies of the ounce sum in index.html — they drifted by 24 oz the last time there were three');
-  const calls = (src.match(/drinksOz\(/g) || []).length;
-  if (calls < 5) bad.push('only ' + calls + ' drinksOz call(s) — the hero, the diary badge, the hydration card, the clamp and the definition should all be there');
+  /* ⚠️ NOT A CALL COUNT. The first version counted drinksOz( occurrences, which fired for the
+     wrong reason on an unrelated plant — a proxy, not the claim. The claim is that every place
+     which shows the day's ounces gets them from the helper: the hero, the diary badge and the
+     hydration card each assign it the same way. */
+  const views = (src.match(/const oz = drinksOz\(drinks\);/g) || []).length;
+  if (views !== 3) bad.push(views + ' of the 3 ounce readouts use drinksOz — the hero, the diary badge and the hydration card must all take the same number');
   /* ⚠️ THE NEGATIVE BUTTONS ARE CHECKED ON THE RENDERED PAGE, NOT HERE. data-dozq="-8" is
      assembled from btn(-n) at runtime, so the literal is not in the source and the first version of
      this clause failed on correct code — the [time-picker] lesson one screen up, repeated. */
@@ -3175,13 +3179,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(minus < 8) bad.push('only ' + minus + ' negative oz button(s) on screen — 4 amounts in each of the two places is 8');
     if(!/id="ozSubBtn"/.test(html)) bad.push('the typed Take off button did not render');
     /* ② − removes ounces that live in the BOTTLE counter, which the old zero clamp could not */
-    const take = function(n){
-      const d = store.get(key, {});
-      const floor = -drinksOz(Object.assign({}, d, {custom:0}));
-      d.custom = Math.max(floor, (d.custom||0) + n);
-      store.set(key, d);
-      return drinksOz(store.get(key, {}));
-    };
+    /* ⛔ THE APP'S OWN FUNCTION, NOT A COPY OF IT. This clause used to reimplement the clamp,
+       which meant it passed a planted defect that let the day go negative — it was testing the
+       test. ozAdjust is top-level precisely so this line can exist. */
+    const take = function(n){ return ozAdjust(D, n); };
     store.set(key, {bottle:2});
     const after = take(-30);
     if(after !== 30) bad.push('taking 30 oz off a 60 oz day left ' + after + ' oz — the subtract is a no-op on logged bottles');
@@ -3193,7 +3194,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   `);
   bad.push.apply(bad, r.bad);
   if (bad.length) fail('water-oz', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('water-oz', 'one ounce formula (' + calls + ' consumers, ' + sums + ' copy of the sum), the diary badge ' +
+  else ok('water-oz', 'one ounce formula (' + views + ' readouts, ' + sums + ' copy of the sum), the diary badge ' +
     'and the hydration card agree on a diet-soda day, − removes ounces logged as bottles, and the day floors at zero');
 }
 
