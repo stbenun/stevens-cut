@@ -3,11 +3,11 @@
 **GENERATED FILE — do not edit.** Source of truth is `FOOD_FACTS` inside `index.html`.
 Regenerate with `node tools/food-doc.js`. `[food-doc]` in check-food.js fails if this is stale.
 
-## Coverage: 102 / 132 foods in the meal plan (**77%**)
+## Coverage: 103 / 132 foods in the meal plan (**78%**)
 
 `cal/p/c/f` are **per one unit** shown in the `per` column. Multiply by the amount eaten.
 
-Provenance of the 207 rows: **113** USDA · **64** label · **28** derived · **2** UNVERIFIED
+Provenance of the 211 rows: **114** USDA · **67** label · **28** derived · **2** UNVERIFIED
 
 | food | per | cal | P | C | F | provenance | source |
 |---|---|---:|---:|---:|---:|---|---|
@@ -75,6 +75,8 @@ Provenance of the 207 rows: **113** USDA · **64** label · **28** derived · **
 | `cranberries` | g | 0.46 | 0.005 | 0.12 | 0.001 | USDA | USDA FoodData Central SR Legacy #171722 "Cranberries, raw": 100 g = 46 cal / 0.46 P / 12 C / 0.13 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page. |
 | `cucumber` | g | 0.15 | 0.007 | 0.036 | 0.001 | USDA | USDA cucumber, with peel, raw: 100 g = 15 cal / 0.65 P / 3.63 C / 0.11 F -> per gram. His 75 g row reads 15 cal; USDA gives 11. Four calories, left alone. |
 | `cucumber roll` | piece (22 g) | 20.46 | 0.4 | 3.87 | 0.32 | USDA | USDA FoodData Central Survey (FNDDS) #2708966 "Sushi roll, vegetable": 93 cal / 1.8 P / 17.6 C / 1.47 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 22 g, one roll = 132 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON. |
+| `dates` | g | 2.77 | 0.0181 | 0.7497 | 0.0015 | USDA | USDA FoodData Central SR Legacy #168191 "Dates, medjool": 100 g = 277 cal / 1.81 P / 74.97 C (6.7 g fibre) / 0.15 F -> per gram. Fetched Sept 8 2026 from the FDC API and parsed from the raw JSON, not read off a page. Deglet Noor (#171726) was fetched in the same pass — 282 / 2.45 / 75.03 / 0.39 per 100 g, within 2% per gram — so this row holds whichever variety he has. ⛔ NO ea: ON PURPOSE: a pitted Medjool is 24 g against a Deglet Noor 7.1 g, so counting dates is a 3.4x error waiting to happen. WEIGH them. |
+| `dijon mustard` | g | 1 | 0 | 0 | 0 | label | HIS OWN BOTTLE — Grey Poupon Dijon, panel photographed Sept 8 2026: 5 cal a serving, 0 F / 0 C / 0 P as printed, sodium 115 mg, 57 servings per 10 oz. ⭐ THE SERVING WEIGHT IS DERIVED, NOT ASSUMED: 10 oz = 283.5 g over 57 servings = 4.97 g, so the panel\'s bare "1.00" is a 5 g teaspoon and 5 cal / 5 g = 1 cal per gram. ⚠️ P/C/F are LABEL ZEROS, not measured zeros (the ingredients do list sugar) — honest at condiment doses, never to be scaled to 100 g. ✅ Kashrut: its ingredients include WHITE WINE, which is why a Dijon needs checking at all; this one is listed OU-Pareve (Kraft Heinz, through 12/31/2026), so the wine is accounted for. Not my ruling — the certification is his to rely on. |
 | `edamame` | g | 1.21 | 0.119 | 0.089 | 0.052 | USDA | USDA edamame, frozen, PREPARED: 100 g = 121 cal / 11.9 P / 8.9 C total (5.2 g fibre, so 3.7 net — an earlier search handed me the NET figure as if it were total) / 5.2 F -> per gram. He confirmed Aug 12 2026 it is just regular frozen edamame, so USDA is the right basis. ⚠️ The app rows ran ~17% high (85 g priced at 120 cal, real 103) and are corrected. |
 | `egg` | each | 72 | 6.3 | 0.4 | 4.8 | USDA | USDA FDC 171287, egg, whole, raw, fresh: 1 large egg (50 g) = 72 cal / 6.3 P / 0.4 C / 4.8 F. Fetched Aug 18 2026. Confirms the app's 2-egg row at 144/13/1/10 and shows Q's original sheet figure of 80 cal an egg was for a larger grade. |
 | `egg whites` | g | 0.52 | 0.109 | 0.007 | 0.002 | USDA | USDA egg white, raw: 100 g = 52 cal / 10.9 P / 0.73 C / 0.17 F -> per gram. The app prices 100 g at 50 / 10 / 0 / 0 — within 4%, so the rows were already right and were NOT changed. |
@@ -156,6 +158,7 @@ Provenance of the 207 rows: **113** USDA · **64** label · **28** derived · **
 | `pear` | g | 0.57 | 0.004 | 0.152 | 0.001 | USDA | USDA FoodData Central SR Legacy #169118 "Pears, raw": 100 g = 57 cal / 0.36 P / 15.2 C / 0.14 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page. |
 | `peas green` | g | 0.81 | 0.054 | 0.144 | 0.004 | USDA | USDA FoodData Central SR Legacy #170419 "Peas, green, raw": 100 g = 81 cal / 5.42 P / 14.4 C / 0.4 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page. |
 | `philadelphia cream cheese` | g | 2.19 | 0.063 | 0.063 | 0.188 | label | Philadelphia 1/3-less-fat (Neufchatel) label, verified Jul 24 2026: 32 g = 70 cal / 2 P / 2 C / 6 F -> per gram. His 45 g row = 98/3/3/8, corrected then from an overstated 120/3/3/10.5. |
+| `pickles` | g | 0.1786 | 0 | 0.0357 | 0 | label | HIS OWN JAR — Grillo\'s Pickles, panel photographed Sept 8 2026: serving 1 oz (28 g / about 1 spear) = 5 cal / 0 P / 1 C / 0 F, sodium 200 mg, about 20 servings. Per gram from that. Ingredients: cucumbers, brine (water, distilled white vinegar, salt), garlic, dill, grape leaves — NO sugar, which is why these price as almost nothing where a bread-and-butter pickle would not. ea:28 is his own label\'s spear weight, so counting spears is safe here. ⚠️ 200 mg sodium a spear is the real cost, not the calories — it belongs in the hydration math, not the macro math. |
 | `pina colada protein` | g | 3.5484 | 0.8065 | 0.0645 | 0.0323 | derived | Per gram, from the app's own half-serving row (15.5 g = 55/12.5/1/0.5) which is exactly half the PP_G scoop weight of 31 g. RAW brand, not Ryse. PP_G 31 g a scoop; the leanest per scoop at 110 cal. Fetched/derived Aug 18 2026. |
 | `pineapple` | g | 0.5 | 0.005 | 0.131 | 0.001 | USDA | USDA raw pineapple, 100 g = 50 cal / 0.54 P / 13.1 C / 0.12 F -> per gram. Cups use 150 g. |
 | `pita` | piece | 190 | 6.3 | 38.5 | 0.8 | UNVERIFIED | HIS 190 cal/piece; split derived from USDA white pita 275 cal / 9.1 P / 55.7 C / 1.2 F per 100 g -> a 69 g piece. ⚠️⚠️ HIS INSTRUCTION Aug 12 2026: "for now just assume 190" — he will confirm off the package later, so 190 STANDS and is not a guess of mine. BRAND IS SHORE PITA AND THE FIGURES CONFLICT: a crowd-sourced listing for Shore Pita Plain gives 230 cal / 6 P / 40 C / 0.5 F per pita, 40 cal ABOVE his 190. Neither is a label photo — his 190 is from memory, the 230 is user-submitted. He eats one EVERY Friday, so 40 cal x every Friday is worth settling. DO NOT overwrite 190 with 230 without the package; Shore sells more than one size. |
@@ -217,9 +220,10 @@ Provenance of the 207 rows: **113** USDA · **64** label · **28** derived · **
 | `wegmans guac cup` | cup | 120 | 1 | 5 | 10 | label | Wegmans Guacamole Snack Pack published panel: 1 mini cup (57 g) = 120 cal / 1 P / 5 C / 10 F. Fetched Sept 7 2026. |
 | `white rice dry` | g | 3.62 | 0.071 | 0.8 | 0.007 | USDA | USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved. |
 | `wholly guac cup` | cup | 110 | 1 | 5 | 9.5 | label | Wholly Guacamole Classic Minis published panel: 1 cup 2 oz (57 g) = 110 cal / 1 P / 5 C / 9.5 F. |
+| `yellow mustard` | g | 0 | 0 | 0 | 0 | label | HIS OWN BOTTLE — Heinz Yellow Mustard, panel photographed Sept 8 2026: 0 cal a serving, 0 F / 0 C / 0 P, sodium 60 mg, 79 servings per 14 oz. Serving weight derived the same way as the Dijon: 14 oz = 396.9 g over 79 = 5.02 g. Genuinely a zero row — the panel itself is badged "Zero calories" — so this prices as nothing at any sane dose. Ingredients: distilled white vinegar, mustard seed, water, salt, turmeric, spices, natural flavor: no wine, so none of the Dijon\'s kashrut question applies to it. |
 | `zucchini` | g | 0.16 | 0.01 | 0.033 | 0.002 | USDA | USDA FoodData Central Foundation #2685568 "Squash, summer, green, zucchini, includes skin, raw": 100 g = 16 cal / 0.984 P / 3.27 C / 0.205 F -> per gram. Fetched Sept 7 2026 from the FDC API and parsed from the raw JSON, not read off a page. |
 
-## Still to source — 30 foods, most-used first
+## Still to source — 29 foods, most-used first
 
 Every row below is a hand-typed number with no source anywhere in the repo.
 
@@ -247,7 +251,6 @@ Every row below is a hand-typed number with no source anywhere in the repo.
 | velvet cake extract | 1 |
 | cinnamon spice extract | 1 |
 | israeli salad, piled | 1 |
-| pickles | 1 |
 | everything-bagel seasoning | 1 |
 | brownie wet | 1 |
 | brownie dry | 1 |
