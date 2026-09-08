@@ -3146,13 +3146,24 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
      hydration card each assign it the same way. */
   const views = (src.match(/const oz = drinksOz\(drinks\);/g) || []).length;
   if (views !== 3) bad.push(views + ' of the 3 ounce readouts use drinksOz — the hero, the diary badge and the hydration card must all take the same number');
-  /* ⚠️ THE NEGATIVE BUTTONS ARE CHECKED ON THE RENDERED PAGE, NOT HERE. data-dozq="-8" is
-     assembled from btn(-n) at runtime, so the literal is not in the source and the first version of
-     this clause failed on correct code — the [time-picker] lesson one screen up, repeated. */
-  if (!/id="ozSubBtn"/.test(src)) bad.push('the typed box has no Take off button');
-  if (!/btn\(-n,/.test(src)) bad.push('nothing builds a negative quick button — he can only add ounces again');
-  if (!/ozRowsHTML\(drinks, false\)/.test(src) || !/ozRowsHTML\(drinks, true\)/.test(src))
+  /* ⚠️ THE MINUS CONTROL IS CHECKED ON THE RENDERED PAGE TOO, not only here — an earlier version of
+     this clause asked SOURCE for data-dozq="-8", which is assembled at runtime, and so failed on
+     correct code. Same [time-picker] lesson, one screen up.
+     ⚠️ RE-AIMED 2026-09-08. It used to count four preset minus buttons per renderer. He killed that
+     design — "the hydration thing that you added is the dumbest thing. just allow me to add or
+     subtract as many oz as i want" — so the control is now one typed box with a − and a +. The claim
+     is unchanged: any amount, either direction, in both places. */
+  if (!/data-ozgo="-1"/.test(src)) bad.push('nothing renders a subtract control — he can only add ounces again');
+  if (!/class="ozn"/.test(src)) bad.push('the oz control has no amount input, so "as many oz as i want" is not expressible');
+  /* ⚠️ THE TWO CALL SITES BY THEIR SYNTAX, not the bare name — counting the name reads 3, because
+     the function DEFINITION matches too, and the first version of this clause failed on correct
+     code for exactly that. The diary's water group concatenates the control; the Hydration card
+     interpolates it. Those two forms are the two callers. */
+  if (!/\+ ozRowsHTML\(drinks\)/.test(src) || !/\$\{ozRowsHTML\(drinks\)\}/.test(src))
     bad.push('the oz control is not rendered from one function in both places — a control added to one would miss the other');
+  /* ⛔ AND NOT BY id. The box renders twice; #ozAdd would collide and one of the two would be dead. */
+  if (/id="ozAdd"|id="ozAddBtn"|id="ozSubBtn"/.test(src))
+    bad.push('the oz control is back on ids — it renders in two places and duplicate ids leave one set dead');
 
   const r = run(`
     const bad = [];
@@ -3175,9 +3186,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     /* the minus buttons must be ON SCREEN, and in BOTH renderers of the control — the diary's
        water group and the Hydration card. Counted, because a control that reaches one of the two is
        exactly the failure the shared ozRowsHTML exists to prevent. */
-    const minus = (html.match(/data-dozq="-\\d+"/g) || []).length;
-    if(minus < 8) bad.push('only ' + minus + ' negative oz button(s) on screen — 4 amounts in each of the two places is 8');
-    if(!/id="ozSubBtn"/.test(html)) bad.push('the typed Take off button did not render');
+    const minus = (html.match(/data-ozgo="-1"/g) || []).length;
+    const boxes = (html.match(/class="ozn"/g) || []).length;
+    if(minus < 2) bad.push('only ' + minus + ' subtract control(s) on screen — the diary water group and the Hydration card should each have one');
+    if(boxes < 2) bad.push('only ' + boxes + ' oz input(s) on screen — one per renderer, or a control he was given is missing from where he actually looks');
     /* ② − removes ounces that live in the BOTTLE counter, which the old zero clamp could not */
     /* ⛔ THE APP'S OWN FUNCTION, NOT A COPY OF IT. This clause used to reimplement the clamp,
        which meant it passed a planted defect that let the day go negative — it was testing the

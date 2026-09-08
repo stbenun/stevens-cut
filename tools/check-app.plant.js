@@ -539,9 +539,15 @@ const PLANTS = [
   { guard: 'water-oz', name: 'taking oz off clamps at zero again, so − is a no-op on ounces logged as bottles',
     edits: [{ from: "  const floor = -drinksOz(Object.assign({}, d, {custom: 0}));",
               to:   "  const floor = 0;" }] },
-  { guard: 'water-oz', name: 'the negative quick buttons disappear',
-    edits: [{ from: "    + wrap('➖ Take oz back off', amts.map(function(n){ return btn(-n, '−' + n); }).join(''))",
-              to:   "    + ''" }] },
+  { guard: 'water-oz', name: 'the subtract button disappears, leaving him able only to add',
+    /* ⚠ RE-ANCHORED 2026-09-08 when he killed the four-preset minus row: "just allow me to add or
+       subtract as many oz as i want". Same defect, new control. */
+    edits: [{ from: "        + '<button class=\"step\" data-ozgo=\"-1\" aria-label=\"subtract that many ounces\">−</button>'",
+              to:   "        + ''" }] },
+  { guard: 'water-oz', name: 'the oz box goes back to an id, so the second one on screen is dead',
+    /* the reason it is data-ozgo at all: the control renders twice and $('#id') finds one. */
+    edits: [{ from: "        + '<button class=\"step\" data-ozgo=\"1\" aria-label=\"add that many ounces\">+</button>'",
+              to:   "        + '<button class=\"step\" id=\"ozAddBtn\">+</button>'" }] },
   { guard: 'water-oz', name: 'the day is allowed to go negative',
     edits: [{ from: "  d.custom = Math.max(floor, (d.custom||0) + n);",
               to:   "  d.custom = (d.custom||0) + n;" }] },
