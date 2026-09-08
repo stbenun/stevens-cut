@@ -691,3 +691,49 @@ meal that landed on calories and blew its fat, which is exactly the case he aske
 [log-shape] that check the printed numbers against `fvSelPick` and against what he actually ate,
 rather than checking that the markup exists. Measured at 390 px with `tools/mkpreview.js` (and 430;
 at 320 the diary badge stacks under the meal name, which is below any width he owns).
+
+## 2026-09-08 (later) — a bigger star, water that goes down as well as up, and the powders that were never in the list
+
+**Three of his reports, in his words:** *"make the star for adding to favorites bigger. its hard to
+press."* · *"why aren't all the protein powders in the food list?"* · *"i need to be able to add or
+subtract oz of water. write now i can only add."*
+
+**The star** was a 15 px glyph centred in a 22 px grid column — a ~15 px target on a 390 px phone,
+against the ~44 px anyone can hit reliably. The column is 40 px now and the tappable span stretches
+the full height of its row, so what he presses is the box rather than the character.
+
+**The water subtract needed a bug fixed before it could work at all.** `custom` was clamped at zero,
+so a − button would have been a silent no-op in the normal case: the ounces he wants back off are in
+the bottle and stick counters, not in `custom`, and `Math.max(0, 0-8)` leaves the day untouched with
+nothing on screen to explain it. It is a signed adjustment now, floored so the DAY reaches zero.
+
+**⚠️ AND ONE NUMBER OF HIS MOVED, WHICH IS THE PART THAT NEEDS HIS EYES.** Building the clamp needed
+one definition of the day's ounces, and there were **three copies of that sum, disagreeing**: the
+diary's water badge (written last, 2026-09-05) had dropped soda and diet soda, while the hero and the
+Hydration card counted both. One day therefore read up to 24 oz differently in two places on one
+screen. Unified on the two that agreed, which means **his diary water badge now counts a diet soda's
+12 oz where yesterday it did not.**
+**MY REASONING, and it is a judgement he can overrule:** the newest of the three copies is the one
+that differed, and it also dropped the legacy `soda` key — that reads as a retyping omission rather
+than a decision that diet soda is not fluid. **If he wants diet soda excluded from hydration, that is
+his call to make and it is one line** — but it then has to be excluded in all three places, which is
+now possible for the first time.
+
+**The powders: the food list is FOOD_FACTS, and a flavour only ever got a row when a RECIPE needed to
+price it.** The rest lived only as scoop WEIGHTS in `PP_G`, which labels grams and never fed the
+picker — 9 flavours searchable, 5 invisible. Four went in (Milk Chocolate, Jet-Puffed Marshmallow,
+Jet-Puffed Birthday Cake, Blueberry Muffin), each priced label ÷ scoop weight and round-tripped back
+to the label in the booted app before being written.
+**⛔ The fifth was refused:** Transparent Labs unflavored has a 33.3 g scoop in PP_G, a 32 g / 28 P
+listing on the web, and no label figures in the repo — three scoop weights and two protein figures,
+which is the case for saying so rather than picking one. **⚠️ And Blueberry Muffin's two sources
+disagree** (his tub photo 140 at 34.9 g, three databases 130 at 33.6 g). His tub is the basis, per the
+Oikos rule that an aggregator's lower figure quietly cuts calories out of a meal; the conflict is
+written into the row's own provenance so nobody smooths it later. Both are open questions 13 and 14.
+
+**One guard-quality note worth keeping, because it is the second time this pattern has cost real
+coverage:** the new [water-oz] guard's first version **reimplemented the clamp inside itself**, and
+therefore passed two planted defects — including one that let the day go negative. It was testing my
+arithmetic, not the app's. The fix was to hoist the arithmetic to a top-level `ozAdjust()` so a plant
+can break it, which is the same reason `fvAddDish` is a named function. **A rule that keeps earning
+its place: if a guard cannot reach the code, the guard is about itself.**
