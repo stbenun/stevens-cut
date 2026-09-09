@@ -3233,5 +3233,73 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'and the hero agree on a diet-soda day, − removes ounces logged as bottles, the day floors at zero, and the why-note that explains a flexed target survived the card being deleted');
 }
 
+/* ---------- [dead-control] every control drawn must have something listening ----------
+ * See the note in the patch that introduced this. Short version: the app rebuilds a container with
+ * innerHTML and re-binds by selector afterwards, so any redraw that forgets a binder ships a button
+ * that does nothing and says nothing. He found two of those in a week. This finds them first.
+ */
+{
+  const srcDC = require('fs').readFileSync(SRC, 'utf8');
+  /* attributes served by ONE document-level listener are wired by construction — read them out of
+     the source so a newly delegated control cannot produce a false alarm */
+  const deleg = [];
+  { let m; const re = /closest\('\[data-([a-z0-9]+)\]'\)/g;
+    while((m = re.exec(srcDC))) if(deleg.indexOf('data-' + m[1]) < 0) deleg.push('data-' + m[1]); }
+
+  const r = run(`
+    const DELEG = ${JSON.stringify(deleg)};
+    const bad = [], seen = {full:0, typed:0, diary:0};
+    const wired = new WeakSet();
+    const origAdd = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(t, f, o){
+      if(t === 'click' || t === 'input' || t === 'change') wired.add(this);
+      return origAdd.call(this, t, f, o);
+    };
+    function scan(sel, label){
+      document.querySelectorAll(sel).forEach(function(root){
+        root.querySelectorAll('button, a, input, select, span[data-fvsel], span[data-fvfav]').forEach(function(c){
+          const attrs = Array.from(c.attributes).map(function(x){ return x.name; })
+            .filter(function(n){ return n.indexOf('data-') === 0; });
+          if(!attrs.length) return;                                  /* no data hook: not ours */
+          seen[label]++;
+          if(wired.has(c)) return;
+          for(const a of attrs) if(DELEG.indexOf(a) >= 0) return;    /* delegated at the document */
+          bad.push(label + ': <' + c.tagName.toLowerCase() + ' ' + attrs.join(' ') + '>');
+        });
+      });
+    }
+    const fv0 = Object.assign({}, fvState());
+    /* ① a FULL render of the food page, with a selection so the ticked rows exist too */
+    fvSet({slot:'bf', tab:'all', q:'', pick:null, sel:['elev8 cor','mixed berries']});
+    current = 'today'; render();
+    scan('.fvpage', 'full');
+    /* ② THE PARTIAL PATH THAT SHIPPED A DEAD ★. Fire a real input event so the app's own handler
+       runs — calling fvListHTML by hand would test the markup, and the markup was never the bug. */
+    const q = document.getElementById('fvQ');
+    if(!q) bad.push('no #fvQ on screen — clause ② ran vacuous');
+    else {
+      q.value = 'berr';
+      q.dispatchEvent(new window.Event('input', {bubbles:true}));
+      scan('.fvlist, .fvbar', 'typed');
+    }
+    /* ③ and the diary, which carries the amount boxes and the remove links */
+    fvClose(); current = 'today'; render();
+    scan('.diaryroot', 'diary');
+    EventTarget.prototype.addEventListener = origAdd;
+    fvSet(fv0);
+    return {bad, seen};
+  `);
+  const bad = r.bad.slice();
+  /* ⛔ VACUITY IS THE FAILURE MODE OF A SCANNER. Zero controls examined reads exactly like zero
+     controls broken, and this repo has shipped that mistake before. */
+  if (r.seen.full  < 20) bad.push('only ' + r.seen.full  + ' controls examined on the food page — clause ① is vacuous');
+  if (r.seen.typed < 5)  bad.push('only ' + r.seen.typed + ' controls examined after typing — clause ② is vacuous');
+  if (r.seen.diary < 5)  bad.push('only ' + r.seen.diary + ' controls examined in the diary — clause ③ is vacuous');
+  if (bad.length) fail('dead-control', bad.length + ' fault(s): ' + bad.slice(0,6).join(' | '));
+  else ok('dead-control', 'every control the app draws has a listener: ' + r.seen.full + ' on a full food page, ' +
+    r.seen.typed + ' after a keystroke rewrites the list (the path that shipped a dead ★), ' +
+    r.seen.diary + ' in the diary — with ' + deleg.length + ' document-delegated attributes excused by construction');
+}
+
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');
 process.exit(failed ? 1 : 0);
