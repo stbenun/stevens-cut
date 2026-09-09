@@ -157,6 +157,33 @@ the command is removed rather than annotated. Stage the paths you edited, spelle
 shows something modified that you did not modify, **it belongs to the other session and it is not yours to
 commit** — a dirty file is owned by whoever made it dirty, until they commit it.
 
+**⛔ THE PLANT HARNESSES GO LAST, AND THE TREE STAYS FROZEN UNTIL THEY PRINT.** New 2026-09-09,
+after three consecutive runs were thrown away in one session — about ninety minutes — for three
+different versions of the same mistake:
+- **Edited `index.html` while a run was in flight.** It snapshots the file at startup and plants into
+  copies of THAT content, while re-spawning `check-app.js` per plant. Edit either and the run is
+  measuring a mixture. Its verdict came back `index.html never written: false`.
+- **Committed while a run was in flight.** Same failure, less obviously: the snapshot is taken at
+  startup, so committing moves the file out from under it even though `git status` ends up clean.
+- **Two runs writing one log file.** `> scratchpad/plants.log` from a second run while the first was
+  still appending. The log interleaved, `grep` declared it binary and matched nothing, the count read
+  "49 of 111", and the summary at the tail belonged to the OTHER run. That one is the worst of the
+  three, because a truncated log with a plausible-looking summary reads like a finished run.
+
+**The rule, then: one run at a time, a unique log per run, nothing touching the repo until the last
+line prints, and count the lines.** `processed: N of <total>` is the cheap check that a run finished
+at all — the summary line alone cannot tell you, which is this file's own recurring lesson about
+silence looking like success.
+
+**⚡ AND BEFORE ANY OF THAT, AFTER ANY REFACTOR: `node tools/check-app.plant.js --anchors`.** It
+matches every plant's anchor against the working tree in about a third of a second and reports the
+ones that have DRIFTED — plants pointing at a line some refactor moved, which silently test nothing
+while the suite still reads green. Anchor drift hit **eight times in two days**; it is the dominant
+failure mode of the plant system. The flag reads the working tree on purpose and runs before the
+dirty-index refusal, because a refactor is uncommitted by definition. It exits non-zero even when
+every anchor matches, and says "this is NOT a pass" — it proves each plant still POINTS at
+something, never that the guard still fires.
+
 **⛔ RUN THE THREE PLANT HARNESSES, EVERY TIME.** They are the only things that test the TESTS. On
 2026-08-18 three plant fixtures and two selftest cases quietly stopped firing — each named a specific
 row, and each row got migrated — so they printed `SKIP` or `BROKEN CASE` while the suite still read as
