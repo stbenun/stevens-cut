@@ -390,9 +390,26 @@
         display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);
         border-radius:6px;font-size:13px;font-weight:800;color:transparent}
   .fv-c.on{border-color:var(--brass);background:var(--brass);color:var(--brass-ink)}
-  /* ⛔ bottom:86px, not 0. The tab bar is position:fixed over the last ~80px of the viewport, so a
-     bar stuck to the bottom would sit UNDER it and read as missing. */
-  .fvbar{position:sticky;bottom:86px;z-index:5;margin-top:14px;padding-top:10px;display:flex;gap:8px}
+  /* ⛔ FIXED, NOT STICKY, AND THAT IS A BUG FIX not a preference. This said position:sticky, which
+     never worked: html,body carry overflow-x:hidden (line ~34) to stop the page sliding sideways,
+     and that makes them a scroll container, which silently degrades sticky in every descendant. The
+     bar therefore laid out statically at the natural end of a 203-food list, and he found it by
+     scrolling — "i want to see the review and add to diary without having to scroll all the way
+     down", 2026-09-09.
+     ⛔ bottom is 86px + the safe area, not 0: the tab bar is fixed over the last ~80px, so a bar at
+     the bottom would sit UNDER it and read as missing. The gradient is so list rows do not show
+     through the gap between the two buttons. */
+  .fvbar{position:fixed;left:0;right:0;z-index:11;display:flex;gap:8px;
+         bottom:calc(86px + env(safe-area-inset-bottom,0px));padding:12px 14px 10px;
+         background:linear-gradient(to top,var(--ink2) 62%,transparent)}
+  /* ⛔ HIDDEN WHILE HE IS TYPING, for the reason nav.tabs is — see the KEYBOARD note there.
+     position:fixed anchors to the LAYOUT viewport; iOS shrinks the VISUAL one to open the keyboard,
+     so a fixed bar detaches and floats mid-screen over the content. That is his 2026-08-20
+     screenshot. While he is typing he is searching, not committing. */
+  body.kbdopen .fvbar{display:none}
+  /* the fixed bar covers the end of the list, so the page makes room — but only when there IS a
+     bar, or an empty picker ends in dead space. Set on render and toggled by fvPatchBar. */
+  .fvpage.haspicks{padding-bottom:104px}
   .fvrev{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:15px 14px;border:0;
          border-radius:12px;background:var(--panel2);color:var(--text);font-weight:800;font-size:12.5px;
          letter-spacing:.04em;box-shadow:0 6px 20px rgba(0,0,0,.45)}
@@ -6955,9 +6972,13 @@ function fvReviewHTML(ld){
    missing element would throw, and an append with an empty string would leave a stale bar. */
 function fvPatchBar(){
   const html = fvBarHTML();
+  const page = document.querySelector('.fvpage');
+  /* ⛔ THE PADDING TRACKS THE BAR. The bar is position:fixed, so it covers the end of the list; if
+     the class and the bar ever disagree, either the last foods are unreachable or an empty picker
+     ends in 104px of nothing. One line, next to the only other thing that changes the bar. */
+  if(page) page.classList.toggle('haspicks', !!html);
   const bar = document.querySelector('.fvbar');
   if(bar){ bar.outerHTML = html; return; }
-  const page = document.querySelector('.fvpage');
   if(page && html) page.insertAdjacentHTML('beforeend', html);
 }
 function fvBarHTML(){
@@ -6985,10 +7006,13 @@ function fvBarHTML(){
 function fvSearchHTML(ld){
   const st = fvState();
   const slot = SLOTS.find(s=>s.key === st.slot);
+  /* haspicks reserves room for the FIXED bar at the bottom; fvPatchBar keeps it in step when the
+     selection changes without a full render */
+  const picked = (st.sel || []).length > 0;
   const TABS = [['all','All'],['fav','Favorites'],['dishes','Your dishes']];
   const tabs = '<div class="fvtabs">' + TABS.map(t=>
     '<button class="fvtab' + (st.tab===t[0]?' on':'') + '" data-fvtab="' + t[0] + '">' + t[1] + '</button>').join('') + '</div>';
-  return '<div class="fvpage">'
+  return '<div class="fvpage' + (picked ? ' haspicks' : '') + '">'
     + '<div class="fvhead"><button class="fvx" data-fvclose="1">✕</button>'
     + '<input type="search" id="fvQ" placeholder="Search all foods…" value="' + esc(st.q) + '">'
     + '</div>'
@@ -11563,7 +11587,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788963091';
+const BUILD = 'b1788964604';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
