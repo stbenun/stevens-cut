@@ -20,13 +20,16 @@ const SW = path.resolve(__dirname, '..', 'sw.js');
 const PLANTS = [
   { guard: 'sw-update-path',
     name: 'the update check is allowed to be served from cache — the app silently stops updating',
-    /* THE defect this whole tool exists for: starve checkUpdate() of the network and the
-       "Update ready" bar never appears again, so nothing deployed reaches his phone. */
+    /* THE defect this whole tool exists for, and the one that makes cache-first defensible at all:
+       starve checkUpdate() of the network and the "Update ready" bar never appears again, so nothing
+       deployed reaches his phone. */
     edits: [{ from: "  if (req.cache === 'no-store' || url.searchParams.has('u')) return;",
               to:   "  /* removed */" }] },
 
   { guard: 'sw-update-path',
     name: 'only ?u= is bypassed, so a no-store check without the buster gets cached',
+    /* Safari does not reliably expose request.cache, which is why the ?u= test is not optional —
+       and this plant is why the no-store test is not optional either. */
     edits: [{ from: "  if (req.cache === 'no-store' || url.searchParams.has('u')) return;",
               to:   "  if (url.searchParams.has('u')) return;" }] },
 
@@ -41,29 +44,37 @@ const PLANTS = [
               to:   "  /* removed */" }] },
 
   { guard: 'sw-online',
-    name: 'it goes cache-first, so he sees the version he last downloaded instead of the live one',
-    edits: [{ from: "    fetch(req)\n      .then(res => {",
-              to:   "    caches.match(req, { ignoreSearch: true }).then(h => h || fetch(req))\n      .then(res => {" }] },
+    name: 'it reverts to network-first, so every cold open pays ~950 KB again',
+    edits: [{ from: "      if (hit) {", to: "      if (false) {" }] },
 
   { guard: 'sw-online',
-    name: 'the good copy is never stored, so there is nothing to fall back on offline',
-    edits: [{ from: "          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});",
-              to:   "          /* not stored */" }] },
+    name: 'the background revalidate is dropped, so the cache never refreshes on its own',
+    /* without it he depends on noticing the Update bar EVERY time; with it, simply reopening the app
+       tomorrow gets him the current build. */
+    edits: [{ from: "        event.waitUntil(fetch(req).then(res => store(key, res)).catch(() => {}));",
+              to:   "        /* not revalidated */" }] },
+
+  { guard: 'sw-online',
+    name: 'nothing is ever stored, so there is no copy to open offline and nothing to serve fast',
+    edits: [{ from: "  if(!res || !res.ok || res.type !== 'basic') return Promise.resolve();",
+              to:   "  return Promise.resolve();" }] },
+
+  { guard: 'sw-update-apply',
+    name: 'the ?v= branch is gone, so tapping Update serves the cached copy and the update never lands',
+    /* the bar would reappear on every open, forever, and tapping it would do nothing visible. */
+    edits: [{ from: "  if (doc && url.searchParams.has('v')) {",
+              to:   "  if (false && doc && url.searchParams.has('v')) {" }] },
+
+  { guard: 'sw-one-key',
+    name: 'the document stops having ONE cache key — the update applies once, then reverts',
+    /* the subtlest failure in this file: ?v= is cached under its own key, the next plain open still
+       hits the old entry, and the app appears to update and then go back. */
+    edits: [{ from: "  const key = doc ? PAGE : req;", to: "  const key = req;" }] },
 
   { guard: 'sw-update-reload',
-    name: 'the offline fallback for an update reload is removed — a blank screen after tapping Update',
-    /* WHAT CLAUSE 5 ACTUALLY PROTECTS, learned from this plant failing twice. After tapping the bar
-       the app reloads itself as ?v=<build>; offline, an exact-key cache lookup misses that URL. TWO
-       independent mechanisms save it: ignoreSearch on the first lookup, and the literal 'index.html'
-       second lookup (which resolves to the same stored key). They are redundant WITH EACH OTHER, so
-       removing either one alone changes nothing — the first two versions of this plant came back NOT
-       CAUGHT, correctly, and that is a fact about the worker worth having written down rather than a
-       hole in the check. The defect is losing BOTH: then a ?v= reload with no signal returns
-       Response.error(), which is a white screen caused by the update button itself. */
-    edits: [{ from: "        caches.match(req, { ignoreSearch: true })",
-              to:   "        caches.match(req)" },
-            { from: "          .then(hit => hit || caches.match('index.html', { ignoreSearch: true }))\n",
-              to:   "" }] },
+    name: 'the ?v= branch loses its offline fallback — tapping Update with no signal shows an error page',
+    edits: [{ from: "      fetch(req).then(res => { store(key, res); return res; }).catch(() => fromCache(key))\n    );\n    return;",
+              to:   "      fetch(req).then(res => { store(key, res); return res; })\n    );\n    return;" }] },
 ];
 
 function main(){

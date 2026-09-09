@@ -200,9 +200,22 @@ local `index.html`; that is the only proof he and I are reading the same file.
 use, so if it ever answers the update check from cache the app compares the cached `BUILD` against
 itself — the Update-ready bar never appears again and **nothing deployed reaches his phone, silently
 and permanently.** That is why the worker passes anything with `?u=` or `cache:'no-store'` straight
-to the network, why navigations are network-FIRST, and why `check-sw.js` exists as its own tool:
+to the network, and why `check-sw.js` exists as its own tool:
 jsdom has no ServiceWorker, so `probe.js` cannot see any of it. It loads the worker into a sandbox
 and CALLS the fetch handler rather than reading its source.
+**THE THREE SHAPES IT HAS, and each one is a decision, not an implementation detail:**
+| request | served from | why |
+|---|---|---|
+| `?u=` / `cache:'no-store'` | **network only, never cached** | the update check. Everything else here depends on this one staying honest. |
+| a plain open | **cache first**, revalidated behind him | ~950 KB off every cold start. Safe ONLY because the app checks for a new build 1.5 s later on the request above — take that away and cache-first is indefensible. |
+| `?v=<build>` (tapping Update) | **network first** | this IS the update landing. Served from cache, the bar would reappear forever and tapping it would do nothing. |
+
+**⛔ AND THE DOCUMENT HAS EXACTLY ONE CACHE KEY.** Every document response is written to `PAGE`,
+whatever query string it arrived with. Cache a `?v=` response under its own key and the next plain
+open still hits the old entry: **the update appears to apply and then silently reverts on the
+following open.** That is the subtlest failure in this repo's cache handling and `[sw-one-key]` is
+the only thing standing between it and his phone.
+
 ⚠️ Writing that checker taught three things worth keeping, all found by its plant harness rather than
 by review: a permissive test double (a fake cache that ignored the query string) agrees with anything
 and hid the defect it was written for; a network-first check run against an EMPTY cache cannot tell

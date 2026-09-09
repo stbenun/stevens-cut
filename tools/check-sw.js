@@ -130,26 +130,66 @@ const RES = (tag) => ({ ok: true, type: 'basic', __tag: tag, clone: () => ({ __t
     else ok('sw-scope', 'POSTs and cross-origin traffic pass straight through — his gist sync and the push service are untouched');
   }
 
-  /* ---- 3. online: network FIRST, with a POPULATED cache -------------------------------- */
+  /* ---- 3. online: CACHE-first, and the copy is refreshed behind him ------------------- */
   {
     const s = boot();
-    const net = RES('network');
+    const net = RES('network'), cached = RES('cache');
     s.net = () => Promise.resolve(net);
-    /* ⛔ SEED THE CACHE. With an empty one a cache-first worker falls through to the network and
-       looks identical to a network-first worker — the plant proved that, by passing. */
-    s.store.set(PAGE, RES('cache'));
+    s.store.set(PAGE, cached);
     const taken = fire(s, REQ(PAGE));
     const bad = [];
     if (taken === null) bad.push('a normal page load was not handled at all');
     else {
       const got = await taken;
-      if (got !== net) bad.push('served the ' + (got && got.__tag) + ' copy, not the network one — this is supposed to be network-FIRST, so he sees what is deployed');
-      if (!s.networkCalls.length) bad.push('the network was never called');
+      if (got !== cached) bad.push('served the ' + (got && got.__tag) + ' copy — a plain open is supposed to come from the CACHE, which is the whole point of the instant open');
       await new Promise(r => setImmediate(r));
-      if (!s.cachePuts.length) bad.push('nothing was written to the cache, so there is no copy to fall back on');
+      if (!s.networkCalls.length) bad.push('nothing was revalidated in the background, so the cache would never refresh and he would depend on the Update bar every single time');
+      if (!s.cachePuts.length) bad.push('the revalidated copy was not stored, so the next open is stale too');
     }
     if (bad.length) fail('sw-online', bad.join(' | '));
-    else ok('sw-online', 'online, a page load is served from the network even when a cached copy exists, and the fresh copy replaces it');
+    else ok('sw-online', 'online, a plain open is served from cache instantly and the fresh copy is fetched behind him — safe only because checkUpdate() still reaches the network, which clause 1 asserts');
+  }
+
+  /* ---- 3b. APPLYING an update: ?v= must come from the network ------------------------- */
+  {
+    const s = boot();
+    const net = RES('network'), cached = RES('cache');
+    s.net = () => Promise.resolve(net);
+    s.store.set(PAGE, cached);
+    const taken = fire(s, REQ(PAGE + '?v=b1788959170'));
+    const bad = [];
+    if (taken === null) bad.push('the ?v= update reload was not handled');
+    else {
+      const got = await taken;
+      if (got !== net) bad.push('tapping Update served the ' + (got && got.__tag) + ' copy — the update could never land, and the bar would reappear forever');
+    }
+    if (bad.length) fail('sw-update-apply', bad.join(' | '));
+    else ok('sw-update-apply', 'tapping Update (?v=) is served from the network even with a cached copy present, so the new build actually lands');
+  }
+
+  /* ---- 3c. ⛔ THE SUBTLE ONE: the document has ONE cache key -------------------------- */
+  {
+    const s = boot();
+    const net = RES('new-build'), cached = RES('old-build');
+    s.net = () => Promise.resolve(net);
+    s.store.set(PAGE, cached);
+    /* he taps Update -> ?v= -> network -> stored. Then he opens the app normally tomorrow. */
+    await fire(s, REQ(PAGE + '?v=b1788959170'));
+    await new Promise(r => setImmediate(r));
+    const s2 = boot();
+    s2.net = () => Promise.reject(new Error('offline'));   /* force the answer to come from cache */
+    for(const [k, v] of s.store) s2.store.set(k, v);
+    const taken = fire(s2, REQ(PAGE));
+    const bad = [];
+    if (taken === null) bad.push('the following plain open was not handled');
+    else {
+      const got = await taken;
+      if (got && got.__tag && got.__tag.indexOf('old-build') === 0)
+        bad.push('the update applied once and then REVERTED — the ?v= response was cached under its own key, so the next plain open still hits the old entry. The document must have exactly one cache key.');
+      else if (!got || got.__responseError) bad.push('the following plain open found nothing in the cache at all');
+    }
+    if (bad.length) fail('sw-one-key', bad.join(' | '));
+    else ok('sw-one-key', 'a ?v= update writes to the document\'s single cache key, so the next plain open serves the NEW build rather than reverting to the old one');
   }
 
   /* ---- 4. offline: the stored copy is served ------------------------------------------- */
@@ -181,8 +221,15 @@ const RES = (tag) => ({ ok: true, type: 'basic', __tag: tag, clone: () => ({ __t
     const bad = [];
     if (taken === null) bad.push('a ?v= reload was not handled offline');
     else {
-      const got = await taken;
-      if (got && got.__responseError)
+      /* ⛔ CATCH THE REJECTION. The realistic defect here is losing the .catch() on the ?v= branch,
+         which makes respondWith reject — and an unhandled rejection would crash this tool instead of
+         failing this clause, which looks like a broken harness rather than a caught defect. */
+      let got;
+      try { got = await taken; }
+      catch(e){ got = { __rejected: String((e && e.message) || e) }; }
+      if (got && got.__rejected)
+        bad.push('a ?v= reload offline REJECTED (' + got.__rejected + ') — with no fallback the browser shows its own network-error page, caused by the Update button itself');
+      else if (got && got.__responseError)
         bad.push('a ?v= reload dead-ends offline — tapping Update with no signal would show a blank screen. TWO things resolve that URL and BOTH are gone: ignoreSearch on the first lookup, and the literal index.html fallback. Either one alone is enough, so check both lines.');
       else if (got !== cached) bad.push('a ?v= reload served ' + JSON.stringify(got) + ' rather than the cached page');
     }
