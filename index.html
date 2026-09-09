@@ -1814,10 +1814,11 @@ function wireRowEdit(ld){
   { const g = document.getElementById('fvSlot');
     if(g) g.addEventListener('change', ()=>{ fvSet({slot: g.value}); render(); }); }
   document.querySelectorAll('[data-fvsave]').forEach(b=>b.addEventListener('click',()=>{
-    const slot = fvState().slot;
     if(!fvSaveFood(ld)) return;
-    openAcc.add('dg-'+slot);
-    /* back to the SEARCH, not out of the page — he is usually adding several things at once */
+    /* ⭐ BACK TO THE LIST, TICKED, WITH THE BAR UP — the screen in his 2026-09-09 screenshots.
+       The query is cleared on purpose: with it gone the list is REBUILT, and a rebuild is when
+       ticked foods sort to the top, so the food he just weighed is the first thing he sees. Nothing
+       has been written to the diary yet; ADD TO DIARY does that, once, for everything he picked. */
     fvSet({pick:null, amt:null, unit:null, q:''}); render(); window.scrollTo(0,0);
   }));
   document.querySelectorAll('[data-eadd]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -6587,7 +6588,9 @@ function logAddFood(ld, slot, key, n, unit){
    search screen with no diary behind it — the tab would simply not be the tab any more, and nothing
    on screen would explain why. Where he is inside a screen is not worth remembering; the ★ he
    pressed is, and that stays in the store. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null, review:false};
+/* selAmt: per-food amount overrides for the picks, {key: {n, u}}. Set when he opens a food and
+   SAVEs a weighed amount; absent means "use his usual", which is what a plain tick means. */
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false};
 /* ⛔ BIND ONCE PER ELEMENT, PER SELECTOR. The food page patches containers in place — a keystroke
    rewrites the list, a tick replaces one row — and the binder runs again afterwards to wire what is
    new. querySelectorAll also returns everything that SURVIVED, so without this a survivor collects a
@@ -6606,7 +6609,7 @@ function fvBind(sel, type, handler){
 }
 function fvState(){ return FV; }
 function fvSet(p){ FV = Object.assign({}, FV, p); }
-function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], dish:null, fact:null, review:false}; }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);
@@ -6784,8 +6787,13 @@ function fvSpec(key, n, u){
    committing it, which makes a drift between them worse than showing no number at all. Same
    argument as fvSpec, one function up. */
 function fvSelPick(k){
-  const u = fvUnits(k)[0], n = fvDefaultAmount(k, u);
-  return {k:k, n:n, u:u, m:fvMacros(k, n, u)};
+  /* ⭐ HIS WEIGHED AMOUNT WINS. Set by SAVE on the food screen; absent for a food he simply ticked,
+     which then means "my usual". This is the single place that decides, so the row he reads, the
+     review page, the bar total and the diary write cannot disagree about it. */
+  const o = (fvState().selAmt || {})[k];
+  const u = (o && o.u) || fvUnits(k)[0];
+  const n = (o && o.n != null) ? o.n : fvDefaultAmount(k, u);
+  return {k:k, n:n, u:u, m:fvMacros(k, n, u), weighed: !!o};
 }
 function fvSelPicks(){
   return (fvState().sel || []).filter(function(k){ return !!FOOD_FACTS[k]; }).map(fvSelPick);
@@ -7058,6 +7066,9 @@ function fvDetailHTML(ld){
     + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     + '<button class="fvsave" data-fvsave="1">SAVE</button>'
+    /* one line, because the button's meaning changed on 2026-09-09 and a button that writes
+       somewhere he is not looking has to say where */
+    + '<div class="sub" style="margin:6px 2px 0">Goes to your picks — ADD TO DIARY commits them.</div>'
     + '<button class="btn ghost" data-ffedit="' + esc(k) + '" style="width:100%;margin-top:8px">✏️ Edit these numbers</button>'
     + '</div>';
 }
@@ -7065,10 +7076,12 @@ function fvDetailHTML(ld){
    so the handler stops propagation — otherwise one tap would both select the food AND navigate to it. */
 function fvSelToggle(k){
   const sel = (FV.sel||[]).slice(), i = sel.indexOf(k);
-  if(i < 0) sel.push(k); else sel.splice(i, 1);
+  const amt = Object.assign({}, FV.selAmt || {});
+  if(i < 0) sel.push(k);
+  else { sel.splice(i, 1); delete amt[k]; }   /* untick forgets the weighed amount with it */
   /* ⛔ THE REVIEW PAGE CANNOT OUTLIVE THE SELECTION. Unticking the last row there leaves a page
      with nothing on it and a bar that no longer renders, so the state goes with it. */
-  fvSet({sel: sel, review: sel.length ? FV.review : false});
+  fvSet({sel: sel, selAmt: amt, review: sel.length ? FV.review : false});
   return sel.length;
 }
 /* ⛔ EVERY SELECTED FOOD GOES IN AT ITS OWN DEFAULT, IN ITS OWN UNIT. This is the bulk path: it is
@@ -7098,20 +7111,29 @@ function fvAddDish(ld, id){
   return null;
 }
 /* Commit the detail page: append this food, in the unit on screen, to the chosen group. */
+/* ⭐ SAVE ADDS TO HIS PICKS AT THE AMOUNT ON SCREEN. IT DOES NOT WRITE THE DIARY.
+   His instruction, 2026-09-09: "i searched up strawberrys, pressed on it, adjusted the amount, then
+   pressed save, after that i would want the screen to be like the images" — the images being the
+   list with that food ticked and the ADD TO DIARY bar waiting. The picker is a basket: pick, weigh,
+   pick again, commit once. That is also how every row in the app he showed me carries its own
+   amount rather than a default.
+   ⚠️ THIS REVERSES THE 2026-09-08 "SAVE UNTICKS IT" FIX, deliberately. That was correct while SAVE
+   wrote to the diary: leaving the tick on would have logged the food twice, once weighed and once at
+   his median, and he would have found it days later as a slot 200 cal over. Under a basket SAVE the
+   double-log is impossible — nothing is written until ADD TO DIARY — and unticking is the exact bug
+   he is reporting. Do not restore it without restoring diary-writing SAVE too. */
 function fvSaveFood(ld){
   const st = fvState(), k = st.pick;
   if(!FOOD_FACTS[k] || !st.slot) return null;
   const u = st.unit || fvUnits(k)[0];
   const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
-  const r = logAddFood(ld, st.slot, k, n, u);
-  /* ⛔ A FOOD THAT IS NOW IN THE DIARY MUST LEAVE THE SELECTION. Since 2026-09-08 a ticked row is
-     tappable from the top of the list and from the review page — whose own copy invites it ("tap a
-     row to change its amount before adding") — so the natural sequence is: tick five, open one,
-     weigh it, SAVE, then ADD the rest. If the tick survived that save, the food would be logged
-     twice: once at the amount he weighed, once at his median. He would find it as a slot 200 cal
-     over with a duplicate row, which is the class of bug that gets discovered days later. */
-  if(r && (st.sel||[]).indexOf(k) >= 0) fvSelToggle(k);
-  return r;
+  if(!(n > 0)) return null;                      /* same refusal logAddFood made on a zero amount */
+  const sel = (st.sel || []).slice();
+  if(sel.indexOf(k) < 0) sel.push(k);
+  const amt = Object.assign({}, st.selAmt || {});
+  amt[k] = {n:n, u:u};
+  fvSet({sel: sel, selAmt: amt});
+  return {k:k, n:n, u:u};                        /* what went into the basket, for the caller */
 }
 /* ==== THE DISH PAGE — where the cookbook went =============================================
    His instruction, 2026-09-06: get rid of the old My Meals section. That section was the ONLY
@@ -11541,7 +11563,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1788959170';
+const BUILD = 'b1788963091';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

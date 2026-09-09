@@ -166,10 +166,21 @@ const PLANTS = [
   { guard: 'food-log', name: 'the REVIEW button disappears from the bar',
     edits: [{ from: "    + '<button class=\"fvrev\" data-fvreview=\"1\"><span class=\"fvrev-n\">' + nSel + '</span>REVIEW</button>'",
               to:   "    + ''" }] },
-  { guard: 'food-log', name: 'SAVING a ticked food leaves it ticked, so ADD TO DIARY logs it twice',
-    /* tick five, open one, weigh it, SAVE, add the rest — the food lands at the weighed amount AND
-       at his median, in a slot he would not re-read for days. */
-    edits: [{ from: "  if(r && (st.sel||[]).indexOf(k) >= 0) fvSelToggle(k);", to: "  /* left ticked */" }] },
+  /* ⚰️ RETIRED 2026-09-09 — "SAVING a ticked food leaves it ticked, so ADD TO DIARY logs it twice".
+     It guarded a SAVE that wrote the diary, where leaving the tick on really did log the food twice
+     (once weighed, once at his median). The basket made that impossible: nothing reaches the diary
+     until ADD TO DIARY, and unticking on save was the exact bug he reported that day. There is no
+     line left to plant, so it is gone rather than re-aimed.
+     ITS COVERAGE MOVED, and the trade is auditable: "SAVE stops putting the food in the picks" and
+     "the weighed amount is ignored and the picks fall back to his median" now cover the same
+     handler, and the second of those IS the bug he reported. */
+  /* ---- the basket, 2026-09-09: SAVE fills the picks at the amount on screen ---- */
+  { guard: 'food-log', name: 'SAVE stops putting the food in the picks, so his screen never changes',
+    edits: [{ from: "  fvSet({sel: sel, selAmt: amt});", to: "  /* not saved */" }] },
+  { guard: 'food-log', name: 'the weighed amount is ignored and the picks fall back to his median — THE BUG HE REPORTED',
+    /* he set 155 g of strawberries, pressed save, and the amount was nowhere. Invisible unless
+       something asserts the NUMBER, which is why the clause reads it back out of fvSelPick. */
+    edits: [{ from: "  const o = (fvState().selAmt || {})[k];", to: "  const o = null;" }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",
@@ -608,23 +619,15 @@ const PLANTS = [
 ];
 
 function main() {
-  /* Nothing below writes index.html. A dirty one therefore means another tool or another session
-     did — refuse, and say which, rather than planting against content that is not committed. */
-  if (numstat() !== '') {
-    console.log('REFUSING TO RUN — index.html has uncommitted changes:');
-    console.log('  git diff --numstat index.html -> ' + numstat());
-    console.log('Nothing in this harness writes that file, so something else is holding it. Whoever has');
-    console.log('it dirty owns it until it is committed. Commit or stash, then re-run.');
-    process.exitCode = 2;
-    return;
-  }
-
-  const before = fs.readFileSync(P);
-  const orig = before.toString('utf8');
-
   if (ANCHORS) {
-    /* ⛔ ANCHORS ONLY. Every plant must match its target exactly once, and must actually change the
+    /* ⛔ READS THE WORKING TREE, DELIBERATELY, AND RUNS BEFORE THE DIRTY-INDEX REFUSAL. The question
+       this flag answers is "did the refactor I just made break a plant anchor" — and a refactor is
+       uncommitted by definition, so refusing on a dirty file made it useless at the exact moment it
+       was built for. The refusal still guards the PLANTING run below, which compares against a
+       committed baseline and has no business running on a tree someone else is holding.
+       ⛔ ANCHORS ONLY. Every plant must match its target exactly once, and must actually change the
        file. That is all this proves. It cannot tell you the guard still fires. */
+    const orig = fs.readFileSync(P, 'utf8');
     let bad = 0, changed = 0;
     PLANTS.forEach(function(p){
       let s2 = orig, why = null;
@@ -640,12 +643,28 @@ function main() {
     console.log('');
     console.log(changed + ' of ' + PLANTS.length + ' plants still point at real code' +
                 (bad ? ', ' + bad + ' DRIFTED' : ''));
+    console.log('(read the WORKING TREE' + (numstat() ? ', which is dirty — that is the point' : '') + ')');
     console.log(bad ? 'ANCHOR DRIFT — those plants are testing nothing until they are re-aimed'
                     : 'anchors only — every plant still points at something. This is NOT a pass: ' +
                       'run without --anchors to prove the guards still fire.');
     process.exitCode = 1;      /* never 0: an anchor check must not be mistaken for a suite run */
     return;
   }
+
+  /* Nothing below writes index.html. A dirty one therefore means another tool or another session
+     did — refuse, and say which, rather than planting against content that is not committed. */
+  if (numstat() !== '') {
+    console.log('REFUSING TO RUN — index.html has uncommitted changes:');
+    console.log('  git diff --numstat index.html -> ' + numstat());
+    console.log('Nothing in this harness writes that file, so something else is holding it. Whoever has');
+    console.log('it dirty owns it until it is committed. Commit or stash, then re-run.');
+    process.exitCode = 2;
+    return;
+  }
+
+  const before = fs.readFileSync(P);
+  const orig = before.toString('utf8');
+
   const env = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
   let all = true;
 

@@ -2415,22 +2415,41 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           else if(+rt !== Math.round(fvSelTotal()[0]))
             sf.push('the review page totals ' + rt + ' but the selection is ' + Math.round(fvSelTotal()[0])); }
         if(!/data-fvaddsel/.test(rv)) sf.push('the review page cannot add what it is reviewing');
-        /* ⑤ SAVING a ticked food takes it out of the selection. Tick five, open one, weigh it,
-           SAVE, ADD the rest — if the tick survived, that food lands twice: once at the weighed
-           amount and once at his median, in a slot he would not re-read for days. */
+        /* ⭐ ⑤ THE BASKET, AND THIS IS THE CLAUSE HE PAID FOR. His report 2026-09-09: "i searched
+           up strawberrys, pressed on it, adjusted the amount, then pressed save, after that i would
+           want the screen to be like the images." So SAVE must fill the PICKS at the amount on
+           screen, must NOT write the diary, and that amount must survive to the diary when he
+           finally commits. A weighed pick and a plain tick go in together and land as two rows with
+           two different amounts — which is what every row in the app he showed me does.
+           ⚠️ THIS REPLACED THE OPPOSITE ASSERTION. Until today SAVE wrote the diary and had to
+           UNTICK the food, or it logged twice. Under a basket nothing is written until ADD TO DIARY,
+           so the double-log is structurally impossible and the untick was the bug he reported. */
         { const D3 = isoToday(), e1 = store.get('qpcut.eaten', {});
           const r1 = store.get('qpcut.eaten', {}); delete r1[D3]; store.set('qpcut.eaten', r1);
-          fvSet({slot:'bf', sel:TICK.slice(), review:true, pick:'elev8 cor', unit:'g', amt:44});
-          if(!fvSaveFood(D3)) sf.push('SAVE refused 44 g of a ticked food');
-          if(fvState().sel.indexOf('elev8 cor') >= 0)
-            sf.push('SAVE left elev8 cor ticked — ADD TO DIARY would log it a second time');
+          const usual = fvSelPick('mixed berries').n;      /* captured BEFORE the add clears sel */
+          fvSet({slot:'bf', sel:[], selAmt:{}, review:false, pick:'elev8 cor', unit:'g', amt:44});
+          if(!fvSaveFood(D3)) sf.push('SAVE refused 44 g of elev8 cor');
+          /* nothing may reach the diary yet */
+          if((logEntries(D3).bf||[]).length)
+            sf.push('SAVE wrote to the diary — the picker is a basket, ADD TO DIARY is what commits');
+          if(fvState().sel.indexOf('elev8 cor') < 0)
+            sf.push('SAVE did not tick the food, so the screen he asked for never appears');
+          { const p = fvSelPick('elev8 cor');
+            if(!(p.n === 44 && p.u === 'g'))
+              sf.push('the pick reads ' + p.n + ' ' + p.u + ' rather than the 44 g he set — THE BUG HE REPORTED'); }
           fvSet({pick:null});
+          fvSelToggle('mixed berries');                    /* a plain tick means "my usual" */
           const n2 = fvAddSelected(D3);
+          if(n2 !== 2) sf.push('the basket committed ' + n2 + ' of its 2 picks');
           const rows2 = entryRows((logEntries(D3).bf||[])[0] || {});
+          if(rows2.length !== 2) sf.push('2 picks produced ' + rows2.length + ' diary row(s)');
           const cor2 = rows2.filter(function(x){ return x.f === 'elev8 cor'; });
-          if(cor2.length !== 1) sf.push('elev8 cor is in the diary ' + cor2.length + ' times after a SAVE then an ADD');
+          const mb2  = rows2.filter(function(x){ return x.f === 'mixed berries'; });
+          if(cor2.length !== 1) sf.push('elev8 cor is in the diary ' + cor2.length + ' times');
           else if(cor2[0].n !== 44) sf.push('the diary kept ' + cor2[0].n + ' g of elev8 cor, not the 44 he weighed');
-          if(n2 !== 1) sf.push('the remaining selection added ' + n2 + ' food(s), not 1');
+          if(mb2.length !== 1) sf.push('mixed berries is in the diary ' + mb2.length + ' times');
+          else if(mb2[0].n !== usual)
+            sf.push('the plain tick landed at ' + mb2[0].n + ' rather than his usual ' + usual + ' — a weighed pick must not change what an unweighed one means');
           store.set('qpcut.eaten', e1); }
         /* ⑥ and the review page dies with the selection rather than stranding him on an empty page */
         fvSet({review:true, sel:TICK.slice()});
@@ -2495,15 +2514,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         const want = Math.round(fvMacros(k, fvDefaultAmount(k, uu), uu)[0]);
         if(shown !== want) bad.push('the page shows ' + shown + ' kcal for ' + k + ' but its default is ' + want);
       });
-      /* and SAVE writes the unit it showed */
-      fvSet({pick:'blueberries', unit:'oz', amt:2});
+      /* and SAVE carries the unit it showed into the PICKS — see clause ⑤ for the full basket */
+      fvSet({sel:[], selAmt:{}, pick:'blueberries', unit:'oz', amt:2});
       if(!fvSaveFood(D)) bad.push('SAVE refused a legitimate 2 oz of blueberries');
       else {
-        const rows = entryRows((logEntries(D).bf||[])[0] || {});
-        const last = rows[rows.length - 1];
-        if(!last || last.f !== 'blueberries' || last.u !== 'oz' || last.n !== 2)
-          bad.push('SAVE wrote ' + JSON.stringify(last) + ', not 2 oz of blueberries');
+        const p = fvSelPick('blueberries');
+        if(!(p.n === 2 && p.u === 'oz'))
+          bad.push('SAVE put ' + p.n + ' ' + p.u + ' of blueberries in the picks, not the 2 oz it showed');
       }
+      fvSet({sel:[], selAmt:{}});
       fvClose(); fvSet(fv0);
     }
     /* the added foods are DIARY LINES now, each with its own amount box and remove control */
@@ -2540,6 +2559,15 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     /* (f) refusals */
     if(logAddFood(D,'bf','not a food',10)) bad.push('added a food that is not on the price list');
     if(logAddFood(D,'bf','blueberries',0)) bad.push('accepted a zero amount');
+    /* ⛔ AND THE BASKET REFUSES THE SAME THINGS. SAVE no longer goes through logAddFood, so its
+       refusals are its own now — a zero amount would otherwise sit in the picks and reach the diary
+       at commit time, where logAddFood would silently drop it and he would find a food missing. */
+    { const fv1 = Object.assign({}, fvState());
+      fvSet({slot:'bf', sel:[], selAmt:{}, pick:'blueberries', unit:'g', amt:0});
+      if(fvSaveFood(D)) bad.push('SAVE accepted a zero amount into the picks');
+      fvSet({pick:'not a food', amt:10});
+      if(fvSaveFood(D)) bad.push('SAVE accepted a food that is not on the price list');
+      fvSet(fv1); }
 
     store.set('qpcut.eaten', eat0); store.set('qpcut.foodq', q0);
     return {bad, t: t.join('/')};
