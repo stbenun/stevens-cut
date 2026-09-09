@@ -737,3 +737,63 @@ therefore passed two planted defects — including one that let the day go negat
 arithmetic, not the app's. The fix was to hoist the arithmetic to a top-level `ozAdjust()` so a plant
 can break it, which is the same reason `fvAddDish` is a named function. **A rule that keeps earning
 its place: if a guard cannot reach the code, the guard is about itself.**
+
+## 2026-09-09 — the full troubleshoot: his four answers, and what the audit actually found
+
+He asked for a full troubleshoot of the app and project, and asked for my questions first. His four
+answers, each of which is now a standing rule:
+
+**① "I dont understand what the refactor is. youre speaking in many terms and vocab i cant
+undersrand."** ⛔ THIS IS A CORRECTION ABOUT ME, NOT ABOUT THE APP, AND IT IS THE MOST IMPORTANT LINE
+IN THIS ENTRY. I had described the problem as "the re-render architecture" and "re-binding listeners
+by selector" — to a philosophy major and data analyst who does not write code. He could not evaluate
+the proposal, so my question was worthless and it cost him a round trip.
+**The rule: explain in what happens to HIM, never in what the code is called.** The version that
+worked: *"every time you tap anything, the app throws the whole screen away and rebuilds it, then has
+to re-attach every button — that's why your keyboard closed and why the ★ went dead."* Same fact, and
+he could immediately weigh it. See [[working-with-steven]]; this belongs with the brevity rules,
+because it is the same rule — reduce what he has to carry.
+
+**② Offline: "idk. what do you think"** — he delegated the call, so I made it and said why. Shipped:
+the app opens with no signal. ⛔ The constraint that shaped it: if the worker ever serves the update
+check from cache, the app compares the cached BUILD with itself and **nothing deployed reaches his
+phone again, silently.** An un-updatable app is worse than one that needs signal, so navigations are
+network-FIRST. **What I did NOT do without asking: serve the page from cache while online.** That
+would make cold opens instant and is the obvious next step, but it means the version he sees is the
+one he last downloaded. Offered, not taken.
+
+**③ "Prune the throwaway keys only."** ⚠️ AND THEN I RETRACTED MY OWN FINDING. I had flagged
+localStorage as growing without bound; measured against his real store it is **383 keys / 43 KB after
+four months**, against a multi-megabyte limit. Pruning would have saved a few hundred bytes. **The
+finding was wrong and the work was not done.** Recorded because a retraction is worth as much as a
+find, and because `render()` already prunes the only two families that accumulate junk.
+
+**④ "Fix it and tell me what moved."** His default for any wrong or stale number I find: fix it,
+report the delta, do not ask first. Already how the light-mayo correction was handled the day before.
+
+### What the audit found that was real
+
+- **A live bug he reported mid-audit**, and the best find of the day: ticking a food after a SEARCH.
+  Three faults at once — the handler called render() and iOS dropped the keyboard; the ticked row rode
+  to the top so a different food took the spot under his thumb and showed an unchecked box; and the
+  second tick did nothing because re-binding stacked a second listener on surviving rows. Fixed, and
+  the fix is verified by DOM node identity rather than by text, since a rebuilt input holds the same
+  value and still loses the keyboard.
+- **[dead-control]** — a new guard for the whole class, since he found two of these in one week and
+  both were mechanically detectable. ⛔ Its first draft read the SOURCE and came back CLEAN on the
+  buggy code, because something did listen: the render pass. Source cannot see WHICH path redrew a
+  container. It watches the DOM instead.
+- **Two date-key conventions in the store** (`dkey()` strips zero-padding, `bagKey`/`acctoggled` do
+  not). Both self-consistent, so it is a latent trap rather than a live bug: new code reading
+  `qpcut.bag.` with `dkey()` finds nothing, silently. Not yet fixed.
+
+### And a lesson about testing that keeps recurring
+
+Three flaws in the new service-worker checker were found by its own plant harness, not by review: a
+**permissive test double** (a fake cache that ignored query strings) agrees with anything and hid the
+exact defect it was written for; a **network-first assertion run against an empty cache** cannot tell
+network-first from cache-first; and one plant was simply **describing a defect that was not one**,
+because the worker's two offline fallbacks are redundant with each other. Add the guard-that-tests-
+itself failure from the day before ([water-oz] reimplementing the clamp inside the guard) and the
+pattern is unmistakable: **a test written in the same hour as its code tends to agree with it.** The
+plant harnesses are the only thing that catches that.
