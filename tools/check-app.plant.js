@@ -535,8 +535,11 @@ const PLANTS = [
   { guard: 'dead-control', name: 'the ★ binder stops reaching the rows a keystroke redrew',
     /* the bug as it shipped: scoped to the detail page's title, so a full render wires that one star
        and every star in the typed list is dead. Nothing on screen says so — the tap does nothing. */
-    edits: [{ from: "  document.querySelectorAll('[data-fvfav]').forEach(el=>el.addEventListener('click',ev=>{",
-              to:   "  document.querySelectorAll('.fvtitle [data-fvfav]').forEach(el=>el.addEventListener('click',ev=>{" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09: the binder became fvBind() in the same session's idempotence fix and
+       this plant went BROKEN CASE on the next run — the harness saying, correctly, that it was
+       testing nothing. Same defect, current spelling. */
+    edits: [{ from: "  fvBind('[data-fvfav]', 'click', function(el, ev){",
+              to:   "  fvBind('.fvtitle [data-fvfav]', 'click', function(el, ev){" }] },
   { guard: 'dead-control', name: 'the list rows are never re-wired after a keystroke, so the whole list goes dead',
     edits: [{ from: "      wireFvRows();\n      document.querySelectorAll('[data-fvaddsel]')",
               to:   "      document.querySelectorAll('[data-fvaddsel]')" }] },
