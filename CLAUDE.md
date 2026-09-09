@@ -109,13 +109,15 @@ clarifying question from him ("just confirming…", "no X?") means **verify**, n
 node tools/food-doc.js                                      # FOOD_FACTS.md
 node tools/status.js                                        # STATUS.md
 
-# 2. the seven verifications. Do not skip the three plant harnesses or step 7 — they prove the guards bite.
+# 2. the nine verifications. Do not skip the four plant harnesses or step 7 — they prove the guards bite.
 node tools/check-food.js                                    # food numbers, budgets, provenance, doc freshness
 NODE_PATH=.work/node_modules node tools/check-app.js        # schedule, rotations, name leak
 NODE_PATH=.work/node_modules node tools/probe.js            # renders his real data, every tab/day
 node tools/check-priced.plant.js                            # plants real defects, proves [priced] fires
 node tools/check-food.selftest.js                           # plants real defects across the food guards
 node tools/check-app.plant.js                               # plants real defects, proves the app-behaviour guards fire
+node tools/check-sw.js                                      # the service worker's routing, EXECUTED — jsdom has no ServiceWorker
+node tools/check-sw.plant.js                                # plants real defects in the worker, proves those checks bite
 NODE_PATH=.work/node_modules node tools/check-srcpath.js --if-touched   # proves --file is honoured; asks git, skips in ~0.2s if it can
 
 # 3. bump `const BUILD = 'b<epoch>'` in index.html   <-- WITHOUT THIS HIS OPEN APP NEVER UPDATES
@@ -193,6 +195,20 @@ which are separate mechanisms and were tested separately.
 `checkUpdate()` compares the served file's `BUILD` against the running app's. **Unchanged BUILD → the
 updater stays silent and nothing reaches his phone.** Also confirm `wc -c` of the live fetch equals
 local `index.html`; that is the only proof he and I are reading the same file.
+
+**⛔ AND SINCE 2026-09-09 THE SERVICE WORKER CAN STARVE THAT MECHANISM.** `sw.js` caches for offline
+use, so if it ever answers the update check from cache the app compares the cached `BUILD` against
+itself — the Update-ready bar never appears again and **nothing deployed reaches his phone, silently
+and permanently.** That is why the worker passes anything with `?u=` or `cache:'no-store'` straight
+to the network, why navigations are network-FIRST, and why `check-sw.js` exists as its own tool:
+jsdom has no ServiceWorker, so `probe.js` cannot see any of it. It loads the worker into a sandbox
+and CALLS the fetch handler rather than reading its source.
+⚠️ Writing that checker taught three things worth keeping, all found by its plant harness rather than
+by review: a permissive test double (a fake cache that ignored the query string) agrees with anything
+and hid the defect it was written for; a network-first check run against an EMPTY cache cannot tell
+network-first from cache-first, because both reach the network; and `ignoreSearch` plus the literal
+`index.html` fallback are **redundant with each other**, so removing either alone changes nothing —
+do not "simplify" the second lookup away on the grounds that the first covers it.
 
 ## WHERE THE NUMBERS LIVE — read these, never recall them
 
