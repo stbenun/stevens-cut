@@ -40,6 +40,9 @@ const P = 'index.html';
    bottom of this file — a filtered run cannot report a pass. */
 const ONLY = (function(){ const i = process.argv.indexOf('--only');
   return i > -1 && process.argv[i+1] ? String(process.argv[i+1]).toLowerCase() : null; })();
+/* --anchors: check every plant still POINTS at something, in about a second, without running the
+   suite once per plant. See the note at the top of this file — it is a drift detector, not a pass. */
+const ANCHORS = process.argv.indexOf('--anchors') > -1;
 
 const numstat = () => {
   try { return execSync('git diff --numstat -- ' + P, { encoding: 'utf8' }).trim(); }
@@ -127,8 +130,11 @@ const PLANTS = [
     edits: [{ from: '      if(w.indexOf(s) >= 0) r = 0;', to: '      if(nk.indexOf(s) === 0) r = 0;' }] },
   { guard: 'food-log', name: 'the search row labels his amount in the FACT’s unit again',
     /* banana read "1 g · 1 cal" while meaning 1 each · 105, and salmon "6 g" meaning 6 oz. */
-    edits: [{ from: "        + '<span class=\"fv-s\">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'",
-              to:   "        + '<span class=\"fv-s\">' + n + ' ' + esc(FOOD_FACTS[k].unit) + ' · ' + Math.round(m[0]) + ' cal</span>'" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09: this line moved into fvRowHTML when the list and the tick handler
+       were made to share one row builder. Same defect — banana reading "1 g · 1 cal" while meaning
+       1 each · 105. */
+    edits: [{ from: "    + '<span class=\"fv-s\">' + n + ' ' + esc(uu) + ' · ' + Math.round(m[0]) + ' cal</span>'",
+              to:   "    + '<span class=\"fv-s\">' + n + ' ' + esc(FOOD_FACTS[k].unit) + ' · ' + Math.round(m[0]) + ' cal</span>'" }] },
   { guard: 'food-log', name: 'the zone bar stops hiding behind the food page (two search boxes)',
     edits: [{ from: "    if(fvState().slot){ zb.innerHTML = ''; return; }   /* .zonebar:empty already hides it */",
               to:   "    if(false){ zb.innerHTML = ''; return; }" }] },
@@ -139,8 +145,9 @@ const PLANTS = [
     edits: [{ from: "  const sig = current==='today'? 'today|'+(fvState().slot ? 'fv' : zoneOrder().join())",
               to:   "  const sig = current==='today'? 'today|'+(zoneOrder().join())" }] },
   { guard: 'food-log', name: 'the tick boxes vanish from the search rows',
-    edits: [{ from: "        + '<span class=\"fv-c\" data-fvsel=\"' + esc(k) + '\">✓</span></button>';",
-              to:   "        + '</button>';" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09: moved into fvRowHTML with the rest of the row. */
+    edits: [{ from: "    + '<span class=\"fv-c\" data-fvsel=\"' + esc(k) + '\">✓</span></button>';",
+              to:   "    + '</button>';" }] },
   /* ---- the picker rewrite of 2026-09-08 — his instruction off another tracker: ticked foods ride
      at the TOP of the list with their numbers, and a counted REVIEW button opens a page holding
      only them. Six plants, because six things he asked for can each break with every other check
@@ -148,8 +155,9 @@ const PLANTS = [
   { guard: 'food-log', name: 'ticked foods stop sorting to the top of the list',
     edits: [{ from: "    keys = pinned.concat(rest);", to: "    keys = rest;" }] },
   { guard: 'food-log', name: 'a ticked row goes back to cal-only, dropping the amount and macros he is committing',
-    edits: [{ from: "      if(sel.indexOf(k) >= 0) return fvSelRowHTML(fvSelPick(k), F, k === lastPin);",
-              to:   "      if(false) return fvSelRowHTML(fvSelPick(k), F, k === lastPin);" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09: the branch moved into fvRowHTML and lost its lastPin argument. */
+    edits: [{ from: "  if(sel.indexOf(k) >= 0) return fvSelRowHTML(fvSelPick(k), F, last);",
+              to:   "  if(false) return fvSelRowHTML(fvSelPick(k), F, last);" }] },
   { guard: 'food-log', name: 'the ticked row prints its amount in the FACT’s unit while pricing his own',
     /* the fv-s bug one level up, in the row built for him to CHECK the amount: 6 oz of salmon
        labelled 6 g reads perfectly plausible and is 5 oz of food away from the truth. */
@@ -554,17 +562,23 @@ const PLANTS = [
   { guard: 'water-oz', name: 'the subtract button disappears, leaving him able only to add',
     /* ⚠ RE-ANCHORED 2026-09-08 when he killed the four-preset minus row: "just allow me to add or
        subtract as many oz as i want". Same defect, new control. */
-    edits: [{ from: "        + '<button class=\"step\" data-ozgo=\"-1\" aria-label=\"subtract that many ounces\">−</button>'",
-              to:   "        + ''" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09: the wrap()/preset scaffolding around it is gone (his "yes" to
+       dropping the +8/+12/+16/+20 row), so the indentation moved. */
+    edits: [{ from: "    + '<button class=\"step\" data-ozgo=\"-1\" aria-label=\"subtract that many ounces\">−</button>'",
+              to:   "    + ''" }] },
   { guard: 'water-oz', name: 'the oz box goes back to an id, so the second one on screen is dead',
     /* the reason it is data-ozgo at all: the control renders twice and $('#id') finds one. */
-    edits: [{ from: "        + '<button class=\"step\" data-ozgo=\"1\" aria-label=\"add that many ounces\">+</button>'",
-              to:   "        + '<button class=\"step\" id=\"ozAddBtn\">+</button>'" }] },
+    /* ⚠ RE-ANCHORED 2026-09-09, same reason as the subtract plant above. */
+    edits: [{ from: "    + '<button class=\"step\" data-ozgo=\"1\" aria-label=\"add that many ounces\">+</button>'",
+              to:   "    + '<button class=\"step\" id=\"ozAddBtn\">+</button>'" }] },
   { guard: 'water-oz', name: 'the why-note is lost when the hydration card is consolidated',
     /* the real risk in deleting a duplicate UI: the copy being removed was not identical. ht.why
        lived ONLY in the log card, and the flat-diary rewrite already lost the eat-time row this way. */
+    /* ⚠ REPAIRED 2026-09-09: the replacement text was missing its closing quote, so the planted
+       file did not parse — check-app.js crashed instead of failing and the harness read it as NOT
+       CAUGHT. A plant that does not compile tests nothing, and looks like a hole in the guard. */
     edits: [{ from: "    + (ht.why.length ? '<div class=\"note\" style=\"margin:2px 0 9px\">'",
-              to:   "    + (false ? '<div class=\"note\" style=\"margin:2px 0 9px\">" }] },
+              to:   "    + (false ? '<div class=\"note\" style=\"margin:2px 0 9px\">'" }] },
   { guard: 'meals-hub', name: 'a second hydration UI comes back to the log card',
     /* his complaint, 2026-09-08: "hydration is in 2 places." The guard must catch the duplicate
        RETURNING, not just the survivor going missing. */
@@ -607,6 +621,31 @@ function main() {
 
   const before = fs.readFileSync(P);
   const orig = before.toString('utf8');
+
+  if (ANCHORS) {
+    /* ⛔ ANCHORS ONLY. Every plant must match its target exactly once, and must actually change the
+       file. That is all this proves. It cannot tell you the guard still fires. */
+    let bad = 0, changed = 0;
+    PLANTS.forEach(function(p){
+      let s2 = orig, why = null;
+      for (const e of p.edits) {
+        const n = s2.split(e.from).length - 1;
+        if (n !== 1) { why = 'anchor matched ' + n + ' time(s)'; break; }
+        s2 = s2.replace(e.from, e.to);
+      }
+      if (!why && s2 === orig) why = 'plant changed nothing';
+      if (why) { console.log('DRIFTED  [' + p.guard + '] ' + p.name + ' — ' + why); bad++; }
+      else changed++;
+    });
+    console.log('');
+    console.log(changed + ' of ' + PLANTS.length + ' plants still point at real code' +
+                (bad ? ', ' + bad + ' DRIFTED' : ''));
+    console.log(bad ? 'ANCHOR DRIFT — those plants are testing nothing until they are re-aimed'
+                    : 'anchors only — every plant still points at something. This is NOT a pass: ' +
+                      'run without --anchors to prove the guards still fire.');
+    process.exitCode = 1;      /* never 0: an anchor check must not be mistaken for a suite run */
+    return;
+  }
   const env = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
   let all = true;
 
