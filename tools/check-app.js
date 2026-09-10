@@ -544,9 +544,16 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         return hits; };
       /* the population at risk: foods whose remainder does not terminate */
       const risky = [];
+      /* ⛔ A REAL PORTION, IN THE FOOD'S OWN UNIT. Passing a bare 32 meant 32 GRAMS for a
+         per-gram fact and 32 SERVINGS for everything else — kodiak flapjack went in at
+         2,016 cal, closed the hole, and finalMeal returned null, so part of this sweep was
+         rendering nothing while reporting clean. Same class as the forty-cups bug in
+         CLAUDE.md. fvDefaultAmount is what the picker itself offers him. */
+      const portion = function(k){ const u = fvUnits(k)[0]; return {u:u, n:fvDefaultAmount(k, u)}; };
       Object.keys(FOOD_FACTS).forEach(function(k){
         store.set('qpcut.eaten', Object.assign({}, eat0, only()));
-        if(!logAddFood(D, 'bf', k, 32)) return;
+        const p = portion(k);
+        if(!logAddFood(D, 'bf', k, p.n, p.u)) return;
         let fm = null; try { fm = finalMeal(D, {nowM: 22*60}); } catch(e){ return; }
         if(!fm) return;
         if([fm.left[0], fm.left[1], fm.gap[0], fm.gap[1]].some(function(v){ return decimals(v) >= 4; }))
@@ -554,20 +561,50 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       });
       if(risky.length < 5)
         bad.push('only ' + risky.length + ' food(s) leave a non-terminating remainder — this clause has almost nothing to catch');
-      /* render the card for them and read what is actually on screen */
-      const leaks = [];
-      risky.slice(0, 12).forEach(function(k){
-        store.set('qpcut.eaten', Object.assign({}, eat0, only()));
-        logAddFood(D, 'bf', k, 32);
-        openAcc.add('finalmeal'); current = 'today';
-        try { render(); } catch(e){ bad.push('rendering after ' + k + ' threw: ' + e.message); return; }
-        const card = document.getElementById('fmCard');
-        if(!card){ bad.push('the final meal card did not render at all after ' + k); return; }
-        const hits = longRuns(card.textContent || '');
-        if(hits.length) leaks.push(k + ' -> ' + hits.slice(0, 2).join(', '));
+      /* ⛔ RENDER EVERY BRANCH THAT PRINTS A NUMBER, NOT JUST THE ONE AN EMPTY DAY REACHES. This
+         clause passed a plant on 2026-09-10 because it only ever produced a ~2,000 cal hole, which
+         always takes the bigger-than-one-sitting branch; the tight branch's own raw float was never
+         on screen. Three lines, three states, and the sweep says so if it cannot reach one.
+         The hole is shrunk by pre-filling slots from his OWN meals, so the states are reached the
+         way his day reaches them rather than by faking a remainder. */
+      const leaks = [], seen = {};
+      /* ⛔ COUNTED, BECAUSE A SWEEP THAT RENDERS NOTHING LOOKS EXACTLY LIKE A CLEAN ONE. That is
+         how the 32-of-everything bug survived: finalMeal returned null and the loop moved on. */
+      let noCard = 0, rendered = 0;
+      const fills = [ {}, {pre:'p5'}, {pre:'p5', bf:'b1'}, {pre:'p5', bf:'b1', lu:'l1'},
+                      {pre:'p5', bf:'b1', lu:'l1', sn:'s1'} ];
+      risky.slice(0, 8).forEach(function(k){
+        fills.forEach(function(fill){
+          const day = Object.assign({}, fill);
+          store.set('qpcut.eaten', Object.assign({}, eat0, (function(){ const o = {}; o[D] = day; return o; })()));
+          /* the offending food goes in as an EXTRA row, so the remainder keeps its long tail */
+          const p2 = portion(k);
+          if(!logAddFood(D, 'bf', k, p2.n, p2.u)) return;
+          let fm = null; try { fm = finalMeal(D, {nowM: 22*60}); } catch(e){ return; }
+          if(!fm){ noCard++; return; }           /* hole closed by the fill — counted, not hidden */
+          const off0 = fm.gap.map(function(v){ return Math.abs(v); });
+          const state = (off0[0] <= 40 && off0[1] <= 6) ? 'tight' : (!fm.oneSitting ? 'big' : 'closest');
+          openAcc.add('finalmeal'); current = 'today';
+          try { render(); } catch(e){ bad.push('rendering after ' + k + ' threw: ' + e.message); return; }
+          const card = document.getElementById('fmCard');
+          if(!card){ bad.push('the final meal card did not render at all after ' + k); return; }
+          const txt = card.textContent || '';
+          seen[state] = (seen[state] || 0) + 1; rendered++;
+          const hits = longRuns(txt);
+          if(hits.length) leaks.push(k + ' [' + state + '] -> ' + hits.slice(0, 2).join(', '));
+        });
       });
       if(leaks.length)
-        bad.push(leaks.length + ' food(s) put a raw float on the final meal card: ' + leaks.slice(0, 3).join(' | '));
+        bad.push(leaks.length + ' render(s) put a raw float on the final meal card: ' + leaks.slice(0, 3).join(' | '));
+      /* ⛔ AND SAY IT WHEN A BRANCH WAS NEVER REACHED. A branch this clause cannot enter is a branch
+         it is not checking, and the difference between that and a pass is exactly the plant it
+         missed. Names the states it did reach so the gap is diagnosable rather than mysterious. */
+      if(rendered < 6) bad.push('the final-meal sweep only rendered the card ' + rendered
+        + ' time(s) (' + noCard + ' fills closed the hole) — it is testing almost nothing');
+      ['tight','big','closest'].forEach(function(st){
+        if(!seen[st]) bad.push('the final-meal card was never rendered in its "' + st + '" state — that '
+          + 'branch prints numbers too and nothing here tested it (reached: '
+          + (Object.keys(seen).join(', ') || 'none') + ')'); });
       store.set('qpcut.eaten', eat0); current = cur0; render();
       return {bad: bad, risky: risky.length};
     `);

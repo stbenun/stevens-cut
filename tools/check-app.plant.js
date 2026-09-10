@@ -241,9 +241,15 @@ const PLANTS = [
   { guard: 'final-meal', name: 'the remainder badge prints the raw float again — his "billionth power"',
     edits: [{ from: '      <span class="statline">${L[0]} left · ${L[1]}P</span></summary>',
               to:   '      <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>' }] },
-  { guard: 'final-meal', name: 'the off-by line prints the raw miss again',
-    edits: [{ from: '      ? `Lands on target — off by ${offR[0]} cal, ${offR[1]}P.`',
-              to:   '      ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`' }] },
+  /* ⛔ RETIRED 2026-09-10, the hour it was written, and the reason is worth more than the plant was.
+     It planted offR -> off on the miss line, expecting a raw float. There is none to expect:
+     finalMeal rounds the gap to one decimal at source (`Math.round((v - totalM[i])*10)/10`), so that
+     line could only ever differ by "5.8" vs "6". It went NOT CAUGHT correctly.
+     The tempting repair was a guard asserting the rounded spelling — which would have frozen a
+     cosmetic preference of mine as if it were his bug, and it was actually a REGRESSION: 0.1P
+     printed as 0P on the one line whose job is saying how close he got. Both the plant and the
+     change it defended are gone. The real leak was fm.left, and its plant — 'the remainder badge
+     prints the raw float again' — is CAUGHT. */
   /* ⛔ AND THE ONE THAT WOULD LOOK LIKE A TIDIER FIX: round inside finalMeal instead. It cures the
      display and quietly moves the solver's own arithmetic, which is why the boundary is at the read.
      [final-meal]'s 25 cal / 8P scenario check is what notices. */
@@ -431,9 +437,14 @@ const PLANTS = [
   { guard: 'meal-drafts', name: 'the card stops saying what a draft is missing',
     /* ⚠ RE-ANCHORED 2026-09-10: the blanket "nothing guards them" became a per-state note when
        he pointed out it was wrong about a draft built from guarded foods. Same defect, current
-       spelling — the card stops telling him what it does not check. */
-    edits: [{ from: "price exactly like the rest of the app — what they still lack is a written method and a '",
-              to:   "price exactly like the rest of the app and are fine. '" }] },
+       spelling — the card stops telling him what it does not check.
+       ⛔ AND RE-CUT THE SAME DAY, because the first version went NOT CAUGHT while looking correct.
+       It replaced only the MIDDLE of three concatenated literals, so the third one still carried
+       the phrase 'slot-budget check' that the guard matches on: the plant deleted the sentence and
+       left the evidence. A plant must take the WHOLE literal it means to destroy. --anchors could
+       not have found this — the fragment matched fine. */
+    edits: [{ from: `    : 'These live on this phone only. Their amounts come from your <b>guarded food list</b>, so they '\n      + 'price exactly like the rest of the app — what they still lack is a written method and a '\n      + 'slot-budget check. Send them over and they get both.';`,
+              to:   `    : 'These are fine.';` }] },
   { guard: 'meal-drafts', name: 'the dishes list stops distinguishing his drafts from guarded meals',
     edits: [{ from: "+ '<span class=\"fv-tag\">yours</span> — they carry <b>no method and no slot-budget check</b> '",
               to:   "+ '<span class=\"fv-tag\">yours</span> '" }] },
