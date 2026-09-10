@@ -2734,6 +2734,9 @@ const FOOD_FACTS = {
      consistent across three weights — but ONE PHOTO of the canister would settle it properly. */
   'kodiak protein oats': {unit:'g', cal:3.8, p:0.2, c:0.58, f:0.08, src:"Kodiak Cakes Protein Oats canister, HIS OWN LABEL photographed Aug 18 2026: serving 1/2 cup (50 g) = 190 cal / 4 F (1 sat) / 29 C (5 fiber, 1 sugar) / 10 P, about 9 servings per container. Ingredients are 100% whole grain rolled oats, pea protein concentrate and whey protein crisps -- which is why it is not plain oats. Per gram: 3.8 cal / 0.2 P / 0.58 C / 0.08 F. This REPLACES a figure derived from Q's spreadsheet, and the label confirms that derivation to three decimals, so his 5 P at 25 g was right all along and my 3.4 P (plain USDA oats) was the error. Kodiak's packets/Power Cups/PEAK figures do not apply to this canister."},
   'oats':              {unit:'g',           cal:3.79, p:0.135, c:0.674, f:0.069, src:'USDA oats, rolled, dry: 100 g = 379 cal / 13.5 P / 67.4 C / 6.9 F -> per gram. The app prices 25 g at 95 cal, i.e. 3.8 cal/g — already exact. No change.'},
+  'seared tuna rice wrap':{unit:'wrap (89 g)', sp:[88,100], cal:92.66, p:8.09, c:11.07, f:1.96, src:'BUILT FROM PARTS, not measured — his instruction 2026-09-07 for restaurant items: "they dont share nutritional facts. Build them from parts." Jus by Julie, Boro Park (4404 18th Ave), "Seared tuna rice wrap", $22. They publish nothing: their menu page, FatSecret, MyNetDiary and the Nutrition by Tanya approved-items list were all checked Sept 10 2026 and none carries this item. HIS OWN MEASUREMENTS, Sept 10 2026: all THREE wraps weigh 268 g together, "quite small", filled with seared tuna, kale, arugula, soba noodles, red cabbage, cucumber and avocado, "very light on the avocado". THE BUILD, per plate of 3, priced by the engine off the keys already in this file: rice paper 24 g DRY (3 small sheets, ~60 g once soaked) + tuna sashimi 80 g + soba noodles cooked 45 g + kale 20 g + arugula 20 g + red cabbage 15 g + cucumber 15 g + avocado 13 g + olive oil 3 g for the sear. The wet masses sum to exactly his 268 g, which is what makes this a solve and not a guess. = 278 cal / 24.3 P / 33.2 C / 5.9 F per plate -> this row is per WRAP (one third). ⚠ WHAT IS ASSUMED vs SOURCED: every per-gram figure is sourced (USDA, or a key already in this file). MINE are the internal split of his 268 g — the tuna portion (80 g), the wrapper size (small sheets) and the 3 g of searing oil. Ask the counter "how much tuna per wrap" to close it. ⭐ THE SPREAD IS NARROW BECAUSE THE MASS IS FIXED, not because the split is known: soaked wrapper (~1.3 cal/g), tuna (1.1) and cooked soba (0.99) are all near 1 cal/g, so 268 g lands at ~278 cal almost regardless of how it is divided. Re-solving with the wrapper at 18-36 g dry and the tuna at 65-100 g, always summing to 268 g, gives 265-300 per plate = 88-100 per wrap. ⛔ PROTEIN IS THE FIGURE THAT REALLY MOVES and sp: does not guard it: 20-29 g across the plate (6.7-9.7 per wrap) depending only on the tuna. Basis 8.09. If a lunch ever hinges on hitting protein, weigh the tuna or treat this as ~24 g P for the plate, not a precise number. ⛔ THE SAUCE IS NOT IN THIS ROW. It is served with a peanut-style dipping sauce and he is allergic to every nut but almonds — he ordered it without. Never add a sauce to this key; price it separately if he ever confirms what it is.'},
+  'rice paper':        {unit:'g', sp:[3.2,3.4], cal:3.3, p:0.03, c:0.80, f:0.002, src:'Spring-roll rice paper (rice flour + tapioca starch + water), per gram DRY. Published listings agree closely on DENSITY and disagree on SHEET WEIGHT, which is why this is per-gram: a USDA-derived listing gives 16 cal / 3.6 C per ~5 g sheet (3.2 cal/g), Three Ladies 22 cm squares work out at ~3.4 cal/g, and starch at 0.80 C/g implies 3.2 cal/g independently. Basis 3.3, spread 3.2-3.4. Sheet weights seen: small ~6 g, large 10-15 g. ⚠️ SOAKED WRAPPER WEIGHS ~3x ITS DRY WEIGHT and gains no calories — never price a wet wrapper by its scale weight. Protein is the softest figure (listings run 1-6 g per 100 g) and is worth under 1 g in a whole wrap. Fetched Sept 10 2026.'},
+  'soba noodles cooked':{unit:'g',          cal:0.99, p:0.0506, c:0.2144, f:0.001, src:'USDA "Noodles, japanese, soba, cooked": 100 g = 99 cal / 5.06 P / 21.44 C / 0.1 F -> per gram. Fetched Sept 10 2026, corroborated across four USDA-derived listings. ⛔ COOKED IS IN THE KEY DELIBERATELY, against this file\'s raw/dry default: soba only ever reaches him already cooked inside a restaurant dish, so a dry basis could not be weighed and would invite a 3x error. Dry soba is ~3.36 cal/g if a dry row is ever needed — add it as its own key rather than converting this one.'},
   'white rice dry':    {unit:'g',           cal:3.62, p:0.071, c:0.80,  f:0.007, src:'USDA white rice, long-grain, regular, RAW: 100 g = 365 cal / 7.13 P / 80 C. Short-grain sushi rice is ~358, so 3.62 cal/g is the midpoint of the two he cooks and is within 2% of either. ⚠️ The app rows were priced at ~3.40 — about 7% light across all five. Carbs were already right (0.80/g exactly), which is why only calories moved.'},
   'rice cake':         {unit:'each',        cal:35,   p:0.33,  c:7,     f:0,     src:'HIS figure, stated repeatedly and baked into the row label "Rice cakes (35 cal each)". Plain brown-rice cakes run 35 cal / 7 C, so his number checks out against the category. He always eats 3.'},
   /* ===== PRODUCE, Aug 12 2026. Every one of these CLEARS the app rather than correcting it —
@@ -6733,12 +6736,15 @@ function foodSearch(q, limit){
     const ua = use[a]||0, ub = use[b]||0;
     return ua !== ub ? ub - ua : a.localeCompare(b);
   }).slice(0, limit||40);
-  /* try what he typed AND its singular, so neither spelling is a dead end */
-  const forms = [raw]; const st = raw.split(' ').map(fsStem).join(' ');
-  if(st !== raw) forms.push(st);
-  const rank = k => {
+  /* ⛔ ONE STRING'S RANK AGAINST ONE KEY — factored out BYTE-FOR-BYTE from what used to be inlined
+     here, because this ordering is guarded and hard-won: "cor" has to land on elev8 cor and not the
+     cornish hen, "alm" on almond butter and not salmon. Nothing in it changed. */
+  const rank1 = function(k, s0){
     const nk = fsNorm(k), w = nk.split(' ');
     const src = fsNorm(FOOD_FACTS[k].src);
+    /* try what he typed AND its singular, so neither spelling is a dead end */
+    const forms = [s0]; const st = s0.split(' ').map(fsStem).join(' ');
+    if(st !== s0) forms.push(st);
     let best = 99;
     forms.forEach(function(s, fi){
       const pen = fi;   /* an exact-spelling hit always beats the same hit via the stem */
@@ -6751,6 +6757,29 @@ function foodSearch(q, limit){
       if(r + pen < best) best = r + pen;
     });
     return best;
+  };
+  /* ⭐ EVERY WORD HE TYPED MUST HIT, IN ANY ORDER — and this is a real bug he ran into twice on
+     2026-09-10, an hour apart. "navel orange" found NOTHING while "navel" alone found `orange`;
+     "tuna wrap" found NOTHING while the key is `seared tuna rice wrap`. Both words right, each one
+     a hit on its own, and the food sitting there. The old ranker scored the query as ONE string, so
+     it could only ever match words that were adjacent and in his order.
+     The score is the WORST word's score: a key that matches one word squarely and another only
+     inside its provenance is a weaker hit than one matching both squarely. Any word that hits
+     nothing at all disqualifies the key outright, so typing more words always narrows.
+     ⚠️ The phrase score is still taken and the better of the two wins — a contiguous hit can only
+     help, never hurt. And a ONE-WORD query never enters this branch, which is what keeps the
+     guarded single-word ranking above exactly as it was. */
+  const toks = raw.split(' ').filter(Boolean);
+  const rank = function(k){
+    const ph = rank1(k, raw);
+    if(toks.length < 2) return ph;
+    let worst = 0;
+    for(let i = 0; i < toks.length; i++){
+      const r = rank1(k, toks[i]);
+      if(r >= 99) return 99;
+      if(r > worst) worst = r;
+    }
+    return Math.min(ph, worst);
   };
   /* rank first, then HIS USAGE, then the shorter name. Usage as the tiebreak is why 'alm' lands on
      almond butter (36 logs) rather than whichever almond product has the shortest name. */
@@ -9978,10 +10007,22 @@ function viewToday(){
     const mac = m => `${Math.round(m[0])} · ${Math.round(m[1])}P · ${Math.round(m[2])}C · ${Math.round(m[3])}F`;
     const off = fm.gap.map(v=>Math.abs(v));
     const tight = off[0] <= 40 && off[1] <= 6;
+    /* ⛔ ONE ROUNDING BOUNDARY, AND NOTHING GETS TO THE SCREEN AROUND IT. His report,
+       2026-09-10: the card showed "calories and protein to the like billionth power". Every
+       number here is a float SUBTRACTION — the day's target minus what he ate — and 43 foods
+       in his own list have a per-gram value that is a non-terminating binary fraction, so
+       32 g of kodiak flapjack printed "234 left · 36.599999999999994P". mac() already rounded
+       the plate and the totals; the remainder and the miss were printed raw.
+       ⚠️ THE RAW VALUES STAY RAW ABOVE THIS LINE, on purpose. `tight` compares against
+       thresholds and the solver scores candidates on fm.gap — rounding at the source would
+       move real behaviour to fix a display bug. Round where it is READ, not where it is
+       computed. */
+    const L = fm.left.map(v=>Math.round(v));
+    const offR = off.map(v=>Math.round(v));
     return `
   <details class="card acc" data-acc="finalmeal"${openAcc.has('finalmeal')?' open':''} id="fmCard">
     <summary><h3 style="display:inline;font-size:16px">🛟 Final meal</h3>
-      <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>
+      <span class="statline">${L[0]} left · ${L[1]}P</span></summary>
     <div class="sub" style="margin-top:6px">${fm.covers.length>1
       ? `Short <b>${fm.covers.map(k=>SLOTS.find(s=>s.key===k).slot.toLowerCase()).join(', ')}</b>. One cook closes it.`
       : `One cook closes the day.`}</div>
@@ -10016,10 +10057,10 @@ function viewToday(){
 
     <div class="budget" style="margin-top:12px"><span><b>TOTAL</b> ${mac(fm.total)}</span><span>vs ${mac(fm.left)} left</span></div>
     <div class="ingmac" style="margin-top:4px">${tight
-      ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`
+      ? `Lands on target — off by ${offR[0]} cal, ${offR[1]}P.`
       : !fm.oneSitting
-        ? `⚠️ <b>This is bigger than one sitting.</b> ${fm.left[0]} cal and ${fm.left[1]}P is most of a day, not a meal — the closest honest plate leaves ${off[0]} cal and ${off[1]}P on the table. Eat this, go to bed under, and don’t chase the rest. One short day costs you nothing.`
-        : `⚠️ Closest fit is ${fm.gap[0]>0?`${off[0]} cal short`:`${off[0]} cal over`}, ${fm.gap[1]>0?`${off[1]}P short`:`${off[1]}P over`}. Try another dish or lane.`}</div>
+        ? `⚠️ <b>This is bigger than one sitting.</b> ${L[0]} cal and ${L[1]}P is most of a day, not a meal — the closest honest plate leaves ${offR[0]} cal and ${offR[1]}P on the table. Eat this, go to bed under, and don’t chase the rest. One short day costs you nothing.`
+        : `⚠️ Closest fit is ${fm.gap[0]>0?`${offR[0]} cal short`:`${offR[0]} cal over`}, ${fm.gap[1]>0?`${offR[1]}P short`:`${offR[1]}P over`}. Try another dish or lane.`}</div>
     <div class="formrow"><button class="btn" id="fmLog">Log it${fm.covers.length>1?` · closes ${fm.covers.length} slots`:''}</button></div>
   </details>`;
   })()}
@@ -11861,7 +11902,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789061113';
+const BUILD = 'b1789069495';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

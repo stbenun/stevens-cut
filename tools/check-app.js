@@ -390,6 +390,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   `);
   const rows = JSON.parse(res);
   const bad = [];
+  let riskyN = 0;
   rows.forEach(r => {
     if (r.err)  { bad.push(`${r.n}/${r.lane}: THREW ${r.err}`); return; }
     if (r.none) { bad.push(`${r.n}/${r.lane}: returned nothing but the hole is real`); return; }
@@ -511,8 +512,70 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('final-recipe', `${dishes.length} dishes: no hand-typed quantities in any step, every scaled part used, no step-count cap`);
 }
 
+  /* ⛔ AND THE CARD AS RENDERED, WHICH THE FOUR SCENARIOS ABOVE DO NOT SEE. They read finalMeal()'s
+     RETURN, and the numbers in it were always right — his report on 2026-09-10 was about the
+     DISPLAY: "in final meal it shows calories and protein to the like billionth power". Every
+     number on the card is a float subtraction and 43 foods in his list have a non-terminating
+     per-gram value, so the remainder printed as 36.599999999999994P. A guard reading fm.left cannot
+     see a rounding that never happened; this one reads the DOM.
+     ⛔ THE FOOD IS CHOSEN BY COMPUTATION, never named, so renaming a row cannot make it vacuous —
+     and it says so out loud if too few foods qualify. */
+  {
+    const r2 = run(`
+      const bad = [], D = isoToday();
+      const eat0 = JSON.parse(JSON.stringify(store.get('qpcut.eaten',{})));
+      const cur0 = current;
+      const only = function(){ const o = {}; o[D] = {}; return o; };
+      /* 4+ decimals is the signal. One to three is a real quantity — 0.5 cup, 2.67 cal/g. */
+      const decimals = function(v){ return (String(v).split('.')[1] || '').length; };
+      /* hand-rolled on purpose: see the note where this clause is installed. Also catches
+         scientific notation, since String(5.68e-14) carries 15 digits after the point. */
+      const longRuns = function(txt){
+        const hits = []; let i = 0;
+        while(i < txt.length){
+          if(txt[i] >= '0' && txt[i] <= '9'){
+            let j = i; while(j < txt.length && txt[j] >= '0' && txt[j] <= '9') j++;
+            if(txt[j] === '.'){
+              let k = j + 1; while(k < txt.length && txt[k] >= '0' && txt[k] <= '9') k++;
+              if(k - j - 1 >= 4) hits.push(txt.slice(i, k));
+              i = k; continue; }
+            i = j; continue; }
+          i++; }
+        return hits; };
+      /* the population at risk: foods whose remainder does not terminate */
+      const risky = [];
+      Object.keys(FOOD_FACTS).forEach(function(k){
+        store.set('qpcut.eaten', Object.assign({}, eat0, only()));
+        if(!logAddFood(D, 'bf', k, 32)) return;
+        let fm = null; try { fm = finalMeal(D, {nowM: 22*60}); } catch(e){ return; }
+        if(!fm) return;
+        if([fm.left[0], fm.left[1], fm.gap[0], fm.gap[1]].some(function(v){ return decimals(v) >= 4; }))
+          risky.push(k);
+      });
+      if(risky.length < 5)
+        bad.push('only ' + risky.length + ' food(s) leave a non-terminating remainder — this clause has almost nothing to catch');
+      /* render the card for them and read what is actually on screen */
+      const leaks = [];
+      risky.slice(0, 12).forEach(function(k){
+        store.set('qpcut.eaten', Object.assign({}, eat0, only()));
+        logAddFood(D, 'bf', k, 32);
+        openAcc.add('finalmeal'); current = 'today';
+        try { render(); } catch(e){ bad.push('rendering after ' + k + ' threw: ' + e.message); return; }
+        const card = document.getElementById('fmCard');
+        if(!card){ bad.push('the final meal card did not render at all after ' + k); return; }
+        const hits = longRuns(card.textContent || '');
+        if(hits.length) leaks.push(k + ' -> ' + hits.slice(0, 2).join(', '));
+      });
+      if(leaks.length)
+        bad.push(leaks.length + ' food(s) put a raw float on the final meal card: ' + leaks.slice(0, 3).join(' | '));
+      store.set('qpcut.eaten', eat0); current = cur0; render();
+      return {bad: bad, risky: risky.length};
+    `);
+    r2.bad.forEach(function(x){ bad.push(x); });
+    riskyN = r2.risky;
+  }
   if (bad.length) fail('final-meal', bad.join(' · '));
-  else ok('final-meal', `${rows.length} hole x lane combos all close within 25 cal / 8P, chicken opt-in only, no duplicate rows`);
+  else ok('final-meal', `${rows.length} hole x lane combos all close within 25 cal / 8P, chicken opt-in only, no duplicate rows — and the rendered card prints no raw float for any of the ${riskyN} foods whose remainder does not terminate`);
 }
 
 /* ---------- [meal-timing] a late meal must not cascade, and nothing lands inside a commitment ------
@@ -2855,6 +2918,32 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const alm = foodSearch('alm', 12);
     if(alm[0] !== 'almond butter') bad.push('search "alm" ranked ' + alm[0] + ' first — a mid-word hit like salmon must rank below a word start');
     if(!foodSearch('', 12).length) bad.push('an empty search shows nothing at all');
+    /* ⭐ AND A MULTI-WORD QUERY FINDS THE FOOD. He hit this twice on 2026-09-10 — "navel orange"
+       and "tuna wrap" both returned NOTHING while each word alone was a hit, and the second time it
+       hid a food added for him minutes earlier. Asserted as a PROPERTY rather than as three fixed
+       queries: for a sample of real keys, typing any two of a key's own words must return that key.
+       A named-query list would rot the moment a key is renamed; this cannot. */
+    { const sample = Object.keys(FOOD_FACTS).filter(function(k){ return k.split(' ').length >= 2; });
+      if(sample.length < 20) bad.push('fewer than 20 multi-word food keys — the multi-word search check is thin');
+      const missed = [];
+      sample.forEach(function(k){
+        const w = k.split(' ').filter(function(x){ return x.length > 2; });
+        if(w.length < 2) return;
+        /* first and LAST word, so the test is not accidentally a prefix test */
+        const q = w[0] + ' ' + w[w.length - 1];
+        if(foodSearch(q, 12).indexOf(k) < 0) missed.push('"' + q + '" does not find ' + k);
+        /* and reversed, because he does not type them in the key's order */
+        const q2 = w[w.length - 1] + ' ' + w[0];
+        if(foodSearch(q2, 12).indexOf(k) < 0) missed.push('"' + q2 + '" does not find ' + k);
+      });
+      if(missed.length) bad.push(missed.length + ' multi-word search miss(es), e.g. ' + missed.slice(0, 3).join(' | '));
+      /* ⛔ AND MORE WORDS MUST NARROW, NEVER WIDEN. If a second word could add results, the branch
+         would be an OR and typing more would make the list worse. */
+      const one = foodSearch('tuna', 40), two = foodSearch('tuna wrap', 40);
+      if(!two.length) bad.push('a two-word query he actually typed still returns nothing');
+      const widened = two.filter(function(k){ return one.indexOf(k) < 0; });
+      if(widened.length) bad.push('adding a word ADDED results (' + widened.slice(0,3).join(', ') + ') — the words are ORed, not ANDed'); }
+
     /* ⛔ AND IT MUST SHOW THE RIGHT THINGS FIRST. The empty list was insertion order, which opened
        on tuna packet / mayonnaise / light mayo / romaine lettuce while the five foods he eats every
        morning were nowhere on screen. His log decides now, so the head of the list must be foods he

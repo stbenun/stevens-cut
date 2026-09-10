@@ -223,6 +223,26 @@ const PLANTS = [
     /* it really did ship like this for one build — fvRepaintAmount wired into one of two handlers. */
     edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
               to:   "      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, sa.n, sa.u);" }] },
+  /* ---- multi-word search, 2026-09-10 ---- */
+  { guard: 'food-log', name: 'the search goes back to matching the phrase, so "tuna wrap" finds nothing',
+    edits: [{ from: `    if(toks.length < 2) return ph;`,
+              to:   `    if(toks.length >= 0) return ph;` }] },
+  { guard: 'food-log', name: 'the words are ORed instead of ANDed, so typing more widens the list',
+    edits: [{ from: `      if(r >= 99) return 99;\n      if(r > worst) worst = r;`,
+              to:   `      if(r >= 99) continue;\n      if(r > worst) worst = r;` }] },
+  /* ---- the final meal card's rounding, 2026-09-10 ---- */
+  { guard: 'final-meal', name: 'the remainder badge prints the raw float again — his "billionth power"',
+    edits: [{ from: '      <span class="statline">${L[0]} left · ${L[1]}P</span></summary>',
+              to:   '      <span class="statline">${fm.left[0]} left · ${fm.left[1]}P</span></summary>' }] },
+  { guard: 'final-meal', name: 'the off-by line prints the raw miss again',
+    edits: [{ from: '      ? `Lands on target — off by ${offR[0]} cal, ${offR[1]}P.`',
+              to:   '      ? `Lands on target — off by ${off[0]} cal, ${off[1]}P.`' }] },
+  /* ⛔ AND THE ONE THAT WOULD LOOK LIKE A TIDIER FIX: round inside finalMeal instead. It cures the
+     display and quietly moves the solver's own arithmetic, which is why the boundary is at the read.
+     [final-meal]'s 25 cal / 8P scenario check is what notices. */
+  { guard: 'final-meal', name: 'the rounding is pushed into finalMeal, so the solver scores rounded numbers',
+    edits: [{ from: `  const left   = target.map((v,i)=> v - had[i]);`,
+              to:   `  const left   = target.map((v,i)=> Math.round((v - had[i]) / 25) * 25);` }] },
   /* ---- clause ⑪: editing a food already in the diary, 2026-09-10 ---- */
   { guard: 'food-log', name: 'the diary row loses its pencil, so editing a logged food needs a delete again',
     edits: [{ from: `    ? '<a href="#" class="di-e" data-diedit="' + at + '" title="edit ' + esc(i.label) + '">✏️</a>'`,
