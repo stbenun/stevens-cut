@@ -2027,7 +2027,12 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         const sb = (SLOTS.filter(function(x){ return x.key === 'bf'; })[0] || {b:[0]}).b;
         /* ⚠️ ASSERT THE NUMBERS THROUGH THE APP'S OWN FORMATTER, not the punctuation around them.
            This matched the literal "+13 cal · ", so changing a hyphen to a real minus would have
-           failed it — and a guard that breaks on wording is a guard that gets muted. */
+           failed it — and a guard that breaks on wording is a guard that gets muted.
+           ⛔ THIS HALF IS A WIRING TEST AND NOTHING MORE, on purpose. Calling the formatter to
+           build the expectation cannot notice the formatter itself losing three macros — both
+           sides shrink together. That contract is asserted from arithmetic in [food-log]'s
+           review clause, ONCE. Do not duplicate it here, and do not delete it there on the
+           grounds that this clause looks like it covers the same thing: it does not. */
         const wantLine = budgetDeltaHTML(want, sb);
         if(body.indexOf(wantLine) < 0)
           bad.push('the open meal does not print its delta against the ' + sb[0] + ' budget (expected ' +
@@ -2636,6 +2641,23 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           if(rv2.indexOf(wantRv) < 0)
             sf.push('the review page does not compare all four macros against the budget (expected ' +
                     wantRv.replace(/<[^>]+>/g, '') + ')');
+          /* ⛔ THE FORMATTER'S OWN CONTRACT, ASSERTED FROM ARITHMETIC — NOT BY CALLING IT. The
+             lookup above delegates to budgetDeltaHTML, which is right for testing the WIRING and
+             useless for testing the RULE: gut the formatter to calories-only and the expectation
+             it builds shrinks along with the page, so the two agree and this clause passes. The
+             full 126-plant run on 2026-09-10 found exactly that — one hole in 126, and the plant
+             had a matching anchor the whole time, so --anchors could never have found it. The four
+             deltas are computed HERE and every one of them, with its label, has to appear. */
+          { const d4 = b2.map(function(x, i){ return Math.round(t2[i]) - x; });
+            const line4 = budgetDeltaHTML(t2, b2).replace(/<[^>]+>/g, '');
+            /* magnitudes, not signs: the sign glyph is checked separately just below, and pinning
+               it here is what made the old version brittle enough to be worth muting. */
+            const miss4 = [Math.abs(d4[0]) + ' cal', Math.abs(d4[1]) + 'P',
+                           Math.abs(d4[2]) + 'C', Math.abs(d4[3]) + 'F']
+              .filter(function(m){ return line4.indexOf(m) < 0; });
+            if(miss4.length)
+              sf.push('the budget formatter prints "' + line4 + '" — missing ' + miss4.join(', ') +
+                      ', so a meal that lands on calories and blows its fat reads as fine'); }
           /* and the sign must be legible: a real minus, not a hyphen, and no em-dash beside it */
           if(/budget — /.test(rv2))
             sf.push('the em-dash is back beside the sign — "— -45" is what he could not read');
