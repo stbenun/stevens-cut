@@ -2502,6 +2502,88 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           if((fvState().sel || []).filter(function(x){ return x === 'blueberries'; }).length !== 1)
             sf.push('updating an amount duplicated the pick');
           fvSet({pick:null, sel:TICK.slice(), selAmt:{}}); }
+        /* ⭐ ⑧ AN AMOUNT FROM CALORIES. His ask 2026-09-10: "i want to be able to add 100calories
+           worth of almond butter." On a cut that is the direction the question arrives in.
+           ⛔ THE CLAUSE THAT IS NOT ARITHMETIC: a zero-calorie food divides to Infinity, and an
+           Infinity in the amount box would ride into his picks and then into the diary. Yellow
+           mustard is 0 cal/g and is in the price list, so this is reachable, not theoretical. */
+        { fvSet({slot:'bf', pick:'almond butter', amt:null, unit:null, sel:[], selAmt:{}});
+          const html = foodPageHTML(D);
+          if(!/id="fvCal"/.test(html)) sf.push('the food screen has no way to set an amount from calories');
+          const n = fvAmountForCalories('almond butter', 'g', 100);
+          if(n !== 17) sf.push('100 cal of almond butter came to ' + n + ' g, not 17');
+          if(n !== Math.round(n)) sf.push('a weight he puts on a scale came back fractional (' + n + ' g)');
+          { const back = fvMacros('almond butter', n, 'g')[0];
+            if(Math.abs(back - 100) > 6) sf.push('17 g of almond butter prices at ' + Math.round(back) + ' cal — the round trip is off by more than rounding explains'); }
+          /* a unit he does NOT weigh keeps its decimal, or the answer is coarse by up to 40% */
+          { const oz = fvAmountForCalories('salmon', 'oz', 100);
+            if(oz === Math.round(oz)) sf.push('100 cal of salmon came back as a whole ' + oz + ' oz — an ounce is 28 g, so whole numbers here are a 40% error'); }
+          /* ⛔ and the refusals */
+          if(fvAmountForCalories('yellow mustard', 'g', 100) != null)
+            sf.push('a ZERO-CALORIE food returned an amount — that is Infinity reaching the amount box');
+          if(fvAmountForCalories('almond butter', 'g', 0) != null) sf.push('0 calories returned an amount');
+          if(fvAmountForCalories('almond butter', 'g', -50) != null) sf.push('negative calories returned an amount');
+          if(fvAmountForCalories('almond butter', 'g', NaN) != null) sf.push('a blank box returned an amount');
+          if(fvAmountForCalories('not a food', 'g', 100) != null) sf.push('an unknown food returned an amount');
+          /* a target smaller than one unit must keep a decimal rather than rounding to nothing */
+          { const tiny = fvAmountForCalories('almond butter', 'g', 2);
+            if(!(tiny > 0)) sf.push('2 cal of almond butter came back as ' + tiny + ' — rounded away to nothing'); }
+          fvSet({pick:null, sel:TICK.slice(), selAmt:{}}); }
+        /* ⭐ ⑨ A PER-ITEM FOOD WITH A KNOWN PIECE WEIGHT CAN BE WEIGHED. His report 2026-09-10:
+           Drizzilicious "didnt let me choose how many g i want to add, it only let me choose x amount
+           for each" — and the food form promises that filling "one item weighs" unlocks weighing,
+           which was only ever true for per-GRAM foods. The engine already priced it; fvUnits was
+           withholding the option.
+           ⛔ AND THE NEGATIVE CASE IS THE IMPORTANT ONE: a per-item food with NO stated weight must
+           NOT offer grams, because that would mean inventing one — the single thing ffScale exists
+           to refuse ("a count against a per-gram fact with no stated unit weight... is a guess"). */
+        { const withWeight = Object.keys(FOOD_FACTS).filter(function(k){
+            const f = FOOD_FACTS[k];
+            return !FF_BASE[ffUnit(f.unit)] && ffEach(f) != null; });
+          const without = Object.keys(FOOD_FACTS).filter(function(k){
+            const f = FOOD_FACTS[k];
+            return !FF_BASE[ffUnit(f.unit)] && ffEach(f) == null; });
+          if(withWeight.length < 3) sf.push('only ' + withWeight.length + ' per-item foods carry a piece weight — clause ⑨ is near-vacuous');
+          if(!without.length) sf.push('no per-item food lacks a piece weight — the refusal half of clause ⑨ is vacuous');
+          withWeight.forEach(function(k){
+            if(fvUnits(k).indexOf('g') < 0) sf.push(k + ' states a piece weight but still cannot be weighed');
+          });
+          without.forEach(function(k){
+            if(fvUnits(k).indexOf('g') >= 0) sf.push(k + ' offers GRAMS with no stated piece weight — that is an invented conversion');
+          });
+          /* and weighing it prices the same as counting it */
+          withWeight.slice(0, 6).forEach(function(k){
+            const f = FOOD_FACTS[k], ea = ffEach(f);
+            const byCount = fvMacros(k, 1, f.unit)[0], byWeight = fvMacros(k, ea, 'g')[0];
+            if(Math.abs(byCount - byWeight) > 0.5)
+              sf.push(k + ': one of them is ' + Math.round(byCount) + ' cal but ' + ea + ' g prices at ' + Math.round(byWeight));
+          });
+          /* ⭐ and the screen says what to put on the scale for a fractional count — his second ask */
+          { const k = withWeight.filter(function(x){ return x === 'oikos triple zero'; })[0] || withWeight[0];
+            fvSet({pick:k, amt:0.5, unit:null});
+            const html = foodPageHTML(D);
+            if(!/on the scale/.test(html))
+              sf.push('half an item does not say how many grams that is — "i want it to tell me how many g that is"');
+            const want = fvGrams(k, 0.5, fvUnits(k)[0]);
+            if(want == null || html.indexOf('<b>' + want + ' g</b>') < 0)
+              sf.push('the scale line does not print ' + want + ' g for half a ' + k);
+            fvSet({pick:null}); } }
+
+        /* ⭐ ⑩ THE REVIEW PAGE COMPARES ALL FOUR MACROS. His ask 2026-09-10: "i like how it compares
+           what i added vs what my meal should be, but have it also compare the macros and not just
+           the calories." A selection that fits on calories and blows the fat is invisible in a
+           one-number line, and fat is what his slots run over most. */
+        { fvSet({review:true, sel:TICK.slice(), selAmt:{}});
+          const rv2 = foodPageHTML(D);
+          const b2 = (SLOTS.filter(function(x){ return x.key === fvState().slot; })[0] || {b:[0,0,0,0]}).b;
+          const t2 = fvSelTotal();
+          ['cal','P','C','F'].forEach(function(lbl, i){
+            const dv = Math.round(t2[i]) - b2[i];
+            const want = (dv >= 0 ? '+' : '') + dv + (i === 0 ? ' cal' : lbl);
+            if(rv2.indexOf(want) < 0)
+              sf.push('the review page does not compare ' + lbl + ' against the budget (expected ' + want + ')');
+          });
+          fvSet({review:false}); }
         /* ⑥ and the review page dies with the selection rather than stranding him on an empty page */
         fvSet({review:true, sel:TICK.slice()});
         fvSelToggle('elev8 cor'); fvSelToggle('mixed berries');
@@ -3378,6 +3460,129 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   else ok('dead-control', 'every control the app draws has a listener: ' + r.seen.full + ' on a full food page, ' +
     r.seen.typed + ' after a keystroke rewrites the list (the path that shipped a dead ★), ' +
     r.seen.diary + ' in the diary — with ' + deleg.length + ' document-delegated attributes excused by construction');
+}
+
+/* ---------- [user-facts] the food form he types his own foods into ----------
+ * He added two foods himself today. This is the only path where a macro number enters by hand, and
+ * it had no check at all. The failure it guards is silent: choose the wrong basis and a per-bar
+ * figure is stored as per-100 g, so the food prices at a fraction of what he ate and nothing on
+ * screen looks wrong. Same class as the graham cracker at 6,495 kcal.
+ */
+{
+  const r = run(`
+    const bad = [];
+    const K1 = 'zzguard per100', K2 = 'zzguard peritem';
+    const u0 = JSON.stringify(store.get('qpcut.ffuser', {}));
+    const fv0 = Object.assign({}, fvState());
+    const fill = function(vals){
+      Object.keys(vals).forEach(function(id){
+        const e = document.getElementById(id);
+        if(e) e.value = String(vals[id]);
+      });
+    };
+    const openNew = function(){ fvSet({slot:'bf', pick:null, dish:null, fact:true}); current='today'; render(); };
+    const openKey = function(k){ fvSet({slot:'bf', pick:null, dish:null, fact:k}); current='today'; render(); };
+
+    /* ---- ① per 100 g: the numbers off a label divided by 100, and priced back to what he typed ---- */
+    openNew();
+    if(!document.getElementById('ffBasis')) bad.push('the new-food form did not render — this guard is vacuous');
+    fill({ffName:K1, ffCal:380, ffP:12, ffC:60, ffF:10});
+    document.getElementById('ffBasis').value = 'g';
+    { const err = fvFactSave();
+      if(err) bad.push('a legitimate per-100 g food was refused: ' + err);
+      else {
+        const f = FOOD_FACTS[K1];
+        if(!f) bad.push('the per-100 g food never reached FOOD_FACTS');
+        else {
+          if(f.unit !== 'g') bad.push('per-100 g stored unit "' + f.unit + '", not g');
+          const m = fvMacros(K1, 100, 'g');
+          if(Math.round(m[0]) !== 380) bad.push('100 g of it prices at ' + Math.round(m[0]) + ' cal, not the 380 he typed');
+          if(Math.round(m[1]) !== 12)  bad.push('100 g prices ' + Math.round(m[1]) + ' P, not the 12 he typed');
+          if(Math.round(m[2]) !== 60)  bad.push('100 g prices ' + Math.round(m[2]) + ' C, not the 60 he typed');
+          if(Math.round(m[3]) !== 10)  bad.push('100 g prices ' + Math.round(m[3]) + ' F, not the 10 he typed');
+          /* ⛔ AND THE BASIS MUST BE ON THE RECORD. Without it, a per-item entry read back later is
+             indistinguishable from a per-100 g one — which is the whole failure. */
+          if(!/per-100 g/.test(f.src || '')) bad.push('the stored provenance does not say which basis he used');
+          if(!/YOUR OWN entry/.test(f.src || '')) bad.push('a typed food does not say it was typed — it could be read later as a label figure');
+        }
+      }
+    }
+    /* ---- ② REOPEN IT: the form must show what he typed, not the stored per-gram value ---- */
+    openKey(K1);
+    { const shown = (document.getElementById('ffCal')||{}).value;
+      if(String(shown) !== '380')
+        bad.push('reopening shows ' + shown + ' calories instead of the 380 he typed — the stored per-gram figure is leaking into the form');
+      const sp = (document.getElementById('ffP')||{}).value;
+      if(String(sp) !== '12') bad.push('reopening shows ' + sp + ' protein instead of 12');
+    }
+
+    /* ---- ③ per ITEM: stored as typed, and priced per piece ---- */
+    openNew();
+    fill({ffName:K2, ffCal:190, ffP:20, ffC:22, ffF:7, ffEa:60});
+    document.getElementById('ffBasis').value = 'each';
+    { const err = fvFactSave();
+      if(err) bad.push('a legitimate per-item food was refused: ' + err);
+      else {
+        const f = FOOD_FACTS[K2];
+        if(!f) bad.push('the per-item food never reached FOOD_FACTS');
+        else {
+          if(f.unit !== 'each') bad.push('per-item stored unit "' + f.unit + '", not each');
+          if(f.cal !== 190) bad.push('per-item stored ' + f.cal + ' cal — it must NOT be divided by 100');
+          const m = fvMacros(K2, 1, 'each');
+          if(Math.round(m[0]) !== 190) bad.push('one of them prices at ' + Math.round(m[0]) + ', not 190');
+          if(f.ea !== 60) bad.push('"one item weighs" did not store (' + f.ea + ')');
+          if(!/per-item/.test(f.src || '')) bad.push('the per-item basis is not on the record');
+        }
+      }
+    }
+    /* ⛔ ④ THE TWO BASES MUST NOT BE CONFUSABLE. This is the graham cracker: a per-item number read
+       as per-gram. 100 units of a per-item food is a real thing he could log, and it must be 100x
+       the single item — not the same number. */
+    { const one = fvMacros(K2, 1, 'each')[0], hundred = fvMacros(K2, 100, 'each')[0];
+      if(!(Math.round(hundred) === Math.round(one) * 100))
+        bad.push('a per-item food does not scale by count (1 -> ' + Math.round(one) + ', 100 -> ' + Math.round(hundred) + ')'); }
+
+    /* ---- ⑤ refusals ---- */
+    openNew();
+    fill({ffName:'', ffCal:100});
+    if(!fvFactSave()) bad.push('a food with no name was accepted');
+    openNew();
+    fill({ffName:'zzguard nocal', ffCal:''});
+    if(!fvFactSave()) bad.push('a food with no calories was accepted');
+    openNew();
+    fill({ffName:K1, ffCal:100});
+    if(!fvFactSave()) bad.push('a duplicate name was accepted, which would silently overwrite a food');
+
+    /* ---- ⑥ revert removes a food he invented, and restores one he overwrote ---- */
+    fvFactRevert(K1);
+    if(FOOD_FACTS[K1]) bad.push('reverting a food he invented left it in the price list');
+    { const before = Object.assign({}, FOOD_FACTS['blueberries']);
+      openKey('blueberries');
+      fill({ffCal:999, ffP:9, ffC:9, ffF:9});
+      document.getElementById('ffBasis').value = 'g';
+      fvFactSave();
+      if(Math.round(FOOD_FACTS['blueberries'].cal * 100) !== 999)
+        bad.push('overwriting a repo food did not take effect');
+      fvFactRevert('blueberries');
+      if(Math.abs((FOOD_FACTS['blueberries']||{}).cal - before.cal) > 1e-9)
+        bad.push('reverting a repo food did NOT restore the original number — his edit would be permanent');
+    }
+
+    /* ---- clean up: leftovers here would corrupt every clause after this one ---- */
+    delete FOOD_FACTS[K1]; delete FOOD_FACTS[K2]; delete FOOD_FACTS['zzguard nocal'];
+    store.set('qpcut.ffuser', JSON.parse(u0));
+    applyUserFacts();
+    fvSet(fv0); fvClose();
+    const strays = Object.keys(FOOD_FACTS).filter(function(k){ return k.indexOf('zzguard') === 0; });
+    if(strays.length) bad.push('the guard left test foods behind: ' + strays.join(', '));
+    return {bad, facts: Object.keys(FOOD_FACTS).length};
+  `);
+  const bad = r.bad.slice();
+  if (bad.length) fail('user-facts', bad.length + ' fault(s): ' + bad.slice(0,5).join(' | '));
+  else ok('user-facts', 'the food form he types his own foods into: per-100 g divides by 100 and prices back to what he typed, ' +
+    'per-item does NOT and scales by count, the basis is recorded in the provenance so the two can never be confused later, ' +
+    'reopening shows the numbers he typed rather than the stored per-gram value, a nameless / calorie-less / duplicate entry is ' +
+    'refused, and revert both deletes an invented food and restores an overwritten one (' + r.facts + ' facts, none left behind)');
 }
 
 console.log(failed ? `\n${failed} CHECK(S) FAILED` : '\nall app checks passed');

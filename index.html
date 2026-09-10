@@ -1811,6 +1811,19 @@ function wireRowEdit(ld){
   });
   }
   wireFvRows();
+  /* ⛔ NO render() HERE, same reason as the Amount box below: it would tear out the field he is
+     typing in and iOS drops the keyboard. Only the amount and the energy block are rewritten. */
+  { const c = document.getElementById('fvCal');
+    if(c) c.addEventListener('input', ()=>{
+      const sa = fvScreenAmount();
+      if(!sa) return;
+      const n2 = fvAmountForCalories(sa.k, sa.u, parseFloat(c.value));
+      if(n2 == null) return;                 /* blank, nonsense, or a zero-calorie food */
+      fvSet({amt: n2});
+      const a2 = document.getElementById('fvAmt'); if(a2) a2.value = n2;
+      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, n2, sa.u);
+    });
+  }
   { const a = document.getElementById('fvAmt'), u = document.getElementById('fvUnit');
     /* ⛔ NO render() HERE. It would tear out the very input he is typing in and iOS would drop the
        keyboard on every keystroke — which is exactly what he reported. Only the energy block
@@ -6771,6 +6784,14 @@ function fvUnits(key){
   let u = [f.unit];
   if(f.unit === 'g') u.push('oz');
   if(f.ea) u.push('each');            /* f.ea is the gram weight of one piece */
+  /* ⛔ AND THE REVERSE, WHICH WAS MISSING. A per-ITEM food whose piece weight is known can be
+     WEIGHED — his report 2026-09-10: Drizzilicious "didnt let me choose how many g i want to add,
+     it only let me choose x amount for each". Worse, the food form promises that filling "one item
+     weighs" unlocks weighing, and that promise was only true for per-gram foods. The engine already
+     handles it (ffScale's "per-unit fact, row in grams" branch), so this was fvUnits withholding an
+     option the rest of the app supports. ffEach also reads the weight out of a unit string, so
+     'cup (150 g)' and 'piece (30 g)' foods qualify without an explicit ea. */
+  if(!FF_BASE[ffUnit(f.unit)] && ffEach(f) != null){ u.push('g'); u.push('oz'); }
   /* ⛔ A ROLL IS A UI UNIT, NOT A STORED ONE. His ask: "allow me to adjust the quantity by rolls
      or pieces." The pricing engine already normalises 'piece' to 'each' and matches a generic
      count against a per-piece fact, so PIECES are what gets written to the log and nothing in the
@@ -6811,6 +6832,39 @@ function fvSpec(key, n, u){
    has been bitten by most.
    Precedence, and it matters: what he is TYPING wins, then the amount he already SAVED for this
    food, then his usual. */
+/* ⭐ HOW MUCH OF THIS IS <n> CALORIES? His ask, 2026-09-10: "i want to be able to add 100calories
+   worth of almond butter." Named and top-level so the guard drives the same arithmetic the box does,
+   rather than a copy of it.
+   Rounding: whole units for anything he weighs (g, mL) because that is what the scale shows; one
+   decimal otherwise, since 100 cal of banana is 0.95 of one. If rounding a mass would land on zero,
+   the decimal is kept rather than printing 0.
+   Returns null when there is nothing to solve — a zero-calorie food would otherwise divide to
+   Infinity and put Infinity in the amount box. */
+function fvAmountForCalories(k, u, cal){
+  if(!FOOD_FACTS[k] || !(cal > 0)) return null;
+  const per = fvMacros(k, 1, u)[0];
+  if(!(per > 0) || !isFinite(per)) return null;
+  const n = cal / per;
+  if(u === 'g' || u === 'mL'){ const r = Math.round(n); return r >= 1 ? r : Math.round(n * 10) / 10; }
+  return Math.round(n * 10) / 10;
+}
+/* ⭐ WHAT GOES ON THE SCALE. His ask 2026-09-10: "even if i were to add 0.5 with the serving size
+   as each, i want it to tell me how many g that is." Half an item says nothing about what to weigh.
+   ⛔ IT USES THE ENGINE'S OWN TABLE AND PIECE READER (FF_BASE, ffEach) rather than a second copy of
+   the conversions, so the grams on screen cannot disagree with what the row actually prices at —
+   which is the failure mode this file is organised against.
+   Returns null when there is nothing to say: a per-item food with no stated piece weight, or a
+   volume unit, where a gram figure would be invented. */
+function fvGrams(k, n, u){
+  const f = FOOD_FACTS[k];
+  if(!f || !(n > 0)) return null;
+  const base = FF_BASE[ffUnit(u)];
+  if(base) return base[0] === 'g' ? Math.round(n * base[1]) : null;   /* g and oz; mL is not a mass */
+  const ea = ffEach(f);
+  if(ea == null) return null;
+  const pieces = (u === 'roll' && f.pc) ? n * f.pc : n;               /* a roll is pc pieces */
+  return Math.round(pieces * ea);
+}
 function fvScreenAmount(){
   const st = fvState(), k = st.pick;
   if(!FOOD_FACTS[k]) return null;
@@ -6968,13 +7022,21 @@ function fvReviewHTML(ld){
   if(!picks.length) return fvSearchHTML(ld);
   const slot = SLOTS.find(function(s){ return s.key === st.slot; });
   const t = fvSelTotal();
-  const d = slot ? Math.round(t[0]) - slot.b[0] : null;
+  /* ⭐ ALL FOUR MACROS AGAINST THE BUDGET — his ask 2026-09-10: "have it also compare the macros and
+     not just the calories." slot.b is [cal, P, C, F], so the comparison was always there and only
+     calories were being printed. Same format as the diary's vs-budget line, deliberately, so the two
+     screens read the same way. A selection that fits on calories and blows the fat is invisible in a
+     one-number line, and fat is the macro his slots run over most. */
+  const dv = slot ? slot.b.map(function(b, i){ return Math.round(t[i]) - b; }) : null;
+  const sgn = function(v){ return (v >= 0 ? '+' : '') + v; };
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvreviewback="1">✕</button>'
     + '<span class="fvtitle">Review selected items</span></div>'
     + '<div class="fvsub">' + picks.length + ' item' + (picks.length===1?'':'s')
-    + (slot ? ' → <b>' + esc(slot.slot) + '</b> · <span class="mono">' + (d>=0?'+':'') + d
-              + '</span> vs its ' + slot.b[0] + ' budget' : '') + '</div>'
+    + (slot ? ' → <b>' + esc(slot.slot) + '</b>' : '') + '</div>'
+    + (slot ? '<div class="fvsub">vs the ' + esc(slot.slot.toLowerCase()) + ' budget — <span class="mono">'
+              + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · ' + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'
+            : '')
     + picks.map(function(p){ return fvSelRowHTML(p, F); }).join('')
     + macros(t.map(Math.round))
     + '<button class="fvsave" data-fvaddsel="1">ADD ' + picks.length + ' TO '
@@ -7107,7 +7169,19 @@ function fvDetailHTML(ld){
     + '<div class="fvfield"><span>Group</span><select id="fvSlot">'
     + SLOTS.map(s=>'<option value="' + esc(s.key) + '"' + (s.key===st.slot?' selected':'') + '>' + esc(s.slot) + '</option>').join('')
     + '</select></div>'
+    /* ⭐ the scale line — only when the unit is not already grams, and only when the weight is known
+       rather than guessed */
+    + (function(){ const g = fvGrams(k, n, u);
+        return (g != null && ffUnit(u) !== 'g')
+          ? '<div class="sub" style="margin:6px 2px">' + n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale</div>'
+          : ''; })()
     + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
+    /* ⭐ THE OTHER DIRECTION — his ask 2026-09-10. On a cut he knows the calories he has left, not
+       the grams. Typing here rewrites the Amount above; it is a calculator, not a second source of
+       truth, so the amount stays the one thing that gets saved. */
+    + '<div class="fvfield"><span>Or set it by calories</span>'
+    + '<input type="number" inputmode="decimal" step="any" min="0" id="fvCal" placeholder="cal" aria-label="calories to convert into an amount"></div>'
+    + '<div class="sub" style="margin:6px 2px">Type the calories you have left — the amount above changes to match.</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     /* ⛔ TWO OUTCOMES, TWO LABELS. One "SAVE" for both adding a food and changing an amount is how
        he ended up unsure enough to delete a pick and start over. */
@@ -11622,7 +11696,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789054356';
+const BUILD = 'b1789055779';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -188,6 +188,29 @@ const PLANTS = [
   { guard: 'food-log', name: 'the button says SAVE for a food already in the picks — one label, two outcomes',
     edits: [{ from: "    + '<button class=\"fvsave\" data-fvsave=\"1\">' + (inPicks ? 'UPDATE AMOUNT' : 'SAVE') + '</button>'",
               to:   "    + '<button class=\"fvsave\" data-fvsave=\"1\">SAVE</button>'" }] },
+  /* ---- setting an amount from calories, 2026-09-10 ---- */
+  { guard: 'food-log', name: 'a zero-calorie food divides to Infinity and puts it in the amount box',
+    /* yellow mustard is 0 cal/g and IS in the price list, so this is reachable. */
+    edits: [{ from: "  if(!(per > 0) || !isFinite(per)) return null;", to: "  /* no refusal */" }] },
+  { guard: 'food-log', name: 'every unit gets rounded to a whole number, so 100 cal of salmon is 40% out',
+    /* the final return is the non-weight branch; forcing it to a whole number makes an ounce the
+       smallest step, and an ounce is 28 g. */
+    edits: [{ from: "  return Math.round(n * 10) / 10;", to: "  return Math.round(n);" }] },
+  { guard: 'food-log', name: 'the calories box disappears from the food screen',
+    edits: [{ from: "    + '<input type=\"number\" inputmode=\"decimal\" step=\"any\" min=\"0\" id=\"fvCal\" placeholder=\"cal\" aria-label=\"calories to convert into an amount\"></div>'",
+              to:   "    + '</div>'" }] },
+  { guard: 'food-log', name: 'a per-item food cannot be weighed again, so the food form keeps lying about "one item weighs"',
+    edits: [{ from: "  if(!FF_BASE[ffUnit(f.unit)] && ffEach(f) != null){ u.push('g'); u.push('oz'); }",
+              to:   "  /* no reverse */" }] },
+  { guard: 'food-log', name: 'grams are offered for a per-item food with NO stated weight — an invented conversion',
+    edits: [{ from: "  if(!FF_BASE[ffUnit(f.unit)] && ffEach(f) != null){ u.push('g'); u.push('oz'); }",
+              to:   "  if(!FF_BASE[ffUnit(f.unit)]){ u.push('g'); u.push('oz'); }" }] },
+  { guard: 'food-log', name: 'half an item stops saying what to put on the scale',
+    edits: [{ from: "          ? '<div class=\"sub\" style=\"margin:6px 2px\">' + n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale</div>'",
+              to:   "          ? ''" }] },
+  { guard: 'food-log', name: 'the review page goes back to comparing calories only',
+    edits: [{ from: "              + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · ' + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'",
+              to:   "              + sgn(dv[0]) + ' cal</span></div>'" }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",
