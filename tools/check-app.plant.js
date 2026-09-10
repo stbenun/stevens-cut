@@ -223,6 +223,13 @@ const PLANTS = [
     /* it really did ship like this for one build — fvRepaintAmount wired into one of two handlers. */
     edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
               to:   "      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, sa.n, sa.u);" }] },
+  /* ---- the drafts note, 2026-09-10 ---- */
+  { guard: 'meal-drafts', name: 'the drafts card goes back to calling every draft unguarded',
+    edits: [{ from: `    : 'These live on this phone only. Their amounts come from your <b>guarded food list</b>, so they '`,
+              to:   `    : 'These live on this phone only and <b>nothing guards them</b> - no provenance. '`}] },
+  { guard: 'meal-drafts', name: 'a draft naming a food the app lacks stops being flagged, so its total is silently short',
+    edits: [{ from: `  if(sp.f) return FOOD_FACTS[sp.f] ? 'ok' : 'unknown';`,
+              to:   `  if(sp.f) return 'ok';` }] },
   /* ---- multi-word search, 2026-09-10 ---- */
   { guard: 'food-log', name: 'the search goes back to matching the phrase, so "tuna wrap" finds nothing',
     edits: [{ from: `    if(toks.length < 2) return ph;`,
@@ -421,8 +428,15 @@ const PLANTS = [
               to:   "    return NL + d.name + ' ' + entryMacros({id:k,rows:d.rows}).map(Math.round).join(' cal / ') + NL" }] },
   { guard: 'meal-drafts', name: 'the drafts card time-seeds itself open',
     edits: [{ from: "(openAcc.has('drafts') ? ' open' : '')", to: "' open'" }] },
-  { guard: 'meal-drafts', name: 'the card stops saying a draft is unguarded',
-    edits: [{ from: "and <b>nothing guards them</b>", to: "and they are fine" }] },
+  { guard: 'meal-drafts', name: 'the card stops saying what a draft is missing',
+    /* ⚠ RE-ANCHORED 2026-09-10: the blanket "nothing guards them" became a per-state note when
+       he pointed out it was wrong about a draft built from guarded foods. Same defect, current
+       spelling — the card stops telling him what it does not check. */
+    edits: [{ from: "price exactly like the rest of the app — what they still lack is a written method and a '",
+              to:   "price exactly like the rest of the app and are fine. '" }] },
+  { guard: 'meal-drafts', name: 'the dishes list stops distinguishing his drafts from guarded meals',
+    edits: [{ from: "+ '<span class=\"fv-tag\">yours</span> — they carry <b>no method and no slot-budget check</b> '",
+              to:   "+ '<span class=\"fv-tag\">yours</span> '" }] },
   { guard: 'meal-drafts', name: 'draftSave stops requiring a name',
     edits: [{ from: "  if(!nm || !entry) return null;", to: "  if(!entry) return null;" }] },
 

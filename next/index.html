@@ -6582,21 +6582,65 @@ function genCardHTML(ld){
 function draftAll(){ return store.get('qpcut.mealdrafts', {}); }
 /* The card that gets a draft OUT of his phone and into the guarded library. Starts closed with the
    count in the badge, like every other section. It renders only when there is something to send. */
+/* ⛔ WHAT A DRAFT ROW IS WORTH, PER ROW. Three genuinely different states, and the old card called
+   all of them unguarded:
+     'ok'      — names a food in FOOD_FACTS (or is a deliberate {free:1}), so it prices off the same
+                 sourced list every recipe in the app uses. Nothing about its NUMBERS is unguarded.
+     'typed'   — a legacy [cal,P,C,F] row. It prices, but nothing stands behind the figures.
+     'unknown' — names a food that does not exist here, so it prices as NOTHING and the draft's total
+                 is silently short. This is the state that deserves the loud flag, and the old
+                 blanket warning buried it among two harmless ones.
+   Named and top-level so [meal-drafts] drives this instead of re-deciding it. */
+function draftRowState(sp){
+  if(!sp) return 'unknown';
+  if(Array.isArray(sp)) return 'typed';
+  if(sp.free) return 'ok';
+  if(sp.parts) return sp.parts.every(function(p){ return p && p.f && FOOD_FACTS[p.f]; }) ? 'ok' : 'unknown';
+  if(sp.f) return FOOD_FACTS[sp.f] ? 'ok' : 'unknown';
+  return 'unknown';
+}
+function draftState(d){
+  const st = entryRows({rows:(d && d.rows) || []}).map(draftRowState);
+  if(!st.length) return 'unknown';
+  if(st.indexOf('unknown') >= 0) return 'unknown';
+  if(st.indexOf('typed') >= 0) return 'typed';
+  return 'ok';
+}
 function draftsCardHTML(){
   const all = draftAll(), ids = Object.keys(all);
   if(!ids.length) return '';
+  const states = {};
   const rows = ids.map(k=>{
     const d = all[k], m = entryMacros({id:k, rows:d.rows}).map(Math.round);
-    return '<div class="mrow"><span class="nm">' + d.name
+    const st = draftState(d);
+    states[st] = (states[st] || 0) + 1;
+    /* the tag is on the row that has the problem, not on the card. A card-level warning cannot say
+       WHICH draft it means, which is how one ends up describing a draft it does not apply to. */
+    const tag = st === 'ok' ? ''
+      : st === 'typed' ? ' <span class="fv-tag">typed numbers</span>'
+      : ' <span class="upflag" style="background:var(--meat);color:#fff">⚠ prices as 0</span>';
+    return '<div class="mrow"><span class="nm">' + d.name + tag
       + ' <span class="daytag">' + d.slot + ' · ' + d.at + '</span></span>'
       + '<span class="em" style="font-family:var(--mono);font-size:11px">' + m[0] + ' · ' + m[1] + 'P '
       + '<a href="#" data-ddel="' + k + '" style="color:var(--meat);text-decoration:none">✕</a></span></div>';
   }).join('');
+  /* ⭐ THE NOTE DESCRIBES THE DRAFTS THAT ARE ACTUALLY ON SCREEN. His question, 2026-09-10, was what
+     this card even was — it had been invisible because he had none — and the answer it gave him was
+     wrong about the only draft in it. What every draft really lacks is a METHOD and a slot-budget
+     check; whether its NUMBERS are guarded depends on the rows. */
+  const note = states.unknown
+    ? 'One or more of these names a food this app does not have, so it <b>prices as 0</b> and its '
+      + 'total is short. Send them over and that gets fixed properly.'
+    : states.typed
+    ? 'These live on this phone only. The ones tagged <b>typed numbers</b> carry figures nothing '
+      + 'stands behind — no source, no check. Send them over and they go into the library properly.'
+    : 'These live on this phone only. Their amounts come from your <b>guarded food list</b>, so they '
+      + 'price exactly like the rest of the app — what they still lack is a written method and a '
+      + 'slot-budget check. Send them over and they get both.';
   return '<details class="acc innerrow" data-acc="drafts"' + (openAcc.has('drafts') ? ' open' : '') + '>'
-    + '<summary><span>📝 Meal drafts</span><span class="statline"><b>' + ids.length + '</b> to send</span></summary>'
+    + '<summary><span>📝 Meal drafts</span><span class="statline"><b>' + ids.length + '</b> saved</span></summary>'
     + rows
-    + '<div class="note" style="margin-top:8px">These live on this phone only and <b>nothing guards them</b> — '
-    + 'no slot-budget check, no provenance. Send them to Claude and they go into the library properly.</div>'
+    + '<div class="note" style="margin-top:8px">' + note + '</div>'
     + '<button class="step" data-dcopy="1" style="width:auto;padding:0 12px;margin-top:8px">📋 Copy for Claude</button>'
     + '</details>';
 }
@@ -7054,9 +7098,15 @@ function fvListHTML(ld){
        carried has to survive the move, not just the buttons. Two things in particular:
        ① THE DELTA against the budget of the slot he is adding to, so the trade is visible BEFORE he
          taps rather than discovered in the hero afterwards;
-       ② the warning that a draft is unguarded. A repo meal is priced by [priced]/[slot-fit]/[row-math];
-         a draft he typed on his phone is priced by nothing until it reaches the repo, and the tab
-         shows them in one list, so the list itself has to say which is which. */
+       ② the warning that a draft is not a guarded MEAL. A repo meal is checked by
+         [priced]/[slot-fit]/[row-math] and carries a written method; a draft has none of those, and
+         the tab shows both in one list, so the list has to say which is which.
+         ⚠️ IT NO LONGER SAYS "nothing guards them", reworded 2026-09-10 on his instruction. That
+         was overstated and he caught it: a draft whose rows NAME foods from FOOD_FACTS prices off
+         the same guarded list as everything else, so the sentence was warning him away from
+         numbers as sound as the app's own. What a draft really lacks is the method and the
+         budget check, so that is what it now says. The per-draft distinction — which rows are
+         sourced — is drawn on the drafts CARD, by draftState. */
     const dAll = draftAll();
     const rows = Object.keys(dAll).map(k=>({id:k, name:dAll[k].name, t:entryMacros({id:k, rows:dAll[k].rows}), draft:true}))
       .concat(SLOTS.reduce((a,x)=>a.concat(x.opts.map(o=>({id:o.id, name:o.name, t:o.vars[0].t, from:x.slot}))), []));
@@ -7064,8 +7114,8 @@ function fvListHTML(ld){
     const bud = slot ? slot.b[0] : 0;
     const nDraft = Object.keys(dAll).length;
     list = (nDraft ? '<div class="sub" style="padding:8px 2px">Your own saved meals are marked '
-        + '<span class="fv-tag">yours</span> — nothing guards them until you send one over and it '
-        + 'lands in the repo.</div>' : '')
+        + '<span class="fv-tag">yours</span> — they carry <b>no method and no slot-budget check</b> '
+        + 'until you send one over and it lands in the repo.</div>' : '')
       + rows.filter(r=>!q || fsNorm(r.name).indexOf(q) >= 0).map(function(r){
         const d = Math.round(r.t[0]) - bud;
         /* ⛔ data-fvdish ONLY. This row must not also carry data-dlog: that attribute has its own
@@ -11903,7 +11953,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789069495';
+const BUILD = 'b1789070378';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

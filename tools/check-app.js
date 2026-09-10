@@ -3316,8 +3316,10 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         const dl = foodPageHTML(D);
         if(dl.indexOf('data-fvdish="' + dIds[0] + '"') < 0)
           bad.push('his own drafts are not listed in Your dishes');
-        if(!/nothing guards them/.test(dl))
-          bad.push('the dishes list no longer warns that a draft is unguarded');
+        /* ⚠ REWORDED 2026-09-10 with the copy — see the note in fvSearchHTML. It must still say
+           what a draft LACKS, or the list stops distinguishing his drafts from repo meals. */
+        if(!/no slot-budget check/.test(dl))
+          bad.push('the dishes list no longer says a draft has no budget check behind it');
         fvSet({dish:dIds[0]}); }
       if(!/fv-tag/.test(dh))              bad.push('a draft is not marked apart from a guarded repo meal');
       if(!/Nothing guards them/.test(dh)) bad.push('a draft page no longer says it is unguarded');
@@ -3479,7 +3481,7 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     const html = foodPageHTML(isoToday());
     if(!/data-fvdish="/.test(html))       bad.push('the dishes tab lists nothing at all');
     if(html.indexOf(id) < 0)              bad.push('the draft does not appear in the dishes tab');
-    if(!/nothing guards them/.test(html)) bad.push('the dishes tab no longer warns that a draft is unguarded');
+    if(!/no slot-budget check/.test(html)) bad.push('the dishes tab no longer says a draft has no budget check behind it');
     if(!/fv-tag/.test(html))              bad.push('the draft is not marked apart from the guarded repo meals');
     /* ⛔ THE DRAFTS CARD IS A SECOND SURFACE, AND RETARGETING LOST IT. Two plants went NOT CAUGHT on
        2026-09-06: the card time-seeding itself open, and the card dropping its unguarded warning.
@@ -3498,8 +3500,14 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         const card = page.slice(di, end < 0 ? di + 4000 : end);
         if(/^drafts" open/.test(page.slice(di + 10)) || /data-acc="drafts" open/.test(page))
           bad.push('the drafts card time-seeds itself open');
-        if(!/nothing guards them/.test(card))
-          bad.push('the drafts card itself no longer warns that a draft is unguarded');
+        /* ⚠ REWORDED 2026-09-10. The card no longer makes ONE claim about every draft — it says
+           what is true of the ones on screen, which for the fixture (rows naming guarded foods)
+           is that they lack a method and a budget check, not that they lack provenance. The
+           three-state behaviour itself is driven in full by the clause further down; this stays
+           a check that the CARD, as its own surface, still says something at all. The lesson
+           above about reading each surface separately is why it is not merged into that clause. */
+        if(!/slot-budget check|nothing stands behind|prices as 0/.test(card))
+          bad.push('the drafts card says nothing about what a draft is missing');
       } }
     /* ⛔ PUT THE PAGE BACK. Rendering the diary above needed the page CLOSED, and the next clause
        adds a dish through it — without this it silently had no slot and logged nothing. */
@@ -3519,6 +3527,37 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
       }
       store.set('qpcut.eaten', eat0);
     }
+    /* ⭐ AND THE CARD MUST NOT LIE ABOUT WHOSE NUMBERS ARE GUARDED. His question, 2026-09-10:
+       "whats this meal drafts thing you added?" — the card had been invisible (he had no drafts)
+       and the note it showed him said every draft has "no provenance", while the only one in it was
+       a single row pointing at a guarded FOOD_FACTS key. Driven through the real renderer for all
+       three states, because the wording is the whole point of the fix. */
+    { const dr0 = JSON.parse(JSON.stringify(store.get('qpcut.mealdrafts', {})));
+      const mk = function(rows){ store.set('qpcut.mealdrafts', {d1:{id:'d1', name:'Test draft', slot:'lu',
+        rows:rows, at:isoToday(), from:null}}); return draftsCardHTML(); };
+      /* ① every row names a guarded food -> it must NOT be called unguarded */
+      { const h = mk([{f:'tuna packet', n:3, u:'each'}]);
+        if(draftState({rows:[{f:'tuna packet', n:3, u:'each'}]}) !== 'ok') bad.push('a draft of sourced foods is not classed ok');
+        if(/nothing guards them|no provenance/i.test(h))
+          bad.push('the drafts card still says nothing guards a draft whose rows all name guarded foods');
+        if(!/guarded food list/.test(h)) bad.push('the drafts card does not say where a sourced draft gets its numbers');
+        if(/typed numbers|prices as 0/.test(h)) bad.push('a fully sourced draft got a warning tag'); }
+      /* ② a hand-typed legacy row -> it must be tagged AND named in the note */
+      { const h = mk([[400, 30, 20, 10]]);
+        if(draftState({rows:[[400,30,20,10]]}) !== 'typed') bad.push('a hand-typed row is not classed typed');
+        if(!/typed numbers/.test(h)) bad.push('a hand-typed draft carries no tag saying so');
+        if(!/nothing stands behind/.test(h)) bad.push('the note does not warn about hand-typed figures'); }
+      /* ③ a food that does not exist -> the LOUD one, because the total is silently short */
+      { const h = mk([{f:'not a real food at all', n:2}]);
+        if(draftState({rows:[{f:'not a real food at all', n:2}]}) !== 'unknown') bad.push('an unknown food is not classed unknown');
+        if(!/prices as 0/.test(h)) bad.push('a draft naming a food the app does not have is not flagged as pricing to zero');
+        /* and it really does price to nothing — the flag must not be decoration */
+        if(entryMacros({id:'d1', rows:[{f:'not a real food at all', n:2}]})[0] !== 0)
+          bad.push('clause ③ is vacuous — that row priced to something'); }
+      /* ④ an empty card stays empty, which is why he had never seen it */
+      store.set('qpcut.mealdrafts', {});
+      if(draftsCardHTML() !== '') bad.push('the drafts card renders with no drafts in it');
+      store.set('qpcut.mealdrafts', dr0); }
     fvSet(fv0);
 
     const n = Object.keys(draftAll()).length;
@@ -3528,9 +3567,11 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
   const bad = r.bad.slice();
   if (r.n !== 1) bad.push('expected exactly one draft in the fixture, found ' + r.n + ' — this guard ran vacuous');
   if (bad.length) fail('meal-drafts', bad.length + ' fault(s): ' + bad.join(' | '));
-  else ok('meal-drafts', 'a draft prices like the entry it came from, the paste payload carries ingredient ' +
+  else ok('meal-drafts', 'the card says which drafts have guarded numbers and flags the ones that do not, '
+    + 'a draft prices like the entry it came from, the paste payload carries ingredient ' +
     'SPECS and no computed macros, unnamed and empty saves are refused, and the card starts closed ' +
-    'saying plainly that nothing guards a draft until it reaches the repo');
+    'naming what a draft actually lacks — a method and a budget check — rather than claiming nothing ' +
+    'stands behind numbers that come from the guarded food list');
 }
 
 /* ==== [log-access] — qpcut.eaten has exactly one reader and one writer ========================
