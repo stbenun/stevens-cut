@@ -185,9 +185,11 @@ const PLANTS = [
     /* HIS REPORT, 2026-09-10. Five of selAmt's six consumers were right; only the editing screen was
        wrong, which is why every existing clause passed while he was deleting and re-adding foods. */
     edits: [{ from: "  const o = (st.selAmt || {})[k];", to: "  const o = null;" }] },
-  { guard: 'food-log', name: 'the button says SAVE for a food already in the picks — one label, two outcomes',
-    edits: [{ from: "    + '<button class=\"fvsave\" data-fvsave=\"1\">' + (inPicks ? 'UPDATE AMOUNT' : 'SAVE') + '</button>'",
-              to:   "    + '<button class=\"fvsave\" data-fvsave=\"1\">SAVE</button>'" }] },
+  { guard: 'food-log', name: 'the button says SAVE for every outcome — one label, three destinations',
+    /* ⚠ RE-ANCHORED 2026-09-10: a third outcome landed here (UPDATE THE DIARY, for a food already
+       eaten), so the two-way ternary this pointed at is now nested. */
+    edits: [{ from: `      + (ed ? 'UPDATE THE DIARY' : (inPicks ? 'UPDATE AMOUNT' : 'SAVE')) + '</button>'`,
+              to:   `      + 'SAVE' + '</button>'` }] },
   /* ---- setting an amount from calories, 2026-09-10 ---- */
   { guard: 'food-log', name: 'a zero-calorie food divides to Infinity and puts it in the amount box',
     /* yellow mustard is 0 cal/g and IS in the price list, so this is reachable. */
@@ -221,6 +223,24 @@ const PLANTS = [
     /* it really did ship like this for one build — fvRepaintAmount wired into one of two handlers. */
     edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
               to:   "      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, sa.n, sa.u);" }] },
+  /* ---- clause ⑪: editing a food already in the diary, 2026-09-10 ---- */
+  { guard: 'food-log', name: 'the diary row loses its pencil, so editing a logged food needs a delete again',
+    edits: [{ from: `    ? '<a href="#" class="di-e" data-diedit="' + at + '" title="edit ' + esc(i.label) + '">✏️</a>'`,
+              to:   `    ? ''` }] },
+  { guard: 'food-log', name: 'the diary row goes back to cal + protein, hiding a meal that blew its fat',
+    edits: [{ from: `    + '<span class="di-m">' + fvMacLine(i.m) + '</span></span>'`,
+              to:   `    + '<span class="di-m">' + Math.round(i.m[0]) + ' · ' + Math.round(i.m[1]) + 'P</span></span>'` }] },
+  /* ⛔ THE ONE THAT REWRITES WHAT HE ATE, not just what he reads: the screen opens at his median
+     instead of the logged amount, and UPDATE THE DIARY then commits the median. */
+  { guard: 'food-log', name: 'the pencil opens at his usual amount instead of the amount he logged',
+    edits: [{ from: `    fvSet({slot:slot, q:'', tab:'all', pick:sp.f, amt: ok ? sp.n : null, unit: ok ? stored : units[0],`,
+              to:   `    fvSet({slot:slot, q:'', tab:'all', pick:sp.f, amt: null, unit: ok ? stored : units[0],` }] },
+  { guard: 'food-log', name: 'the edit writes the FACT unit rather than the one on screen — oz shown, grams saved',
+    edits: [{ from: `  const spec = fvSpec(k, sa.n, sa.u);`,
+              to:   `  const spec = fvSpec(k, sa.n, FOOD_FACTS[k].unit);` }] },
+  { guard: 'food-log', name: 'a group change appends before removing, so the food lands in TWO meals',
+    edits: [{ from: `    logWrite(ld, from, kept);\n    if(!logAddFood(ld, to, k, sa.n, sa.u)) return null;`,
+              to:   `    if(!logAddFood(ld, to, k, sa.n, sa.u)) return null;\n    logWrite(ld, from, es);` }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",

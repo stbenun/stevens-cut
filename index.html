@@ -356,16 +356,35 @@
      syrup' and 'kodiak protein oats' both clipped. The app he showed me puts the serving BENEATH the
      food name for exactly this reason, so the name gets the full width and the numbers get their own
      line. Measured, not guessed. */
-  .ditem{display:grid;grid-template-columns:1fr auto 18px;gap:3px 8px;align-items:center;
+  /* ⛔ THE ACTION COLUMN SPANS BOTH ROWS, AND THE NUMBERS SHARE ONE FLEX LINE. Four macros and a
+     second button landed on this row on 2026-09-10, and the previous shape sized column 2 from two
+     different SPANNING items — a width nothing on screen states and nothing here can predict.
+     Now: column 1 takes whatever is left, column 2 is the two buttons, and the amount + macros are
+     one flex line inside column 1 where they cannot collide with either button. Measured at 320
+     and 400 with mkpreview, not reasoned about — this file has shipped a card that read "..." on
+     reasoning alone. */
+  .ditem{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;
          padding:8px 0;border-bottom:1px solid var(--line)}
-  .ditem .di-n{grid-area:1/1/2/3;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ditem .di-x{grid-area:1/3/2/4}
-  .ditem .di-q{grid-area:2/1/3/2;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px}
-  .ditem .di-m{grid-area:2/2/3/4}
+  .ditem .di-n{grid-area:1/1/2/2;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* ⛔ THE MACROS DROP TO THEIR OWN LINE RATHER THAN BREAKING MID-NUMBER. Measured, not reasoned:
+     at 400 px (his phone) the amount and "170 cal · 3P · 38C · 0F" share one 16 px line; at 320 they
+     cannot, and left to text-wrap the run split between the carbs and the fat. flex-wrap here plus
+     white-space:nowrap on the macros makes the break DETERMINISTIC, which is this file’s own rule
+     after a card shipped reading "..." with a chip stacked one letter per line. */
+  .ditem .di-l{grid-area:2/1/3/2;min-width:0;display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}
+  .ditem .di-a{grid-area:1/2/3/3;flex-shrink:0;display:flex;align-items:center;gap:2px}
+  .ditem .di-q{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-shrink:0}
   .ditem .di-q input{width:52px;padding:4px 5px;font-size:12.5px;text-align:right;border:1px solid var(--brass);
          border-radius:6px;background:var(--panel2);color:var(--text)}
-  .ditem .di-m{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right}
-  .ditem .di-x{color:var(--meat);text-decoration:none;text-align:right;font-size:13px}
+  .ditem .di-m{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;
+         white-space:nowrap;margin-left:auto}
+  /* ⭐ BOTH CONTROLS ARE 30 px WIDE. He has told me twice that a small control is a broken one —
+     "make the star for adding to favorites bigger. its hard to press" — and the ✕ was 18 px with a
+     13 px glyph in it. flex-shrink:0 because flex will shrink whatever it can reach. */
+  .ditem .di-x,.ditem .di-e{text-decoration:none;text-align:center;font-size:14px;
+         width:30px;line-height:28px;flex-shrink:0}
+  .ditem .di-x{color:var(--meat)}
+  .ditem .di-e{color:var(--brass)}
   .ditem .di-free{font-style:italic}
   /* ---- the food PAGE: a screen that takes the tab over ---- */
   .dgadd{width:100%;margin-top:10px;padding:11px;border:1px dashed var(--brass);border-radius:10px;
@@ -1684,15 +1703,38 @@ function wireRowEdit(ld){
     logWrite(ld, slot, kept);
     openAcc.add('dg-'+slot); render();
   }));
+  /* ⭐ EDIT A FOOD FROM THE DIARY — the pencil. Opens the food screen pointed at this row, seeded
+     with the amount and the unit that are actually logged, so nothing changes until he saves.
+     ⛔ THE UNIT MUST BE ONE THE DROPDOWN OFFERS. A stored unit fvUnits does not list would render a
+     <select> with no option selected — the browser then shows the FIRST unit while st.unit still
+     says the old one, which is the screen-says-oz-save-writes-grams class all over again. In that
+     case the offered unit wins and the amount is re-derived, so the pair on screen is coherent. */
+  document.querySelectorAll('[data-diedit]').forEach(a=>a.addEventListener('click',ev=>{
+    ev.preventDefault();
+    const p = String(a.dataset.diedit).split('|'), slot = p[0], ei = +p[1], ri = +p[2];
+    const sp = (entryRows((logEntries(ld)[slot] || [])[ei]) || [])[ri];
+    if(!sp || !sp.f || !FOOD_FACTS[sp.f] || typeof sp.n !== 'number'){ render(); return; }
+    const units = fvUnits(sp.f);
+    const stored = sp.u || FOOD_FACTS[sp.f].unit;
+    const ok = units.indexOf(stored) >= 0;
+    fvSet({slot:slot, q:'', tab:'all', pick:sp.f, amt: ok ? sp.n : null, unit: ok ? stored : units[0],
+           sel:[], selAmt:{}, dish:null, fact:null, review:false, edit:{slot:slot, ei:ei, ri:ri}});
+    openAcc.add('dg-' + slot);          /* so ✕ lands back on the meal he came out of, open */
+    current = 'today'; render(); window.scrollTo(0,0);
+  }));
   /* ---- the food page ---- */
   document.querySelectorAll('[data-fvopen]').forEach(b=>b.addEventListener('click',()=>{
-    fvSet({slot:b.dataset.fvopen, q:'', tab:'all', pick:null, amt:null, unit:null});
+    fvSet({slot:b.dataset.fvopen, q:'', tab:'all', pick:null, amt:null, unit:null, edit:null});
     current = 'today'; render(); window.scrollTo(0,0);
   }));
   document.querySelectorAll('[data-fvclose]').forEach(b=>b.addEventListener('click',()=>{ fvClose(); render(); }));
   document.querySelectorAll('[data-fvback]').forEach(b=>b.addEventListener('click',()=>{
     /* ⚠ CLEAR `fact` TOO. foodPageHTML checks st.fact FIRST, so leaving it set made ✕ on the
        editor look like a dead button — state changed, same screen redrawn. */
+    /* ⛔ AN EDIT CAME FROM THE DIARY, SO ✕ GOES BACK TO THE DIARY. Clearing only `pick` would drop
+       him on a food SEARCH he never opened, with the diary nowhere in sight and no way to tell
+       whether his edit had been kept. Nothing was written, which is what ✕ means here. */
+    if(fvState().edit && !fvState().fact){ fvClose(); render(); return; }
     fvSet({fact:null, pick:null, amt:null, unit:null}); render();
   }));
   document.querySelectorAll('[data-fvtab]').forEach(b=>b.addEventListener('click',()=>{
@@ -1855,6 +1897,14 @@ function wireRowEdit(ld){
   { const g = document.getElementById('fvSlot');
     if(g) g.addEventListener('change', ()=>{ fvSet({slot: g.value}); render(); }); }
   document.querySelectorAll('[data-fvsave]').forEach(b=>b.addEventListener('click',()=>{
+    /* ⛔ THE STATE DECIDES WHERE THIS GOES, NOT THE LABEL. An edit writes his diary and leaves the
+       screen; a pick fills the basket and goes back to the list with the bar up. Reading the button
+       text to tell them apart would put the two branches one typo away from each other. */
+    if(fvState().edit){
+      if(!fvEditSave(ld)) return;       /* a zero or a vanished row: stay put, change nothing */
+      fvClose(); current = 'today'; render(); window.scrollTo(0,0);
+      return;
+    }
     if(!fvSaveFood(ld)) return;
     /* ⭐ BACK TO THE LIST, TICKED, WITH THE BAR UP — the screen in his 2026-09-09 screenshots.
        The query is cleared on purpose: with it gone the list is REBUILT, and a rebuild is when
@@ -6631,7 +6681,9 @@ function logAddFood(ld, slot, key, n, unit){
    pressed is, and that stays in the store. */
 /* selAmt: per-food amount overrides for the picks, {key: {n, u}}. Set when he opens a food and
    SAVEs a weighed amount; absent means "use his usual", which is what a plain tick means. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false};
+/* edit: {slot, ei, ri} — set only when the food screen was opened from a row ALREADY in the diary.
+   It changes where SAVE goes and where ✕ lands, and nothing else: the screen is the same screen. */
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false, edit:null};
 /* ⛔ BIND ONCE PER ELEMENT, PER SELECTOR. The food page patches containers in place — a keystroke
    rewrites the list, a tick replaces one row — and the binder runs again afterwards to wire what is
    new. querySelectorAll also returns everything that SURVIVED, so without this a survivor collects a
@@ -6650,7 +6702,7 @@ function fvBind(sel, type, handler){
 }
 function fvState(){ return FV; }
 function fvSet(p){ FV = Object.assign({}, FV, p); }
-function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false}; }
+function fvClose(){ FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false, edit:null}; }
 function favs(){ return store.get('qpcut.favs', []); }
 function favToggle(k){
   const f = favs(), i = f.indexOf(k);
@@ -7193,6 +7245,11 @@ function fvDetailHTML(ld){
      from the same call, so the screen and the save cannot disagree about the unit. */
   const sa = fvScreenAmount();
   const u = sa.u, n = sa.n, inPicks = sa.inPicks;
+  /* ⭐ OPENED FROM THE DIARY? Then this screen edits what he ate, not what he is picking. The
+     amount and unit were seeded from the logged row by the pencil handler, so fvScreenAmount is
+     already showing them — all that changes here is what the button promises. */
+  const ed = st.edit;
+  const edSlot = ed ? ((SLOTS.find(function(s){ return s.key === ed.slot; }) || {}).slot || ed.slot) : '';
   const F = favs();
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvback="1">✕</button>'
@@ -7223,8 +7280,14 @@ function fvDetailHTML(ld){
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     /* ⛔ TWO OUTCOMES, TWO LABELS. One "SAVE" for both adding a food and changing an amount is how
        he ended up unsure enough to delete a pick and start over. */
-    + '<button class="fvsave" data-fvsave="1">' + (inPicks ? 'UPDATE AMOUNT' : 'SAVE') + '</button>'
-    + '<div class="sub" style="margin:6px 2px 0">' + (inPicks
+    /* ⛔ THREE OUTCOMES, THREE LABELS. One "SAVE" for adding a food, changing a pick's amount and
+       editing a row already eaten is how he ended up deleting a pick and starting over rather than
+       trusting the button. The edit label names the meal, because Group can move it. */
+    + '<button class="fvsave" data-fvsave="1">'
+      + (ed ? 'UPDATE THE DIARY' : (inPicks ? 'UPDATE AMOUNT' : 'SAVE')) + '</button>'
+    + '<div class="sub" style="margin:6px 2px 0">' + (ed
+        ? 'Editing what you logged in ' + esc(edSlot) + '. Change Group to move it to another meal.'
+        : inPicks
         ? 'Already in your picks — this changes its amount.'
         : 'Goes to your picks — ADD TO DIARY commits them.') + '</div>'
     + '<button class="btn ghost" data-ffedit="' + esc(k) + '" style="width:100%;margin-top:8px">✏️ Edit these numbers</button>'
@@ -7295,6 +7358,46 @@ function fvSaveFood(ld){
   amt[k] = {n:n, u:u};
   fvSet({sel: sel, selAmt: amt});
   return {k:k, n:n, u:u};                        /* what went into the basket, for the caller */
+}
+/* ⭐ COMMIT AN EDIT TO A ROW THAT IS ALREADY IN THE DIARY. This is the one path on the food screen
+   that WRITES the log — SAVE on a food he is picking only fills the basket. Separate function
+   rather than a branch inside fvSaveFood, because the two do genuinely different things and a
+   single function that sometimes writes his diary and sometimes does not is the shape of the bug
+   where a weighed food got logged twice.
+   ⛔ CHANGING THE GROUP MOVES IT. The Group select is on that screen and always has been; leaving
+   it visible but inert in edit mode would be a control that lies. The move takes the row OUT first
+   and appends second, so a refused append can only ever lose the move — never duplicate the food
+   into two meals, which is the failure he would find days later as a slot 200 cal over. */
+function fvEditSave(ld){
+  const st = fvState(), ed = st.edit, k = st.pick;
+  if(!ed || !FOOD_FACTS[k]) return null;
+  /* ⛔ THE SAME RESOLVER THE SCREEN RENDERED FROM, for the same reason fvSaveFood uses it: st.unit
+     is null until he touches the dropdown, so a hand-rolled fallback here would write grams while
+     the screen said oz. */
+  const sa = fvScreenAmount();
+  if(!sa || !(sa.n > 0)) return null;
+  const from = ed.slot;
+  const es = (logEntries(ld)[from] || []).slice(), e = es[ed.ei];
+  if(!e) return null;
+  const rows = copyRows(e);
+  if(ed.ri < 0 || ed.ri >= rows.length) return null;
+  const spec = fvSpec(k, sa.n, sa.u);
+  const to = st.slot || from;
+  if(to === from){
+    rows[ed.ri] = spec;
+    es[ed.ei] = Object.assign({}, e, {rows: rows});
+    logWrite(ld, from, es);
+  } else {
+    rows.splice(ed.ri, 1);
+    const kept = es.slice();
+    /* an entry that has lost a row is his own list now, not the recipe — same call the ✕ makes */
+    if(rows.length) kept[ed.ei] = Object.assign({}, e, {rows: rows, id:'custom', name: e.name || 'Foods'});
+    else kept.splice(ed.ei, 1);
+    logWrite(ld, from, kept);
+    if(!logAddFood(ld, to, k, sa.n, sa.u)) return null;
+  }
+  openAcc.add('dg-' + to);
+  return {k:k, n:sa.n, u:sa.u, slot:to, moved: to !== from};
 }
 /* ==== THE DISH PAGE — where the cookbook went =============================================
    His instruction, 2026-09-06: get rid of the old My Meals section. That section was the ONLY
@@ -9198,6 +9301,10 @@ function diarySlotItems(ld, slotKey){
         label: foodLabel(sp, ing[ri] && ing[ri][0]),
         m: priceRow([null,null,sp]) || [0,0,0,0],
         ei, ri,
+        /* ⛔ THE KEY, NOT JUST THE LABEL. foodLabel prints sp.f for a normal row, so the two look
+           identical on screen — but a {parts} row's label is "a + b" and a legacy row's comes from
+           the recipe, and neither can be opened on the food screen. The pencil asks THIS. */
+        f: (sp && sp.f) || null,
         unit: (sp && sp.u) || (FOOD_FACTS[sp && sp.f] || {}).unit || '',
         n: (sp && typeof sp.n === 'number') ? sp.n : null,
         free: !!(sp && (sp.free || Array.isArray(sp)))
@@ -9208,15 +9315,36 @@ function diarySlotItems(ld, slotKey){
 }
 /* one line per food: name · editable amount · macros · remove */
 function diaryItemHTML(slotKey, i){
+  const at = slotKey + '|' + i.ei + '|' + i.ri;
   const amt = i.free ? '<span class="di-free">free</span>'
     : (i.n == null ? '—'
-    : '<input type="number" inputmode="decimal" step="any" min="0" data-diq="' + slotKey + '|' + i.ei + '|' + i.ri + '"'
+    : '<input type="number" inputmode="decimal" step="any" min="0" data-diq="' + at + '"'
       + ' value="' + i.n + '" aria-label="' + esc(i.label) + ' amount"> <span class="di-u">' + esc(i.unit) + '</span>');
+  /* ⭐ THE PENCIL OPENS THE FULL FOOD SCREEN ON THIS ROW — his ask, 2026-09-10: "give me ability to
+     edit a food from here." The amount box beside it was only ever half an editor. It cannot change
+     the UNIT (so a row logged in grams could never become ounces without deleting it), cannot answer
+     "how much of this is 100 cal" or "40 g of protein", and cannot say what to put on the scale.
+     All three exist on the food screen, so this points that screen at the diary row instead of at
+     his picks rather than growing a second, weaker editor here.
+     ⛔ ONLY ON A ROW THAT SCREEN CAN ACTUALLY EDIT: it needs a FOOD_FACTS key and a numeric amount.
+     A {free:1} seasoning has no amount, a {parts} line is several foods behind one label, and a
+     legacy [cal,P,C,F] row has no fact at all. A pencil on any of those would open a screen that
+     silently edits the wrong thing — worse than no pencil. */
+  const edit = (i.f && FOOD_FACTS[i.f] && !i.free && i.n != null)
+    ? '<a href="#" class="di-e" data-diedit="' + at + '" title="edit ' + esc(i.label) + '">✏️</a>'
+    : '';
+  /* ⭐ ALL FOUR MACROS, AND THROUGH fvMacLine. His ask, same message: "write the macros of each
+     food, not just protien and clas". cal + protein is the two-number line this file has already
+     been corrected about twice — a food that fits on calories and blows the fat is invisible in it.
+     fvMacLine rather than a fourth spelling of the same row: the picker rows and the review page
+     print a food's macros with it, so what he reads BEFORE committing a food and what he reads
+     after it is in the diary are now produced by one function and cannot drift. */
   return '<div class="ditem">'
     + '<span class="di-n">' + esc(i.label) + '</span>'
-    + '<span class="di-q">' + amt + '</span>'
-    + '<span class="di-m">' + Math.round(i.m[0]) + ' · ' + Math.round(i.m[1]) + 'P</span>'
-    + '<a href="#" class="di-x" data-dix="' + slotKey + '|' + i.ei + '|' + i.ri + '" title="remove">✕</a>'
+    + '<span class="di-l"><span class="di-q">' + amt + '</span>'
+    + '<span class="di-m">' + fvMacLine(i.m) + '</span></span>'
+    + '<span class="di-a">' + edit
+    + '<a href="#" class="di-x" data-dix="' + at + '" title="remove">✕</a></span>'
     + '</div>';
 }
 function diaryHTML(ld){
@@ -11733,7 +11861,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789056613';
+const BUILD = 'b1789061113';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

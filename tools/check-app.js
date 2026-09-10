@@ -2721,6 +2721,107 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     if(!/data-diq="bf\\|0\\|3"/.test(html)) bad.push('the diary does not expose the added foods as editable lines');
     if(!/data-dix="bf\\|0\\|3"/.test(html)) bad.push('the diary offers no way to remove an added food');
 
+    /* ⑪ ⭐ EDIT A FOOD THAT IS ALREADY IN THE DIARY, AND PRINT ALL FOUR OF ITS MACROS. His ask,
+       2026-09-10: "give me ability to edit a food from here. write the macros of each food, not
+       just protien and clas". DRIVEN — the pencil is clicked, the screen is read, the log is read
+       back. Source-reading cannot catch the two failures that matter: a pencil that opens the wrong
+       ROW, and a screen that seeds his median instead of the logged amount. The second is not a
+       display bug — saving then REWRITES what he ate. */
+    {
+      const fv2 = Object.assign({}, fvState()), cur0 = current;
+      /* its own snapshot, so nothing below this clause inherits a moved food */
+      const eatC = JSON.parse(JSON.stringify(store.get('qpcut.eaten',{})));
+      const items = diarySlotItems(D, 'bf');
+      if(items.length < 3) bad.push('clause 11 has fewer than 3 bf rows to work with — it is vacuous');
+      let pens = 0;
+      items.forEach(function(i){
+        const h = diaryItemHTML('bf', i);
+        /* ⛔ THROUGH fvMacLine, not a fourth spelling. The picker rows and the review page print a
+           food's macros with it, so what he checks before committing and what the diary shows him
+           afterwards have to be one function or they will drift. */
+        if(h.indexOf(fvMacLine(i.m)) < 0)
+          bad.push('the diary row for ' + i.label + ' does not print its four macros');
+        const editable = !!(i.f && FOOD_FACTS[i.f] && !i.free && i.n != null);
+        const hasPen = h.indexOf('data-diedit=') >= 0;
+        if(editable && !hasPen) bad.push('no way to edit ' + i.label + ' from the diary');
+        /* ⛔ AND NO PENCIL WHERE THE SCREEN CANNOT EDIT. A {parts} line is several foods behind one
+           label and a legacy [cal,P,C,F] row has no fact at all, so a pencil there opens a screen
+           that edits something else — worse than no pencil. */
+        if(!editable && hasPen) bad.push(i.label + ' offers a pencil but the food screen cannot edit it');
+        if(hasPen) pens++;
+      });
+      if(!pens) bad.push('not one diary row offers a way to edit the food — clause 11 is vacuous');
+      openAcc.add('dg-bf'); current = 'today'; fvClose(); render();
+      const pen = document.querySelector('.ditem [data-diedit]');
+      if(!pen) bad.push('the diary renders no pencil at all');
+      else {
+        const ref = String(pen.getAttribute('data-diedit')).split('|');
+        const sp0 = (entryRows((logEntries(D)[ref[0]]||[])[+ref[1]])||[])[+ref[2]];
+        const wantU = sp0.u || FOOD_FACTS[sp0.f].unit;
+        const snap = JSON.stringify(store.get('qpcut.eaten',{})[D]);
+        pen.click();
+        const st2 = fvState();
+        if(!st2.edit) bad.push('tapping the pencil did not put the food screen into edit mode');
+        if(st2.pick !== sp0.f)
+          bad.push('the pencil opened ' + st2.pick + ' rather than the row it sits on (' + sp0.f + ')');
+        const sa2 = fvScreenAmount() || {};
+        if(sa2.n !== sp0.n || sa2.u !== wantU)
+          bad.push('the edit screen opened at ' + sa2.n + ' ' + sa2.u + ' for a row logged as ' + sp0.n + ' ' + wantU);
+        { const box = document.getElementById('fvAmt'), us = document.getElementById('fvUnit');
+          if(!box || String(box.value) !== String(sp0.n))
+            bad.push('the Amount box reads ' + (box && box.value) + ' for a row logged as ' + sp0.n);
+          if(!us || us.value !== wantU)
+            bad.push('the Serving Size box reads ' + (us && us.value) + ' for a row logged in ' + wantU); }
+        if(foodPageHTML(D).indexOf('UPDATE THE DIARY') < 0)
+          bad.push('the button does not say what it will do to a food already eaten');
+        /* ⛔ CHANGING THE UNIT IS THE POINT OF THE PENCIL. The amount box on the row can never do
+           it, which is why he had to delete a food and re-add it. */
+        const other = fvUnits(sp0.f).filter(function(u){ return u !== wantU; })[0];
+        if(!other) bad.push('clause 11 landed on a food with one unit — the unit change is untested');
+        else {
+          fvSet({unit: other, amt: 3});
+          if(JSON.stringify(store.get('qpcut.eaten',{})[D]) !== snap)
+            bad.push('the edit screen wrote the diary before he pressed save');
+          if(!fvEditSave(D)) bad.push('UPDATE THE DIARY refused a legitimate edit');
+          const now = (entryRows((logEntries(D)[ref[0]]||[])[+ref[1]])||[])[+ref[2]];
+          const gotU = now && (now.u || (FOOD_FACTS[now.f]||{}).unit);
+          if(!now || now.f !== sp0.f || now.n !== 3 || gotU !== other)
+            bad.push('the saved row is ' + JSON.stringify(now) + ', not 3 ' + other + ' of ' + sp0.f);
+        }
+        /* refusals — a zero, and a row index that is no longer there */
+        fvSet({slot:'bf', pick:sp0.f, unit:null, amt:0, edit:{slot:'bf', ei:+ref[1], ri:+ref[2]}});
+        if(fvEditSave(D)) bad.push('the edit accepted a zero amount');
+        fvSet({amt:5, edit:{slot:'bf', ei:+ref[1], ri:99}});
+        if(fvEditSave(D)) bad.push('the edit wrote to a row index that does not exist');
+        /* ⛔ A GROUP CHANGE MOVES IT — EXACTLY ONCE. Landing in both meals is the failure he would
+           find days later as a slot 200 cal over, and it is what appending before removing does. */
+        fvClose(); openAcc.add('dg-bf'); render();
+        const pen2 = document.querySelector('.ditem [data-diedit]');
+        if(!pen2) bad.push('no pencil left to test the move with');
+        else {
+          const r2 = String(pen2.getAttribute('data-diedit')).split('|');
+          const sp2 = (entryRows((logEntries(D)[r2[0]]||[])[+r2[1]])||[])[+r2[2]];
+          pen2.click();
+          fvSet({slot:'di'});
+          if(!fvEditSave(D)) bad.push('moving a logged food to another meal was refused');
+          const n2 = SLOTS.reduce(function(a,s){ return a + diarySlotItems(D, s.key)
+            .filter(function(i){ return i.f === sp2.f; }).length; }, 0);
+          if(n2 !== 1) bad.push(sp2.f + ' appears ' + n2 + ' time(s) in the day after a move — must be exactly 1');
+          if(!diarySlotItems(D,'di').some(function(i){ return i.f === sp2.f; }))
+            bad.push('the moved food never arrived in the dinner group');
+        }
+        /* ⛔ ✕ GOES BACK TO THE DIARY. Clearing only the pick drops him on a food SEARCH he never
+           opened, with no way to tell whether his edit was kept. */
+        fvClose(); openAcc.add('dg-bf'); render();
+        const pen3 = document.querySelector('.ditem [data-diedit]');
+        if(pen3){ pen3.click();
+          const x = document.querySelector('[data-fvback]'); if(x) x.click();
+          if(fvState().slot || fvState().edit || foodPageHTML(D) !== '')
+            bad.push('closing an edit left him on the food page instead of back on the diary'); }
+      }
+      store.set('qpcut.eaten', eatC);
+      fvClose(); fvSet(fv2); current = cur0; render();
+    }
     /* (e) search ranks a prefix match first */
     const blue = foodSearch('blue', 12);
     if(blue[0] !== 'blueberries') bad.push('search "blue" ranked ' + blue[0] + ' first, not blueberries');
@@ -2771,7 +2872,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     'All / Favorites / Your dishes, the food screen asks amount + serving size + group and SAVEs the unit ' +
     'it showed, no food opens at an absurd default, the diary lines stay editable, and a ticked food ' +
     'sorts to the TOP of the list exactly once printing the amount and all four macros the add will ' +
-    'commit, with a counted REVIEW page holding only the selection and dying with it');
+    'commit, with a counted REVIEW page holding only the selection and dying with it — and every ' +
+    'logged row prints its own four macros and opens on the food screen at the amount and UNIT it ' +
+    'was logged in, where a group change moves it to exactly one meal');
 }
 
 /* ==== [gen-build] — mode ② of the generator: foods in, a solved plate out ====================
