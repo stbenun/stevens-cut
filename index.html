@@ -6803,6 +6803,22 @@ function fvSpec(key, n, u){
    three copies of one rule. Those rows exist precisely so he can check the amount before
    committing it, which makes a drift between them worse than showing no number at all. Same
    argument as fvSpec, one function up. */
+/* ⛔ ONE PLACE DECIDES WHAT THE FOOD SCREEN IS SHOWING — the amount, the unit, and whether this
+   food is already in his picks. fvDetailHTML RENDERS from this and fvSaveFood COMMITS from it.
+   They each had their own copy for exactly one build, and the disagreement was a UNIT: reopening a
+   pick stored in oz displayed "oz" and saved GRAMS, because the save fell back to the fact's own
+   unit whenever he had not touched the unit dropdown. Same number, wrong unit — the class this repo
+   has been bitten by most.
+   Precedence, and it matters: what he is TYPING wins, then the amount he already SAVED for this
+   food, then his usual. */
+function fvScreenAmount(){
+  const st = fvState(), k = st.pick;
+  if(!FOOD_FACTS[k]) return null;
+  const o = (st.selAmt || {})[k];
+  const u = st.unit || (o && o.u) || fvUnits(k)[0];
+  const n = (st.amt != null) ? st.amt : ((o && o.n != null) ? o.n : fvDefaultAmount(k, u));
+  return {k:k, u:u, n:n, inPicks: (st.sel || []).indexOf(k) >= 0};
+}
 function fvSelPick(k){
   /* ⭐ HIS WEIGHED AMOUNT WINS. Set by SAVE on the food screen; absent for a food he simply ticked,
      which then means "my usual". This is the single place that decides, so the row he reads, the
@@ -7074,8 +7090,12 @@ function fvDetailHTML(ld){
   const st = fvState(), k = st.pick, f = FOOD_FACTS[k];
   if(!f) return fvSearchHTML(ld);
   const units = fvUnits(k);
-  const u = st.unit || units[0];
-  const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
+  /* ⭐ ALREADY IN HIS PICKS? OPEN AT THE AMOUNT HE SET. His report 2026-09-10: he had to delete a
+     selected food and re-select it to change its amount, because tapping back into it showed his
+     usual (100 g) instead of the 155 g he had entered. fvScreenAmount decides; fvSaveFood commits
+     from the same call, so the screen and the save cannot disagree about the unit. */
+  const sa = fvScreenAmount();
+  const u = sa.u, n = sa.n, inPicks = sa.inPicks;
   const F = favs();
   return '<div class="fvpage">'
     + '<div class="fvhead"><button class="fvx" data-fvback="1">✕</button>'
@@ -7089,10 +7109,12 @@ function fvDetailHTML(ld){
     + '</select></div>'
     + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
-    + '<button class="fvsave" data-fvsave="1">SAVE</button>'
-    /* one line, because the button's meaning changed on 2026-09-09 and a button that writes
-       somewhere he is not looking has to say where */
-    + '<div class="sub" style="margin:6px 2px 0">Goes to your picks — ADD TO DIARY commits them.</div>'
+    /* ⛔ TWO OUTCOMES, TWO LABELS. One "SAVE" for both adding a food and changing an amount is how
+       he ended up unsure enough to delete a pick and start over. */
+    + '<button class="fvsave" data-fvsave="1">' + (inPicks ? 'UPDATE AMOUNT' : 'SAVE') + '</button>'
+    + '<div class="sub" style="margin:6px 2px 0">' + (inPicks
+        ? 'Already in your picks — this changes its amount.'
+        : 'Goes to your picks — ADD TO DIARY commits them.') + '</div>'
     + '<button class="btn ghost" data-ffedit="' + esc(k) + '" style="width:100%;margin-top:8px">✏️ Edit these numbers</button>'
     + '</div>';
 }
@@ -7149,8 +7171,11 @@ function fvAddDish(ld, id){
 function fvSaveFood(ld){
   const st = fvState(), k = st.pick;
   if(!FOOD_FACTS[k] || !st.slot) return null;
-  const u = st.unit || fvUnits(k)[0];
-  const n = (st.amt != null) ? st.amt : fvDefaultAmount(k, u);
+  /* ⛔ THE SAME RESOLVER THE SCREEN RENDERED FROM. It used to compute its own u and n, and the two
+     disagreed about the UNIT: st.unit is null unless he touches the dropdown, so editing only the
+     amount of a pick stored in oz saved grams. */
+  const sa = fvScreenAmount();
+  const u = sa.u, n = sa.n;
   if(!(n > 0)) return null;                      /* same refusal logAddFood made on a zero amount */
   const sel = (st.sel || []).slice();
   if(sel.indexOf(k) < 0) sel.push(k);
@@ -11597,7 +11622,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789051697';
+const BUILD = 'b1789054356';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

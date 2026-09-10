@@ -181,6 +181,13 @@ const PLANTS = [
     /* he set 155 g of strawberries, pressed save, and the amount was nowhere. Invisible unless
        something asserts the NUMBER, which is why the clause reads it back out of fvSelPick. */
     edits: [{ from: "  const o = (fvState().selAmt || {})[k];", to: "  const o = null;" }] },
+  { guard: 'food-log', name: 'the food screen stops seeding from his pick, so editing an amount needs a delete first',
+    /* HIS REPORT, 2026-09-10. Five of selAmt's six consumers were right; only the editing screen was
+       wrong, which is why every existing clause passed while he was deleting and re-adding foods. */
+    edits: [{ from: "  const o = (st.selAmt || {})[k];", to: "  const o = null;" }] },
+  { guard: 'food-log', name: 'the button says SAVE for a food already in the picks — one label, two outcomes',
+    edits: [{ from: "    + '<button class=\"fvsave\" data-fvsave=\"1\">' + (inPicks ? 'UPDATE AMOUNT' : 'SAVE') + '</button>'",
+              to:   "    + '<button class=\"fvsave\" data-fvsave=\"1\">SAVE</button>'" }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",

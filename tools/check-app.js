@@ -2472,6 +2472,36 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           else if(mb2[0].n !== usual)
             sf.push('the plain tick landed at ' + mb2[0].n + ' rather than his usual ' + usual + ' — a weighed pick must not change what an unweighed one means');
           store.set('qpcut.eaten', e1); }
+        /* ⭐ ⑦ REOPENING A PICK OPENS AT THE AMOUNT HE SET. His report 2026-09-10: "i want to be
+           able to go back to an item and edit the amount i want to add. right now, in order to do
+           that, i have to delete the selected item and then re-select it with the amount i want."
+           The food screen seeded from his flat default and ignored selAmt, so tapping back into a
+           pick showed a DIFFERENT number from the row he had just tapped, and SAVE would overwrite
+           what he had entered. Deleting and re-adding was the only way through, and he found it.
+           ⛔ WHY NOTHING CAUGHT IT: selAmt had six consumers and five were correct — the list row,
+           the review page, the bar total, the commit and the row builder. Only the screen whose job
+           is editing it was wrong. "selAmt works" was true and useless; each consumer needs its own
+           assertion. */
+        { fvSet({slot:'bf', sel:[], selAmt:{}, review:false, pick:'blueberries', unit:'oz', amt:3});
+          if(!fvSaveFood(D)) sf.push('SAVE refused 3 oz of blueberries');
+          fvSet({pick:'blueberries', amt:null, unit:null});   /* exactly what tapping the row does */
+          const html = foodPageHTML(D);
+          const shown = (html.match(/id="fvAmt" value="([^"]*)"/) || [])[1];
+          if(shown !== '3')
+            sf.push('reopening a pick shows ' + shown + ' rather than the 3 he set — he would have to delete it and start over, which is what he reported');
+          if((html.match(/id="fvUnit"[\\s\\S]*?value="oz" selected/) || []).length === 0
+             && !/value="oz" selected/.test(html))
+            sf.push('reopening a pick lost the UNIT he chose');
+          if(!/UPDATE AMOUNT/.test(html))
+            sf.push('the button still says SAVE for a food already in his picks — one label for two outcomes is what made him unsure enough to delete it');
+          /* and an update changes it in place rather than adding a second entry */
+          fvSet({amt:5});
+          if(!fvSaveFood(D)) sf.push('UPDATE refused 5 oz');
+          const p2 = fvSelPick('blueberries');
+          if(!(p2.n === 5 && p2.u === 'oz')) sf.push('after an update the pick reads ' + p2.n + ' ' + p2.u + ', not 5 oz');
+          if((fvState().sel || []).filter(function(x){ return x === 'blueberries'; }).length !== 1)
+            sf.push('updating an amount duplicated the pick');
+          fvSet({pick:null, sel:TICK.slice(), selAmt:{}}); }
         /* ⑥ and the review page dies with the selection rather than stranding him on an empty page */
         fvSet({review:true, sel:TICK.slice()});
         fvSelToggle('elev8 cor'); fvSelToggle('mixed berries');
