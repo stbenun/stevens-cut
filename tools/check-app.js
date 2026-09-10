@@ -2122,13 +2122,34 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
     { const ld0 = logDate; logDate = '2026-08-10';   /* Monday — Legs */
       current = 'today'; render();
       const tl = document.body.innerHTML;
-      if(/data-acc="lift"/.test(tl))
-        bad.push('the lift cards are still on Today — they moved to Train');
+      /* ⚠️ RE-AIMED 2026-09-09. These followed data-acc="lift" — the lift ACCORDION — which was
+         deleted when he asked for the exercises not to be buried inside it. Following the marker
+         meant the guard broke on a deliberate change and, worse, would have gone on passing if the
+         exercises themselves ever vanished while an empty card stayed. It now follows the
+         EXERCISES. */
+      if(document.querySelectorAll('#z-lift, details.exfold').length)
+        bad.push('the lift zone is still on Today — it moved to Train');
       if(/data-acc="gymtiming"/.test(tl))
         bad.push('the gym-timing card is still on Today — it moved to Train');
       current = 'train'; render();
-      if(!/data-acc="lift"/.test(document.body.innerHTML))
-        bad.push('Train does not render the lift zone on a lifting day — it was lost, not moved');
+      { const folds = document.querySelectorAll('details.exfold');
+        if(!document.getElementById('z-lift'))
+          bad.push('Train does not render the lift zone on a lifting day — it was lost, not moved');
+        if(!folds.length)
+          bad.push('Train renders the lift zone but NO per-exercise roll-ups — the exercises were lost');
+        /* ⛔ AND NOTHING MAY BURY THEM. His instruction 2026-09-09: "i need each exercise to be its
+           own rollup", answered as un-burying them from the Lift card, which started closed and cost
+           him two opens before the first weight box. A <details> ancestor between the zone and an
+           exercise puts that back, and it would look like a styling change in a diff. */
+        folds.forEach(function(f){
+          let p = f.parentElement, depth = 0;
+          while(p && p.id !== 'z-lift' && depth < 12){
+            if(p.tagName === 'DETAILS')
+              bad.push('an exercise roll-up is nested inside another <details> (' +
+                (p.dataset.acc || p.className || p.tagName) + ') — he asked for them not to be buried');
+            p = p.parentElement; depth++;
+          }
+        }); }
       logDate = ld0; }
     current = 'train'; render();
     if(typeof liftZoneHTML !== 'function') bad.push('liftZoneHTML does not exist — the lift zone was lost, not moved');

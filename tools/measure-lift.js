@@ -10,7 +10,14 @@
  * measures. Fails on horizontal overflow, on a summary row taller than 2 lines, or on an exercise name
  * squeezed below a readable floor.
  *
- * Usage: NODE_PATH=.work/node_modules node tools/measure-lift.js [--widths 320,390] [--shot out.png]
+ * ⛔ IT READS THE REAL CLOCK, so on a rest day there is no lift card and nothing to measure. Pass
+ * --date YYYY-MM-DD to point it at a lifting day; it drives the app's own date picker (logDate)
+ * rather than faking time, so the workout renders through the normal path.
+ * ⚠️ A non-today date is a BACKFILL view, which deliberately hides the live session row (start /
+ * finish / rest timers). The exercise rows are what this tool measures, so that is an acceptable
+ * trade — but it is stated here so the missing row does not read as a defect.
+ *
+ * Usage: NODE_PATH=.work/node_modules node tools/measure-lift.js [--widths 320,390] [--date 2026-08-11] [--shot out.png]
  */
 'use strict';
 const path = require('path');
@@ -19,6 +26,7 @@ const fs = require('fs');
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : d; };
 const WIDTHS = String(arg('widths', '320,360,390,430')).split(',').map(Number);
 const SHOT = arg('shot', null);
+const DATE = arg('date', null);        /* null = the real today; see the note above */
 const ROOT = path.join(__dirname, '..');
 const DATA = path.join(ROOT, '.work', 'gistdata.json');
 
@@ -64,6 +72,10 @@ const warn = (n, m) => console.log(`  note  [${n}] ${m}`);
       await page.waitForSelector('#view', { timeout: 15000 });
 
       /* open the Lift accordion + every exercise fold, then let the transitions settle */
+      /* point the app at a lifting day if asked, through its own date picker */
+      if (DATE) await page.evaluate(d => {
+        try { logDate = d; current = 'train'; render(); } catch (e) {}
+      }, DATE);
       const opened = await page.evaluate(() => {
         const lift = document.getElementById('liftLog');
         if (!lift) return 0;
@@ -72,7 +84,7 @@ const warn = (n, m) => console.log(`  note  [${n}] ${m}`);
         f.forEach(d => { d.open = true; });
         return f.length;
       });
-      if (!opened) { fail(`lift-card@${W}`, 'no lift card rendered — is today a workout day?'); await page.close(); continue; }
+      if (!opened) { fail(`lift-card@${W}`, 'no lift card rendered — a rest day has none. Pass --date with a lifting day (e.g. --date 2026-08-11)'); await page.close(); continue; }
       await new Promise(r => setTimeout(r, 700));
 
       const m = await page.evaluate(() => {
