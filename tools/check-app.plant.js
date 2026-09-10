@@ -196,9 +196,11 @@ const PLANTS = [
     /* the final return is the non-weight branch; forcing it to a whole number makes an ounce the
        smallest step, and an ounce is 28 g. */
     edits: [{ from: "  return Math.round(n * 10) / 10;", to: "  return Math.round(n);" }] },
-  { guard: 'food-log', name: 'the calories box disappears from the food screen',
-    edits: [{ from: "    + '<input type=\"number\" inputmode=\"decimal\" step=\"any\" min=\"0\" id=\"fvCal\" placeholder=\"cal\" aria-label=\"calories to convert into an amount\"></div>'",
-              to:   "    + '</div>'" }] },
+  { guard: 'food-log', name: 'the by-macro box disappears from the food screen',
+    /* ⚠ RE-ANCHORED 2026-09-10: the single calories box became a macro selector plus a number box
+       when he asked to set amounts by protein/carbs/fat too. */
+    edits: [{ from: "    + '<input type=\"number\" inputmode=\"decimal\" step=\"any\" min=\"0\" id=\"fvByN\" placeholder=\"how much\" style=\"width:80px\" aria-label=\"how much of it\">'",
+              to:   "    + ''" }] },
   { guard: 'food-log', name: 'a per-item food cannot be weighed again, so the food form keeps lying about "one item weighs"',
     edits: [{ from: "  if(!FF_BASE[ffUnit(f.unit)] && ffEach(f) != null){ u.push('g'); u.push('oz'); }",
               to:   "  /* no reverse */" }] },
@@ -206,11 +208,19 @@ const PLANTS = [
     edits: [{ from: "  if(!FF_BASE[ffUnit(f.unit)] && ffEach(f) != null){ u.push('g'); u.push('oz'); }",
               to:   "  if(!FF_BASE[ffUnit(f.unit)]){ u.push('g'); u.push('oz'); }" }] },
   { guard: 'food-log', name: 'half an item stops saying what to put on the scale',
-    edits: [{ from: "          ? '<div class=\"sub\" style=\"margin:6px 2px\">' + n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale</div>'",
-              to:   "          ? ''" }] },
-  { guard: 'food-log', name: 'the review page goes back to comparing calories only',
-    edits: [{ from: "              + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · ' + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'",
-              to:   "              + sgn(dv[0]) + ' cal</span></div>'" }] },
+    /* ⚠ RE-ANCHORED 2026-09-10: the line moved into fvScaleHTML so two handlers could repaint it —
+       rendered once, it showed the grams for the previous amount. */
+    edits: [{ from: "    ? n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale' : '';",
+              to:   "    ? '' : '';" }] },
+  { guard: 'food-log', name: 'the budget line goes back to comparing calories only',
+    /* ⚠ RE-ANCHORED 2026-09-10: the delta moved into budgetDeltaHTML, shared by the Review page and
+       the diary, when he said the minuses were hard to see. One plant now covers both screens. */
+    edits: [{ from: "  return '<span class=\"mono\" style=\"color:var(--text)\">' + sgn(d[0]) + ' cal · '\n    + sgn(d[1]) + 'P · ' + sgn(d[2]) + 'C · ' + sgn(d[3]) + 'F</span>';",
+              to:   "  return '<span class=\"mono\" style=\"color:var(--text)\">' + sgn(d[0]) + ' cal</span>';" }] },
+  { guard: 'food-log', name: 'the amount box stops repainting the scale line, so it shows the previous amount',
+    /* it really did ship like this for one build — fvRepaintAmount wired into one of two handlers. */
+    edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
+              to:   "      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, sa.n, sa.u);" }] },
   { guard: 'food-log', name: 'the bulk add stops using the amount the row printed',
     /* the drift fvSelPick exists to delete: the row says 155 g and the diary takes 100. */
     edits: [{ from: "    if(logAddFood(ld, st.slot, p.k, p.n, p.u)) n++;",
@@ -569,7 +579,9 @@ const PLANTS = [
   { guard: 'food-log', name: "the amount box re-renders on every keystroke — the keyboard closes as he types",
     /* his exact report, 2026-09-07. render() replaces the view, so the focused input is torn out
        and iOS drops the keyboard. Re-focusing afterwards is not a fix. */
-    edits: [{ from: "      const box = document.querySelector('.fvenergy');\n      if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);",
+    /* ⚠ RE-ANCHORED 2026-09-10: the hand-rolled energy repaint became fvRepaintAmount when the
+       scale line had to be repainted alongside it. */
+    edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
               to:   "      render();" }] },
   { guard: 'food-log', name: "the search box goes back to re-rendering the whole page as he types",
     /* same wound, other field — it used to render then re-focus and restore the caret. */

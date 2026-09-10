@@ -1812,31 +1812,42 @@ function wireRowEdit(ld){
   }
   wireFvRows();
   /* ⛔ NO render() HERE, same reason as the Amount box below: it would tear out the field he is
-     typing in and iOS drops the keyboard. Only the amount and the energy block are rewritten. */
-  { const c = document.getElementById('fvCal');
-    if(c) c.addEventListener('input', ()=>{
-      const sa = fvScreenAmount();
-      if(!sa) return;
-      const n2 = fvAmountForCalories(sa.k, sa.u, parseFloat(c.value));
-      if(n2 == null) return;                 /* blank, nonsense, or a zero-calorie food */
-      fvSet({amt: n2});
-      const a2 = document.getElementById('fvAmt'); if(a2) a2.value = n2;
-      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, n2, sa.u);
-    });
+     typing in and iOS drops the keyboard. Only the amount, the energy block and the scale line are
+     rewritten — and the scale line MUST be, or it keeps showing the grams for the previous amount. */
+  const fvRepaintAmount = (k2, n2, u2) => {
+    const a2 = document.getElementById('fvAmt'); if(a2) a2.value = n2;
+    const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);
+    const sc = document.getElementById('fvScale'); if(sc) sc.innerHTML = fvScaleHTML(k2, n2, u2);
+  };
+  { const bw = document.getElementById('fvByWhat'), bn = document.getElementById('fvByN');
+    if(bw && bn){
+      const go = ()=>{
+        const sa = fvScreenAmount();
+        if(!sa) return;
+        const n2 = fvAmountForMacro(sa.k, sa.u, parseFloat(bn.value), +bw.value);
+        if(n2 == null) return;   /* blank, nonsense, or a food with none of that macro to divide by */
+        fvSet({amt: n2});
+        fvRepaintAmount(sa.k, n2, sa.u);
+      };
+      bn.addEventListener('input', go);
+      bw.addEventListener('change', go);
+    }
   }
   { const a = document.getElementById('fvAmt'), u = document.getElementById('fvUnit');
     /* ⛔ NO render() HERE. It would tear out the very input he is typing in and iOS would drop the
-       keyboard on every keystroke — which is exactly what he reported. Only the energy block
-       depends on this value, so only the energy block is rewritten. */
+       keyboard on every keystroke — which is exactly what he reported.
+       ⛔ AND IT REPAINTS THE SCALE LINE, NOT JUST THE ENERGY BLOCK. That line was added on
+       2026-09-10 and rendered once, so typing a new amount left it showing the grams for the
+       PREVIOUS one — two numbers contradicting each other on one screen. fvRepaintAmount is shared
+       with the by-macro box so neither can forget a part again.
+       ⛔ SEEDED FROM fvScreenAmount, not from a hand-rolled u2/n2 pair. Recomputing it here is the
+       same duplication that had the screen showing oz while the save wrote grams this morning. */
     if(a) a.addEventListener('input', ()=>{
       const v = parseFloat(a.value);
       fvSet({amt: isFinite(v) ? v : null});
-      const st2 = fvState(), k2 = st2.pick;
-      if(!FOOD_FACTS[k2]) return;
-      const u2 = st2.unit || fvUnits(k2)[0];
-      const n2 = (st2.amt != null) ? st2.amt : fvDefaultAmount(k2, u2);
-      const box = document.querySelector('.fvenergy');
-      if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);
+      const sa = fvScreenAmount();
+      if(!sa) return;
+      fvRepaintAmount(sa.k, sa.n, sa.u);
     });
     /* ⛔ CLEAR THE AMOUNT ON A UNIT CHANGE. 100 g reinterpreted as 100 oz is a 12x error that
        looks like a typo, not a bug. Dropping it re-derives the default for the NEW unit. */
@@ -6832,19 +6843,24 @@ function fvSpec(key, n, u){
    has been bitten by most.
    Precedence, and it matters: what he is TYPING wins, then the amount he already SAVED for this
    food, then his usual. */
-/* ⭐ HOW MUCH OF THIS IS <n> CALORIES? His ask, 2026-09-10: "i want to be able to add 100calories
-   worth of almond butter." Named and top-level so the guard drives the same arithmetic the box does,
-   rather than a copy of it.
+/* ⭐ HOW MUCH OF THIS IS <n> CALORIES — OR PROTEIN, CARBS, FAT? Two asks, 2026-09-10: "i want to be
+   able to add 100calories worth of almond butter", then "i also want to be able to set the amount of
+   an item by a macro." On a cut that is the direction the question arrives in: he knows what he has
+   left, not the grams. Named and top-level so the guard drives the same arithmetic the box does.
    Rounding: whole units for anything he weighs (g, mL) because that is what the scale shows; one
-   decimal otherwise, since 100 cal of banana is 0.95 of one. If rounding a mass would land on zero,
+   decimal otherwise, since 100 cal of banana is 0.95 of one. If rounding a mass would land on zero
    the decimal is kept rather than printing 0.
-   Returns null when there is nothing to solve — a zero-calorie food would otherwise divide to
-   Infinity and put Infinity in the amount box. */
-function fvAmountForCalories(k, u, cal){
-  if(!FOOD_FACTS[k] || !(cal > 0)) return null;
-  const per = fvMacros(k, 1, u)[0];
+   ⛔ THE REFUSAL IS THE LOAD-BEARING PART, and generalising made it far more reachable: almost every
+   food has calories, but macros are routinely ZERO — olive oil has no protein, egg whites no carbs.
+   Dividing by that is Infinity, and an Infinity in the amount box reaches his picks and then the
+   diary. Returns null instead, and the box simply does not move. */
+const FV_BY = [[0, 'calories'], [1, 'protein'], [2, 'carbs'], [3, 'fat']];
+function fvAmountForMacro(k, u, target, idx){
+  if(!FOOD_FACTS[k] || !(target > 0)) return null;
+  const i = (idx >= 0 && idx <= 3) ? +idx : 0;
+  const per = fvMacros(k, 1, u)[i];
   if(!(per > 0) || !isFinite(per)) return null;
-  const n = cal / per;
+  const n = target / per;
   if(u === 'g' || u === 'mL'){ const r = Math.round(n); return r >= 1 ? r : Math.round(n * 10) / 10; }
   return Math.round(n * 10) / 10;
 }
@@ -6855,6 +6871,26 @@ function fvAmountForCalories(k, u, cal){
    which is the failure mode this file is organised against.
    Returns null when there is nothing to say: a per-item food with no stated piece weight, or a
    volume unit, where a gram figure would be invented. */
+/* the scale line, as its own function because TWO handlers have to repaint it — see the note on
+   fvAmountForMacro. Rendered once and never updated, it contradicted the amount above it. */
+/* ⭐ ONE FORMATTER FOR A BUDGET DELTA — the Review page and the open meal in the diary both print
+   it, and both used to assemble it by hand.
+   His report 2026-09-10: "its hard to see the minuses here". Three causes, all fixed: the em-dash
+   that sat against the sign is gone, the sign is a real MINUS (U+2212, as wide as the plus and at
+   digit height, where a hyphen is neither), and the numbers are text-bright rather than muted grey.
+   ⚠️ Math.abs is not decoration: the sign is prepended explicitly, so without it a negative would
+   print as "\u2212-45". */
+function budgetDeltaHTML(t, b){
+  const sgn = function(v){ return (v >= 0 ? '+' : '\u2212') + Math.abs(v); };
+  const d = b.map(function(x, i){ return Math.round(t[i]) - x; });
+  return '<span class="mono" style="color:var(--text)">' + sgn(d[0]) + ' cal · '
+    + sgn(d[1]) + 'P · ' + sgn(d[2]) + 'C · ' + sgn(d[3]) + 'F</span>';
+}
+function fvScaleHTML(k, n, u){
+  const g = fvGrams(k, n, u);
+  return (g != null && ffUnit(u) !== 'g')
+    ? n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale' : '';
+}
 function fvGrams(k, n, u){
   const f = FOOD_FACTS[k];
   if(!f || !(n > 0)) return null;
@@ -7034,9 +7070,8 @@ function fvReviewHTML(ld){
     + '<span class="fvtitle">Review selected items</span></div>'
     + '<div class="fvsub">' + picks.length + ' item' + (picks.length===1?'':'s')
     + (slot ? ' → <b>' + esc(slot.slot) + '</b>' : '') + '</div>'
-    + (slot ? '<div class="fvsub">vs the ' + esc(slot.slot.toLowerCase()) + ' budget — <span class="mono">'
-              + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · ' + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'
-            : '')
+    + (slot ? '<div class="fvsub">vs the ' + esc(slot.slot.toLowerCase()) + ' budget: '
+              + budgetDeltaHTML(t, slot.b) + '</div>' : '')
     + picks.map(function(p){ return fvSelRowHTML(p, F); }).join('')
     + macros(t.map(Math.round))
     + '<button class="fvsave" data-fvaddsel="1">ADD ' + picks.length + ' TO '
@@ -7170,18 +7205,21 @@ function fvDetailHTML(ld){
     + SLOTS.map(s=>'<option value="' + esc(s.key) + '"' + (s.key===st.slot?' selected':'') + '>' + esc(s.slot) + '</option>').join('')
     + '</select></div>'
     /* ⭐ the scale line — only when the unit is not already grams, and only when the weight is known
-       rather than guessed */
-    + (function(){ const g = fvGrams(k, n, u);
-        return (g != null && ffUnit(u) !== 'g')
-          ? '<div class="sub" style="margin:6px 2px">' + n + ' ' + esc(u) + ' = <b>' + g + ' g</b> on the scale</div>'
-          : ''; })()
+       rather than guessed. It has an id because both amount handlers repaint it; left stale it
+       contradicts the amount above it. */
+    + '<div class="sub" id="fvScale" style="margin:6px 2px">' + fvScaleHTML(k, n, u) + '</div>'
     + '<div class="fvenergy">' + fvEnergyHTML(k, n, u) + '</div>'
     /* ⭐ THE OTHER DIRECTION — his ask 2026-09-10. On a cut he knows the calories he has left, not
        the grams. Typing here rewrites the Amount above; it is a calculator, not a second source of
        truth, so the amount stays the one thing that gets saved. */
-    + '<div class="fvfield"><span>Or set it by calories</span>'
-    + '<input type="number" inputmode="decimal" step="any" min="0" id="fvCal" placeholder="cal" aria-label="calories to convert into an amount"></div>'
-    + '<div class="sub" style="margin:6px 2px">Type the calories you have left — the amount above changes to match.</div>'
+    + '<div class="fvfield"><span>Or set it by</span>'
+    + '<span style="display:flex;gap:6px;align-items:center">'
+    + '<select id="fvByWhat" style="width:auto" aria-label="which number to work from">'
+    + FV_BY.map(function(x){ return '<option value="' + x[0] + '">' + x[1] + '</option>'; }).join('')
+    + '</select>'
+    + '<input type="number" inputmode="decimal" step="any" min="0" id="fvByN" placeholder="how much" style="width:80px" aria-label="how much of it">'
+    + '</span></div>'
+    + '<div class="sub" style="margin:6px 2px">Type what you have left — calories, protein, carbs or fat — and the amount above changes to match.</div>'
     + '<div class="sub" style="margin:10px 2px">' + esc(srcBlurb(f.src)) + '</div>'
     /* ⛔ TWO OUTCOMES, TWO LABELS. One "SAVE" for both adding a food and changing an amount is how
        he ended up unsure enough to delete a pick and start over. */
@@ -9235,8 +9273,7 @@ function diaryHTML(ld){
     const totalRow = items.length
       ? macros(t.map(Math.round))
         + '<div class="sub" style="margin-top:5px">vs the ' + esc(s.slot.toLowerCase())
-        + ' budget — <span class="mono">' + sgn(dv[0]) + ' cal · ' + sgn(dv[1]) + 'P · '
-        + sgn(dv[2]) + 'C · ' + sgn(dv[3]) + 'F</span></div>'
+        + ' budget: ' + budgetDeltaHTML(t, s.b) + '</div>'
       : '';
     return '<details class="acc dgroup' + (skip?' skipped':'') + '" data-acc="dg-' + s.key + '"'
       + (openAcc.has('dg-'+s.key)?' open':'') + '>'
@@ -11696,7 +11733,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789055779';
+const BUILD = 'b1789056613';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

@@ -2025,9 +2025,13 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         if(tot == null) bad.push('the open meal has no TOTAL line');
         else if(+tot !== want[0]) bad.push('the meal TOTAL says ' + tot + ' but he ate ' + want[0]);
         const sb = (SLOTS.filter(function(x){ return x.key === 'bf'; })[0] || {b:[0]}).b;
-        const dd = want[0] - sb[0];
-        if(body.indexOf((dd>=0?'+':'') + dd + ' cal · ') < 0)
-          bad.push('the open meal does not print its delta against the ' + sb[0] + ' budget'); }
+        /* ⚠️ ASSERT THE NUMBERS THROUGH THE APP'S OWN FORMATTER, not the punctuation around them.
+           This matched the literal "+13 cal · ", so changing a hyphen to a real minus would have
+           failed it — and a guard that breaks on wording is a guard that gets muted. */
+        const wantLine = budgetDeltaHTML(want, sb);
+        if(body.indexOf(wantLine) < 0)
+          bad.push('the open meal does not print its delta against the ' + sb[0] + ' budget (expected ' +
+                   wantLine.replace(/<[^>]+>/g, '') + ')'); }
     }
 
     store.set('qpcut.eaten', eat0); store.set('qpcut.offplan', op0);
@@ -2509,25 +2513,74 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
            mustard is 0 cal/g and is in the price list, so this is reachable, not theoretical. */
         { fvSet({slot:'bf', pick:'almond butter', amt:null, unit:null, sel:[], selAmt:{}});
           const html = foodPageHTML(D);
-          if(!/id="fvCal"/.test(html)) sf.push('the food screen has no way to set an amount from calories');
-          const n = fvAmountForCalories('almond butter', 'g', 100);
+          if(!/id="fvByN"/.test(html)) sf.push('the food screen has no way to set an amount from a number he has left');
+          const n = fvAmountForMacro('almond butter', 'g', 100, 0);
           if(n !== 17) sf.push('100 cal of almond butter came to ' + n + ' g, not 17');
           if(n !== Math.round(n)) sf.push('a weight he puts on a scale came back fractional (' + n + ' g)');
           { const back = fvMacros('almond butter', n, 'g')[0];
             if(Math.abs(back - 100) > 6) sf.push('17 g of almond butter prices at ' + Math.round(back) + ' cal — the round trip is off by more than rounding explains'); }
           /* a unit he does NOT weigh keeps its decimal, or the answer is coarse by up to 40% */
-          { const oz = fvAmountForCalories('salmon', 'oz', 100);
+          { const oz = fvAmountForMacro('salmon', 'oz', 100, 0);
             if(oz === Math.round(oz)) sf.push('100 cal of salmon came back as a whole ' + oz + ' oz — an ounce is 28 g, so whole numbers here are a 40% error'); }
-          /* ⛔ and the refusals */
-          if(fvAmountForCalories('yellow mustard', 'g', 100) != null)
+          /* ⭐ AND BY EACH MACRO — his second ask, 2026-09-10. Every one round-trips against the
+             macro it solved for, not against calories, or a protein target could be met by a
+             carbohydrate answer and nothing would notice. */
+          [[1,'protein'],[2,'carbs'],[3,'fat']].forEach(function(p){
+            const idx = p[0];
+            const k2 = idx === 1 ? 'chicken breast raw' : (idx === 2 ? 'white rice dry' : 'almond butter');
+            if(!FOOD_FACTS[k2]) { sf.push('clause ⑧ has no ' + p[1] + ' fixture — it is vacuous'); return; }
+            const u2 = fvUnits(k2)[0];
+            const got = fvAmountForMacro(k2, u2, 20, idx);
+            if(got == null) { sf.push('20 g of ' + p[1] + ' from ' + k2 + ' could not be solved'); return; }
+            const back2 = fvMacros(k2, got, u2)[idx];
+            if(Math.abs(back2 - 20) > 2)
+              sf.push(got + ' ' + u2 + ' of ' + k2 + ' gives ' + Math.round(back2) + ' g ' + p[1] + ', not the 20 asked for');
+          });
+          /* ⛔ and the refusals. THE ZERO-MACRO CASE IS WHY GENERALISING WAS RISKY: calories are
+             almost never zero, protein and carbs often are, and dividing by one is an Infinity on
+             its way into the amount box and then the diary. */
+          if(fvAmountForMacro('yellow mustard', 'g', 100, 0) != null)
             sf.push('a ZERO-CALORIE food returned an amount — that is Infinity reaching the amount box');
-          if(fvAmountForCalories('almond butter', 'g', 0) != null) sf.push('0 calories returned an amount');
-          if(fvAmountForCalories('almond butter', 'g', -50) != null) sf.push('negative calories returned an amount');
-          if(fvAmountForCalories('almond butter', 'g', NaN) != null) sf.push('a blank box returned an amount');
-          if(fvAmountForCalories('not a food', 'g', 100) != null) sf.push('an unknown food returned an amount');
+          { const noP = Object.keys(FOOD_FACTS).filter(function(k3){
+              const f3 = FOOD_FACTS[k3]; return f3.unit === 'g' && !(f3.p > 0); });
+            if(!noP.length) sf.push('no zero-protein food exists — the zero-macro refusal is vacuous');
+            noP.slice(0, 5).forEach(function(k3){
+              if(fvAmountForMacro(k3, 'g', 20, 1) != null)
+                sf.push(k3 + ' has no protein but still returned an amount for a protein target — Infinity');
+            }); }
+          if(fvAmountForMacro('almond butter', 'g', 0, 0) != null) sf.push('a target of 0 returned an amount');
+          if(fvAmountForMacro('almond butter', 'g', -50, 0) != null) sf.push('a negative target returned an amount');
+          if(fvAmountForMacro('almond butter', 'g', NaN, 0) != null) sf.push('a blank box returned an amount');
+          if(fvAmountForMacro('not a food', 'g', 100, 0) != null) sf.push('an unknown food returned an amount');
           /* a target smaller than one unit must keep a decimal rather than rounding to nothing */
-          { const tiny = fvAmountForCalories('almond butter', 'g', 2);
+          { const tiny = fvAmountForMacro('almond butter', 'g', 2, 0);
             if(!(tiny > 0)) sf.push('2 cal of almond butter came back as ' + tiny + ' — rounded away to nothing'); }
+          /* ⛔ AND THE SCALE LINE MUST FOLLOW THE AMOUNT. It is rendered once and repainted by the
+             handlers; left stale it shows the grams for the PREVIOUS amount, two numbers
+             contradicting each other on one screen. */
+          if(!/id="fvScale"/.test(foodPageHTML(D)))
+            sf.push('the scale line has no id, so neither amount handler can repaint it and it goes stale');
+          if(!/id="fvByWhat"/.test(foodPageHTML(D)) || !/id="fvByN"/.test(foodPageHTML(D)))
+            sf.push('the food screen cannot set an amount from a macro');
+          /* ⛔ AND IT MUST FOLLOW A TYPED AMOUNT. Driven through the real input, because this bug
+             existed for one build in a form indistinguishable from the fix by reading: the repaint
+             helper was wired into the by-macro box and not into the amount box, so the line sat
+             there showing the grams for the previous amount. */
+          { fvSet({pick:'oikos triple zero', amt:0.5, unit:null}); current='today'; render();
+            const ab = document.getElementById('fvAmt'), sc = document.getElementById('fvScale');
+            if(!ab || !sc) sf.push('no amount box or scale line on the food screen to check');
+            else {
+              const before = sc.textContent;
+              ab.value = '2';
+              ab.dispatchEvent(new window.Event('input', {bubbles:true}));
+              const after = (document.getElementById('fvScale') || {textContent:''}).textContent;
+              const want = fvGrams('oikos triple zero', 2, fvUnits('oikos triple zero')[0]);
+              if(after === before)
+                sf.push('the scale line did not change when the amount did — it still reads "' + before + '"');
+              else if(after.indexOf(want + ' g') < 0)
+                sf.push('after typing 2 the scale line reads "' + after + '" rather than ' + want + ' g');
+            }
+            fvSet({pick:null, amt:null}); }
           fvSet({pick:null, sel:TICK.slice(), selAmt:{}}); }
         /* ⭐ ⑨ A PER-ITEM FOOD WITH A KNOWN PIECE WEIGHT CAN BE WEIGHED. His report 2026-09-10:
            Drizzilicious "didnt let me choose how many g i want to add, it only let me choose x amount
@@ -2577,12 +2630,18 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           const rv2 = foodPageHTML(D);
           const b2 = (SLOTS.filter(function(x){ return x.key === fvState().slot; })[0] || {b:[0,0,0,0]}).b;
           const t2 = fvSelTotal();
-          ['cal','P','C','F'].forEach(function(lbl, i){
-            const dv = Math.round(t2[i]) - b2[i];
-            const want = (dv >= 0 ? '+' : '') + dv + (i === 0 ? ' cal' : lbl);
-            if(rv2.indexOf(want) < 0)
-              sf.push('the review page does not compare ' + lbl + ' against the budget (expected ' + want + ')');
-          });
+          /* ⚠️ THROUGH THE FORMATTER, for the reason above — and it still fails on a wrong NUMBER,
+             which is all this clause was ever about. */
+          const wantRv = budgetDeltaHTML(t2, b2);
+          if(rv2.indexOf(wantRv) < 0)
+            sf.push('the review page does not compare all four macros against the budget (expected ' +
+                    wantRv.replace(/<[^>]+>/g, '') + ')');
+          /* and the sign must be legible: a real minus, not a hyphen, and no em-dash beside it */
+          if(/budget — /.test(rv2))
+            sf.push('the em-dash is back beside the sign — "— -45" is what he could not read');
+          { const anyNeg = [0,1,2,3].some(function(i){ return Math.round(t2[i]) - b2[i] < 0; });
+            if(anyNeg && !/\u2212/.test(rv2))
+              sf.push('a negative delta is printed with a hyphen rather than a real minus sign'); }
           fvSet({review:false}); }
         /* ⑥ and the review page dies with the selection rather than stranding him on an empty page */
         fvSet({review:true, sel:TICK.slice()});
