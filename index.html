@@ -2648,13 +2648,12 @@ const FOOD_FACTS = {
      what stops anything AUTOMATED — the solver, the rebalancer, a swap line — from ever reaching for
      it, and [nut-facts] fails the build if any recipe row names it. He checks wrappers himself and
      said so Aug 19 2026, so this is not a second opinion on his judgement; it is a stop on the parts
-     of the app that have no judgement. ⏳ BRAND NOT READABLE in the photo, so the key is descriptive.
-     Rename it once he says what it is. */
+     of the app that have no judgement. ✅ BRAND ANSWERED by him 2026-09-15 and the key now carries it. */
   /* ⛔ nut:1 SITS AFTER f: AND BEFORE src:, and that position is load-bearing, not style. Written
      before cal: instead, the entry still parses as JavaScript, still prices correctly and still
      flags in [nut-facts] — but food-doc's regex cannot see it, so the food vanishes from
      FOOD_FACTS.md entirely. [food-doc-parse] caught exactly that on the first write of this row. */
-  'protein donut':     {unit:'g', ea:32.5, /* 2 donuts = 65 g per the panel, so 32.5 g each */ cal:2.4615, p:0.3077, c:0.4, f:0.0923, nut:1, src:'HIS OWN WRAPPER, panel photographed 2026-09-15; brand not legible in the image. Panel: servings 1, serving size 2 DONUTS (65 g) = 160 cal / 20 P / 26 C / 6 F, of which FIBER 8 g and ERYTHRITOL 13 g, total sugars <1 g, 0 g added, sat fat 1 g, chol 5 mg, sodium 390 mg, calcium 20% DV. Per gram off the 65 g serving; ea:32.5 is one donut. Legible ingredient tail: guar gum, cellulose, sucralose, cellulose gum. ⛔ DO NOT ATWATER-CHECK THIS ROW: 20P*4 + 26C*4 + 6F*9 = 238 against a stated 160, because 8 g of the carb is fiber and 13 g is erythritol, which carries essentially no calories. The wrapper prints the arithmetic on the front: 26 g carbs - 8 g fiber - 13 g erythritol = 5 g NET CARBS. Re-costing at net carb gives 20*4 + 5*4 + 6*9 = 154, which is the panel. Third row in this file with that shape - see [twizzlers zero sugar] (maltitol) and [royo bread] (fiber). ⚠️ THE CARB FIGURE HERE IS TOTAL (26), not net (5), like every other row in this file. 20 g of protein in 160 cal is a genuinely good ratio for him; the reason to be careful is the facility line above, not the macros.'},
+  'legendary foods protein donut': {unit:'g', ea:32.5, /* 2 donuts = 65 g per the panel, so 32.5 g each */ cal:2.4615, p:0.3077, c:0.4, f:0.0923, nut:1, src:'HIS OWN WRAPPER, panel photographed 2026-09-15. LEGENDARY FOODS - he named the brand himself the same day, after the row went in keyed as a plain descriptive name because the wrapper photo did not show it. Panel: servings 1, serving size 2 DONUTS (65 g) = 160 cal / 20 P / 26 C / 6 F, of which FIBER 8 g and ERYTHRITOL 13 g, total sugars <1 g, 0 g added, sat fat 1 g, chol 5 mg, sodium 390 mg, calcium 20% DV. Per gram off the 65 g serving; ea:32.5 is one donut. Legible ingredient tail: guar gum, cellulose, sucralose, cellulose gum. ⛔ DO NOT ATWATER-CHECK THIS ROW: 20P*4 + 26C*4 + 6F*9 = 238 against a stated 160, because 8 g of the carb is fiber and 13 g is erythritol, which carries essentially no calories. The wrapper prints the arithmetic on the front: 26 g carbs - 8 g fiber - 13 g erythritol = 5 g NET CARBS. Re-costing at net carb gives 20*4 + 5*4 + 6*9 = 154, which is the panel. Third row in this file with that shape - see [twizzlers zero sugar] (maltitol) and [royo bread] (fiber). ⚠️ THE CARB FIGURE HERE IS TOTAL (26), not net (5), like every other row in this file. 20 g of protein in 160 cal is a genuinely good ratio for him; the reason to be careful is the facility line above, not the macros.'},
   /* ==== the last of the unsourced staples, Aug 18 2026 ==== */
   'elev8 cor': {unit:'g', cal:3.4, p:0.056, c:0.752, f:0, src:"Elev8 Foods Creamy Rice (his Cream of Rice) published panel: 1 serving = 122 cal / 27 C / 2 P / 0 F, serving ~35.9 g -> 3.4 cal/g. Fetched Aug 18 2026. Corroborates his 25 g row exactly: 25 x 3.4 = 85 cal and 25 x 0.752 = 18.8 C against the row's 85/19. It was right, just unsourced."},
   'fage 0% greek yogurt': {unit:'g', cal:0.57, p:0.103, c:0.032, f:0, src:"FAGE Total 0% plain, published panel 57 cal / 10.3 P per 100 g -> per gram. Fetched Aug 18 2026. Confirms his 125 g row (70 cal / 13 P) to within a calorie. ⚠️ One retailer listing gives 80 cal / 16 P for a 'container', which works out to a DIFFERENT container size, not a different yogurt -- do not swap this figure for that one. Separate key from the 2% (0.697 cal/g) on purpose; conflating them is already denied in the row matcher."},
@@ -12008,7 +12007,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789503785';
+const BUILD = 'b1789506183';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
