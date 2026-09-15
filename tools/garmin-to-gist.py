@@ -121,8 +121,14 @@ def main():
                 cals[iso] = (num(r.get('Active Calories')), num(r.get('Total')))
 
     # ---- pull the gist FRESH; never write over a stale read ----
+    # ⛔ NOT the raw.githubusercontent URL. It is CDN-cached and lagged ~9 MINUTES on
+    # 2026-09-14: a sleep ingest was followed by a steps ingest, the second run read a
+    # payload that predated the first, and PATCHing it back would have wiped seven
+    # nights of sleep. The whole payload is rewritten on every run, so a stale READ is
+    # silent data loss, not a stale report. `gh api` hits the API and is never cached.
     payload = json.loads(subprocess.check_output(
-        ['curl', '-s', RAW]).decode('utf-8'))
+        ['gh', 'api', 'gists/' + GIST, '--jq',
+         '.files["thecut-data.json"].content']).decode('utf-8'))
     data, wmap = payload['data'], payload.setdefault('w', {})
     os.makedirs('.work', exist_ok=True)
     with io.open('.work/gist-backup-%d.json' % int(time.time()), 'w', encoding='utf-8') as fh:
