@@ -34,7 +34,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, execFile } = require('child_process');
 const P = 'index.html';
 /* --only <substring>: run just the plants whose guard or name contains it. See the note at the
    bottom of this file — a filtered run cannot report a pass. */
@@ -725,7 +725,7 @@ const PLANTS = [
               to:   "SLOTS.forEach(function(s){ const b = SLOT_BUDGET[s.key]; if(b) s.b = [b[0]-5, b[2], b[3], b[4]]; });" }] },
 ];
 
-function main() {
+async function main() {
   if (ANCHORS) {
     /* ⛔ READS THE WORKING TREE, DELIBERATELY, AND RUNS BEFORE THE DIRTY-INDEX REFUSAL. The question
        this flag answers is "did the refactor I just made break a plant anchor" — and a refactor is
@@ -758,19 +758,33 @@ function main() {
     return;
   }
 
-  /* Nothing below writes index.html. A dirty one therefore means another tool or another session
-     did — refuse, and say which, rather than planting against content that is not committed. */
-  if (numstat() !== '') {
-    console.log('REFUSING TO RUN — index.html has uncommitted changes:');
-    console.log('  git diff --numstat index.html -> ' + numstat());
-    console.log('Nothing in this harness writes that file, so something else is holding it. Whoever has');
-    console.log('it dirty owns it until it is committed. Commit or stash, then re-run.');
-    process.exitCode = 2;
-    return;
-  }
+  /* ⭐ PLANTS AGAINST THE WORKING TREE, dirty or not — changed 2026-09-15 on his call.
+     This used to REFUSE on an uncommitted index.html, reasoning that nothing here writes that file
+     so a dirty one meant someone else was holding it. The reasoning was sound and the rule was
+     still backwards: it made the harness unrunnable on exactly the change you want verified, and
+     forced a commit BEFORE the verification that is supposed to gate the commit. It cost a real
+     deploy that day — five food rows were committed unverified purely to get this to start.
 
+     What the refusal actually protected was the END assertion, which compared the file to git and
+     so needed git to be the baseline. It does not need git: the baseline is the bytes read RIGHT
+     HERE, one line down, and `untouched` below compares against those. That assertion is strictly
+     stronger — it catches an in-place write even on a tree that was already dirty, which the git
+     comparison could not.
+
+     ⛔ WHAT IS GENUINELY LOST, and it is why the tree state is still printed: if the file moves
+     mid-run, this can no longer say WHO moved it. A plant writing in place and a second session
+     editing look identical from here. So a moved file voids the never-written claim for that run
+     and says so, rather than being reported as a hole in the guards. */
   const before = fs.readFileSync(P);
   const orig = before.toString('utf8');
+  const dirtyAtStart = numstat();
+  if (dirtyAtStart !== '') {
+    console.log('planting against the WORKING TREE, which is dirty — this is supported, and is the');
+    console.log('point: uncommitted work is what needs verifying. git diff --numstat index.html -> ' +
+                dirtyAtStart);
+    console.log('⚠ do not edit index.html until this finishes, or the never-written check below is void.');
+    console.log('');
+  }
 
   const env = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
   let all = true;
@@ -782,38 +796,85 @@ function main() {
     if (!RUN.length) { console.log('nothing matched — this run tested NOTHING'); process.exitCode = 1; return; }
   }
 
-  RUN.forEach(function (p, i) {
+  /* ⭐ THE PLANTS RUN CONCURRENTLY — changed 2026-09-15 on his call. They were run one at a time
+     for no reason: each plant already writes its OWN uniquely-named scratch file and spawns its
+     OWN checker process against it, so they share nothing mutable and never touch index.html.
+     The only thing serialising them was the shape of the loop. 133 plants x one full app suite
+     each is ~40 minutes of wall clock, and it blocked a deploy for most of an afternoon.
+
+     ⭐ JOBS DEFAULTS TO 6, AND THAT NUMBER IS MEASURED, NOT REASONED. Same 6 plants, same machine,
+     same session: --jobs 1 = 4m28s · --jobs 4 = 2m56s · --jobs 6 = 1m27s. So 3.1x at six-wide.
+     ⚠ The first version of this comment defended a default of 4 on the theory that a jsdom holding
+     the whole ~1 MB app makes these memory-bound, so a wider pool would swap rather than finish
+     sooner. THAT WAS A GUESS AND THE MEASUREMENT DISAGREED — going 4 -> 6 nearly halved the wall
+     clock. Contention is real (six concurrent checks each take ~87s against ~45s alone, so roughly
+     2x slower each) but six-wide still wins by 3x net. The lesson is the one this whole file is
+     about: a number nobody timed is a number nobody should trust, including mine.
+     --jobs N overrides; --jobs 1 restores the old serial behaviour exactly, which is the first
+     thing to try if a result ever looks impossible. Above ~8 nobody has measured — do that before
+     raising it rather than assuming the curve keeps going.
+
+     ⛔ EACH PLANT'S LINES ARE BUFFERED AND PRINTED AS ONE BLOCK. Printing them as they are
+     produced would interleave two plants' output at speed, and a CAUGHT line sitting above
+     another plant's detail line is worse than useless — it reads as evidence for the wrong
+     claim. Order across plants is completion order, not RUN order; every line names its own
+     guard and plant, so nothing depends on position. */
+  const JOBS = (function(){
+    const i = process.argv.indexOf('--jobs');
+    const n = i > -1 ? parseInt(process.argv[i + 1], 10) : NaN;
+    return (Number.isFinite(n) && n > 0) ? n : 6;
+  })();
+  console.log('running ' + RUN.length + ' plant(s), ' + JOBS + ' at a time' +
+              (JOBS === 1 ? ' (serial)' : '') + ' — each boots the full app suite');
+  console.log('');
+
+  const runOne = (p, i) => new Promise(function (resolve) {
+    const say = [];
     let s = orig, ok = true;
     for (const e of p.edits) {
       if (s.split(e.from).length - 1 !== 1) {
-        console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — anchor not unique/found');
+        say.push('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — anchor not unique/found');
         ok = false; all = false; break;
       }
       s = s.replace(e.from, e.to);
     }
-    if (!ok) return;
+    if (!ok) { console.log(say.join('\n')); return resolve(); }
     if (s === orig) {
       console.log('BROKEN CASE  [' + p.guard + '] ' + p.name + ' — plant changed nothing');
-      all = false; return;
+      all = false; return resolve();
     }
-    /* the defect goes in a COPY; the working tree is never written */
-    const tmp = path.join(os.tmpdir(), 'checkapp-plant-' + i + '.html');
+    /* the defect goes in a COPY; the working tree is never written. The pid is in the name so two
+       harness runs on one machine cannot hand each other's defect to the checker. */
+    const tmp = path.join(os.tmpdir(), 'checkapp-plant-' + process.pid + '-' + i + '.html');
     fs.writeFileSync(tmp, s);
-    let out = '', code = 0;
-    try {
-      out = execSync('node tools/check-app.js --file "' + tmp + '"', { env: env, encoding: 'utf8' });
-    } catch (e) { code = e.status || 1; out = (e.stdout || '') + (e.stderr || ''); }
-    try { fs.unlinkSync(tmp); } catch (e) {}
-    const rx = new RegExp('FAIL\\s+\\[' + p.guard + '\\]');
-    if (code !== 0 && rx.test(out)) {
-      const line = (out.split('\n').find(l => rx.test(l)) || '').trim();
-      console.log('CAUGHT  [' + p.guard + '] ' + p.name);
-      console.log('        ' + line.slice(0, 150));
-    } else {
-      console.log('NOT CAUGHT  [' + p.guard + '] ' + p.name + '  (exit=' + code + ')');
-      all = false;
-    }
+    execFile('node', ['tools/check-app.js', '--file', tmp],
+      { env: env, encoding: 'utf8', maxBuffer: 1 << 26 },
+      function (err, stdout, stderr) {
+        try { fs.unlinkSync(tmp); } catch (e) {}
+        const out = (stdout || '') + (stderr || '');
+        const code = err ? (err.code || 1) : 0;
+        const rx = new RegExp('FAIL\\s+\\[' + p.guard + '\\]');
+        if (code !== 0 && rx.test(out)) {
+          const line = (out.split('\n').find(l => rx.test(l)) || '').trim();
+          say.push('CAUGHT  [' + p.guard + '] ' + p.name);
+          say.push('        ' + line.slice(0, 150));
+        } else {
+          say.push('NOT CAUGHT  [' + p.guard + '] ' + p.name + '  (exit=' + code + ')');
+          all = false;
+        }
+        console.log(say.join('\n'));
+        resolve();
+      });
   });
+
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(JOBS, RUN.length) }, async function () {
+    while (true) {
+      const i = next++;
+      if (i >= RUN.length) return;
+      await runOne(RUN[i], i);
+    }
+  }));
 
   /* Not restore machinery — an assertion. If a future edit reintroduces an in-place write, this is
      what says so, and it costs one file read. */
@@ -821,7 +882,18 @@ function main() {
   const ns = numstat();
   console.log('');
   console.log('index.html never written: ' + untouched + '   git diff --numstat: ' + (ns === '' ? '(empty — clean)' : ns));
-  const good = all && untouched && ns === '';
+  /* ⛔ THE GIT STATE IS PRINTED, NOT JUDGED — 2026-09-15. `good` used to require ns === '', which is
+     what made a dirty tree fail the run and forced the refusal this file no longer has. Cleanliness
+     was never the property under test; NOT WRITING index.html is, and `untouched` tests that directly
+     against the bytes read at the start. A tree that was dirty before this started and is dirty now,
+     with the same bytes, is a clean result. */
+  if (!untouched) {
+    console.log('');
+    console.log('⚠ index.html MOVED WHILE THIS RAN. From here a plant writing in place and another');
+    console.log('  session editing the file look identical, so this run cannot claim the harness kept');
+    console.log('  its hands off — that claim is VOID, not disproved. Re-run on a still tree.');
+  }
+  const good = all && untouched;
   /* ⛔ A FILTERED RUN NEVER REPORTS A PASS, and never exits 0. It skipped plants by construction, and
      the failure this whole file circles is a harness that tests less than it appears to — so the
      narrow run is for debugging one plant, and only the full run can say the guards are load-bearing.
@@ -837,4 +909,4 @@ function main() {
   process.exitCode = good ? 0 : 1;
 }
 
-main();
+main().catch(function(e){ console.log('harness crashed: ' + (e && e.stack || e)); process.exitCode = 1; });
