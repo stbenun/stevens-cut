@@ -2598,6 +2598,16 @@ const FOOD_FACTS = {
      cookies." His "around 9" IS the label serving exactly, and per gram the minis are the same
      cookie as the Thins (both 29 g = 140 cal) — so the swap is honest and needs no adjustment. */
   'oreo mini':      {unit:'g',             ea:3.22, /* its own src: "3.22 g per cookie" (29 g / 9) */ cal:4.83, p:0.034, c:0.724, f:0.207, src:'Oreo Mini Bite Size label: 9 cookies (29 g) = 140 cal / 1 P / 21 C / 6 F -> per gram, 3.22 g per cookie. Identical per-gram to oreo thin, which is expected — same cookie, smaller format. He eats these WHOLE, not de-creamed.'},
+  /* ⭐ THE ONLY ONE OF THE FOUR 2026-09-15 LABELS THAT IS *NOT* HIS PACKAGE — the image he sent is
+     a web/stock product shot (it arrived with the image-search chrome still on it), not a photo of
+     a bag in his hand. That is fine BY HIS OWN RULE — "these above are all online, get as much as
+     you can online", and he should not photograph a national brand — but the distinction is
+     recorded because every other label this session is a real package.
+     ⏳ KASHRUT UNCONFIRMED: there is a certification mark after "LECITHIN (SOY)" in the ingredient
+     panel and the image is too low-resolution to read it. Sugar-free Twizzlers are not always
+     certified the same as the regular line, so do NOT put this in a meal next to meat, or in a
+     dairy-timed snack, until he reads the mark off his own bag. */
+  'twizzlers zero sugar': {unit:'g',       ea:7, /* 4 pieces = 28 g, so 7 g per twist */ cal:2.857, p:0.0179, c:0.7857, f:0.0179, src:'PUBLISHED LABEL via the product image he sent 2026-09-15 (not his own bag — see the note above). Hershey Company, "Twizzlers Zero Sugar", UPC 0 34000 54010 5. Panel: about 5 servings per container, serving 4 pieces (28 g) = 80 cal / <1 P / 22 C / 0.5 F, sodium 70 mg, fiber 0 g, total sugars 0 g, SUGAR ALCOHOLS 15 g. Per gram off the 28 g serving; ea:7 lets him count twists or weigh them. Protein taken as 0.5 g per serving, the midpoint of the "<1 g" declaration - the enriched wheat flour in it supports roughly that, and the whole quantity is worth 0.125 g a twist, so nothing in his day turns on it. ⛔ DO NOT ATWATER-CHECK THIS ROW AND DO NOT "CORRECT" IT: 22C*4 + 0.5F*9 = 92.5 against a stated 80, because 15 of the 22 g of carb is MALTITOL, which yields ~2.1 cal/g rather than 4. Re-costing it as 7 g sugar*4 + 15 g maltitol*2.1 + 4.5 fat lands at ~64, i.e. the true value sits BELOW the label and the panel is already the conservative number. The label is what goes in the app. ⚠️ 15 g of maltitol in one 4-piece serving, and the bag says so itself: "EXCESS CONSUMPTION MAY LEAD TO GAS AND BLOATING." Worth knowing before it becomes a Creami topping the night before a heavy Legs day. Contains wheat and soy; no nuts declared.'},
   /* ⚠️ THE ONE DERIVED ROW ON THIS LIST — kept separate from 'oreo thin' on purpose. He confirmed
      Aug 11 2026 he WEIGHS AFTER THE SCRAPE, so the 6 de-creamed cups need wafer-only macros, and no
      published label exists for an Oreo wafer. Derived by subtracting an assumed ~22 % cream fraction
@@ -2867,6 +2877,23 @@ const FOOD_FACTS = {
   'turkey breast':  {unit:'oz cooked',    cal:38,   p:8.5, c:0,  f:0.3, src:'roast, 135 cal / 30 P per 100 g'},
   'chicken breast': {unit:'oz cooked',    cal:47,   p:8.8, c:0,  f:1.0, src:'grilled skinless, 165 cal / 31 P per 100 g'},
   'smoked half chicken': {unit:'half bird', cal:620, p:85, c:2, f:29, src:'DERIVED, not a published label: his own ~85 g protein figure for the Southside half chicken, at 29 P per 100 g roasted meat = ~293 g meat = ~557 cal, plus the breast skin he keeps (~20 g, ~90 cal) and rub. Cross-check: 85P*4 + 2C*4 + 29F*9 = 609. Treat as +/-15% like every restaurant number.'},
+
+  /* ============ Added 2026-09-15 from FOUR label photos he sent ============
+     His ask: "please add these images as new foods." All three below are read off HIS OWN
+     package panel, photographed, which is the strongest provenance this file has.
+
+     ⛔ THE TWO PRIMAL KRISP PRODUCTS ARE DIFFERENT FOODS AND HE SAID SO EXPLICITLY:
+     "pay attention to the primal crisp ones. one is chicken, one is brisket." Same brand, same
+     bag art, same marketing copy on the back — and 4.67 vs 4.21 cal/g with a 2 g/g protein gap.
+     Two keys, never one with a spread. Both bags carry Kosher-Mehadrin + OU-Glatt + Halal marks,
+     so both are MEAT for the dairy waits ([[kashrut-meal-timing]]).
+
+     ⚠️ A FIFTH LABEL DID NOT ARRIVE. He wrote "the yellow one is Royo Artisan Bread"; four
+     images came through and none of them is yellow or bread. NOT guessed — Royo publishes
+     several breads at different weights and the spread across them is real. Ask again. */
+  'smoked salmon fillet- kansas city bbq': {unit:'g', cal:1.6071, p:0.2143, c:0.0179, f:0.0714, src:'HIS OWN PACKAGE, panel photographed 2026-09-15. Acme Smoked Fish Corp., Brooklyn NY 11222, "Kansas City BBQ Smoked Salmon", UPC 0 23384 11222 0. Panel: 2 servings per container, serving 2 oz (56 g) = 90 cal / 12 P / 1 C / 4 F, sat fat 1 g, chol 30 mg, sodium 480 mg. Per gram off the 56 g serving column. ⭐ NAMED BY HIM: "call the salmon one Smoked Salmon Fillet- Kansas City BBQ" — key lowercased to match every other key in this file and his own phone add-food path, which lowercases. ⚠️ THE CONTAINER COLUMN IS THE SERVING COLUMN DOUBLED (90->180, 4->8, 1->2, 12->24), so the real datum is the 56 g figure and there is only ONE measurement here, not two. The pack is declared 113 g while 2 x 56 = 112, so pricing the whole tub by this row gives 181.6 cal against the panel\'s stated 180 — a 1.6 cal rounding artifact, not a discrepancy to chase. Atwater cross-check: 12P*4 + 1C*4 + 4F*9 = 88 vs 90 stated, tight. ⛔ THIS IS ATLANTIC (FARMED) SALMON, HOT-SMOKED AND SAUCED — do NOT price it off the \'salmon\' key, which is raw wild coho on his word (1.46 cal/g). This row is heavier per gram AND carries 480 mg sodium per 56 g, which puts it in the same class as the smoked meats for a next-morning weigh-in. Sauce is in the fish: tomato puree, dark brown sugar, spices, vinegar - hence the 1 g carb.'},
+  'primal krisp brisket': {unit:'g', cal:4.6667, p:0.6333, c:0, f:0.2333, src:'HIS OWN PACKAGE, panel photographed 2026-09-15. Primal Krisp LLC, Jackson NJ 08527, beef-brisket crisps. Ingredients: beef brisket flat, salt, mustard, spices - four items, nothing else. Panel: 2 servings per container, serving 1 oz (30 g) = 140 cal / 19 P / 0 C / 7 F, sat fat 3 g, chol 30 mg, sodium 380 mg; container 60 g = 280 / 38 / 0 / 14. Per gram off the 30 g serving. The container column is exactly double, and pricing 60 g by this row returns 280 / 38 / 0 / 14 to the digit. Atwater cross-check: 19P*4 + 7F*9 = 139 vs 140 stated - as tight as a label gets. ⚠️ THEY CALL 30 g "1 oz"; a real ounce is 28.35 g. The GRAM figure governs, which is why this row is per gram and not per ounce. ⛔ NOT the same food as [primal krisp chicken] - 4.67 vs 4.21 cal/g, 0.63 vs 0.70 P/g, and triple the fat. Kosher-Mehadrin + OU-Glatt: MEAT.'},
+  'primal krisp chicken': {unit:'g', cal:4.2105, p:0.7018, c:0, f:0.1053, src:'HIS OWN PACKAGE, panel photographed 2026-09-15. Primal Krisp LLC, Jackson NJ 08527, chicken crisps. Ingredients: chicken, salt, spices. Panel: 1 serving per container, serving 1 package (57 g) = 240 cal / 40 P / 0 C / 6 F, sat fat 2 g, chol 60 mg, sodium 870 mg; the per-1-oz column reads 120 cal / 20 P / 3 F. Per gram off the 57 g package. The two columns agree with each other (57 g = ~2 oz), so the basis is corroborated twice on the same panel. ⛔ THE CALORIE FIGURE DOES NOT ATWATER-CHECK AND I AM KEEPING THE LABEL ANYWAY: 40P*4 + 6F*9 = 214 against a stated 240, a 26 cal / 12% gap, and the 1 oz column carries the same 12% (107 vs 120). Both directions were considered; the published panel is the sourced datum and the macro sum is my arithmetic on rounded integers, so the label wins - but a whole bag priced by MACROS will read ~26 cal lighter than priced by CALORIES, and that gap is real, not a bug in this row. Likely cause is protein rounded down from ~46 g or an unlisted fraction of carb. ⛔ NOT the same food as [primal krisp brisket] - he flagged the pair himself. Kosher-Mehadrin + OU-Glatt: MEAT.'},
 
   /* ============ HummusFit Buffins — the 11 flavors he actually owns ============
      HIS ASK, 2026-08-19: "Save the macros and cals for each of the muffins so that we can
@@ -11962,7 +11989,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789143036';
+const BUILD = 'b1789494753';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
