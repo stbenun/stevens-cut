@@ -221,7 +221,10 @@ const PLANTS = [
               to:   "  return '<span class=\"mono\" style=\"color:var(--text)\">' + sgn(d[0]) + ' cal</span>';" }] },
   { guard: 'food-log', name: 'the amount box stops repainting the scale line, so it shows the previous amount',
     /* it really did ship like this for one build — fvRepaintAmount wired into one of two handlers. */
-    edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
+    /* ⚠ RE-ANCHORED 2026-09-17: fvRepaintAmount was split into fvRepaintReadouts (energy + scale)
+       and fvRepaintAmount (those plus the field) to stop the box re-typing the default he deleted.
+       This plant follows the keystroke handler, which now calls the readouts-only half. */
+    edits: [{ from: "      fvRepaintReadouts(sa.k, sa.n, sa.u);",
               to:   "      const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(sa.k, sa.n, sa.u);" }] },
   /* ---- the drafts note, 2026-09-10 ---- */
   { guard: 'meal-drafts', name: 'the drafts card goes back to calling every draft unguarded',
@@ -645,8 +648,12 @@ const PLANTS = [
     /* his exact report, 2026-09-07. render() replaces the view, so the focused input is torn out
        and iOS drops the keyboard. Re-focusing afterwards is not a fix. */
     /* ⚠ RE-ANCHORED 2026-09-10: the hand-rolled energy repaint became fvRepaintAmount when the
-       scale line had to be repainted alongside it. */
-    edits: [{ from: "      fvRepaintAmount(sa.k, sa.n, sa.u);",
+       scale line had to be repainted alongside it.
+       ⚠ RE-ANCHORED AGAIN 2026-09-17: fvRepaintAmount was split, and the keystroke handler now
+       calls fvRepaintReadouts. Both re-anchorings were found by the harness reporting BROKEN CASE
+       rather than by anyone remembering — which is the whole reason a plant that cannot find its
+       anchor is a loud failure and not a silent pass. */
+    edits: [{ from: "      fvRepaintReadouts(sa.k, sa.n, sa.u);",
               to:   "      render();" }] },
   { guard: 'food-log', name: "the search box goes back to re-rendering the whole page as he types",
     /* same wound, other field — it used to render then re-focus and restore the caret. */
