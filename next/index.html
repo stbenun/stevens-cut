@@ -1857,10 +1857,22 @@ function wireRowEdit(ld){
   /* ⛔ NO render() HERE, same reason as the Amount box below: it would tear out the field he is
      typing in and iOS drops the keyboard. Only the amount, the energy block and the scale line are
      rewritten — and the scale line MUST be, or it keeps showing the grams for the previous amount. */
-  const fvRepaintAmount = (k2, n2, u2) => {
-    const a2 = document.getElementById('fvAmt'); if(a2) a2.value = n2;
+  /* ⛔ THE READOUTS AND THE FIELD ARE SEPARATE ON PURPOSE — 2026-09-17, and the split IS the fix.
+     A single fvRepaintAmount wrote a2.value on every repaint, including the one fired BY the amount
+     field's own keystroke. Clear the box and the chain ran: value '' -> parseFloat NaN -> amt null
+     -> fvScreenAmount falls back to the DEFAULT -> the default is written straight back into the
+     box he had just emptied. His report: "when i try to delete the default amount ... it doesnt
+     allow me to delete all the numbers." It was not the keyboard and it was not iOS; the app was
+     re-typing the number as fast as he deleted it.
+     Rule: the field is written only by code that is CHOOSING an amount for him (the by-macro box).
+     Code that is REACTING to him typing repaints the readouts and never touches the field. */
+  const fvRepaintReadouts = (k2, n2, u2) => {
     const box = document.querySelector('.fvenergy'); if(box) box.innerHTML = fvEnergyHTML(k2, n2, u2);
     const sc = document.getElementById('fvScale'); if(sc) sc.innerHTML = fvScaleHTML(k2, n2, u2);
+  };
+  const fvRepaintAmount = (k2, n2, u2) => {
+    const a2 = document.getElementById('fvAmt'); if(a2) a2.value = n2;
+    fvRepaintReadouts(k2, n2, u2);
   };
   { const bw = document.getElementById('fvByWhat'), bn = document.getElementById('fvByN');
     if(bw && bn){
@@ -1885,12 +1897,19 @@ function wireRowEdit(ld){
        with the by-macro box so neither can forget a part again.
        ⛔ SEEDED FROM fvScreenAmount, not from a hand-rolled u2/n2 pair. Recomputing it here is the
        same duplication that had the screen showing oz while the save wrote grams this morning. */
+    /* ⛔ EMPTY IS '' AND UNTOUCHED IS null, AND THEY MUST NOT BE THE SAME VALUE. Both used to be
+       null, which is why clearing the box re-derived the default and put it back. fvScreenAmount
+       reads `st.amt != null`, so '' survives as the amount and every `!(n > 0)` guard downstream
+       already treats it as no-amount: the scale line hides itself, the energy block reads 0 kcal,
+       and fvSaveFood refuses rather than silently logging a default he never chose. That last one
+       is the part that would have been a real defect — an empty box saving 100 g.
+       Junk ('abc') is deliberately treated as empty too, not as null. */
     if(a) a.addEventListener('input', ()=>{
       const v = parseFloat(a.value);
-      fvSet({amt: isFinite(v) ? v : null});
+      fvSet({amt: isFinite(v) ? v : ''});
       const sa = fvScreenAmount();
       if(!sa) return;
-      fvRepaintAmount(sa.k, sa.n, sa.u);
+      fvRepaintReadouts(sa.k, sa.n, sa.u);   /* NOT fvRepaintAmount — never write the field he is in */
     });
     /* ⛔ CLEAR THE AMOUNT ON A UNIT CHANGE. 100 g reinterpreted as 100 oz is a 12x error that
        looks like a typo, not a bug. Dropping it re-derives the default for the NEW unit. */
@@ -12032,7 +12051,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789567147';
+const BUILD = 'b1789674382';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

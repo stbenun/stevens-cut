@@ -2686,6 +2686,41 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
                 sf.push('after typing 2 the scale line reads "' + after + '" rather than ' + want + ' g');
             }
             fvSet({pick:null, amt:null}); }
+          /* ⛔ HE MUST BE ABLE TO EMPTY THE AMOUNT BOX. His report 2026-09-17: "when i try to
+             delete the default amount when adding a food on my phone, it doesnt allow me to delete
+             all the numbers." ONE repaint helper served both the by-macro box and the amount box's
+             own keystroke handler, and it wrote a2.value every time — so clearing the field ran
+             '' -> NaN -> amt null -> fvScreenAmount falls back to the DEFAULT -> the default is
+             typed straight back in. Driven through the real input because the defect is invisible
+             to reading: the fixed and broken versions both call a repaint helper on every keystroke.
+             ⛔ AND THE SAVE HALF IS THE ONE THAT WOULD HAVE BITTEN HARDEST. Once the box can be
+             left empty, fvScreenAmount's fallback means SAVE would log a default amount he never
+             chose. The slot is set and a positive control runs first, so neither assertion can
+             pass because SAVE was refusing for some unrelated reason. */
+          { const FVSNAP = Object.assign({}, fvState());   /* restored in full below - see the note */
+            fvSet({pick:'oikos triple zero', amt:null, unit:null, slot:'sn', sel:[], selAmt:{}});
+            current='today'; render();
+            const ab = document.getElementById('fvAmt');
+            if(!ab) sf.push('no amount box on the food screen to clear');
+            else if(ab.value === '') sf.push('the amount box opened EMPTY, so clearing it proves nothing');
+            else {
+              if(fvSaveFood(D) == null)
+                sf.push('positive control failed: SAVE refused a NORMAL amount, so the empty-amount check below would pass vacuously');
+              fvSet({sel:[], selAmt:{}});
+              ab.value = '';
+              ab.dispatchEvent(new window.Event('input', {bubbles:true}));
+              const now = (document.getElementById('fvAmt') || {value:'?'}).value;
+              if(now !== '')
+                sf.push('clearing the amount box refilled it with "' + now + '" — he cannot delete the default');
+              if(fvSaveFood(D) != null)
+                sf.push('SAVE accepted an EMPTY amount — it would log a default he never chose');
+            }
+            /* ⛔ RESTORE THE WHOLE STATE OBJECT, not a hand-picked set of keys. The first
+               version of this block reset pick/amt/slot/sel/selAmt by hand and broke THREE
+               unrelated assertions further down that were still relying on the oikos pick at
+               0.5 and on a populated basket. A shared-state test that tidies up approximately
+               is how a guard starts failing for reasons that have nothing to do with its subject. */
+            fvSet(FVSNAP); render(); }
           fvSet({pick:null, sel:TICK.slice(), selAmt:{}}); }
         /* ⭐ ⑨ A PER-ITEM FOOD WITH A KNOWN PIECE WEIGHT CAN BE WEIGHED. His report 2026-09-10:
            Drizzilicious "didnt let me choose how many g i want to add, it only let me choose x amount

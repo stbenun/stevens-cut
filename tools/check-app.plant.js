@@ -652,6 +652,20 @@ const PLANTS = [
     /* same wound, other field — it used to render then re-focus and restore the caret. */
     edits: [{ from: "      holder.innerHTML = fvListHTML(ld);",
               to:   "      render(); return;" }] },
+  { guard: 'food-log', name: "the amount box re-types the default as fast as he deletes it",
+    /* HIS REPORT, 2026-09-17: "when i try to delete the default amount when adding a food on my
+       phone, it doesnt allow me to delete all the numbers."
+       ⛔ BOTH EDITS ARE REQUIRED AND THAT IS THE WHOLE POINT OF THIS ENTRY. Reverting either one
+       alone does NOT reproduce it: with amt still going to '' the old repaint writes an empty
+       string back (harmless), and with the repaint already split the null fallback never reaches
+       the field (it only corrupts SAVE). Planted singly, each was caught by at most one of the two
+       assertions -- the field-refill assertion passed against a half-plant and would have shipped
+       unverified. The defect is the PAIR: clear -> NaN -> null -> fvScreenAmount falls back to the
+       default -> fvRepaintAmount types it back in. */
+    edits: [{ from: "fvSet({amt: isFinite(v) ? v : ''});",
+              to:   "fvSet({amt: isFinite(v) ? v : null});" },
+            { from: "fvRepaintReadouts(sa.k, sa.n, sa.u);   /* NOT fvRepaintAmount",
+              to:   "fvRepaintAmount(sa.k, sa.n, sa.u);   /* NOT fvRepaintAmount" }] },
   { guard: 'food-log', name: "the patched result rows are never re-wired, so a filtered list is dead to the touch",
     /* patching innerHTML throws the listeners away; a list that looks right and does nothing. */
     edits: [{ from: "      wireFvRows();\n      document.querySelectorAll('[data-fvaddsel]')",
