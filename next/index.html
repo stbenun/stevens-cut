@@ -3118,6 +3118,8 @@ const FOOD_FACTS = {
   'tuna avocado roll':   {unit:'piece (38 g)', pc:6, cal:42.43, p:2.39, c:5.3, f:1.31, src:'BUILT FROM PARTS, not measured — his instruction 2026-09-07: "they dont share nutritional facts. Build them from parts." = USDA FNDDS tuna roll (1 piece, 30 g) + 50 g avocado per roll (8.33 g per piece). ⚠ THE FILLING AMOUNT IS THE BUILD ASSUMPTION, everything else is sourced: USDA has no combination rolls, so the base roll and the piece weight are theirs and the half an avocado spread through a 6-piece roll is mine. Tell Claude if his place cuts them differently.'},
   'tuna cucumber roll':  {unit:'piece (37 g)', pc:6, cal:30.1, p:2.27, c:4.83, f:0.09, src:'BUILT FROM PARTS, not measured — his instruction 2026-09-07: "they dont share nutritional facts. Build them from parts." = USDA FNDDS tuna roll (1 piece, 30 g) + 40 g cucumber per roll (6.67 g per piece). ⚠ THE FILLING AMOUNT IS THE BUILD ASSUMPTION, everything else is sourced: USDA has no combination rolls, so the base roll and the piece weight are theirs and the 40 g of cucumber spread through a 6-piece roll is mine. Tell Claude if his place cuts them differently.'},
   'tuna roll':         {unit:'piece (30 g)', pc:6, cal:29.1, p:2.22, c:4.59, f:0.08, src:'USDA FoodData Central Survey (FNDDS) #2708965 "Sushi roll tuna": 97 cal / 7.4 P / 15.3 C / 0.26 F per 100 g, and USDA\u2019s own portion table gives 1 piece = 30 g, one roll = 180 g (6 pieces). So this row is per PIECE and pc:6 converts a roll. Fetched Sept 7 2026, parsed from raw JSON.'},
+  'mission zero net carbs tortilla': {unit:'g', ea:40, cal:2, p:0.125, c:0.35, f:0.1, src:'HIS OWN BAG, panel photographed 2026-09-22. Mission Zero Net Carbs Original, 8 soft taco / tortilla wraps per 11.29 oz (320 g) bag, (c) 2024 Gruma Corporation, Irving TX 75038. Panel: 8 servings, serving size 1 TORTILLA (40 g) = 80 cal / 5 P / 14 C / 4 F, of which FIBER 14 g (50% DV), total sugars 0 g, 0 g added, sat fat 2 g, trans 0 g, chol 0 mg, sodium 260 mg, calcium 69 mg, iron 0.5 mg, potassium 4 mg. Per gram off the 40 g serving; ea:40 is one tortilla. DO NOT ATWATER-CHECK THIS ROW, AND DO NOT "FIX" IT WITH NET CARBS EITHER - it fails BOTH ways, which makes it different from [legendary foods protein donut] and [royo bread] where net-carb costing lands on the label. Total carb costs 5P*4 + 14C*4 + 4F*9 = 112 against a stated 80; net carb costs 20 + 0 + 36 = 56, which is BELOW the label - and 0 g net is exactly what the front of the bag prints (14 total - 14 fibre). The panel is only consistent if the fibre blend is costed at about 1.7 cal per g: (80 - 56) / 14 = 1.71. That is ordinary and permitted for non-digestible carbohydrate, but it means NEITHER arithmetic reproduces this label and the printed 80 is the only figure to trust. THE CARB FIGURE HERE IS TOTAL (14), not net (0), like every other row in this file - so anything summing carbs reads 14 g from one tortilla even though the bag advertises zero. KASHRUT IS NOT RESOLVED BY THE PHOTO: a cRc mark is visible with no D beside it, and the ingredient tail folds out of shot at the mono- and diglycerides, which is the line that would decide pareve. Ingredients legible: water, modified food starch, vegetable shortening (interesterified and hydrogenated soybean oils), wheat gluten isolate, vital wheat (?), powdered cellulose, pea protein, then salt, mono- and diglycerides, sodium phosphate, baking soda, cellulose gum, natural flavors, fumaric acid and calcium propionate. CONTAINS WHEAT. No nut line was visible, but the allergen block is partly obscured, so this row is NOT an affirmative nut clearance.'},
+  'haolam mozzarella shredded': {unit:'g', cal:3.2143, p:0.2857, c:0, f:0.2143, src:'HIS OWN BAG, panel photographed 2026-09-22. Haolam Shredded Mozzarella, low moisture part skim natural cheese, NET WT 8 oz (226 g). Panel: 8 servings, serving size 1 oz (28 g) = 90 cal / 8 P / <1 C / 6 F, sat fat 3.5 g, trans 0 g, chol 20 mg, sodium 240 mg, fibre 0 g, sugars 0 g, calcium 210 mg (15% DV), vitamin D 0, iron 0, potassium 0. Per gram off the 28 g serving. Atwater cross-check: 8P*4 + 6F*9 = 86 against a stated 90, a 4 cal gap that the panel roundings plus the <1 g carb cover - so this row IS arithmetically sound, unlike [mission zero net carbs tortilla]. c is carried as 0 because the panel prints "<1 g": the true value sits in [0, 1) per 28 g, so a 28 g portion can understate carbs by up to 1 g and never more. Ingredients: pasteurized milk, cultures, salt, enzymes, powdered cellulose to prevent caking. Allergen: contains milk. DAIRY, and CHOLOV YISROEL - OU-D, also marked kosher for Passover. The meat/dairy waits apply, which for him is the whole question of WHEN this can be eaten, not whether. THIS IS A SECOND MOZZARELLA, NOT A CORRECTION OF [low-moisture mozzarella] (Les Petites Fermieres, 28 g = 80 / 7 / 2 / 6). Same cheese type, different brand, different numbers: +10 cal, +1 P, -2 C at the same 28 g. Keep both and do not merge them - same call as the two blueberry Buffins. l2 Broccoli Jiben, l3 Spinach Jiben and l4 Tuna Melt Stack all still point at the Fermieres row at 28 g; if he has actually switched brands those three plates each move +10 cal / +1 P / -2 C and need re-pricing. He said ADD, not replace, so nothing was repointed - ask before moving them.'},
 };
 /* ============ PRICING — a row's numbers are LOOKED UP, never stored =============================
    Built Aug 18 2026 on his instruction, verbatim: "Every recipe should be FACT checked when being
@@ -8452,8 +8454,8 @@ let cardEditing = false;
    Zones he has ordered come first in his order; any zone the app adds later keeps its natural spot
    at the end instead of vanishing. A stored order must never be able to delete a section outright;
    hiding is what the hide button is for. */
-const ZONE_LABEL = {diary:'\u{1F4D3} Diary', food:'\u{1F37D} Food', log:'\u270F\uFE0F Log', tools:'\u{1F9F0} Tools'};
-const ZONE_ALL = ['diary','food','log','tools'];
+const ZONE_LABEL = {diary:'\u{1F4D3} Diary', food:'\u{1F37D} Food', log:'\u270F\uFE0F Log', make:'\u{1F9EA} Make something', tools:'\u{1F9F0} Tools'};
+const ZONE_ALL = ['diary','log','make','food','tools'];
 function zonePin(){ const v = store.get('qpcut.zonepin', null); return Array.isArray(v) && v.length? v : null; }
 function setZonePin(v){ store.set('qpcut.zonepin', (v && v.length)? v : null); }
 /* the order actually rendered: his pin if he has one, else the clock's pick, always completed
@@ -8924,7 +8926,7 @@ function zoneOrder(){
   const liftDone = !wo || ended || wd===6 || (lift!=null && m>lift+150);
   /* ⛔ 'lift' IS NO LONGER A ZONE HERE — it lives on Train. What its window still decides is
      whether FOOD or the DIARY leads: around a lift he is eating to a clock, so the log goes up. */
-  if(!liftDone && (liftLive || inWindow || upcoming)) return ['diary','log','food','tools'];
+  if(!liftDone && (liftLive || inWindow || upcoming)) return ['diary','log','make','food','tools'];
   /* COOK window → Food leads (cooking needs lead time): weekday dinner prep 4–7 PM, or Friday Shabbat-feast
      prep ~2:30 PM until the feast. OTHERWISE Log leads — logging the meal you're about to eat is the default
      next action, so the Log card (with that meal marked "next") sits right under the NOW hero. A done lift
@@ -8938,7 +8940,7 @@ function zoneOrder(){
      ⚠ Do not restore ['food','diary',...] on the reasoning that cooking needs lead time. That is
      the argument this edit overruled, and he overruled it knowing the app behaves that way.
      [zone-order] in check-app asserts diary-before-food on every branch, so a revert fails loudly. */
-  return cook ? ['diary','food','log','tools'] : ['diary','log','food','tools'];
+  return cook ? ['diary','food','log','make','tools'] : ['diary','log','make','food','tools'];
 }
 
 /* -- tiny sparkline -- */
@@ -10042,6 +10044,21 @@ function viewToday(){
     <h2 class="sec">📓 Diary${hubLd===isoToday()?'':' · '+hubLd}</h2>
     ${backfill?`<div class="note" style="margin:0 0 10px">${ld>isoToday()?`<b>Preview of ${ld}</b> — this is a future day, logging is off. Use the date picker at the top to come back to today.`:`Backfill mode — everything below saves to <b>${ld}</b>.`}</div>`:''}
     <div class="card">${diaryHTML(hubLd)}</div>
+  </section>`;
+  })();
+  /* ---- MAKE zone ---- */
+  /* ⛔ THE TWO GENERATORS LEFT THE DIARY ZONE AND BECAME THEIR OWN ZONE — his ask 2026-09-22,
+     "i want the log secrtion to be right below the diary and move make something to be below the log".
+     While these cards sat INSIDE z-diary no zone ordering could satisfy it: the Log is a ZONE, so
+     anything sitting between the diary card and the end of z-diary renders above the Log no matter
+     what zoneOrder() returns. Splitting them out is what makes his order expressible at all.
+     Same move, and the same reason, as the log card leaving the diary — see the comment in logZone.
+     ⚠ The heading markup is deliberately UNCHANGED from what it was inside z-diary: only its
+     position moves, so nothing on his screen looks different except the order he asked for. */
+  const makeZone = (()=>{
+    const hubLd = ld;
+    return `
+  <section class="zone" id="z-make">
     <h2 class="sec">🧪 Make something</h2>
     <div class="card">${genCardHTML(hubLd)}</div>
     <div class="card">${gen2CardHTML(hubLd)}</div>
@@ -10341,8 +10358,8 @@ function viewToday(){
      ＋ Add food button set a state that nothing rendered — a dead button on the main screen, and
      every other check still passed. [food-log] caught it by counting search boxes and finding none. */
   if(fvState().slot) return `<div class="card">${foodPageHTML(ld)}</div>`;
-  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};
-  const order = zoneSeq(backfill? ['diary','food','log','tools'] : zoneOrder());
+  const Z = {diary:diaryZone, food:foodZone, log:logZone, make:makeZone, tools:toolsZone};
+  const order = zoneSeq(backfill? ['diary','food','log','make','tools'] : zoneOrder());
   return `
   <div class="pickrow" style="margin:0 0 10px;align-items:center;gap:8px">
     <input type="date" id="viewDate" value="${ld}" style="padding:6px 9px;font-size:13px" aria-label="View any day — past or upcoming">
@@ -12051,7 +12068,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1789674382';
+const BUILD = 'b1790099142';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});

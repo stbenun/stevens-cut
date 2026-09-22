@@ -80,8 +80,17 @@ def main():
     year = int(today[:4])
 
     def find(pat):
-        hits = sorted(glob.glob(os.path.join(a.dir, pat)))
-        return hits[0] if hits else None
+        """NEWEST match by mtime, not the alphabetically first.
+
+        ⛔ This was `sorted(...)[0]` until 2026-09-22, which meant that once a second export
+        landed in the directory the tool silently kept reading the OLD one: 'Sleep (4).csv'
+        sorts before 'Sleep (7).csv', so a run meant to ingest the week of Sep 14 was about to
+        re-ingest August and move the HRV baseline floor with it. Caught by a --dry-run, which
+        is the reason to keep doing one. His exports all land with the same stem and a rising
+        '(n)', so mtime is the only ordering that tracks 'the file he just sent'.
+        """
+        hits = glob.glob(os.path.join(a.dir, pat))
+        return max(hits, key=os.path.getmtime) if hits else None
 
     f_sleep = find('Sleep*.csv')
     f_hrv   = find('HRV*.csv')

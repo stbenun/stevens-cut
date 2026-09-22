@@ -634,8 +634,12 @@ const PLANTS = [
     edits: [{ from: "  <div class=\"card\" id=\"mealLog\">",
               to:   "  <div class=\"card\" id=\"mealLog\">${diaryHTML(ld)}" }] },
   { guard: 'meals-hub', name: 'the lift zone comes back to Today as well as Train, so the set logger exists twice',
-    edits: [{ from: "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone};",
-              to:   "  const Z = {diary:diaryZone, food:foodZone, log:logZone, tools:toolsZone + liftZoneHTML(ld)};" }] },
+    /* ⚠ RE-ANCHORED 2026-09-22: the zone map gained make:makeZone when "Make something" was split
+       out of the diary zone, and this plant's `from` stopped matching. The harness said so out loud
+       ("PLANT HARNESS FOUND A HOLE") rather than quietly planting nothing — which is the whole reason
+       the plant files exist. Same defect, same guard; only the anchor moved. */
+    edits: [{ from: "  const Z = {diary:diaryZone, food:foodZone, log:logZone, make:makeZone, tools:toolsZone};",
+              to:   "  const Z = {diary:diaryZone, food:foodZone, log:logZone, make:makeZone, tools:toolsZone + liftZoneHTML(ld)};" }] },
   { guard: 'tab-bar-fit', name: 'the tab bar hard-codes a column count again — the bug he reported',
     /* it was repeat(5,1fr) with four tabs: the buttons packed into four of five columns and the whole
        bar sat shifted left with a dead column on the right. Nothing threw; every check passed. */
