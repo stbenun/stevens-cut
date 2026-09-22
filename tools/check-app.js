@@ -2614,8 +2614,9 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
         /* ⭐ ⑧ AN AMOUNT FROM CALORIES. His ask 2026-09-10: "i want to be able to add 100calories
            worth of almond butter." On a cut that is the direction the question arrives in.
            ⛔ THE CLAUSE THAT IS NOT ARITHMETIC: a zero-calorie food divides to Infinity, and an
-           Infinity in the amount box would ride into his picks and then into the diary. Yellow
-           mustard is 0 cal/g and is in the price list, so this is reachable, not theoretical. */
+           Infinity in the amount box would ride into his picks and then into the diary. It is reachable rather
+           than theoretical because zero-calorie rows really are in the price list; the clause below
+           asks which ones rather than naming one, after the named one stopped being zero. */
         { fvSet({slot:'bf', pick:'almond butter', amt:null, unit:null, sel:[], selAmt:{}});
           const html = foodPageHTML(D);
           if(!/id="fvByN"/.test(html)) sf.push('the food screen has no way to set an amount from a number he has left');
@@ -2644,8 +2645,19 @@ const run = code => inst.win.__probe('(function(){' + code + '})()');
           /* ⛔ and the refusals. THE ZERO-MACRO CASE IS WHY GENERALISING WAS RISKY: calories are
              almost never zero, protein and carbs often are, and dividing by one is an Infinity on
              its way into the amount box and then the diary. */
-          if(fvAmountForMacro('yellow mustard', 'g', 100, 0) != null)
-            sf.push('a ZERO-CALORIE food returned an amount — that is Infinity reaching the amount box');
+          /* ⚠ DERIVED, NOT NAMED — 2026-09-22. This clause used to call fvAmountForMacro('yellow
+             mustard', ...) because yellow mustard was 0 cal/g. He then logged 75 g of it, reported
+             "it says its 0 cals. thats not true", and the row was corrected to USDA's 0.6 cal/g —
+             at which point the FIXTURE stopped being zero-calorie and this guard failed on a food
+             that was now behaving correctly. The protection is still needed; the example was not
+             allowed to be a constant. Same shape as the zero-protein clause below, so it now asks
+             FOOD_FACTS which foods are actually zero rather than remembering one that used to be. */
+          { const noCal = Object.keys(FOOD_FACTS).filter(function(k3){
+              const f3 = FOOD_FACTS[k3]; return f3.unit === 'g' && !(f3.cal > 0); });
+            if(!noCal.length) sf.push('no zero-calorie food exists — the zero-calorie refusal is vacuous');
+            noCal.slice(0, 5).forEach(function(k3){
+              if(fvAmountForMacro(k3, 'g', 100, 0) != null)
+                sf.push(k3 + ' has no calories but still returned an amount — that is Infinity reaching the amount box'); }); }
           { const noP = Object.keys(FOOD_FACTS).filter(function(k3){
               const f3 = FOOD_FACTS[k3]; return f3.unit === 'g' && !(f3.p > 0); });
             if(!noP.length) sf.push('no zero-protein food exists — the zero-macro refusal is vacuous');

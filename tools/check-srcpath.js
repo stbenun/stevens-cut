@@ -72,6 +72,10 @@ if (process.argv.includes('--if-touched')) {
 
 const REAL = 'index.html';
 const before = fs.readFileSync(REAL);
+/* the tree's state BEFORE the proof runs, so D can assert this run changed nothing without
+   also demanding the tree be committed. See the note on D. */
+let nsBefore = 'git-error';
+try { nsBefore = execSync('git diff --numstat -- ' + REAL, { encoding: 'utf8' }).trim(); } catch (e) {}
 const orig = before.toString('utf8');
 const T = os.tmpdir();
 const ENV = Object.assign({}, process.env, { NODE_PATH: '.work/node_modules' });
@@ -138,8 +142,18 @@ else {
 const untouched = fs.readFileSync(REAL).equals(before);
 let ns = 'git-error';
 try { ns = execSync('git diff --numstat -- ' + REAL, { encoding: 'utf8' }).trim(); } catch (e) {}
-say(untouched && ns === '', 'D. index.html byte-identical and git-clean throughout',
-    'equals=' + untouched + ', numstat=' + (ns === '' ? '(empty)' : ns));
+/* ⚠ THIS USED TO DEMAND ns === '' — a CLEAN tree, not an UNCHANGED one — and that made D
+   impossible to pass at the only time it ever runs. --if-touched fires this proof exactly when
+   probe.js or check-app.js differs from origin/main, which is to say mid-deploy, which is to say
+   with index.html dirty. Hit on 2026-09-22: a mustard correction broke a hardcoded fixture inside
+   check-app.js, fixing that made check-app.js "touched", the proof finally ran for real, and D
+   failed reporting numstat=2 2 while ALSO reporting equals=true — the run had demonstrably
+   changed nothing. What D needs to prove is that THIS RUN left the file alone: `untouched` is the
+   byte-level proof of that, and the git line now asserts the diff is the SAME as before the run
+   rather than empty. A guard that cannot pass when it fires teaches people to ignore it. */
+say(untouched && ns === nsBefore, 'D. index.html untouched by this run (bytes + git diff unchanged)',
+    'equals=' + untouched + ', numstat before=' + (nsBefore === '' ? '(clean)' : nsBefore.replace(/\s+/g, ' ')) +
+    ', after=' + (ns === '' ? '(clean)' : ns.replace(/\s+/g, ' ')));
 
 console.log('');
 console.log(pass ? 'DIFFERENTIAL PROOF PASSED — --file is honoured by both mechanisms and changes nothing else'
