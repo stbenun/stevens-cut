@@ -797,3 +797,28 @@ because the worker's two offline fallbacks are redundant with each other. Add th
 itself failure from the day before ([water-oz] reimplementing the clamp inside the guard) and the
 pattern is unmistakable: **a test written in the same hour as its code tends to agree with it.** The
 plant harnesses are the only thing that catches that.
+
+## 2026-09-22 — two brands of one food may both live in the price list
+
+**His call, in his own words:** *"i will choose the mozzerella that i use. its ok to have different
+types of the same food."*
+
+**What prompted it.** He photographed a Haolam shredded mozzarella and said "add these 2 new foods".
+The list already held a different brand's shredded mozzarella, with different numbers at the same
+weight. It was logged as a SECOND row rather than a correction, and he was asked which one his recipes
+should point at — because three plates name that key.
+
+**The answer is that the question was the wrong shape.** He is not switching brands; he keeps both and
+picks at the moment he logs. So:
+
+- **Two rows for the same foodstuff are not a duplicate to be merged.** A brand is part of the
+  identity of a food here, not a detail about it. Same call the two blueberry Buffins already got, now
+  stated generally.
+- **Do not repoint a recipe to a new brand on his behalf, and do not ask again.** A recipe naming one
+  brand is a default, not a claim about what is in his fridge; the diary row is editable, which is
+  where the choice actually gets made.
+- **The standing instruction this reverses is only the ASKING.** The rows themselves were right.
+
+⚠ The consequence he has accepted: a plate whose recipe names one brand will price as that brand until
+he edits the logged row. The gap between two mozzarellas at one portion is small but not zero, and it
+is his to close at log time, deliberately.
