@@ -122,8 +122,11 @@ const PLANTS = [
        going back to the fact's own unit — "1 biscoff" then means one gram again. */
     edits: [{ from: "  const u = unit || (f.ea ? 'each' : f.unit);", to: '  const u = unit || f.unit;' }] },
   { guard: 'food-log', name: 'the food-only entry loses its name, so the tile reads blank',
-    edits: [{ from: "  if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }",
-              to:   "  if(!cur){ logWrite(ld, slot, [{id:'custom', rows:[spec]}]); return 'new'; }" }] },
+    /* ⚠ RE-ANCHORED 2026-09-24 onto newCustomEntry. This pointed at logAddFood's opening line;
+       logAddMacros was then written with the same line and the anchor matched twice, so the plant
+       stopped being applicable. The duplication is gone and the name now has exactly one home. */
+    edits: [{ from: "function newCustomEntry(spec){ return {id:'custom', name:'Foods', rows:[spec]}; }",
+              to:   "function newCustomEntry(spec){ return {id:'custom', rows:[spec]}; }" }] },
   { guard: 'food-log', name: 'ranking goes back to a bare STRING prefix, so "cor" surfaces the cornish hen',
     /* retargeted 2026-09-06 onto the rewritten foodSearch. Same defect, same reason it is the one
        worth planting: he types "cor" every day, and a bare prefix puts the cornish hen above it. */

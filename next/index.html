@@ -1745,6 +1745,35 @@ function wireRowEdit(ld){
   document.querySelectorAll('[data-ffnew]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({fact:true, pick:null}); render(); window.scrollTo(0,0);
   }));
+  /* ==== ADD CALORIES ==== */
+  document.querySelectorAll('[data-fvquick]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({quick:true, pick:null}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-fvqx]').forEach(b=>b.addEventListener('click',()=>{
+    fvSet({quick:false}); render(); window.scrollTo(0,0);
+  }));
+  document.querySelectorAll('[data-fvqsave]').forEach(b=>b.addEventListener('click',()=>{
+    const v = id => { const el = document.getElementById(id); const n = el ? Number(el.value) : 0;
+      return isFinite(n) && n > 0 ? n : 0; };
+    const P = v('fvqP'), C = v('fvqC'), F = v('fvqF');
+    /* ⭐ CALORIES FROM THE MACROS WHEN HE LEAVES THEM BLANK. Atwater, the same 4/4/9 every label
+       uses. He is reading a menu that often prints one or the other, not both, and making him do
+       the arithmetic is the sort of thinking this app exists to take off him.
+       ⚠ HIS NUMBER WINS whenever he typed one: a label that disagrees with Atwater is usually
+       RIGHT (fibre, sugar alcohols — see the Mission tortilla), so a typed figure is never
+       "corrected" to the computed one. */
+    const cal = v('fvqCal') || Math.round(P*4 + C*4 + F*9);
+    const err = document.getElementById('fvqErr');
+    const fail = m => { if(err){ err.textContent = m; err.style.display = 'block'; } };
+    if(!cal && !P && !C && !F) return fail('Put in at least one number.');
+    const st = fvState(), slot = st.slot;
+    if(!slot) return fail('No meal is open.');
+    const txt = (document.getElementById('fvqT') || {}).value || '';
+    /* ⚠ An error must NOT re-render — same rule as the new-food form: it would wipe what he typed. */
+    if(!logAddMacros(ld, slot, txt, [cal, P, C, F])) return fail('Put in at least one number.');
+    openAcc.add('dg-' + slot);
+    fvSet({quick:false}); fvClose(); render(); window.scrollTo(0,0);
+  }));
   document.querySelectorAll('[data-ffedit]').forEach(b=>b.addEventListener('click',()=>{
     fvSet({fact:b.dataset.ffedit}); render(); window.scrollTo(0,0);
   }));
@@ -3216,6 +3245,16 @@ function priceRow(row) {
   if (!sp) return [0, 0, 0, 0];
   if (Array.isArray(sp)) return sp;                /* legacy copy, on its way out */
   if (sp.free) return [0, 0, 0, 0];
+  /* ⭐ A ROW THAT IS JUST NUMBERS — his ask 2026-09-24, "a way to just add calories and the
+     macros". No food key, nothing to look up: he read a menu or a wrapper and knows the four
+     figures. {m:[cal,P,C,F], t:'what it was'}.
+     ⛔ NOT the legacy bare-array spec above. That one is [cal,P,C,F] with no label and is on its
+     way out; this one is an OBJECT, so copyRows/Object.assign handle it like every other row and
+     it cannot hit the Array.isArray trap that made a hand-typed row price as nothing.
+     Guarded by shape, not trust: anything non-finite or negative reads as 0 rather than poisoning
+     a day total with NaN, which would silently blank every number downstream of it. */
+  if (Array.isArray(sp.m)) return [0,1,2,3].map(function(i){
+    const v = Number(sp.m[i]); return isFinite(v) && v > 0 ? v : 0; });
   if (sp.parts) {
     let out = [0, 0, 0, 0];
     for (const p of sp.parts) {
@@ -6148,6 +6187,14 @@ function logToggleMeal(ld, slot, id){
   if(cur.length === 1 && cur[0].id === id) logWrite(ld, slot, []);
   else logSetMeal(ld, slot, id);
 }
+/* ⭐ A CHEAP IDENTITY FOR THE STORED LOG, so anything DERIVED from it can cache against it
+   instead of rebuilding. It lives in here because it reads qpcut.eaten and [log-access] allows
+   exactly one region to do that — foodHistory(), which is the caller that needed it, sits outside.
+   The whole RAW string is the key on purpose: a length-and-endpoints hash would collide on an edit
+   that preserved both, and a collision here would price his food off a stale index. A 50 KB string
+   compare is microseconds against the milliseconds of a rebuild, and it is correct no matter WHO
+   wrote the key — logWrite, or a sync merge that never goes through it. */
+function logRaw(){ try{ return localStorage.getItem('qpcut.eaten'); }catch(e){ return null; } }
 /* ==== LOG-ACCESS-END ==== */
 
 /* ==== RECIPE PARSER — turn a pasted ingredient list into priceable rows =====================
@@ -6807,15 +6854,36 @@ function foodDefaultAmount(key){
    ⛔ ONE function builds the row spec. fvSaveFood had its own copy of these two lines for a few
    minutes, which is the same two-copies-of-one-rule bug the pricing engine exists to delete —
    the copy that is not the one being read goes stale silently. */
+/* ⛔ ONE PLACE NAMES A CUSTOM ENTRY, because for a few hours there were two. logAddMacros was
+   written by copying logAddFood's opening line verbatim, which duplicated `name:'Foods'` — and the
+   [food-log] plant that proves the tile does not go blank when that name is dropped anchors on that
+   exact line. Its anchor went from matching once to twice, so it could no longer be applied, and
+   --anchors reported DRIFTED rather than passing on a plant it had silently stopped running.
+   His rule, and the reason this is a helper rather than a reworded copy: a constant lives in ONE
+   place and is read, never retyped. Now the plant has one line to point at and so does the name. */
+function newCustomEntry(spec){ return {id:'custom', name:'Foods', rows:[spec]}; }
 function logAddFood(ld, slot, key, n, unit){
   const f = FOOD_FACTS[key];
   if(!f || typeof n !== 'number' || !isFinite(n) || n <= 0) return null;
   const u = unit || (f.ea ? 'each' : f.unit);
   const spec = fvSpec(key, n, u);
   const cur = (logEntries(ld)[slot] || [])[0];
-  if(!cur){ logWrite(ld, slot, [{id:'custom', name:'Foods', rows:[spec]}]); return 'new'; }
+  if(!cur){ logWrite(ld, slot, [newCustomEntry(spec)]); return 'new'; }
   const rows = copyRows(cur).concat([spec]);
   logWrite(ld, slot, [Object.assign({}, cur, {rows: rows})]);
+  return 'appended';
+}
+/* ⭐ THE SAME APPEND, FOR A ROW THAT IS ONLY NUMBERS. Deliberately a sibling of logAddFood and
+   not a flag on it: that function's whole job is resolving a FOOD_FACTS key, a unit and an amount,
+   and none of those exist here. Refusing an all-zero row is the one validation that matters — an
+   empty quick-add is a row he would never see again but that would sit in his diary forever. */
+function logAddMacros(ld, slot, text, m){
+  const v = (m || []).map(function(x){ const n = Number(x); return isFinite(n) && n > 0 ? n : 0; });
+  if(v.length !== 4 || !v.some(function(x){ return x > 0; })) return null;
+  const spec = {m: v, t: String(text || '').trim() || 'quick add'};
+  const cur = (logEntries(ld)[slot] || [])[0];
+  if(!cur){ logWrite(ld, slot, [newCustomEntry(spec)]); return 'new'; }
+  logWrite(ld, slot, [Object.assign({}, cur, {rows: copyRows(cur).concat([spec])})]);
   return 'appended';
 }
 /* ==== THE FOOD PAGE — a screen, not another accordion ======================================
@@ -6838,7 +6906,7 @@ function logAddFood(ld, slot, key, n, unit){
    SAVEs a weighed amount; absent means "use his usual", which is what a plain tick means. */
 /* edit: {slot, ei, ri} — set only when the food screen was opened from a row ALREADY in the diary.
    It changes where SAVE goes and where ✕ lands, and nothing else: the screen is the same screen. */
-let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, review:false, edit:null};
+let FV = {slot:null, q:'', tab:'all', pick:null, amt:null, unit:null, sel:[], selAmt:{}, dish:null, fact:null, quick:false, review:false, edit:null};
 /* ⛔ BIND ONCE PER ELEMENT, PER SELECTOR. The food page patches containers in place — a keystroke
    rewrites the list, a tick replaces one row — and the binder runs again afterwards to wire what is
    new. querySelectorAll also returns everything that SURVIVED, so without this a survivor collects a
@@ -6965,7 +7033,17 @@ function foodSearch(q, limit){
    what he has actually logged is the default now — median rather than mean because one mis-typed
    amount should not move it, and per UNIT because a banana is 1 each to him and 118 g to the fact.
    Falls back to FOOD_DEFAULT_N for anything he has never logged. */
+/* ⛔ MEMOISED 2026-09-24, AND THE NUMBERS ARE WHY. This rebuilt an index of his ENTIRE diary on
+   every call, and fvRowHTML calls it TWICE per row — once via foodTypicalUnit, once via
+   foodTypicalAmount — for up to 60 rows, on EVERY KEYSTROKE in the food search. That is 120 full
+   diary rebuilds per keypress, measured at 4.92 ms a row and ~350 ms for one fvListHTML on DESKTOP;
+   his phone is several times slower again, and it got worse with every day he logged.
+   He reported it as "the search bar is very slow". It was never the search: foodSearch is 3.4 ms.
+   Cached against the raw stored string, so a sync merge that bypasses logWrite still invalidates. */
+let _fhRaw = null, _fhBy = null;
 function foodHistory(){
+  const raw = logRaw();
+  if(_fhBy && raw === _fhRaw) return _fhBy;
   const by = {};
   const push = p => {
     if(!p || !p.f || typeof p.n !== 'number' || !isFinite(p.n) || p.n <= 0) return;
@@ -6982,6 +7060,7 @@ function foodHistory(){
       });
     });
   });
+  _fhRaw = raw; _fhBy = by;
   return by;
 }
 /* the unit he actually records this food in — a banana is 'each' to him, 'g' to the fact */
@@ -7355,6 +7434,37 @@ function fvBarHTML(){
     + '</button></div>' : '';
   return bar;
 }
+/* ==== ADD CALORIES — a row that is only numbers =========================================
+   His ask 2026-09-24: "i need you to add me a way to just add calories and the macros", named by
+   him, and placed by him: "Call it 'Add Calories'. put it right under new food".
+   ⚠ THIS IS NOT THE NEW-FOOD FORM. That one creates a reusable FOOD_FACTS entry with a unit and
+   a provenance; this creates ONE row in ONE meal and leaves nothing behind. The two sit together
+   because the question that reaches both is the same — "it is not in the list" — and the answer
+   differs only in whether he will ever eat it again. */
+function fvQuickHTML(ld){
+  const st = fvState();
+  const slot = SLOTS.find(s=>s.key === st.slot);
+  const num = function(id, ph){
+    return '<input type="number" id="' + id + '" placeholder="' + ph + '" inputmode="decimal" '
+      + 'step="any" min="0" style="width:100%">'; };
+  return '<div class="fvpage">'
+    + '<div class="fvhead"><button class="fvx" data-fvqx="1">✕</button>'
+    + '<b style="font-size:16px">Add Calories</b></div>'
+    + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
+    + '<div class="formrow" style="margin-top:10px">'
+      + '<input type="text" id="fvqT" placeholder="What was it?" style="flex:1;font-family:var(--body)">'
+    + '</div>'
+    + '<div class="formrow" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'
+      + '<label class="sub">Calories' + num('fvqCal','cal') + '</label>'
+      + '<label class="sub">Protein (g)' + num('fvqP','P') + '</label>'
+      + '<label class="sub">Carbs (g)' + num('fvqC','C') + '</label>'
+      + '<label class="sub">Fat (g)' + num('fvqF','F') + '</label>'
+    + '</div>'
+    + '<div class="sub" style="margin-top:8px">Leave calories blank and they are worked out from the macros.</div>'
+    + '<div id="fvqErr" class="note" style="display:none;margin-top:8px"></div>'
+    + '<div class="formrow" style="margin-top:10px"><button class="btn" data-fvqsave="1" style="width:100%">Add it</button></div>'
+    + '</div>';
+}
 function fvSearchHTML(ld){
   const st = fvState();
   const slot = SLOTS.find(s=>s.key === st.slot);
@@ -7376,6 +7486,9 @@ function fvSearchHTML(ld){
        button read as one block of actions and the slot line stays attached to the tabs and list it
        actually describes. */
     + '<button class="btn ghost" data-ffnew="1" style="width:100%;margin:8px 0 0">＋ New food</button>'
+    /* ⭐ RIGHT UNDER NEW FOOD, his placement 2026-09-24. Same width and weight: the two are
+       alternatives to each other, and making this one smaller would read as a footnote. */
+    + '<button class="btn ghost" data-fvquick="1" style="width:100%;margin:6px 0 0">＋ Add Calories</button>'
     + '<div class="fvsub">Adding to <b>' + (slot ? slot.slot : '') + '</b></div>'
     + tabs
     + '<div class="fvlist">' + fvListHTML(ld) + '</div>'
@@ -7721,6 +7834,7 @@ function foodPageHTML(ld){
   const st = fvState();
   if(!st.slot) return '';
   if(st.fact) return fvFactHTML(ld);
+  if(st.quick) return fvQuickHTML(ld);
   if(st.dish) return fvDishHTML(ld);
   /* ⛔ pick BEFORE review, deliberately: tapping a row on the review page opens that food's amount
      screen, and ✕ there clears pick and lands back on the review page rather than the list. */
@@ -7742,6 +7856,8 @@ function foodLabel(sp, fallback){
   if(Array.isArray(sp)) return fallback || 'hand-typed row';   /* no fact key to name it by */
   if(sp.free) return fallback || 'seasoning';
   if(sp.parts) return sp.parts.map(p=>p.f).join(' + ');
+  /* a numbers-only row carries its own text, because there is no fact key to name it by */
+  if(Array.isArray(sp.m)) return sp.t || fallback || 'quick add';
   return sp.f || fallback || '—';
 }
 /* One row's amount changed, returning the FULL rows array to store. Named and exported to the page
@@ -7799,6 +7915,16 @@ function rowEditorHTML(ld, slotKey, entry){
     const nm = foodLabel(sp, ing[i] && ing[i][0]);
     /* free rows and composites are shown but NOT editable: a {free:1} has no amount to change, and
        a {parts} line is several foods behind one label — editing it needs the generator, not a box. */
+    /* ⭐ AN ADD-CALORIES ROW GETS ITS OWN BRANCH, and it exists because the obvious fix was
+       wrong. Falling through to the free/parts branch below rendered it fine — and left it with
+       NO ✕, because that branch has none. A row he typed by hand is exactly the row most likely
+       to be typed wrong, and it would have been stuck in his day for good. It also printed only
+       calories, hiding the protein he had just entered. No amount box: there is no amount, only
+       four numbers, and the way to change them is to remove it and add it again. */
+    if(Array.isArray(sp.m))
+      return `<div class="erow free"><span class="en">${nm}</span><span></span>`
+           + `<span class="em">${Math.round(m[0])} · ${Math.round(m[1])}P${i>=ing.length
+               ? ` <a href="#" data-erm="${slotKey}|${i}" title="remove" style="color:var(--meat);text-decoration:none">✕</a>` : ''}</span></div>`;
     if(sp.free || sp.parts || !sp.f || typeof sp.n !== 'number')
       return `<div class="erow free"><span class="en">${nm}</span><span></span>`
            + `<span class="em">${sp.free?'free':Math.round(m[0])+' cal'}</span></div>`;
@@ -12080,7 +12206,7 @@ document.addEventListener('visibilitychange', ()=>{ if(syncCfg().gist){ clearTim
 })();
 
 /* ---------- self-updater (works on the real site; no-op on cached artifact) ---------- */
-const BUILD = 'b1790261613';
+const BUILD = 'b1790269345';
 async function checkUpdate(manual){
   try{
     const res = await fetch(location.pathname + '?u=' + Math.random(), {cache:'no-store'});
